@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    /* Base Options: */
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "es2022",
+    "allowJs": true,
+    "checkJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    /* Strictness & Linting */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "noPropertyAccessFromIndexSignature": true,
+
+    /* Workspace Mode: typecheck only, do not emit from root config */
+    "module": "NodeNext",
+    "noEmit": true,
+
+    /* Isomorphic - No DOM typings: */
+    "lib": ["es2022"],
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*",
+    "__test__/**/*",
+    "eslint.config.ts",
+    "commitlint.config.ts",
+    "tsup.config.ts"
+  ]
+}

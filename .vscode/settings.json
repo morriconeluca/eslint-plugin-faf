@@ -1,0 +1,20 @@
+{
+  "editor.codeActionsOnSave": { "source.fixAll": "explicit" },
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "javascript.preferences.importModuleSpecifier": "relative",
+  "explorer.compactFolders": false,
+  "explorer.sortOrder": "filesFirst",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#0F3046",
+    "titleBar.activeBackground": "#164462",
+    "titleBar.activeForeground": "#F6FAFD",
+    "titleBar.inactiveBackground": "#0F3046",
+    "titleBar.inactiveForeground": "#F6FAFD"
+  },
+  "windowColors.🌈 BaseColor": "#2980b9"
+}
