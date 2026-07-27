@@ -2,11 +2,9 @@ import * as tsParser from '@typescript-eslint/parser';
 import { RuleTester } from 'eslint';
 import { afterAll, beforeAll, describe, it } from 'vitest';
 
-import {
-  clearDirCache,
-  seedDirCache,
-  setProjectRoot,
-} from '#_rules@shared/_utils/context/index.js';
+import { clearDirCache } from '#_rules@shared/_utils/_primitives/clear-dir-cache/index.js';
+import { seedDirCache } from '#_rules@shared/_utils/_primitives/seed-dir-cache/index.js';
+import { setProjectRoot } from '#_rules@shared/_utils/_primitives/set-project-root/index.js';
 
 import enforceAccessNode from './enforce-access-node.rule.js';
 

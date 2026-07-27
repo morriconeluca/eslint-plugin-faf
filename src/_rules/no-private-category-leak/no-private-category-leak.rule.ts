@@ -2,14 +2,28 @@ import type { Rule } from 'eslint';
 
 import path from 'path';
 
-import {
-  findTreeConfig,
-  getPrivateCategoryOwner,
-  resolveImportPath,
-  type TFafSettings,
-  toRelativePath,
-} from '#_rules@shared/_utils/context/index.js';
+import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
 
+import { resolveImportPath } from '#_rules@shared/_utils/_aggregates/resolve-import-path/index.js';
+import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
+import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
+import { getPrivateCategoryOwner } from '#_rules@shared/_utils/_systems/get-private-category-owner/index.js';
+
+/**
+ * @fileoverview Rule: faf/no-private-category-leak
+ * Enforces the FAF Law of Private Category Encapsulation.
+ *
+ * FAF Law: Category folders prefixed with `_` nested directly inside a Fragment/Root Fragment
+ * are Private Categories containing internal implementation details.
+ * Their contents are private to the owning Fragment/Root Fragment subtree and cannot leak or be imported externally.
+ *
+ * Valid:
+ * - Sibling nodes within the owner Fragment importing from the Private Category (e.g. `example/example.component.tsx`
+ *   importing from `example/_components/child/index.js`).
+ *
+ * Invalid:
+ * - A rule inside `src/_rules/naming-conventions/` importing from `src/_rules/_rules@shared/_utils/_utils@shared/_stores/cache/` (leak).
+ */
 const rule: Rule.RuleModule = {
   create(context) {
     const absPath = context.filename;

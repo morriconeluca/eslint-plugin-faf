@@ -2,14 +2,26 @@ import type { Rule } from 'eslint';
 
 import path from 'path';
 
-import {
-  classifyFolder,
-  findTreeConfig,
-  resolveImportPath,
-  type TFafSettings,
-  toRelativePath,
-} from '#_rules@shared/_utils/context/index.js';
+import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
 
+import { classifyFolder } from '#_rules@shared/_utils/_aggregates/classify-folder/index.js';
+import { resolveImportPath } from '#_rules@shared/_utils/_aggregates/resolve-import-path/index.js';
+import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
+import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
+
+/**
+ * @fileoverview Rule: faf/no-direct-fragment-import
+ * Enforces the FAF Law of Fragment Encapsulation.
+ *
+ * FAF Law: External files must never import directly a Fragment's internal files.
+ * All imports from outside the Fragment's boundaries must pass exclusively through its Access Node (`index.ts`).
+ *
+ * Valid:
+ * - `import { Button } from '#_ui/_components/button/index.js';`
+ *
+ * Invalid:
+ * - `import { Button } from '#_ui/_components/button/button.component.js';`
+ */
 const rule: Rule.RuleModule = {
   create(context) {
     const absPath = context.filename;

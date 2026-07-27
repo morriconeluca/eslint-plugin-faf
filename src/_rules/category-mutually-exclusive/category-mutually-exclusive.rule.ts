@@ -2,15 +2,28 @@ import type { Rule } from 'eslint';
 
 import path from 'path';
 
-import {
-  classifyFolder,
-  findTreeConfig,
-  getCategoryConfig,
-  readDirCached,
-  type TFafSettings,
-  toRelativePath,
-} from '#_rules@shared/_utils/context/index.js';
+import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
 
+import { classifyFolder } from '#_rules@shared/_utils/_aggregates/classify-folder/index.js';
+import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
+import { getCategoryConfig } from '#_rules@shared/_utils/_primitives/get-category-config/index.js';
+import { readDirCached } from '#_rules@shared/_utils/_primitives/read-dir-cached/index.js';
+import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
+
+/**
+ * @fileoverview Rule: faf/category-mutually-exclusive
+ * Enforces the FAF rule of Category Purity (Mutua Esclusività).
+ *
+ * FAF Law: Categories must contain either ONLY single files (Logical Nodes) or ONLY subfolders (Fragments).
+ *
+ * Valid:
+ * - A category configured with `allowSingleFiles: true` containing only files (e.g. `_types/user.type.ts`).
+ * - A category configured with `allowSingleFiles: false` containing only Fragment folders (e.g. `_utils/get-path/`).
+ *
+ * Invalid:
+ * - Mixing single files and subfolders directly inside the same category directory.
+ * - Placing files directly in a Category that is not configured to allow single files (`allowSingleFiles: false`).
+ */
 const rule: Rule.RuleModule = {
   create(context) {
     const absPath = context.filename;
@@ -61,11 +74,16 @@ const rule: Rule.RuleModule = {
         if (hasFiles) {
           const folderName = path.basename(relDir);
           const catConfig = getCategoryConfig(relDir, config);
-          if (catConfig && !catConfig.allowSingleFiles) {
-            context.report({
-              message: `Category "${folderName}" cannot contain file nodes directly. File "${fileName}" must be encapsulated inside a Fragment.`,
-              node,
-            });
+          if (catConfig) {
+            const ext = path.extname(fileName);
+            const isAllowedAsset =
+              catConfig.allowedExtensions?.includes(ext) ?? false;
+            if (!catConfig.allowSingleFiles && !isAllowedAsset) {
+              context.report({
+                message: `Category "${folderName}" cannot contain file nodes directly. File "${fileName}" must be encapsulated inside a Fragment.`,
+                node,
+              });
+            }
           }
         }
       },

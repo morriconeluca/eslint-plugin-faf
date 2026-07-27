@@ -2,11 +2,9 @@ import * as tsParser from '@typescript-eslint/parser';
 import { RuleTester } from 'eslint';
 import { afterAll, beforeAll, describe, it } from 'vitest';
 
-import {
-  clearDirCache,
-  seedDirCache,
-  setProjectRoot,
-} from '#_rules@shared/_utils/context/index.js';
+import { clearDirCache } from '#_rules@shared/_utils/_primitives/clear-dir-cache/index.js';
+import { seedDirCache } from '#_rules@shared/_utils/_primitives/seed-dir-cache/index.js';
+import { setProjectRoot } from '#_rules@shared/_utils/_primitives/set-project-root/index.js';
 
 import categoryMutuallyExclusive from './category-mutually-exclusive.rule.js';
 
@@ -138,6 +136,7 @@ describe('category-mutually-exclusive', () => {
     seedDirCache('src/_mixed', ['direct-file.type.ts'], ['sub-fragment']);
     seedDirCache('src/_mixed/sub-fragment', ['index.ts'], []);
     seedDirCache('src/_utils', ['helper.util.ts'], []);
+    seedDirCache('src/_styles', ['theme.css'], []);
   });
 
   ruleTester.run('category-mutually-exclusive', categoryMutuallyExclusive, {
@@ -185,6 +184,11 @@ describe('category-mutually-exclusive', () => {
       {
         code: 'export default {}',
         filename: 'src/_components/button/index.ts',
+        settings,
+      },
+      {
+        code: '/* CSS */',
+        filename: 'src/_styles/theme.css',
         settings,
       },
     ],

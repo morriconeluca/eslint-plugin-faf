@@ -13,7 +13,8 @@
     }
   },
   "imports": {
-    "#_rules@shared/*": "./src/_rules/_rules@shared/*"
+    "#_rules@shared/*": "./src/_rules/_rules@shared/*",
+    "#_utils@shared/*": "./src/_rules/_rules@shared/_utils/_utils@shared/*"
   },
   "type": "module",
   "files": [

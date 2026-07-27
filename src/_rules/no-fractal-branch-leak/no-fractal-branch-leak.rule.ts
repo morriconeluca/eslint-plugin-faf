@@ -2,13 +2,12 @@ import type { Rule } from 'eslint';
 
 import path from 'path';
 
-import {
-  findTreeConfig,
-  getPrivateCategoryOwner,
-  resolveImportPath,
-  type TFafSettings,
-  toRelativePath,
-} from '#_rules@shared/_utils/context/index.js';
+import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
+
+import { resolveImportPath } from '#_rules@shared/_utils/_aggregates/resolve-import-path/index.js';
+import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
+import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
+import { getPrivateCategoryOwner } from '#_rules@shared/_utils/_systems/get-private-category-owner/index.js';
 
 /**
  * Returns the owner of the closest Fractal Branch ancestor, or null.
@@ -29,6 +28,20 @@ function getFractalBranchOwner(relPath: string): null | string {
   return null;
 }
 
+/**
+ * @fileoverview Rule: faf/no-fractal-branch-leak
+ * Enforces the FAF Law of Fractal Branch Encapsulation.
+ *
+ * FAF Law: Fractal Branches (directories following the `_<Scope>@shared` naming convention)
+ * hold internal shared implementations. They are private to their parent Scope's subtree
+ * and cannot leak or be imported by files outside of that scope.
+ *
+ * Valid:
+ * - A utility inside `src/_rules/_rules@shared/_utils/` importing from `src/_rules/_rules@shared/`.
+ *
+ * Invalid:
+ * - A rule inside `src/_rules/naming-conventions/` importing from `src/_rules/_rules@shared/_utils/_utils@shared/` (out-of-scope).
+ */
 const rule: Rule.RuleModule = {
   create(context) {
     const absPath = context.filename;

@@ -231,7 +231,9 @@ export default {
 
 Maps import aliases (e.g., `#/_src@shared`) to relative paths from the project root. This is critical for the linter to trace boundaries and verify import encapsulation.
 
-**Single Source of Truth**: By default, `eslint-plugin-faf` automatically resolves your path aliases using the `"imports"` field in your `package.json`. If `"imports"` contains any keys, it is treated as the exclusive source of truth, and any `aliases` configured in `faf.config.ts` will be ignored. If `"imports"` is not defined or empty, the plugin falls back to using the `aliases` object defined in `faf.config.ts`.
+**Single Source of Truth**: By default, `eslint-plugin-faf` automatically resolves your path aliases using the `"imports"` field in your `package.json`. If `"imports"` contains any keys mapped to flat path strings, it is treated as the exclusive source of truth, and any `aliases` configured in `faf.config.ts` will be ignored. If `"imports"` is not defined, empty, or consists only of conditional import objects (which are skipped by the linter for simplicity), the plugin falls back to using the `aliases` object defined in `faf.config.ts`.
+
+_Note: If your codebase uses conditional imports in `package.json` (e.g. mapping aliases to objects for ESM/CJS or types/default targets), you must define their flat equivalents in `faf.config.ts` `aliases` to ensure correct linting._
 
 ### `excludes`
 
@@ -242,7 +244,7 @@ Array of path strings relative to the project root. Any folder matching these pa
 Configures taxomonic categories (`_` prefixed directories).
 
 - `role`: Maps the folder to an architectural role. It removes language plural heuristics (e.g., mapping `_components` to the `component` role suffix).
-- `allowSingleFiles`: Set to `true` to allow single files (`Logical Nodes`) directly in the category. If `false` or omitted, only subfolder `Fragments` are permitted.
+- `allowSingleFiles`: Set to `true` to allow single files (`Logical Nodes`) directly in the category. If `false` or omitted, only subfolder `Fragments` are permitted, except for static assets matching the `allowedExtensions` whitelist.
 - `allowedExtensions`: Whitelists file extensions for asset categories. Matches are treated as static assets, skipping role suffix validation (e.g. `logo.png` inside `_images`).
 
 ### `localHorizontalHierarchies` / `globalHorizontalHierarchies`
@@ -264,6 +266,11 @@ Verifies folders, files, and roles comply with FAF taxonomy:
 - Validates that internal Fragment files share their parent Fragment's name prefix (e.g. files in folder `button/` must be named `button.<role>.<ext>`).
 - Enforces role suffix validation on Fragment Nodes and Logical Nodes.
 - Assures route terminal Fragments contain the appropriate Master Node (e.g. a `.api.ts` file under `_apis`).
+- Enforces FAF logical domain containment rules:
+  - Root Fragments can only reside directly in the Root Container or another Root Fragment.
+  - Layers cannot reside inside Fragments.
+  - Fragments cannot be placed directly inside other Fragments (they must be nested within a Private Category), Fractal Branches, or nested Root Fragments.
+  - Fractal Branches cannot be nested inside other Fractal Branches.
 
 ### 2. `faf/enforce-access-node`
 
@@ -310,11 +317,14 @@ Ensures category purity:
 
 ## Performance Optimizations
 
-To prevent sluggish linting in large codebases, the core engine implements heavy caching:
+To prevent sluggish linting in large codebases, the core engine implements aggressive, state-cached optimizations:
 
-- **Directory Cache (`dirCache`)**: Inspects the physical disk exactly once per folder, storing the contents in-memory.
+- **Directory Cache (`dirCache`)**: Inspects the physical disk exactly once per folder, storing the contents in-memory. It is optimized to perform exactly one system call on cache misses by removing redundant `fs.existsSync` checks.
 - **Classification Cache (`classifyCache`)**: Memoizes the structural type (`FolderType`) of each directory for the lifetime of the ESLint run.
-- **Role Cache (`rolesCache`)**: Uses a `WeakMap` to cache the flattened list of role names per tree configuration, avoiding memory leaks and redundant array allocations.
+- **Role Cache (`rolesCache`)**: Uses a `WeakMap` to cache the allowed roles per tree configuration as a native `Set`, avoiding memory leaks, redundant array flattening allocations, and speeding up role lookup checks to $O(1)$.
+- **Category Configuration Cache (`categoryConfigCache`)**: Memoizes resolved category configurations per folder path to eliminate repetitive directory walks and path parent traversals.
+- **Tree Configuration Cache (`treeConfigCache` / `treeConfigIncludingExcludedCache`)**: Memoizes resolved tree configurations per file path, reducing tree lookup checks to a simple map-lookup.
+- **Resolved Import Path Cache (`resolvedImportPathCache`)**: Caches project-root-relative resolved import paths to avoid repeating expensive path resolutions, alias matching, and package.json parsing on duplicate imports.
 
 ---
 

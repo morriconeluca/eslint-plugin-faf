@@ -2,13 +2,28 @@ import type { Rule } from 'eslint';
 
 import path from 'path';
 
-import {
-  classifyFolder,
-  findTreeConfig,
-  type TFafSettings,
-  toRelativePath,
-} from '#_rules@shared/_utils/context/index.js';
+import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
 
+import { classifyFolder } from '#_rules@shared/_utils/_aggregates/classify-folder/index.js';
+import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
+import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
+
+/**
+ * @fileoverview Rule: faf/enforce-access-node
+ * Enforces the FAF Law of Access Node Integrity.
+ *
+ * FAF Law: An Access Node (barrel file like `index.ts`) must only define and export the Fragment's public interface.
+ * It is restricted to import/export only its own sibling Fragment Nodes using simple relative paths.
+ *
+ * Valid:
+ * - `export * from './button.component';` inside `button/index.ts`.
+ * - `export type * from './button.type';` inside `button/index.ts`.
+ *
+ * Invalid:
+ * - Importing/exporting files from subfolders (e.g. `export * from './_components/child';`).
+ * - Importing/exporting files from parent folders or external paths (e.g. `export * from '../utils';`).
+ * - Exporting files that do not share the parent Fragment's name prefix.
+ */
 const rule: Rule.RuleModule = {
   create(context) {
     const absPath = context.filename;

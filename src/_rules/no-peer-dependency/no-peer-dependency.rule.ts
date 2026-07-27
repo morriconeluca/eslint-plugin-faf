@@ -2,21 +2,22 @@ import type { Rule } from 'eslint';
 
 import path from 'path';
 
-import {
-  classifyFolder,
-  findTreeConfigIncludingExcluded,
-  getFileRole,
-  getLcaAndSubBranches,
-  getRoleHierarchyIndex,
-  getRootFragmentConfig,
-  readDirCached,
-  resolveHorizontalHierarchy,
-  resolveImportPath,
-  type TFafSettings,
-  toRelativePath,
-  type TRootFragmentConfig,
-  type TTreeConfig,
-} from '#_rules@shared/_utils/context/index.js';
+import type {
+  TFafSettings,
+  TRootFragmentConfig,
+  TTreeConfig,
+} from '#_rules@shared/_types/faf.type.js';
+
+import { classifyFolder } from '#_rules@shared/_utils/_aggregates/classify-folder/index.js';
+import { resolveImportPath } from '#_rules@shared/_utils/_aggregates/resolve-import-path/index.js';
+import { findTreeConfigIncludingExcluded } from '#_rules@shared/_utils/_primitives/find-tree-config-including-excluded/index.js';
+import { getFileRole } from '#_rules@shared/_utils/_primitives/get-file-role/index.js';
+import { getLcaAndSubBranches } from '#_rules@shared/_utils/_primitives/get-lca-and-sub-branches/index.js';
+import { getRoleHierarchyIndex } from '#_rules@shared/_utils/_primitives/get-role-hierarchy-index/index.js';
+import { getRootFragmentConfig } from '#_rules@shared/_utils/_primitives/get-root-fragment-config/index.js';
+import { readDirCached } from '#_rules@shared/_utils/_primitives/read-dir-cached/index.js';
+import { resolveHorizontalHierarchy } from '#_rules@shared/_utils/_primitives/resolve-horizontal-hierarchy/index.js';
+import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
 
 function getDirectoryRole(dirPath: string, config: TTreeConfig): null | string {
   const folderName = path.basename(dirPath);
@@ -87,6 +88,22 @@ function isInsidePrivateCategoryOfLca(
   return false;
 }
 
+/**
+ * @fileoverview Rule: faf/no-peer-dependency
+ * Enforces the FAF Law of Separation between Peers.
+ *
+ * FAF Law: Sibling directories and files (at the same filesystem level) must not import each other
+ * unless a horizontal hierarchy flow is explicitly configured (via local/global horizontal hierarchies).
+ * For files inside a Fragment, peer imports flow according to the index order defined in the `roles` configuration.
+ *
+ * Valid:
+ * - A compound utility importing from a primitive utility (if compounds ➔ primitives is configured).
+ * - Sibling Fragment Nodes importing from each other according to the roles scale order (e.g. `util` imports `type`).
+ *
+ * Invalid:
+ * - A primitive utility importing from a compound utility (violating horizontal hierarchy).
+ * - Circular imports between sibling folders with no configured hierarchy.
+ */
 const rule: Rule.RuleModule = {
   create(context) {
     const absPath = context.filename;

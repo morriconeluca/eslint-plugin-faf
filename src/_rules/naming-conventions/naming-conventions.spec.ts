@@ -2,11 +2,9 @@ import * as tsParser from '@typescript-eslint/parser';
 import { RuleTester } from 'eslint';
 import { afterAll, beforeAll, describe, it } from 'vitest';
 
-import {
-  clearDirCache,
-  seedDirCache,
-  setProjectRoot,
-} from '#_rules@shared/_utils/context/index.js';
+import { clearDirCache } from '#_rules@shared/_utils/_primitives/clear-dir-cache/index.js';
+import { seedDirCache } from '#_rules@shared/_utils/_primitives/seed-dir-cache/index.js';
+import { setProjectRoot } from '#_rules@shared/_utils/_primitives/set-project-root/index.js';
 
 import namingConventions from './naming-conventions.rule.js';
 
@@ -142,7 +140,13 @@ describe('naming-conventions', () => {
       ['index.ts', 'icon.component.tsx'],
       []
     );
-    seedDirCache('src/_components/button', ['index.ts', 'button.type.ts'], []);
+    seedDirCache(
+      'src/_components/button',
+      ['index.ts', 'button.type.ts', 'button.component.tsx'],
+      []
+    );
+    seedDirCache('src/_utils', [], ['button']);
+    seedDirCache('src/_utils/button', ['index.ts', 'button.component.tsx'], []);
     seedDirCache('src/bad-folder', ['bad-folder.component.tsx'], []);
     seedDirCache('src/_ui', [], ['_components', 'button']);
     seedDirCache('src/_ui/button', ['index.ts', 'button.component.tsx'], []);
@@ -187,6 +191,32 @@ describe('naming-conventions', () => {
     seedDirCache('src/_apis/_apis@shared/_types', ['mutate.type.ts'], []);
     seedDirCache('src/utils', ['helper.util.ts'], []);
     seedDirCache('src/_button', ['index.ts', '_button.component.tsx'], []);
+    seedDirCache('src/_styles', ['theme.css', 'theme-bad.ts'], []);
+    seedDirCache('src/_types', ['user.type.ts', 'user-bad.util.ts'], []);
+    // Seeds for parent-child relationship constraints
+    seedDirCache(
+      'src/_components/button/sub-frag',
+      ['index.ts', 'sub-frag.component.tsx'],
+      []
+    );
+    seedDirCache(
+      'src/_src@shared/direct-frag',
+      ['index.ts', 'direct-frag.component.tsx'],
+      []
+    );
+    seedDirCache(
+      'src/app/direct-frag',
+      ['index.ts', 'direct-frag.component.tsx'],
+      []
+    );
+    seedDirCache('src/_components/button/_my-layer', [], ['child']);
+    seedDirCache(
+      'src/_components/button/_my-layer/child',
+      ['index.ts', 'child.component.tsx'],
+      []
+    );
+    seedDirCache('src/_src@shared/_src@shared@shared', ['some.type.ts'], []);
+    seedDirCache('src/_components/my-root', ['page.tsx'], []);
   });
 
   ruleTester.run('naming-conventions', namingConventions, {
@@ -342,6 +372,136 @@ describe('naming-conventions', () => {
         filename: 'src/_button/_button.component.tsx',
         settings,
       },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Fragment "button" inside Category "_utils" must contain a Master Node with role "util" (e.g. "button.util.ts").',
+          },
+        ],
+        filename: 'src/_utils/button/button.component.tsx',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'File extension ".ts" is not allowed in Category "_styles". Allowed extensions: .css.',
+          },
+        ],
+        filename: 'src/_styles/theme-bad.ts',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Role "util" for file "user-bad.util.ts" does not match the expected Category role "type".',
+          },
+        ],
+        filename: 'src/_types/user-bad.util.ts',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Fragment directory "sub-frag" cannot be placed directly inside Fragment "button". Sub-Fragments must be contained within a Private Category.',
+          },
+        ],
+        filename: 'src/_components/button/sub-frag/sub-frag.component.tsx',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Fragment directory "direct-frag" cannot be placed directly inside Fractal Branch "_src@shared". Fragments must be contained within a Category.',
+          },
+        ],
+        filename: 'src/_src@shared/direct-frag/direct-frag.component.tsx',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Fragment directory "direct-frag" cannot be placed directly inside Root Fragment "app". Fragments must be contained within a Category.',
+          },
+        ],
+        filename: 'src/app/direct-frag/direct-frag.component.tsx',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Fragment directory "child" cannot be placed directly inside Layer "_my-layer". Fragments must be contained within a Category.',
+          },
+          {
+            message:
+              'Layer directory "_my-layer" cannot be placed inside "button" (classified as fragment). Layers cannot reside within Fragments.',
+          },
+        ],
+        filename: 'src/_components/button/_my-layer/child/child.component.tsx',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Folder name "_src@shared@shared" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
+          },
+          {
+            message:
+              'Fractal Branch "_src@shared@shared" cannot be placed inside another Fractal Branch "_src@shared".',
+          },
+          {
+            message:
+              'Fractal Branches cannot contain files directly. File "some.type.ts" is placed directly inside Fractal Branch "_src@shared@shared".',
+          },
+        ],
+        filename: 'src/_src@shared/_src@shared@shared/some.type.ts',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Root Fragment directory "my-root" must be placed directly inside a Root Container or another Root Fragment, not inside "_components" (classified as category).',
+          },
+        ],
+        filename: 'src/_components/my-root/page.tsx',
+        settings: {
+          faf: {
+            ...settings.faf,
+            trees: settings.faf.trees.map((tree, index) => {
+              if (index === 0) {
+                return {
+                  ...tree,
+                  rootFragments: [
+                    ...(tree.rootFragments || []),
+                    {
+                      paths: ['src/_components/my-root'],
+                      rootNodes: [['page.tsx']],
+                    },
+                  ],
+                };
+              }
+              return tree;
+            }),
+          },
+        },
+      },
     ],
     valid: [
       {
@@ -387,6 +547,16 @@ describe('naming-conventions', () => {
       {
         code: 'export default {}',
         filename: 'src/configs/vitest-setup.ts',
+        settings,
+      },
+      {
+        code: '/* styles block */',
+        filename: 'src/_styles/theme.css',
+        settings,
+      },
+      {
+        code: 'export type User = { id: string };',
+        filename: 'src/_types/user.type.ts',
         settings,
       },
     ],

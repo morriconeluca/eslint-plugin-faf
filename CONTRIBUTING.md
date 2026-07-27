@@ -19,7 +19,15 @@ The project is structured to enforce strong type-safety, maintain clean boundari
 │   ├── main.ts               # Entry point exposing rules and configs
 │   ├── main.type.ts          # Plugin type definitions (TFafPlugin)
 │   └── _rules/               # FAF rule Category
-│       ├── _rules@shared/    # Shared utilities Fractal Branch
+│       ├── _rules@shared/    # Shared Fractal Branch
+│       │   ├── _types/       # FAF configuration types
+│       │   │   └── faf.type.ts
+│       │   └── _utils/       # Systemic design categories
+│       │       ├── _utils@shared/ # Fractal Branch containing persistent state cache
+│       │       ├── _primitives/ # Stateless leaf helpers
+│       │       ├── _compounds/ # Helpers combining primitive logic
+│       │       ├── _aggregates/ # Higher-level orchestrators
+│       │       └── _systems/    # Core system boundary queries
 │       └── <rule-name>/      # Folder Fragment for each rule
 │           ├── index.ts      # Access Node (exports the rule module)
 │           ├── <name>.rule.ts # Rule implementation
