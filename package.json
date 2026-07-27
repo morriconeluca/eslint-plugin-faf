@@ -1,6 +1,6 @@
 {
-  "name": "eslint-plugin-faf",
-  "version": "0.1.0",
+  "name": "@morriconeluca/eslint-plugin-faf",
+  "version": "0.1.1",
   "description": "An ESLint plugin for FAF projects.",
   "main": "./dist/main.cjs",
   "module": "./dist/main.js",
@@ -11,6 +11,9 @@
       "import": "./dist/main.js",
       "require": "./dist/main.cjs"
     }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "imports": {
     "#_rules@shared/*": "./src/_rules/_rules@shared/*",

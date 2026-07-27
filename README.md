@@ -1,4 +1,4 @@
-# eslint-plugin-faf
+# @morriconeluca/eslint-plugin-faf
 
 An ESLint plugin to deterministically enforce the rules and constraints of the **[Fractal Architecture Framework (FAF)](https://github.com/morriconeluca/fractal-architecture-framework)**.
 
@@ -20,18 +20,18 @@ This plugin is designed for complex TypeScript/JavaScript codebases to ensure **
 Install the plugin along with its peer dependencies:
 
 ```bash
-npm install eslint-plugin-faf --save-dev
+npm install @morriconeluca/eslint-plugin-faf --save-dev
 # or
-yarn add eslint-plugin-faf --dev
+yarn add @morriconeluca/eslint-plugin-faf --dev
 # or
-pnpm add eslint-plugin-faf -D
+pnpm add @morriconeluca/eslint-plugin-faf -D
 ```
 
 ---
 
 ## Configuration
 
-`eslint-plugin-faf` is configured via the ESLint flat config file (`eslint.config.ts` or `eslint.config.js`). All architectural settings are loaded from the global `settings.faf` object.
+`@morriconeluca/eslint-plugin-faf` is configured via the ESLint flat config file (`eslint.config.ts` or `eslint.config.js`). All architectural settings are loaded from the global `settings.faf` object.
 
 ### 1. Integration in `eslint.config.ts`
 
@@ -40,7 +40,7 @@ For a clean setup, we recommend defining your FAF taxonomy settings in a separat
 Since FAF is an **all-or-nothing architectural system**, all rules must be active as blocking errors to prevent architectural drift. The canonical way to integrate it is by extending `fafPlugin.configs.recommended` (which pre-configures all rules as `"error"`) and injecting your settings:
 
 ```typescript
-import fafPlugin from 'eslint-plugin-faf';
+import fafPlugin from '@morriconeluca/eslint-plugin-faf';
 import fafSettings from './faf.config';
 
 export default [

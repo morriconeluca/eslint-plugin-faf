@@ -17,7 +17,7 @@ export { rules } from './rules.js';
 const plugin: TFafPlugin = {
   configs,
   meta: {
-    name: 'eslint-plugin-faf',
+    name: '@morriconeluca/eslint-plugin-faf',
     version: pkg.version,
   },
   rules,

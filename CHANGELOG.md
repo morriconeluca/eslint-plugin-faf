@@ -1,5 +1,12 @@
 # eslint-plugin-faf
 
+## 0.1.1
+
+### Patch Changes
+
+- 2af8fc0: Refactor package entrypoint by decomposing `src/main.ts` into single-responsibility Root Nodes (`types.ts`, `rules.ts`, `configs.ts`, `main.ts`).
+- 0ea809b: Refactor context utilities into individual fragments under systemic design directories, add strict nesting validation rules to `faf/naming-conventions`, and optimize linter caches.
+
 ## 0.1.0
 
 ### Minor Changes
