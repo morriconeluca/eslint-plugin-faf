@@ -4,6 +4,9 @@ import { configs as perfectionistConfigs } from 'eslint-plugin-perfectionist';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import { configs as tseslintConfigs } from 'typescript-eslint';
 
+import fafSettings from './faf.config.js';
+import { configs as fafConfigs } from './src/main.js';
+
 export default defineConfig([
   globalIgnores(['dist/**', 'node_modules/**', 'tmp/**']),
   js.configs.recommended,
@@ -11,6 +14,7 @@ export default defineConfig([
   importX.flatConfigs.recommended,
   importX.flatConfigs.typescript,
   perfectionistConfigs['recommended-natural'],
+  fafConfigs.recommended,
   {
     files: ['**/*.ts', '**/*.js'],
     languageOptions: {
@@ -38,6 +42,7 @@ export default defineConfig([
       ],
     },
     settings: {
+      ...fafSettings,
       'import-x/resolver': {
         typescript: true,
       },

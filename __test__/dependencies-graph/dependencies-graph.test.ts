@@ -13,7 +13,7 @@ describe('Fitness Function: Dependencies Graph', () => {
   it('should not have any cycles between modules and orphan modules', async () => {
     const result = await cruise([srcPath], {
       exclude: {
-        path: '[.](test|spec)[.](ts)$',
+        path: '([.](test|spec)[.](ts)$|[.]d[.]ts$)',
       },
       includeOnly: {
         path: '^src/',

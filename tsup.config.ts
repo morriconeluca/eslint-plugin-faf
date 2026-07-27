@@ -7,7 +7,7 @@ export default defineConfig({
       ignoreDeprecations: '6.0',
     },
   },
-  entry: ['src/index.ts'],
+  entry: ['src/main.ts'],
   format: ['cjs', 'esm'],
   minify: false,
   shims: true, // Auto-inject shims for CJS/ESM compatibility (e.g. __dirname, __filename)
