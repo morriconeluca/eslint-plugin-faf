@@ -1,43 +1,19 @@
-import type { TFafPlugin } from './main.type.js';
+import type { TFafPlugin } from './types.js';
 
 import pkg from '../package.json' with { type: 'json' };
-import categoryMutuallyExclusive from './_rules/category-mutually-exclusive/index.js';
-import enforceAccessNode from './_rules/enforce-access-node/index.js';
-import namingConventions from './_rules/naming-conventions/index.js';
-import noDirectFragmentImport from './_rules/no-direct-fragment-import/index.js';
-import noFractalBranchLeak from './_rules/no-fractal-branch-leak/index.js';
-import noPeerDependency from './_rules/no-peer-dependency/index.js';
-import noPrivateCategoryLeak from './_rules/no-private-category-leak/index.js';
+import { configs } from './configs.js';
+import { rules } from './rules.js';
 
-export const rules = {
-  'category-mutually-exclusive': categoryMutuallyExclusive,
-  'enforce-access-node': enforceAccessNode,
-  'naming-conventions': namingConventions,
-  'no-direct-fragment-import': noDirectFragmentImport,
-  'no-fractal-branch-leak': noFractalBranchLeak,
-  'no-peer-dependency': noPeerDependency,
-  'no-private-category-leak': noPrivateCategoryLeak,
-} as const;
+export { configs } from './configs.js';
+export { rules } from './rules.js';
 
-export const configs: TFafPlugin['configs'] = {
-  recommended: {
-    plugins: {
-      faf: {
-        rules,
-      },
-    },
-    rules: {
-      'faf/category-mutually-exclusive': 'error',
-      'faf/enforce-access-node': 'error',
-      'faf/naming-conventions': 'error',
-      'faf/no-direct-fragment-import': 'error',
-      'faf/no-fractal-branch-leak': 'error',
-      'faf/no-peer-dependency': 'error',
-      'faf/no-private-category-leak': 'error',
-    },
-  },
-};
-
+/**
+ * Default export representing the ESLint plugin for the Fractal Architecture Framework (FAF).
+ * Assembles configs, rules, and package metadata.
+ *
+ * Exposes rules and configs both as named exports (for backward compatibility/direct consumption)
+ * and within the default plugin export container.
+ */
 const plugin: TFafPlugin = {
   configs,
   meta: {

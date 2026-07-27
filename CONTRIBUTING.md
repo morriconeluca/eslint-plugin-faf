@@ -17,7 +17,9 @@ The project is structured to enforce strong type-safety, maintain clean boundari
 ├── faf.config.ts             # Local FAF taxonomy settings for self-linting
 ├── src/                      # Plugin source code
 │   ├── main.ts               # Entry point exposing rules and configs
-│   ├── main.type.ts          # Plugin type definitions (TFafPlugin)
+│   ├── types.ts              # Plugin type definitions (TFafPlugin)
+│   ├── rules.ts              # Rules aggregator
+│   ├── configs.ts            # Configs aggregator
 │   └── _rules/               # FAF rule Category
 │       ├── _rules@shared/    # Shared Fractal Branch
 │       │   ├── _types/       # FAF configuration types

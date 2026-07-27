@@ -27,7 +27,12 @@ export default {
         rootFragments: [
           {
             paths: ['src'],
-            rootNodes: [['main.type.ts'], ['main.ts']],
+            rootNodes: [
+              ['types.ts'],
+              ['rules.ts'],
+              ['configs.ts'],
+              ['main.ts'],
+            ],
           },
         ],
       },
