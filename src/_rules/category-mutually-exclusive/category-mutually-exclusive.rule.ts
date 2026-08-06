@@ -78,6 +78,18 @@ const rule: Rule.RuleModule = {
             const ext = path.extname(fileName);
             const isAllowedAsset =
               catConfig.allowedExtensions?.includes(ext) ?? false;
+
+            // If the category defines allowedExtensions and this file's
+            // extension is not in the list, skip — naming-conventions
+            // already reports a precise extension-mismatch error.
+            if (
+              !isAllowedAsset &&
+              catConfig.allowedExtensions &&
+              catConfig.allowedExtensions.length > 0
+            ) {
+              return;
+            }
+
             if (!catConfig.allowSingleFiles && !isAllowedAsset) {
               context.report({
                 message: `Category "${folderName}" cannot contain file nodes directly. File "${fileName}" must be encapsulated inside a Fragment.`,

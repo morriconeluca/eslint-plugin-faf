@@ -6,27 +6,10 @@ import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
 
 import { resolveImportPath } from '#_rules@shared/_utils/_aggregates/resolve-import-path/index.js';
 import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
+import { getFractalBranchOwner } from '#_rules@shared/_utils/_primitives/get-fractal-branch-owner/index.js';
+import { getImmediateSubDomain } from '#_rules@shared/_utils/_primitives/get-immediate-sub-domain/index.js';
 import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
-import { getPrivateCategoryOwner } from '#_rules@shared/_utils/_systems/get-private-category-owner/index.js';
-
-/**
- * Returns the owner of the closest Fractal Branch ancestor, or null.
- */
-function getFractalBranchOwner(relPath: string): null | string {
-  let current = relPath;
-  while (current && current !== '.' && current !== '/') {
-    const folderName = path.basename(current);
-    if (folderName.startsWith('_') && folderName.includes('@shared')) {
-      return path.dirname(current).replace(/\\/g, '/');
-    }
-    const parent = path.dirname(current).replace(/\\/g, '/');
-    if (parent === current) {
-      break;
-    }
-    current = parent;
-  }
-  return null;
-}
+import { getPrivateCategoryInfo } from '#_rules@shared/_utils/_systems/get-private-category-info/index.js';
 
 /**
  * @fileoverview Rule: faf/no-fractal-branch-leak
@@ -81,15 +64,46 @@ const rule: Rule.RuleModule = {
           });
         } else {
           // FAF Guideline G2: Private Category Leak check. Even within an authorized Fractal Branch scope,
-          // importing from a Private Category is forbidden unless the importer is inside the owner Fragment's subtree.
-          const privateOwner = getPrivateCategoryOwner(importedDir, config!);
-          if (privateOwner) {
-            const isPrivateDescendant =
-              relPath === privateOwner ||
-              relPath.startsWith(privateOwner + '/');
-            if (!isPrivateDescendant) {
+          // importing from a Private Category is forbidden unless the importer is a direct child of the owner Fragment,
+          // shares the same immediate sub-domain under the category, or the imported resource is also inside a Fractal Branch
+          // that the importer has access to.
+          const info = getPrivateCategoryInfo(importedDir, config!);
+          if (info) {
+            const { owner, privateCategoryPath } = info;
+            const isPrivateDirectChild = path.dirname(relPath) === owner;
+
+            const importerSubDomain = getImmediateSubDomain(
+              relPath,
+              privateCategoryPath
+            );
+            const importedSubDomain = getImmediateSubDomain(
+              resolvedRelPath,
+              privateCategoryPath
+            );
+            const isInsideSameSubDomain =
+              importerSubDomain !== '' &&
+              importerSubDomain === importedSubDomain;
+
+            let isFractalBranchAllowed = false;
+            const fbOwner = getFractalBranchOwner(importedDir);
+            if (fbOwner) {
+              // The Fractal Branch must be nested inside (or be) the Private Category itself
+              const isFbInsidePrivateCategory =
+                fbOwner === privateCategoryPath ||
+                fbOwner.startsWith(privateCategoryPath + '/');
+              if (isFbInsidePrivateCategory) {
+                isFractalBranchAllowed =
+                  relPath === fbOwner || relPath.startsWith(fbOwner + '/');
+              }
+            }
+
+            if (
+              !isPrivateDirectChild &&
+              !isInsideSameSubDomain &&
+              !isFractalBranchAllowed
+            ) {
               context.report({
-                message: `Importing from Private Category is forbidden. The imported resource is private to "${privateOwner}".`,
+                message: `Importing from Private Category is forbidden. The imported resource is private to "${owner}".`,
                 node,
               });
             }

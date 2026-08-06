@@ -11,7 +11,6 @@ import noDirectFragmentImport from './no-direct-fragment-import.rule.js';
 // Bind Vitest globals to globalThis so RuleTester can find them
 Object.assign(globalThis, { afterAll, beforeAll, describe, it });
 
-// Set project root
 setProjectRoot(process.cwd());
 
 const settings = {
@@ -62,6 +61,10 @@ const settings = {
         ],
         includes: ['src'],
         localHorizontalHierarchies: [
+          {
+            hierarchies: [['button'], ['card']],
+            paths: ['src'],
+          },
           {
             hierarchies: [['_domain'], ['_network', '_state', '_ui']],
             paths: ['src/_src@shared'],
@@ -128,8 +131,42 @@ const ruleTester = new RuleTester({
 describe('no-direct-fragment-import', () => {
   beforeAll(() => {
     clearDirCache();
-    seedDirCache('src/button', ['index.ts', 'button.component.tsx'], []);
+    seedDirCache(
+      'src/button',
+      ['index.ts', 'button.component.tsx', 'button.hook.ts'],
+      []
+    );
     seedDirCache('src/card', ['index.ts', 'card.component.tsx'], []);
+    seedDirCache('src/_src@shared', [], ['_ui']);
+    seedDirCache('src/_src@shared/_ui', [], ['_components']);
+    seedDirCache('src/_src@shared/_ui/_components', [], ['button']);
+    seedDirCache(
+      'src/_src@shared/_ui/_components/button',
+      ['index.ts', 'button.component.tsx'],
+      []
+    );
+    seedDirCache(
+      'src/example',
+      ['index.ts', 'example.component.tsx', 'example.type.ts'],
+      ['_components']
+    );
+    seedDirCache('src/example/_components', [], ['child']);
+    seedDirCache(
+      'src/example/_components/child',
+      ['index.ts', 'child.component.tsx'],
+      []
+    );
+    seedDirCache('src/_components', [], ['alpha', 'beta']);
+    seedDirCache(
+      'src/_components/alpha',
+      ['index.ts', 'alpha.component.tsx'],
+      []
+    );
+    seedDirCache(
+      'src/_components/beta',
+      ['index.ts', 'beta.component.tsx'],
+      []
+    );
   });
 
   ruleTester.run('no-direct-fragment-import', noDirectFragmentImport, {
@@ -145,16 +182,80 @@ describe('no-direct-fragment-import', () => {
         filename: 'src/card/card.component.tsx',
         settings,
       },
+      {
+        code: "import { Button } from '#/_src@shared/_ui/_components/button/button.component';",
+        errors: [
+          {
+            message:
+              'Direct import of Fragment internal file "button.component.tsx" is forbidden. You must import through its Access Node (index file) in "src/_src@shared/_ui/_components/button".',
+          },
+        ],
+        filename: 'src/card/card.component.tsx',
+        settings,
+      },
+      {
+        code: "import { Alpha } from '../alpha/alpha.component';",
+        errors: [
+          {
+            message:
+              'Direct import of Fragment internal file "alpha.component.tsx" is forbidden. You must import through its Access Node (index file) in "src/_components/alpha".',
+          },
+        ],
+        filename: 'src/_components/beta/beta.component.tsx',
+        settings,
+      },
+      {
+        code: "export { Button } from '../button/button.component';",
+        errors: [
+          {
+            message:
+              'Direct import of Fragment internal file "button.component.tsx" is forbidden. You must import through its Access Node (index file) in "src/button".',
+          },
+        ],
+        filename: 'src/card/card.component.tsx',
+        settings,
+      },
+      {
+        code: "import type { Button } from '../button/button.component';",
+        errors: [
+          {
+            message:
+              'Direct import of Fragment internal file "button.component.tsx" is forbidden. You must import through its Access Node (index file) in "src/button".',
+          },
+        ],
+        filename: 'src/card/card.component.tsx',
+        settings,
+      },
     ],
     valid: [
+      // Import via directory (Access Node implicit)
       {
         code: "import { Button } from '../button';",
         filename: 'src/card/card.component.tsx',
         settings,
       },
+      // Internal import between sibling Fragment Nodes
       {
         code: "import { helper } from './button.hook';",
         filename: 'src/button/button.component.tsx',
+        settings,
+      },
+      // Import of Access Node via alias
+      {
+        code: "import { Button } from '#/_src@shared/_ui/_components/button';",
+        filename: 'src/card/card.component.tsx',
+        settings,
+      },
+      // Sub-Fragment imports parent Fragment Node
+      {
+        code: "import { ExampleType } from '../../example.type';",
+        filename: 'src/example/_components/child/child.component.tsx',
+        settings,
+      },
+      // Re-export from Access Node (directory)
+      {
+        code: "export * from '../button';",
+        filename: 'src/card/card.component.tsx',
         settings,
       },
     ],

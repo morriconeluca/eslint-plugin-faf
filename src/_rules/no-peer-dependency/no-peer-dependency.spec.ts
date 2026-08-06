@@ -11,7 +11,6 @@ import noPeerDependency from './no-peer-dependency.rule.js';
 // Bind Vitest globals to globalThis so RuleTester can find them
 Object.assign(globalThis, { afterAll, beforeAll, describe, it });
 
-// Set project root
 setProjectRoot(process.cwd());
 
 const settings = {
@@ -102,6 +101,24 @@ const settings = {
               {
                 paths: ['src/app'],
                 rootNodes: [['app.tsx']],
+                subRootFragments: [
+                  {
+                    paths: ['src/app/about'],
+                    rootNodes: [['about.route.ts']],
+                  },
+                  {
+                    paths: ['src/app/contact'],
+                    rootNodes: [['contact.route.ts']],
+                  },
+                  {
+                    paths: ['src/app/foo'],
+                    rootNodes: [['x.ts']],
+                  },
+                  {
+                    paths: ['src/app/bar'],
+                    rootNodes: [['y.ts']],
+                  },
+                ],
               },
             ],
           },
@@ -130,7 +147,13 @@ describe('no-peer-dependency', () => {
     clearDirCache();
     seedDirCache(
       'src/button',
-      ['index.ts', 'button.component.tsx', 'button.hook.ts', 'button.type.ts'],
+      [
+        'index.ts',
+        'button.component.tsx',
+        'button.hook.ts',
+        'button.type.ts',
+        'button.api.ts',
+      ],
       []
     );
     seedDirCache('src/_src@shared/_ui', [], ['_components', '_utils']);
@@ -146,12 +169,62 @@ describe('no-peer-dependency', () => {
       ['index.ts', 'format.util.ts'],
       []
     );
-    seedDirCache('src/app', [], ['about', 'contact', 'foo', 'bar']);
-    seedDirCache('src/app/about', ['index.ts', 'about.route.ts'], []);
-    seedDirCache('src/app/contact', ['index.ts', 'contact.route.ts'], []);
+    seedDirCache('src/app', ['app.tsx'], ['about', 'contact', 'foo', 'bar']);
+    seedDirCache('src/app/about', ['about.route.ts'], []);
+    seedDirCache('src/app/contact', ['contact.route.ts'], []);
     seedDirCache('src/app/foo', ['x.ts'], []);
     seedDirCache('src/app/bar', ['y.ts'], []);
-    seedDirCache('src/configs', ['vitest-setup.ts'], []);
+    seedDirCache('src/configs', ['vitest-setup.ts', 'jest-setup.ts'], []);
+    seedDirCache(
+      'src',
+      ['main.tsx', 'main.css'],
+      ['_src@shared', 'app', 'button', 'configs']
+    );
+    seedDirCache('src/_src@shared', [], ['_ui']);
+    seedDirCache('src/_src@shared/_ui', [], ['_components']);
+    seedDirCache(
+      'src/_src@shared/_ui/_components',
+      [],
+      ['_atoms', '_molecules']
+    );
+    seedDirCache('src/_src@shared/_ui/_components/_atoms', [], ['icon']);
+    seedDirCache(
+      'src/_src@shared/_ui/_components/_atoms/icon',
+      ['index.ts', 'icon.component.tsx'],
+      []
+    );
+    seedDirCache('src/_src@shared/_ui/_components/_molecules', [], ['avatar']);
+    seedDirCache(
+      'src/_src@shared/_ui/_components/_molecules/avatar',
+      ['index.ts', 'avatar.component.tsx'],
+      []
+    );
+    seedDirCache('src/_src@shared/_ui/_constants', ['color.constant.ts'], []);
+    seedDirCache('src/_src@shared/_ui/_pages', [], ['home']);
+    seedDirCache(
+      'src/_src@shared/_ui/_pages/home',
+      ['index.ts', 'home.page.tsx'],
+      []
+    );
+    seedDirCache(
+      'src/button',
+      [
+        'index.ts',
+        'button.component.tsx',
+        'button.hook.ts',
+        'button.type.ts',
+        'button.api.ts',
+        'button.spec.tsx',
+        'button.story.tsx',
+      ],
+      ['_components']
+    );
+    seedDirCache('src/button/_components', [], ['btn-icon']);
+    seedDirCache(
+      'src/button/_components/btn-icon',
+      ['index.ts', 'btn-icon.component.tsx'],
+      []
+    );
   });
 
   ruleTester.run('no-peer-dependency', noPeerDependency, {
@@ -165,6 +238,17 @@ describe('no-peer-dependency', () => {
           },
         ],
         filename: 'src/button/button.hook.ts',
+        settings,
+      },
+      {
+        code: "import { Component } from './button.component';",
+        errors: [
+          {
+            message:
+              'Sibling import violation: "button.api.ts" (role "api", level 12) cannot import from "button.component.tsx" (role "component", level 12). Imports must flow from lower to higher levels.',
+          },
+        ],
+        filename: 'src/button/button.api.ts',
         settings,
       },
       {
@@ -190,7 +274,7 @@ describe('no-peer-dependency', () => {
         settings,
       },
       {
-        code: "import { Contact } from '../contact';",
+        code: "import { Contact } from '../contact/contact.route';",
         errors: [
           {
             message:
@@ -233,16 +317,101 @@ describe('no-peer-dependency', () => {
         filename: 'src/configs/vitest-setup.ts',
         settings,
       },
+      {
+        code: "import { main } from '../main';",
+        errors: [
+          {
+            message:
+              'Root Node import violation: "app.tsx" cannot import from "main.tsx" under Root Fragment "src".',
+          },
+        ],
+        filename: 'src/app/app.tsx',
+        settings,
+      },
+      {
+        code: "import { Avatar } from '../../_molecules/avatar';",
+        errors: [
+          {
+            message:
+              'Horizontal hierarchy violation: "_atoms" cannot import from "_molecules" under parent "src/_src@shared/_ui/_components".',
+          },
+        ],
+        filename:
+          'src/_src@shared/_ui/_components/_atoms/icon/icon.component.tsx',
+        settings,
+      },
+      {
+        code: "import { Home } from '../_pages/home';",
+        errors: [
+          {
+            message:
+              'Horizontal hierarchy violation: "_constants" cannot import from "_pages" under parent "src/_src@shared/_ui".',
+          },
+        ],
+        filename: 'src/_src@shared/_ui/_constants/color.constant.ts',
+        settings,
+      },
     ],
     valid: [
+      // Higher role imports lower role
       {
         code: "import { useSomething } from './button.hook';",
         filename: 'src/button/button.component.tsx',
         settings,
       },
+      // Import from lower Category in horizontal hierarchy
       {
         code: "import { format } from '../../_utils/format';",
         filename: 'src/_src@shared/_ui/_components/button/button.component.tsx',
+        settings,
+      },
+      // Import from Fractal Branch (peer exception)
+      {
+        code: "import { something } from './_src@shared/_ui/_components/button';",
+        filename: 'src/main.tsx',
+        settings,
+      },
+      // Root Node import in valid order (main.tsx at level 1 imports main.css at level 0)
+      {
+        code: "import './main.css';",
+        filename: 'src/main.tsx',
+        settings,
+      },
+      // Sub-tree of Fragment imports from Fragment root
+      {
+        code: "import { ButtonType } from '../../button.type';",
+        filename: 'src/button/_components/btn-icon/btn-icon.component.tsx',
+        settings,
+      },
+      // Global horizontal hierarchy — molecules import from atoms
+      {
+        code: "import { Icon } from '../../_atoms/icon';",
+        filename:
+          'src/_src@shared/_ui/_components/_molecules/avatar/avatar.component.tsx',
+        settings,
+      },
+      // Local horizontal hierarchy — _pages imports from _components
+      {
+        code: "import { Button } from '../../_components/button';",
+        filename: 'src/_src@shared/_ui/_pages/home/home.page.tsx',
+        settings,
+      },
+      // Foreign Domain to Foreign Domain (both excluded — no check)
+      {
+        code: "import { jest } from './jest-setup';",
+        filename: 'src/configs/vitest-setup.ts',
+        settings,
+      },
+      // Boundary Element: .spec imports domain role (.component)
+      {
+        code: "import { Button } from './button.component';",
+        filename: 'src/button/button.spec.tsx',
+        settings,
+      },
+      // Boundary Element: .story imports domain role (.component)
+      {
+        code: "import { Button } from './button.component';",
+        filename: 'src/button/button.story.tsx',
         settings,
       },
     ],

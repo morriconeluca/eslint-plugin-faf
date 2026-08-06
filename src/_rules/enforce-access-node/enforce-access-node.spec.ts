@@ -11,7 +11,6 @@ import enforceAccessNode from './enforce-access-node.rule.js';
 // Bind Vitest globals to globalThis so RuleTester can find them
 Object.assign(globalThis, { afterAll, beforeAll, describe, it });
 
-// Set project root
 setProjectRoot(process.cwd());
 
 const settings = {
@@ -194,11 +193,24 @@ describe('enforce-access-node', () => {
       },
     ],
     valid: [
+      // Re-export of own Fragment Nodes
       {
         code: `
           export * from './button.component';
           export * from './button.hook';
         `,
+        filename: 'src/button/index.ts',
+        settings,
+      },
+      // Type-only re-export
+      {
+        code: "export type * from './button.hook';",
+        filename: 'src/button/index.ts',
+        settings,
+      },
+      // Self-import (./index) is filtered as special case
+      {
+        code: "import { X } from './index';",
         filename: 'src/button/index.ts',
         settings,
       },

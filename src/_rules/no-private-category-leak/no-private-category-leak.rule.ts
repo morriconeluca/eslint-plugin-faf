@@ -6,8 +6,10 @@ import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
 
 import { resolveImportPath } from '#_rules@shared/_utils/_aggregates/resolve-import-path/index.js';
 import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
+import { getFractalBranchOwner } from '#_rules@shared/_utils/_primitives/get-fractal-branch-owner/index.js';
+import { getImmediateSubDomain } from '#_rules@shared/_utils/_primitives/get-immediate-sub-domain/index.js';
 import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
-import { getPrivateCategoryOwner } from '#_rules@shared/_utils/_systems/get-private-category-owner/index.js';
+import { getPrivateCategoryInfo } from '#_rules@shared/_utils/_systems/get-private-category-info/index.js';
 
 /**
  * @fileoverview Rule: faf/no-private-category-leak
@@ -50,13 +52,45 @@ const rule: Rule.RuleModule = {
       }
 
       const importedDir = path.dirname(resolvedRelPath);
-      const owner = getPrivateCategoryOwner(importedDir, config!);
+      const info = getPrivateCategoryInfo(importedDir, config!);
 
-      if (owner) {
-        // The importing file must be inside the owner's sub-tree
-        const isDescendant =
-          relPath === owner || relPath.startsWith(owner + '/');
-        if (!isDescendant) {
+      if (info) {
+        const { owner, privateCategoryPath } = info;
+        // Allowed if:
+        // 1. Importer is a direct child of the owner
+        // 2. OR Importer and imported resource share the same immediate sub-domain/sub-fragment under the Private Category
+        // 3. OR the imported resource is inside a Fractal Branch and the importer is a descendant of that branch's owner
+        const isDirectChild = path.dirname(relPath) === owner;
+
+        const importerSubDomain = getImmediateSubDomain(
+          relPath,
+          privateCategoryPath
+        );
+        const importedSubDomain = getImmediateSubDomain(
+          resolvedRelPath,
+          privateCategoryPath
+        );
+        const isInsideSameSubDomain =
+          importerSubDomain !== '' && importerSubDomain === importedSubDomain;
+
+        let isFractalBranchAllowed = false;
+        const fbOwner = getFractalBranchOwner(importedDir);
+        if (fbOwner) {
+          // The Fractal Branch must be nested inside (or be) the Private Category itself
+          const isFbInsidePrivateCategory =
+            fbOwner === privateCategoryPath ||
+            fbOwner.startsWith(privateCategoryPath + '/');
+          if (isFbInsidePrivateCategory) {
+            isFractalBranchAllowed =
+              relPath === fbOwner || relPath.startsWith(fbOwner + '/');
+          }
+        }
+
+        if (
+          !isDirectChild &&
+          !isInsideSameSubDomain &&
+          !isFractalBranchAllowed
+        ) {
           context.report({
             message: `Importing from Private Category is forbidden. The imported resource is private to "${owner}".`,
             node,

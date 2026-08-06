@@ -5,17 +5,12 @@ import type { TTreeConfig } from '../../../_types/faf.type.js';
 import { classifyFolder } from '../../_aggregates/classify-folder/index.js';
 
 /**
- * Identifies the owner Fragment/Root Fragment path if the given path is situated inside a Private Category.
- * Traverses up the directory structure.
- *
- * @param relPath - Path to inspect, relative to project root.
- * @param config - Tree configuration.
- * @returns The path of the owning Fragment or null if not inside a Private Category.
+ * Returns the owner and private category path of the private category if the given path is inside one, or null.
  */
-export function getPrivateCategoryOwner(
+export function getPrivateCategoryInfo(
   relPath: string,
   config: TTreeConfig
-): null | string {
+): null | { owner: string; privateCategoryPath: string } {
   let current = relPath;
   while (current && current !== '.' && current !== '/') {
     const parent = path.dirname(current).replace(/\\/g, '/');
@@ -30,7 +25,7 @@ export function getPrivateCategoryOwner(
       currentType === 'category' &&
       (parentType === 'fragment' || parentType === 'root-fragment')
     ) {
-      return parent;
+      return { owner: parent, privateCategoryPath: current };
     }
 
     current = parent;

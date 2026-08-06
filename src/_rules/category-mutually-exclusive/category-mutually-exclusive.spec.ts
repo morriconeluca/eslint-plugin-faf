@@ -11,7 +11,6 @@ import categoryMutuallyExclusive from './category-mutually-exclusive.rule.js';
 // Bind Vitest globals to globalThis so RuleTester can find them
 Object.assign(globalThis, { afterAll, beforeAll, describe, it });
 
-// Set project root
 setProjectRoot(process.cwd());
 
 const settings = {
@@ -130,13 +129,29 @@ describe('category-mutually-exclusive', () => {
     clearDirCache();
     seedDirCache('src/_components', [], ['button', 'card', '_atoms-bad']);
     seedDirCache('src/_components/_atoms-bad', ['icon.component.tsx'], []);
-    seedDirCache('src/_components/button', ['index.ts'], []);
-    seedDirCache('src/_components/card', ['index.ts'], []);
+    seedDirCache(
+      'src/_components/button',
+      ['index.ts', 'button.component.tsx'],
+      []
+    );
+    seedDirCache(
+      'src/_components/card',
+      ['index.ts', 'card.component.tsx'],
+      []
+    );
     seedDirCache('src/_types', ['user.type.ts', 'api.type.ts'], []);
     seedDirCache('src/_mixed', ['direct-file.type.ts'], ['sub-fragment']);
-    seedDirCache('src/_mixed/sub-fragment', ['index.ts'], []);
+    seedDirCache(
+      'src/_mixed/sub-fragment',
+      ['index.ts', 'sub-fragment.type.ts'],
+      []
+    );
     seedDirCache('src/_utils', ['helper.util.ts'], []);
     seedDirCache('src/_styles', ['theme.css'], []);
+    seedDirCache('src/_images', ['logo.png', 'audio.mp3'], []);
+    seedDirCache('src/_hooks', [], ['use-auth', 'use-query']);
+    seedDirCache('src/_hooks/use-auth', ['index.ts', 'use-auth.hook.ts'], []);
+    seedDirCache('src/_hooks/use-query', ['index.ts', 'use-query.hook.ts'], []);
   });
 
   ruleTester.run('category-mutually-exclusive', categoryMutuallyExclusive, {
@@ -176,19 +191,40 @@ describe('category-mutually-exclusive', () => {
       },
     ],
     valid: [
+      // Single file in Category with allowSingleFiles
       {
         code: 'export type User = { name: string };',
         filename: 'src/_types/user.type.ts',
         settings,
       },
+      // Access Node inside Fragment directory
       {
         code: 'export default {}',
         filename: 'src/_components/button/index.ts',
         settings,
       },
+      // Asset with allowed extension in Category
       {
         code: '/* CSS */',
         filename: 'src/_styles/theme.css',
+        settings,
+      },
+      // Allowed asset extension (.png in _images)
+      {
+        code: '',
+        filename: 'src/_images/logo.png',
+        settings,
+      },
+      // Disallowed extension — not reported by this rule (naming-conventions handles it)
+      {
+        code: 'export default {}',
+        filename: 'src/_images/audio.mp3',
+        settings,
+      },
+      // Category with only Fragment directories
+      {
+        code: 'export default {}',
+        filename: 'src/_hooks/use-auth/index.ts',
         settings,
       },
     ],

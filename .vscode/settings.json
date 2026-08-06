@@ -1,5 +1,7 @@
 {
-  "editor.codeActionsOnSave": { "source.fixAll": "explicit" },
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
   "typescript.preferences.importModuleSpecifier": "shortest",
   "javascript.preferences.importModuleSpecifier": "shortest",
   "explorer.compactFolders": false,
@@ -12,9 +14,17 @@
   "workbench.colorCustomizations": {
     "activityBar.background": "#0F3046",
     "titleBar.activeBackground": "#164462",
-    "titleBar.activeForeground": "#F6FAFD",
+    "titleBar.activeForeground": "#FFFFFF",
     "titleBar.inactiveBackground": "#0F3046",
-    "titleBar.inactiveForeground": "#F6FAFD"
+    "titleBar.inactiveForeground": "#FFFFFF",
+    "statusBar.background": "#0F3046",
+    "statusBar.debuggingBackground": "#0F3046",
+    "statusBar.noFolderBackground": "#0F3046",
+    "activityBar.foreground": "#FFFFFF",
+    "activityBar.inactiveForeground": "#FFFFFF",
+    "statusBar.foreground": "#FFFFFF",
+    "statusBar.debuggingForeground": "#FFFFFF",
+    "statusBar.noFolderForeground": "#FFFFFF"
   },
-  "windowColors.🌈 BaseColor": "#2980b9"
+  "windowColors.baseColor": "#2980b9"
 }

@@ -11,7 +11,6 @@ import namingConventions from './naming-conventions.rule.js';
 // Bind Vitest globals to globalThis so RuleTester can find them
 Object.assign(globalThis, { afterAll, beforeAll, describe, it });
 
-// Set project root
 setProjectRoot(process.cwd());
 
 const settings = {
@@ -193,7 +192,6 @@ describe('naming-conventions', () => {
     seedDirCache('src/_button', ['index.ts', '_button.component.tsx'], []);
     seedDirCache('src/_styles', ['theme.css', 'theme-bad.ts'], []);
     seedDirCache('src/_types', ['user.type.ts', 'user-bad.util.ts'], []);
-    // Seeds for parent-child relationship constraints
     seedDirCache(
       'src/_components/button/sub-frag',
       ['index.ts', 'sub-frag.component.tsx'],
@@ -217,6 +215,24 @@ describe('naming-conventions', () => {
     );
     seedDirCache('src/_src@shared/_src@shared@shared', ['some.type.ts'], []);
     seedDirCache('src/_components/my-root', ['page.tsx'], []);
+    seedDirCache(
+      'src/widget',
+      ['index.ts', 'widget.component.tsx', 'helpers.ts'],
+      []
+    );
+    seedDirCache('src/_hooks', [], ['_wrong@shared']);
+    seedDirCache('src/_hooks/_wrong@shared', [], ['_types']);
+    seedDirCache('src/_hooks/_wrong@shared/_types', ['helper.type.ts'], []);
+    seedDirCache(
+      'src/dialog',
+      [
+        'index.ts',
+        'dialog.component.tsx',
+        'dialog.spec.tsx',
+        'dialog.story.tsx',
+      ],
+      []
+    );
   });
 
   ruleTester.run('naming-conventions', namingConventions, {
@@ -502,61 +518,110 @@ describe('naming-conventions', () => {
           },
         },
       },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Fragment Node "helpers.ts" must share the parent Fragment name: "widget.<role>.ts".',
+          },
+          {
+            message:
+              'File "helpers.ts" inside Fragment "widget" must have an explicit role suffix (e.g. "widget.style.ts").',
+          },
+        ],
+        filename: 'src/widget/helpers.ts',
+        settings,
+      },
+      {
+        code: 'export type Helper = string;',
+        errors: [
+          {
+            message:
+              'Fractal Branch name "_wrong@shared" must match its parent scope name: "_hooks@shared".',
+          },
+        ],
+        filename: 'src/_hooks/_wrong@shared/_types/helper.type.ts',
+        settings,
+      },
     ],
     valid: [
+      // Fragment Node shares parent Fragment name
       {
         code: 'export const Button = () => null;',
         filename: 'src/button/button.component.tsx',
         settings,
       },
+      // Access Node inside Fragment
       {
         code: 'export default {}',
         filename: 'src/button/index.ts',
         settings,
       },
+      // Root Node in Root Fragment
       {
         code: 'export const main = 1;',
         filename: 'src/main.tsx',
         settings,
       },
+      // Route terminal Fragment with correct Master Node role
       {
         code: 'export const getProfile = () => null;',
         filename: 'src/_apis/_me/get-profile/get-profile.api.ts',
         settings,
       },
+      // Dynamic route parameter in kebab-case
       {
         code: 'export const getLead = () => null;',
         filename: 'src/_apis/_[lead-id]/get-lead/get-lead.api.ts',
         settings,
       },
+      // Fractal Branch type file in shared Category
       {
         code: 'export type Mutate = string;',
         filename: 'src/_apis/_apis@shared/_types/mutate.type.ts',
         settings,
       },
+      // Fragment Node with explicit role inside Category
       {
         code: 'export type MyType = string;',
         filename: 'src/_components/button/button.type.ts',
         settings,
       },
+      // Fragment inside Sub-Category
       {
         code: 'export const Icon = () => null;',
         filename: 'src/_components/_atoms/icon/icon.component.tsx',
         settings,
       },
+      // Foreign Domain file (excluded path)
       {
         code: 'export default {}',
         filename: 'src/configs/vitest-setup.ts',
         settings,
       },
+      // Asset with allowed extension in Category
       {
         code: '/* styles block */',
         filename: 'src/_styles/theme.css',
         settings,
       },
+      // Single file in Category with allowSingleFiles
       {
         code: 'export type User = { id: string };',
         filename: 'src/_types/user.type.ts',
+        settings,
+      },
+      // .spec.tsx as valid Fragment Node
+      {
+        code: 'export const test = 1;',
+        filename: 'src/dialog/dialog.spec.tsx',
+        settings,
+      },
+      // .story.tsx as valid Fragment Node
+      {
+        code: 'export const story = 1;',
+        filename: 'src/dialog/dialog.story.tsx',
         settings,
       },
     ],

@@ -11,7 +11,6 @@ import noPrivateCategoryLeak from './no-private-category-leak.rule.js';
 // Bind Vitest globals to globalThis so RuleTester can find them
 Object.assign(globalThis, { afterAll, beforeAll, describe, it });
 
-// Set project root
 setProjectRoot(process.cwd());
 
 const settings = {
@@ -19,6 +18,7 @@ const settings = {
     aliases: {
       '#/_apis@shared': 'src/_src@shared/_network/_apis/_apis@shared',
       '#/_app@shared': 'src/app/_app@shared',
+      '#/_components@shared': 'src/example/_components/_components@shared',
       '#/_src@shared': 'src/_src@shared',
     },
     trees: [
@@ -131,15 +131,39 @@ describe('no-private-category-leak', () => {
     seedDirCache(
       'src/example',
       ['index.ts', 'example.component.tsx'],
-      ['_components']
+      ['_components', '_types']
     );
-    seedDirCache('src/example/_components', [], ['private-child']);
+    seedDirCache('src/example/_types', ['example.type.ts'], []);
+    seedDirCache(
+      'src/example/_components',
+      [],
+      ['private-child', 'another-child', '_components@shared']
+    );
+    seedDirCache('src/example/_components/_components@shared', [], ['_types']);
+    seedDirCache(
+      'src/example/_components/_components@shared/_types',
+      ['shared-helper.type.ts'],
+      []
+    );
     seedDirCache(
       'src/example/_components/private-child',
-      ['index.ts', 'private-child.component.tsx'],
+      ['index.ts', 'private-child.component.tsx', 'private-child.type.ts'],
+      ['_utils']
+    );
+    seedDirCache(
+      'src/example/_components/private-child/_utils',
+      ['sub-helper.util.ts'],
+      []
+    );
+    seedDirCache(
+      'src/example/_components/another-child',
+      ['index.ts', 'another-child.component.tsx'],
       []
     );
     seedDirCache('src/other', ['index.ts', 'other.component.tsx'], []);
+    seedDirCache('src', ['main.tsx'], ['_types', 'app']);
+    seedDirCache('src/_types', ['global.type.ts'], []);
+    seedDirCache('src/app', ['app.tsx'], []);
   });
 
   ruleTester.run('no-private-category-leak', noPrivateCategoryLeak, {
@@ -155,11 +179,78 @@ describe('no-private-category-leak', () => {
         filename: 'src/other/other.component.tsx',
         settings,
       },
+      {
+        code: "import { Another } from '../another-child';",
+        errors: [
+          {
+            message:
+              'Importing from Private Category is forbidden. The imported resource is private to "src/example".',
+          },
+        ],
+        filename:
+          'src/example/_components/private-child/private-child.component.tsx',
+        settings,
+      },
+      {
+        code: "import { Util } from '../../_types/example.type';",
+        errors: [
+          {
+            message:
+              'Importing from Private Category is forbidden. The imported resource is private to "src/example".',
+          },
+        ],
+        filename:
+          'src/example/_components/private-child/private-child.component.tsx',
+        settings,
+      },
+      {
+        code: "import { Helper } from '#/_components@shared/_types/shared-helper.type';",
+        errors: [
+          {
+            message:
+              'Importing from Private Category is forbidden. The imported resource is private to "src/example".',
+          },
+        ],
+        filename: 'src/other/other.component.tsx',
+        settings,
+      },
+      {
+        code: "import { SubHelper } from './_components/private-child/_utils/sub-helper.util';",
+        errors: [
+          {
+            message:
+              'Importing from Private Category is forbidden. The imported resource is private to "src/example/_components/private-child".',
+          },
+        ],
+        filename: 'src/example/example.component.tsx',
+        settings,
+      },
     ],
     valid: [
+      // Direct child of owner imports from Private Category
       {
         code: "import { Child } from './_components/private-child';",
         filename: 'src/example/example.component.tsx',
+        settings,
+      },
+      // Internal import within same Sub-Fragment
+      {
+        code: "import { SomeType } from './private-child.type';",
+        filename:
+          'src/example/_components/private-child/private-child.component.tsx',
+        settings,
+      },
+      // Fractal Branch inside Private Category
+      {
+        code: "import { Helper } from '#/_components@shared/_types/shared-helper.type';",
+        filename:
+          'src/example/_components/private-child/private-child.component.tsx',
+        settings,
+      },
+      // Root Node importing from its own Private Category
+      {
+        code: "import { GlobalType } from './_types/global.type';",
+        filename: 'src/main.tsx',
         settings,
       },
     ],

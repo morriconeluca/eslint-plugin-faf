@@ -11,7 +11,6 @@ import noFractalBranchLeak from './no-fractal-branch-leak.rule.js';
 // Bind Vitest globals to globalThis so RuleTester can find them
 Object.assign(globalThis, { afterAll, beforeAll, describe, it });
 
-// Set project root
 setProjectRoot(process.cwd());
 
 const settings = {
@@ -128,7 +127,7 @@ const ruleTester = new RuleTester({
 describe('no-fractal-branch-leak', () => {
   beforeAll(() => {
     clearDirCache();
-    seedDirCache('src/app', ['index.ts', 'app.tsx'], ['_app@shared']);
+    seedDirCache('src/app', ['app.tsx'], ['_app@shared']);
     seedDirCache('src/app/_app@shared', [], ['_hooks', '_ui']);
     seedDirCache('src/app/_app@shared/_hooks', [], ['use-custom']);
     seedDirCache(
@@ -145,7 +144,17 @@ describe('no-fractal-branch-leak', () => {
     seedDirCache(
       'src/app/_app@shared/_ui/_components/private-fragment',
       ['index.ts', 'private-fragment.component.tsx'],
-      ['_components']
+      ['_components', '_hooks', '_private-fragment@shared']
+    );
+    seedDirCache(
+      'src/app/_app@shared/_ui/_components/private-fragment/_private-fragment@shared',
+      [],
+      ['_utils']
+    );
+    seedDirCache(
+      'src/app/_app@shared/_ui/_components/private-fragment/_private-fragment@shared/_utils',
+      ['local-helper.util.ts'],
+      []
     );
     seedDirCache(
       'src/app/_app@shared/_ui/_components/private-fragment/_components',
@@ -157,7 +166,24 @@ describe('no-fractal-branch-leak', () => {
       ['index.ts', 'child-fragment.component.tsx'],
       []
     );
-    seedDirCache('src', ['main.tsx'], ['app']);
+    seedDirCache('src', ['main.tsx'], ['app', '_src@shared']);
+    seedDirCache('src/_src@shared', [], ['_hooks']);
+    seedDirCache('src/_src@shared/_hooks', [], ['use-global']);
+    seedDirCache(
+      'src/_src@shared/_hooks/use-global',
+      ['index.ts', 'use-global.hook.ts'],
+      []
+    );
+    seedDirCache(
+      'src/app/_app@shared/_ui/_components/private-fragment/_hooks',
+      [],
+      ['use-pf']
+    );
+    seedDirCache(
+      'src/app/_app@shared/_ui/_components/private-fragment/_hooks/use-pf',
+      ['index.ts', 'use-pf.hook.ts'],
+      []
+    );
   });
 
   ruleTester.run('no-fractal-branch-leak', noFractalBranchLeak, {
@@ -195,11 +221,36 @@ describe('no-fractal-branch-leak', () => {
         filename: 'src/app/app.tsx',
         settings,
       },
+      {
+        code: "import { Helper } from '../../_ui/_components/private-fragment/_private-fragment@shared/_utils/local-helper.util';",
+        errors: [
+          {
+            message:
+              'Importing from Fractal Branch is forbidden. The imported resource is private to "src/app/_app@shared/_ui/_components/private-fragment" and its descendants.',
+          },
+        ],
+        filename: 'src/app/_app@shared/_hooks/use-custom/use-custom.hook.ts',
+        settings,
+      },
     ],
     valid: [
+      // Descendant of scope imports from FB
       {
         code: "import { useCustom } from './_app@shared/_hooks/use-custom';",
         filename: 'src/app/app.tsx',
+        settings,
+      },
+      // Deeply nested sub-tree accesses parent scope's FB
+      {
+        code: "import { useCustom } from '../../../../_hooks/use-custom';",
+        filename:
+          'src/app/_app@shared/_ui/_components/private-fragment/private-fragment.component.tsx',
+        settings,
+      },
+      // File inside _app@shared accesses _src@shared (both under src/)
+      {
+        code: "import { useGlobal } from '#/_src@shared/_hooks/use-global';",
+        filename: 'src/app/_app@shared/_hooks/use-custom/use-custom.hook.ts',
         settings,
       },
     ],
