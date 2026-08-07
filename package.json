@@ -2,6 +2,10 @@
   "name": "@morriconeluca/eslint-plugin-faf",
   "version": "0.2.0",
   "description": "An ESLint plugin for FAF projects.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/morriconeluca/eslint-plugin-faf.git"
+  },
   "main": "./dist/main.cjs",
   "module": "./dist/main.js",
   "types": "./dist/main.d.ts",
