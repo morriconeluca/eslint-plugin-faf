@@ -152,6 +152,8 @@ describe('category-mutually-exclusive', () => {
     seedDirCache('src/_hooks', [], ['use-auth', 'use-query']);
     seedDirCache('src/_hooks/use-auth', ['index.ts', 'use-auth.hook.ts'], []);
     seedDirCache('src/_hooks/use-query', ['index.ts', 'use-query.hook.ts'], []);
+    seedDirCache('src/_schemas', ['user.schema.ts'], ['_shared']);
+    seedDirCache('src/_schemas/_shared', ['shared.schema.ts'], []);
   });
 
   ruleTester.run('category-mutually-exclusive', categoryMutuallyExclusive, {
@@ -225,6 +227,13 @@ describe('category-mutually-exclusive', () => {
       {
         code: 'export default {}',
         filename: 'src/_hooks/use-auth/index.ts',
+        settings,
+      },
+      // Category with allowSingleFiles containing single files alongside a Sub-Category
+      // (prefixed `_`): Sub-Categories are excluded from the mutual-exclusivity check
+      {
+        code: 'export const userSchema = {};',
+        filename: 'src/_schemas/user.schema.ts',
         settings,
       },
     ],

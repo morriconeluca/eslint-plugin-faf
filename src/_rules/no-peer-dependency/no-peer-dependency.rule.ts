@@ -209,8 +209,12 @@ const rule: Rule.RuleModule = {
         return;
       }
 
-      // Exception: Descendants of a Fragment importing from the Fragment's root
+      // A descendant reaching for the Fragment root has no privileged access to it
       if (subB === '' && classifyFolder(lca, config!) === 'fragment') {
+        context.report({
+          message: `Peer separation violation: "${subA}" cannot import directly from the root of Fragment "${lca}". A node nested inside a Private Category or Fractal Branch has no privileged access to its owning Fragment's other direct children; promote the shared resource to a Fractal Branch if the sharing need is genuine.`,
+          node,
+        });
         return;
       }
 
@@ -229,6 +233,22 @@ const rule: Rule.RuleModule = {
           }
           return;
         }
+      }
+
+      // Root Nodes are exempt from the Role naming convention, so relationships involving them
+      // (including nested or sibling Root Fragments) can never fall back to the Role scale: they
+      // must always be explicitly authorized by the architect via "rootNodes" at the common ancestor.
+      const isSubARootFragment =
+        classifyFolder(path.posix.join(lca, subA), config!) === 'root-fragment';
+      const isSubBRootFragment =
+        classifyFolder(path.posix.join(lca, subB), config!) === 'root-fragment';
+
+      if (isSubARootFragment || isSubBRootFragment) {
+        context.report({
+          message: `Root Node import violation: "${relPath}" cannot import from "${resolvedRelPath}" because no "rootNodes" relationship is configured under Root Fragment "${lca}". Relationships between Root Nodes must always be explicitly authorized by the architect.`,
+          node,
+        });
+        return;
       }
 
       // Determine if there is a defined horizontal hierarchy at LCA and whether the import is allowed

@@ -42,7 +42,6 @@ const rule: Rule.RuleModule = {
     const relDir = path.dirname(relPath);
     const parentType = classifyFolder(relDir, config);
 
-    // This check runs once per directory. To avoid reporting multiple times, we only run it on the Access Node or the first file processed in the directory.
     if (parentType !== 'category') {
       return {};
     }
@@ -53,7 +52,6 @@ const rule: Rule.RuleModule = {
       Program(node) {
         const contents = readDirCached(relDir);
 
-        // Filter contents to ignore doc files, config files, and Fractal Branches
         const activeFiles = contents.files.filter(
           (f) => f !== 'README.md' && f !== 'package.json' && !f.startsWith('.')
         );

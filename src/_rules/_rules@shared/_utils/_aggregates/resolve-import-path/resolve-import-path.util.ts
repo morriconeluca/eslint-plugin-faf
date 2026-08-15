@@ -85,6 +85,21 @@ function _resolveImportPath(
 }
 
 /**
+ * Bare script extensions (i.e. without any additional Role/suffix segment) considered
+ * when disambiguating an extension-less import against multiple same-prefix candidates.
+ */
+const SCRIPT_EXTENSIONS = new Set([
+  'cjs',
+  'cts',
+  'js',
+  'jsx',
+  'mjs',
+  'mts',
+  'ts',
+  'tsx',
+]);
+
+/**
  * Helper to check if a resolved relative path points to a directory with an index file,
  * or a file missing its extension, and resolves it accordingly.
  */
@@ -105,9 +120,17 @@ function finalizeResolvedPath(relResolved: string): string {
   const parentContents = readDirCached(resolvedDir);
   const exactMatch = parentContents.files.find((f) => f === resolvedBase);
   if (!exactMatch) {
-    const matchWithExt = parentContents.files.find((f) =>
+    // Multiple files can share the same prefix (e.g. "foo.ts" and "foo.spec.ts" both
+    // start with "foo."). Prefer the candidate whose remainder is a bare script
+    // extension over one carrying an additional Role/suffix segment, so resolution
+    // doesn't depend on filesystem readdir order.
+    const candidates = parentContents.files.filter((f) =>
       f.startsWith(resolvedBase + '.')
     );
+    const matchWithExt =
+      candidates.find((f) =>
+        SCRIPT_EXTENSIONS.has(f.slice(resolvedBase.length + 1))
+      ) ?? candidates[0];
     if (matchWithExt) {
       return (resolvedDir === '.' ? '' : resolvedDir + '/') + matchWithExt;
     }

@@ -56,9 +56,8 @@ const rule: Rule.RuleModule = {
         const isAccessNode =
           importedFile === 'index.ts' || importedFile === 'index.js';
         if (!isAccessNode) {
-          // Check if the importing file is outside B's Fragment
-          const isInside =
-            relPath === importedDir || relPath.startsWith(importedDir + '/');
+          // Only a sibling Fragment Node (same directory) is exempt from the Access Node
+          const isInside = path.dirname(relPath) === importedDir;
           if (!isInside) {
             context.report({
               message: `Direct import of Fragment internal file "${importedFile}" is forbidden. You must import through its Access Node (index file) in "${importedDir}".`,

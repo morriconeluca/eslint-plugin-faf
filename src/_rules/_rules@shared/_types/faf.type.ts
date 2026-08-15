@@ -20,6 +20,17 @@ export type TFolderType =
   | 'root-fragment'
   | 'unknown';
 
+export type THttpMethod =
+  | 'connect'
+  | 'delete'
+  | 'get'
+  | 'head'
+  | 'options'
+  | 'patch'
+  | 'post'
+  | 'put'
+  | 'trace';
+
 export type TLocalHierarchyConfig = {
   hierarchies: string[][];
   paths: string[];
@@ -32,6 +43,7 @@ export type TRootFragmentConfig = {
 };
 
 export type TRouteHierarchyConfig = {
+  httpMethods?: THttpMethod[];
   paths: string[];
   role: string;
 };

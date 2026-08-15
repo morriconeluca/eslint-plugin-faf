@@ -30,7 +30,6 @@ const rule: Rule.RuleModule = {
     const relPath = toRelativePath(absPath);
     const fileName = path.basename(relPath);
 
-    // This rule only applies to Access Nodes (index.ts / index.js)
     if (fileName !== 'index.ts' && fileName !== 'index.js') {
       return {};
     }
@@ -54,9 +53,7 @@ const rule: Rule.RuleModule = {
     }
 
     function checkSource(node: Rule.Node, sourceVal: string) {
-      // Must be a relative import pointing to a file in the same directory (no subfolders, no parent folders)
-      // Allowed format: "./filename" or "./filename.js" etc.
-      // Must start with "./" and not contain any further "/"
+      // Matches only "./filename" with no further "/" (no subfolders, no parent folders)
       const isValidSibling = /^\.\/[^/]+$/.test(sourceVal);
       if (!isValidSibling) {
         context.report({
@@ -66,8 +63,6 @@ const rule: Rule.RuleModule = {
         return;
       }
 
-      // FAF Guideline G1: The Access Node (barrel file) must only re-export
-      // its sibling Fragment Nodes that reside within the same Fragment directory.
       const importedFilename = path.basename(sourceVal);
       if (
         importedFilename === 'index' ||

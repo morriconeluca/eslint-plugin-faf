@@ -144,7 +144,27 @@ describe('no-fractal-branch-leak', () => {
     seedDirCache(
       'src/app/_app@shared/_ui/_components/private-fragment',
       ['index.ts', 'private-fragment.component.tsx'],
-      ['_components', '_hooks', '_private-fragment@shared']
+      ['_components', '_hooks', '_private-fragment@shared', '_utils']
+    );
+    seedDirCache(
+      'src/app/_app@shared/_ui/_components/private-fragment/_utils',
+      [],
+      ['_utils@shared', 'other-detail']
+    );
+    seedDirCache(
+      'src/app/_app@shared/_ui/_components/private-fragment/_utils/_utils@shared',
+      [],
+      ['_utils']
+    );
+    seedDirCache(
+      'src/app/_app@shared/_ui/_components/private-fragment/_utils/_utils@shared/_utils',
+      ['nested-helper.util.ts'],
+      []
+    );
+    seedDirCache(
+      'src/app/_app@shared/_ui/_components/private-fragment/_utils/other-detail',
+      ['index.ts', 'other-detail.util.ts'],
+      []
     );
     seedDirCache(
       'src/app/_app@shared/_ui/_components/private-fragment/_private-fragment@shared',
@@ -232,12 +252,33 @@ describe('no-fractal-branch-leak', () => {
         filename: 'src/app/_app@shared/_hooks/use-custom/use-custom.hook.ts',
         settings,
       },
+      // Direct child of private-fragment (its Private Category's owner) reaching into a
+      // Fractal Branch nested inside that same Private Category
+      {
+        code: "import { NestedHelper } from './_utils/_utils@shared/_utils/nested-helper.util';",
+        errors: [
+          {
+            message:
+              'Importing from Fractal Branch is forbidden. The imported resource is private to "src/app/_app@shared/_ui/_components/private-fragment/_utils" and its descendants.',
+          },
+        ],
+        filename:
+          'src/app/_app@shared/_ui/_components/private-fragment/private-fragment.component.tsx',
+        settings,
+      },
     ],
     valid: [
       // Descendant of scope imports from FB
       {
         code: "import { useCustom } from './_app@shared/_hooks/use-custom';",
         filename: 'src/app/app.tsx',
+        settings,
+      },
+      // Sub-Fragment sibling of a Fractal Branch nested inside the same Private Category
+      {
+        code: "import { NestedHelper } from '../_utils@shared/_utils/nested-helper.util';",
+        filename:
+          'src/app/_app@shared/_ui/_components/private-fragment/_utils/other-detail/other-detail.util.ts',
         settings,
       },
       // Deeply nested sub-tree accesses parent scope's FB

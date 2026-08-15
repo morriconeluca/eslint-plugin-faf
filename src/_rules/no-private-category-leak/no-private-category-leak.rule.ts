@@ -56,10 +56,24 @@ const rule: Rule.RuleModule = {
 
       if (info) {
         const { owner, privateCategoryPath } = info;
-        // Allowed if:
-        // 1. Importer is a direct child of the owner
-        // 2. OR Importer and imported resource share the same immediate sub-domain/sub-fragment under the Private Category
-        // 3. OR the imported resource is inside a Fractal Branch and the importer is a descendant of that branch's owner
+
+        // A Fractal Branch nested inside the Private Category is a closer, more specific
+        // encapsulation boundary: its own Law is the sole authority on access to it, and
+        // the Private Category's direct-child/sub-domain grants do not apply (non-transitivity).
+        let isFractalBranchInPrivateCategory = false;
+        let isFractalBranchAllowed = false;
+        const fbOwner = getFractalBranchOwner(importedDir);
+        if (fbOwner) {
+          const isFbInsidePrivateCategory =
+            fbOwner === privateCategoryPath ||
+            fbOwner.startsWith(privateCategoryPath + '/');
+          if (isFbInsidePrivateCategory) {
+            isFractalBranchInPrivateCategory = true;
+            isFractalBranchAllowed =
+              relPath === fbOwner || relPath.startsWith(fbOwner + '/');
+          }
+        }
+
         const isDirectChild = path.dirname(relPath) === owner;
 
         const importerSubDomain = getImmediateSubDomain(
@@ -73,24 +87,11 @@ const rule: Rule.RuleModule = {
         const isInsideSameSubDomain =
           importerSubDomain !== '' && importerSubDomain === importedSubDomain;
 
-        let isFractalBranchAllowed = false;
-        const fbOwner = getFractalBranchOwner(importedDir);
-        if (fbOwner) {
-          // The Fractal Branch must be nested inside (or be) the Private Category itself
-          const isFbInsidePrivateCategory =
-            fbOwner === privateCategoryPath ||
-            fbOwner.startsWith(privateCategoryPath + '/');
-          if (isFbInsidePrivateCategory) {
-            isFractalBranchAllowed =
-              relPath === fbOwner || relPath.startsWith(fbOwner + '/');
-          }
-        }
+        const isAllowed = isFractalBranchInPrivateCategory
+          ? isFractalBranchAllowed
+          : isDirectChild || isInsideSameSubDomain;
 
-        if (
-          !isDirectChild &&
-          !isInsideSameSubDomain &&
-          !isFractalBranchAllowed
-        ) {
+        if (!isAllowed) {
           context.report({
             message: `Importing from Private Category is forbidden. The imported resource is private to "${owner}".`,
             node,

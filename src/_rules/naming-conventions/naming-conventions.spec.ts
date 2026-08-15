@@ -129,7 +129,13 @@ describe('naming-conventions', () => {
     clearDirCache();
     seedDirCache(
       'src/button',
-      ['index.ts', 'button.component.tsx', 'button.hook.ts'],
+      ['index.ts', 'button.component.tsx', 'button.hook.ts', 'button.css'],
+      []
+    );
+    seedDirCache('src/empty-frag', ['index.ts'], []);
+    seedDirCache(
+      'src/duo',
+      ['index.ts', 'duo.component.tsx', 'duo.component.jsx'],
       []
     );
     seedDirCache('src/_components', [], ['button', '_atoms']);
@@ -188,10 +194,16 @@ describe('naming-conventions', () => {
     );
     seedDirCache('src/_apis/_apis@shared', [], ['_types']);
     seedDirCache('src/_apis/_apis@shared/_types', ['mutate.type.ts'], []);
+    seedDirCache('src/_apis/fetch-todo', ['index.ts', 'fetch-todo.api.ts'], []);
+    seedDirCache('src/_apis/GET-todo', ['index.ts', 'GET-todo.api.ts'], []);
     seedDirCache('src/utils', ['helper.util.ts'], []);
     seedDirCache('src/_button', ['index.ts', '_button.component.tsx'], []);
     seedDirCache('src/_styles', ['theme.css', 'theme-bad.ts'], []);
-    seedDirCache('src/_types', ['user.type.ts', 'user-bad.util.ts'], []);
+    seedDirCache(
+      'src/_types',
+      ['user.type.ts', 'user-bad.util.ts', 'setting.util.type.ts'],
+      []
+    );
     seedDirCache(
       'src/_components/button/sub-frag',
       ['index.ts', 'sub-frag.component.tsx'],
@@ -233,6 +245,16 @@ describe('naming-conventions', () => {
       ],
       []
     );
+    seedDirCache(
+      'src/pagination',
+      [
+        'index.ts',
+        'pagination.component.tsx',
+        'pagination.util.spec.ts',
+        'pagination.util.type.spec.ts',
+      ],
+      []
+    );
   });
 
   ruleTester.run('naming-conventions', namingConventions, {
@@ -243,6 +265,10 @@ describe('naming-conventions', () => {
           {
             message:
               'Fragment Node "wrong.component.tsx" must share the parent Fragment name: "button.<role>.tsx".',
+          },
+          {
+            message:
+              'Fragment Node "wrong.component.tsx" shares Role "component" with sibling "button.component.tsx". Each Fragment Node must have a unique Role within its Fragment.',
           },
         ],
         filename: 'src/button/wrong.component.tsx',
@@ -544,6 +570,118 @@ describe('naming-conventions', () => {
         filename: 'src/_hooks/_wrong@shared/_types/helper.type.ts',
         settings,
       },
+      // Fragment Node composing two Roles (util + spec) in its name
+      {
+        code: 'export const getPagination = () => 1;',
+        errors: [
+          {
+            message:
+              'File "pagination.util.spec.ts" composes multiple Roles ("util", "spec") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.',
+          },
+        ],
+        filename: 'src/pagination/pagination.util.spec.ts',
+        settings,
+      },
+      // Category single file composing two Roles, even though the rightmost matches the expected Category role
+      {
+        code: 'export type Setting = string;',
+        errors: [
+          {
+            message:
+              'File "setting.util.type.ts" composes multiple Roles ("util", "type") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.',
+          },
+        ],
+        filename: 'src/_types/setting.util.type.ts',
+        settings,
+      },
+      // Fragment Node composing three Roles (util + type + spec) in its name
+      {
+        code: 'export const getPaginationDetails = () => 1;',
+        errors: [
+          {
+            message:
+              'File "pagination.util.type.spec.ts" composes multiple Roles ("util", "type", "spec") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.',
+          },
+        ],
+        filename: 'src/pagination/pagination.util.type.spec.ts',
+        settings,
+      },
+      // Real asset (no code extension) inside a Fragment must still carry an explicit role suffix
+      {
+        code: '/* styles */',
+        errors: [
+          {
+            message:
+              'File "button.css" inside Fragment "button" must have an explicit role suffix (e.g. "button.style.css").',
+          },
+        ],
+        filename: 'src/button/button.css',
+        settings,
+      },
+      // index.ts in a Root Fragment, not prescribed as a Root Node
+      {
+        code: 'export default {};',
+        errors: [
+          {
+            message:
+              'Access Nodes ("index.ts/index.js") are exclusive to Fragments. Found index file directly inside "app" (classified as root-fragment).',
+          },
+        ],
+        filename: 'src/app/index.ts',
+        settings,
+      },
+      // Fragment with an Access Node but no Fragment Node establishing its Role
+      {
+        code: 'export default {};',
+        errors: [
+          {
+            message:
+              'Fragment "empty-frag" has no Master Node. Every Fragment must contain at least one Fragment Node establishing its Role.',
+          },
+        ],
+        filename: 'src/empty-frag/index.ts',
+        settings,
+      },
+      // Two Fragment Nodes sharing the same Role in the same Fragment
+      {
+        code: 'export const Duo = () => null;',
+        errors: [
+          {
+            message:
+              'Fragment Node "duo.component.tsx" shares Role "component" with sibling "duo.component.jsx". Each Fragment Node must have a unique Role within its Fragment.',
+          },
+        ],
+        filename: 'src/duo/duo.component.tsx',
+        settings,
+      },
+      // Route terminal Fragment with an unrecognized HTTP method
+      {
+        code: 'export const fetchTodo = () => null;',
+        errors: [
+          {
+            message:
+              'Route terminal Fragment "fetch-todo" must follow the "<method>-<object>" pattern with a lowercase HTTP method (connect, delete, get, head, options, patch, post, put, trace).',
+          },
+        ],
+        filename: 'src/_apis/fetch-todo/fetch-todo.api.ts',
+        settings,
+      },
+      // Route terminal Fragment with an uppercase HTTP method
+      {
+        code: 'export const getTodo = () => null;',
+        errors: [
+          {
+            message:
+              'Folder name "GET-todo" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
+          },
+          {
+            message:
+              'Route terminal Fragment "GET-todo" must follow the "<method>-<object>" pattern with a lowercase HTTP method (connect, delete, get, head, options, patch, post, put, trace).',
+          },
+        ],
+        filename: 'src/_apis/GET-todo/GET-todo.api.ts',
+        settings,
+      },
     ],
     valid: [
       // Fragment Node shares parent Fragment name
@@ -623,6 +761,37 @@ describe('naming-conventions', () => {
         code: 'export const story = 1;',
         filename: 'src/dialog/dialog.story.tsx',
         settings,
+      },
+      // Single Role Fragment Node, sibling of a file composing two Roles
+      {
+        code: 'export const Pagination = () => null;',
+        filename: 'src/pagination/pagination.component.tsx',
+        settings,
+      },
+      // index.ts as a Root Node, explicitly prescribed by the architect
+      {
+        code: 'export default {};',
+        filename: 'src/widget-root/index.ts',
+        settings: {
+          faf: {
+            ...settings.faf,
+            trees: settings.faf.trees.map((tree, index) => {
+              if (index === 0) {
+                return {
+                  ...tree,
+                  rootFragments: [
+                    ...(tree.rootFragments || []),
+                    {
+                      paths: ['src/widget-root'],
+                      rootNodes: [['index.ts']],
+                    },
+                  ],
+                };
+              }
+              return tree;
+            }),
+          },
+        },
       },
     ],
   });

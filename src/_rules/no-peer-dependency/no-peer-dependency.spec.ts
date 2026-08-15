@@ -76,6 +76,14 @@ const settings = {
             ],
             paths: ['src/_src@shared/_ui'],
           },
+          {
+            hierarchies: [['_enums'], ['_dtos']],
+            paths: ['src/_src@shared/_ui/_schemas'],
+          },
+          {
+            hierarchies: [['_primitives'], ['_compounds']],
+            paths: ['src/_src@shared/_ui/_schemas/_dtos'],
+          },
         ],
         roles: [
           ['constant'],
@@ -100,15 +108,19 @@ const settings = {
             subRootFragments: [
               {
                 paths: ['src/app'],
-                rootNodes: [['app.tsx']],
+                rootNodes: [
+                  ['app.tsx'],
+                  ['cart/cart.tsx'],
+                  ['checkout/checkout.tsx'],
+                ],
                 subRootFragments: [
                   {
                     paths: ['src/app/about'],
-                    rootNodes: [['about.route.ts']],
+                    rootNodes: [['page.tsx']],
                   },
                   {
                     paths: ['src/app/contact'],
-                    rootNodes: [['contact.route.ts']],
+                    rootNodes: [['page.tsx']],
                   },
                   {
                     paths: ['src/app/foo'],
@@ -117,6 +129,22 @@ const settings = {
                   {
                     paths: ['src/app/bar'],
                     rootNodes: [['y.ts']],
+                  },
+                  {
+                    paths: ['src/app/help'],
+                    rootNodes: [['help.util.ts']],
+                  },
+                  {
+                    paths: ['src/app/support'],
+                    rootNodes: [['support.util.ts']],
+                  },
+                  {
+                    paths: ['src/app/cart'],
+                    rootNodes: [['cart.tsx']],
+                  },
+                  {
+                    paths: ['src/app/checkout'],
+                    rootNodes: [['checkout.tsx']],
                   },
                 ],
               },
@@ -169,11 +197,19 @@ describe('no-peer-dependency', () => {
       ['index.ts', 'format.util.ts'],
       []
     );
-    seedDirCache('src/app', ['app.tsx'], ['about', 'contact', 'foo', 'bar']);
-    seedDirCache('src/app/about', ['about.route.ts'], []);
-    seedDirCache('src/app/contact', ['contact.route.ts'], []);
+    seedDirCache(
+      'src/app',
+      ['app.tsx'],
+      ['about', 'contact', 'foo', 'bar', 'help', 'support', 'cart', 'checkout']
+    );
+    seedDirCache('src/app/about', ['page.tsx'], []);
+    seedDirCache('src/app/contact', ['page.tsx'], []);
     seedDirCache('src/app/foo', ['x.ts'], []);
     seedDirCache('src/app/bar', ['y.ts'], []);
+    seedDirCache('src/app/help', ['help.util.ts'], []);
+    seedDirCache('src/app/support', ['support.util.ts'], []);
+    seedDirCache('src/app/cart', ['cart.tsx'], []);
+    seedDirCache('src/app/checkout', ['checkout.tsx'], []);
     seedDirCache('src/configs', ['vitest-setup.ts', 'jest-setup.ts'], []);
     seedDirCache(
       'src',
@@ -181,11 +217,32 @@ describe('no-peer-dependency', () => {
       ['_src@shared', 'app', 'button', 'configs']
     );
     seedDirCache('src/_src@shared', [], ['_ui']);
-    seedDirCache('src/_src@shared/_ui', [], ['_components']);
+    seedDirCache('src/_src@shared/_ui', [], ['_components', '_schemas']);
     seedDirCache(
       'src/_src@shared/_ui/_components',
       [],
       ['_atoms', '_molecules']
+    );
+    seedDirCache('src/_src@shared/_ui/_schemas', [], ['_dtos', '_enums']);
+    seedDirCache(
+      'src/_src@shared/_ui/_schemas/_dtos',
+      [],
+      ['_compounds', '_primitives']
+    );
+    seedDirCache(
+      'src/_src@shared/_ui/_schemas/_dtos/_compounds',
+      ['user-details-dto.schema.ts'],
+      []
+    );
+    seedDirCache(
+      'src/_src@shared/_ui/_schemas/_dtos/_primitives',
+      ['user-dto.schema.ts'],
+      []
+    );
+    seedDirCache(
+      'src/_src@shared/_ui/_schemas/_enums',
+      ['user-role-enum.schema.ts'],
+      []
     );
     seedDirCache('src/_src@shared/_ui/_components/_atoms', [], ['icon']);
     seedDirCache(
@@ -274,14 +331,14 @@ describe('no-peer-dependency', () => {
         settings,
       },
       {
-        code: "import { Contact } from '../contact/contact.route';",
+        code: "import { Contact } from '../contact/page';",
         errors: [
           {
             message:
-              'Horizontal hierarchy violation (fallback to roles): sibling directory "about" (mapped to role "route", level 12) cannot import from "contact" (mapped to role "route", level 12) under parent "src/app".',
+              'Root Node import violation: "src/app/about/page.tsx" cannot import from "src/app/contact/page.tsx" because no "rootNodes" relationship is configured under Root Fragment "src/app". Relationships between Root Nodes must always be explicitly authorized by the architect.',
           },
         ],
-        filename: 'src/app/about/about.route.ts',
+        filename: 'src/app/about/page.tsx',
         settings,
       },
       {
@@ -289,10 +346,23 @@ describe('no-peer-dependency', () => {
         errors: [
           {
             message:
-              'Peer separation violation: sibling directories "foo" and "bar" cannot import each other because no horizontal hierarchy is defined under parent "src/app".',
+              'Root Node import violation: "src/app/foo/x.ts" cannot import from "src/app/bar/y.ts" because no "rootNodes" relationship is configured under Root Fragment "src/app". Relationships between Root Nodes must always be explicitly authorized by the architect.',
           },
         ],
         filename: 'src/app/foo/x.ts',
+        settings,
+      },
+      // Root Fragment whose Root Node name coincidentally matches a recognized Role: the
+      // Role-fallback must never apply to Root Nodes, even when the name happens to align
+      {
+        code: "import { Support } from '../support/support.util';",
+        errors: [
+          {
+            message:
+              'Root Node import violation: "src/app/help/help.util.ts" cannot import from "src/app/support/support.util.ts" because no "rootNodes" relationship is configured under Root Fragment "src/app". Relationships between Root Nodes must always be explicitly authorized by the architect.',
+          },
+        ],
+        filename: 'src/app/help/help.util.ts',
         settings,
       },
       {
@@ -351,6 +421,56 @@ describe('no-peer-dependency', () => {
         filename: 'src/_src@shared/_ui/_constants/color.constant.ts',
         settings,
       },
+      // Explicit rootNodes relationship at the common ancestor: reverse of the authorized order
+      {
+        code: "import { Checkout } from '../checkout/checkout';",
+        errors: [
+          {
+            message:
+              'Root Node import violation: "cart.tsx" cannot import from "checkout.tsx" under Root Fragment "src/app".',
+          },
+        ],
+        filename: 'src/app/cart/cart.tsx',
+        settings,
+      },
+      // Custom hierarchy (Esempio 7.2.3.1): _enums cannot import from _dtos
+      {
+        code: "import { UserDto } from '../_dtos/_primitives/user-dto.schema';",
+        errors: [
+          {
+            message:
+              'Horizontal hierarchy violation: "_enums" cannot import from "_dtos" under parent "src/_src@shared/_ui/_schemas".',
+          },
+        ],
+        filename:
+          'src/_src@shared/_ui/_schemas/_enums/user-role-enum.schema.ts',
+        settings,
+      },
+      // Systemic Design (Esempio 7.2.3.1): _primitives cannot import from _compounds
+      {
+        code: "import { UserDetailsDto } from '../_compounds/user-details-dto.schema';",
+        errors: [
+          {
+            message:
+              'Horizontal hierarchy violation: "_primitives" cannot import from "_compounds" under parent "src/_src@shared/_ui/_schemas/_dtos".',
+          },
+        ],
+        filename:
+          'src/_src@shared/_ui/_schemas/_dtos/_primitives/user-dto.schema.ts',
+        settings,
+      },
+      // Descendant in a Private Category has no privileged access to the Fragment root
+      {
+        code: "import type { TButton } from '../../button.type';",
+        errors: [
+          {
+            message:
+              'Peer separation violation: "_components" cannot import directly from the root of Fragment "src/button". A node nested inside a Private Category or Fractal Branch has no privileged access to its owning Fragment\'s other direct children; promote the shared resource to a Fractal Branch if the sharing need is genuine.',
+          },
+        ],
+        filename: 'src/button/_components/btn-icon/btn-icon.component.tsx',
+        settings,
+      },
     ],
     valid: [
       // Higher role imports lower role
@@ -375,12 +495,6 @@ describe('no-peer-dependency', () => {
       {
         code: "import './main.css';",
         filename: 'src/main.tsx',
-        settings,
-      },
-      // Sub-tree of Fragment imports from Fragment root
-      {
-        code: "import { ButtonType } from '../../button.type';",
-        filename: 'src/button/_components/btn-icon/btn-icon.component.tsx',
         settings,
       },
       // Global horizontal hierarchy — molecules import from atoms
@@ -412,6 +526,26 @@ describe('no-peer-dependency', () => {
       {
         code: "import { Button } from './button.component';",
         filename: 'src/button/button.story.tsx',
+        settings,
+      },
+      // Explicit rootNodes relationship authorizes order between sibling Root Fragments
+      {
+        code: "import { Cart } from '../cart/cart';",
+        filename: 'src/app/checkout/checkout.tsx',
+        settings,
+      },
+      // Custom hierarchy (Esempio 7.2.3.1): _dtos may import from _enums
+      {
+        code: "import { UserRole } from '../../_enums/user-role-enum.schema';",
+        filename:
+          'src/_src@shared/_ui/_schemas/_dtos/_primitives/user-dto.schema.ts',
+        settings,
+      },
+      // Systemic Design (Esempio 7.2.3.1): _compounds may import from _primitives
+      {
+        code: "import { UserDto } from '../_primitives/user-dto.schema';",
+        filename:
+          'src/_src@shared/_ui/_schemas/_dtos/_compounds/user-details-dto.schema.ts',
         settings,
       },
     ],

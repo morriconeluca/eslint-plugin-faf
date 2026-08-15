@@ -225,6 +225,18 @@ describe('no-private-category-leak', () => {
         filename: 'src/example/example.component.tsx',
         settings,
       },
+      // Direct child of owner Fragment reaching into a Fractal Branch nested inside the Private Category
+      {
+        code: "import { Helper } from '#/_components@shared/_types/shared-helper.type';",
+        errors: [
+          {
+            message:
+              'Importing from Private Category is forbidden. The imported resource is private to "src/example".',
+          },
+        ],
+        filename: 'src/example/example.component.tsx',
+        settings,
+      },
     ],
     valid: [
       // Direct child of owner imports from Private Category

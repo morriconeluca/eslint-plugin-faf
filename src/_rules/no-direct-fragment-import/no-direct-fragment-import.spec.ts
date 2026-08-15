@@ -226,6 +226,18 @@ describe('no-direct-fragment-import', () => {
         filename: 'src/card/card.component.tsx',
         settings,
       },
+      // Sub-Fragment nested in a Private Category must still use the Access Node
+      {
+        code: "import { ExampleType } from '../../example.type';",
+        errors: [
+          {
+            message:
+              'Direct import of Fragment internal file "example.type.ts" is forbidden. You must import through its Access Node (index file) in "src/example".',
+          },
+        ],
+        filename: 'src/example/_components/child/child.component.tsx',
+        settings,
+      },
     ],
     valid: [
       // Import via directory (Access Node implicit)
@@ -244,12 +256,6 @@ describe('no-direct-fragment-import', () => {
       {
         code: "import { Button } from '#/_src@shared/_ui/_components/button';",
         filename: 'src/card/card.component.tsx',
-        settings,
-      },
-      // Sub-Fragment imports parent Fragment Node
-      {
-        code: "import { ExampleType } from '../../example.type';",
-        filename: 'src/example/_components/child/child.component.tsx',
         settings,
       },
       // Re-export from Access Node (directory)

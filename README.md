@@ -15,6 +15,15 @@ This plugin is designed for complex TypeScript/JavaScript codebases to ensure **
 
 ---
 
+## Companion Tooling
+
+`eslint-plugin-faf` does not detect dependency cycles. FAF requires the dependency graph to be a Directed Acyclic Graph, but enforcing that is intentionally left to dedicated tools, configured separately in your project:
+
+- [`eslint-plugin-import-x`](https://github.com/un-ts/eslint-plugin-import-x)'s `import-x/no-cycle` rule.
+- [`dependency-cruiser`](https://github.com/sverweij/dependency-cruiser), for cycle detection and other custom dependency fitness functions.
+
+---
+
 ## Installation
 
 Install the plugin along with its peer dependencies:
@@ -213,8 +222,12 @@ export default {
           {
             // Subtree where intermediate folders are classified as organizational Layers,
             // and the terminal Fragment must contain a Master Node with the specified role (e.g. '.api.ts')
+            // and a name following the "<method>-<object>" pattern (e.g. 'get-todo')
             paths: ['src/_src@shared/_network/_apis'],
             role: 'api',
+            // Optional: restricts which HTTP methods are valid as the Fragment name prefix.
+            // Defaults to all standard HTTP methods (get, post, put, patch, delete, head, options, connect, trace).
+            httpMethods: ['get', 'post', 'put', 'patch', 'delete'],
           },
         ],
       },
@@ -264,8 +277,9 @@ Verifies folders, files, and roles comply with FAF taxonomy:
 
 - Enforces `kebab-case` naming for all folders and files in the logical domain.
 - Validates that internal Fragment files share their parent Fragment's name prefix (e.g. files in folder `button/` must be named `button.<role>.<ext>`).
-- Enforces role suffix validation on Fragment Nodes and Logical Nodes.
-- Assures route terminal Fragments contain the appropriate Master Node (e.g. a `.api.ts` file under `_apis`).
+- Enforces role suffix validation on Fragment Nodes and Logical Nodes, restricted to a single Role segment per file name.
+- Requires every Fragment to contain at least one Fragment Node (its Master Node), and forbids two Fragment Nodes from sharing the same Role.
+- Assures route terminal Fragments contain the appropriate Master Node (e.g. a `.api.ts` file under `_apis`) and that the Fragment name follows the `<method>-<object>` pattern (e.g. `get-todo`), with the HTTP method restricted to `routeHierarchies[].httpMethods` or, by default, all standard HTTP methods.
 - Enforces FAF logical domain containment rules:
   - Root Fragments can only reside directly in the Root Container or another Root Fragment.
   - Layers cannot reside inside Fragments.
@@ -289,7 +303,7 @@ Applies **Fragment Encapsulation**:
 
 Applies **Private Category Encapsulation**:
 
-- Restricts consumption of elements inside a Private Category (e.g. `_components/` nested inside a Fragment) to files within the parent Fragment or its sub-fragments.
+- Restricts consumption of elements inside a Private Category (e.g. `_components/` nested inside a Fragment) to the direct child Fragment Nodes of the owning Fragment/Root Fragment, and to sibling nodes within the same immediate sub-domain of the Private Category. Access does not extend to other sub-domains, nor to a Fractal Branch nested inside the Private Category (governed instead by its own encapsulation rule).
 
 ### 5. `faf/no-fractal-branch-leak`
 
@@ -304,7 +318,7 @@ Applies **Peer Isolation**:
 - Prevents sibling files and folders from importing each other unless an explicit hierarchy is configured:
   - **Inside a Fragment**: Flow is governed by the `roles` array order.
   - **Between folders**: Flow is governed by `localHorizontalHierarchies` or `globalHorizontalHierarchies`. If undefined, the linter falls back to mapped roles. Otherwise, peer isolation is strictly enforced.
-  - **Root Nodes**: Flow is governed by the defined index order in `rootFragments.rootNodes`.
+  - **Root Nodes**: Flow is governed exclusively by the defined index order in `rootFragments.rootNodes`. Root Nodes are exempt from the Role naming convention, so relationships between them never fall back to the `roles` scale: any relationship without a matching `rootNodes` entry is denied.
 
 ### 7. `faf/category-mutually-exclusive`
 

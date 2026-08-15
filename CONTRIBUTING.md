@@ -188,17 +188,26 @@ describe('my-rule', () => {
 export { default } from './my-rule.rule.js';
 ```
 
-### 2. Register the Rule (`src/main.ts`)
+### 2. Register the Rule
 
-Add your rule to the `rules` export map and `configs.recommended.rules` map in `src/main.ts`:
+Add your rule to the `rules` map in `src/rules.ts`:
 
 ```typescript
 import myRule from './_rules/my-rule/index.js';
 
-export const rules: Record<string, TFafRuleModule> = {
+export const rules = {
   // ...
   'my-rule': myRule,
-};
+} as const;
+```
+
+And enable it in `configs.recommended.rules` in `src/configs.ts`:
+
+```typescript
+rules: {
+  // ...
+  'faf/my-rule': 'error',
+},
 ```
 
 ---
