@@ -15,32 +15,8 @@ import { getFileRole } from '#_rules@shared/_utils/_primitives/get-file-role/ind
 import { getLcaAndSubBranches } from '#_rules@shared/_utils/_primitives/get-lca-and-sub-branches/index.js';
 import { getRoleHierarchyIndex } from '#_rules@shared/_utils/_primitives/get-role-hierarchy-index/index.js';
 import { getRootFragmentConfig } from '#_rules@shared/_utils/_primitives/get-root-fragment-config/index.js';
-import { readDirCached } from '#_rules@shared/_utils/_primitives/read-dir-cached/index.js';
 import { resolveHorizontalHierarchy } from '#_rules@shared/_utils/_primitives/resolve-horizontal-hierarchy/index.js';
 import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
-
-function getDirectoryRole(dirPath: string, config: TTreeConfig): null | string {
-  const folderName = path.basename(dirPath);
-  if (folderName.startsWith('_')) {
-    return getRoleFromFolderName(folderName, config);
-  }
-  const contents = readDirCached(dirPath);
-  for (const file of contents.files) {
-    if (file.startsWith(folderName + '.')) {
-      const role = getFileRole(file, config);
-      if (role) return role;
-    }
-  }
-  return null;
-}
-
-function getRoleFromFolderName(
-  name: string,
-  config: TTreeConfig
-): null | string {
-  const catConfig = config.categories?.find((c) => c.name === name);
-  return catConfig ? (catConfig.role ?? null) : null;
-}
 
 function getRootNodeIndex(
   relPath: string,
@@ -263,27 +239,10 @@ const rule: Rule.RuleModule = {
           });
         }
       } else {
-        // Fallback to role-based hierarchy comparison
-        const roleA = getDirectoryRole(path.posix.join(lca, subA), config!);
-        const roleB = getDirectoryRole(path.posix.join(lca, subB), config!);
-
-        const idxA = roleA ? getRoleHierarchyIndex(roleA, config!) : -1;
-        const idxB = roleB ? getRoleHierarchyIndex(roleB, config!) : -1;
-
-        if (idxA !== -1 && idxB !== -1) {
-          if (idxB >= idxA) {
-            context.report({
-              message: `Horizontal hierarchy violation (fallback to roles): sibling directory "${subA}" (mapped to role "${roleA}", level ${idxA}) cannot import from "${subB}" (mapped to role "${roleB}", level ${idxB}) under parent "${lca}".`,
-              node,
-            });
-          }
-        } else {
-          // If no hierarchy is defined and cannot resolve roles, it is forbidden by default
-          context.report({
-            message: `Peer separation violation: sibling directories "${subA}" and "${subB}" cannot import each other because no horizontal hierarchy is defined under parent "${lca}".`,
-            node,
-          });
-        }
+        context.report({
+          message: `Peer separation violation: sibling directories "${subA}" and "${subB}" cannot import each other because no horizontal hierarchy is defined under parent "${lca}".`,
+          node,
+        });
       }
     }
 
