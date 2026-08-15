@@ -66,6 +66,10 @@ const settings = {
             paths: ['src/_src@shared'],
           },
           {
+            hierarchies: [['_types'], ['_classes'], ['_utils'], ['_apis']],
+            paths: ['src/_src@shared/_network'],
+          },
+          {
             hierarchies: [
               ['_constants'],
               ['_types'],
@@ -216,7 +220,20 @@ describe('no-peer-dependency', () => {
       ['main.tsx', 'main.css'],
       ['_src@shared', 'app', 'button', 'configs']
     );
-    seedDirCache('src/_src@shared', [], ['_ui']);
+    seedDirCache('src/_src@shared', [], ['_network', '_ui']);
+    seedDirCache('src/_src@shared/_network', [], ['_apis', '_hooks']);
+    seedDirCache('src/_src@shared/_network/_apis', [], ['get-thing']);
+    seedDirCache(
+      'src/_src@shared/_network/_apis/get-thing',
+      ['index.ts', 'get-thing.api.ts'],
+      []
+    );
+    seedDirCache('src/_src@shared/_network/_hooks', [], ['use-thing']);
+    seedDirCache(
+      'src/_src@shared/_network/_hooks/use-thing',
+      ['index.ts', 'use-thing.hook.ts'],
+      []
+    );
     seedDirCache('src/_src@shared/_ui', [], ['_components', '_schemas']);
     seedDirCache(
       'src/_src@shared/_ui/_components',
@@ -469,6 +486,30 @@ describe('no-peer-dependency', () => {
           },
         ],
         filename: 'src/button/_components/btn-icon/btn-icon.component.tsx',
+        settings,
+      },
+      // Undeclared pair: denied regardless of "_hooks"/"_apis" Role order
+      {
+        code: "import { getThing } from '../../_apis/get-thing';",
+        errors: [
+          {
+            message:
+              'Peer separation violation: sibling directories "_hooks" and "_apis" cannot import each other because no horizontal hierarchy is defined under parent "src/_src@shared/_network".',
+          },
+        ],
+        filename: 'src/_src@shared/_network/_hooks/use-thing/use-thing.hook.ts',
+        settings,
+      },
+      // Same undeclared pair, opposite direction: also forbidden
+      {
+        code: "import { useThing } from '../../_hooks/use-thing';",
+        errors: [
+          {
+            message:
+              'Peer separation violation: sibling directories "_apis" and "_hooks" cannot import each other because no horizontal hierarchy is defined under parent "src/_src@shared/_network".',
+          },
+        ],
+        filename: 'src/_src@shared/_network/_apis/get-thing/get-thing.api.ts',
         settings,
       },
     ],

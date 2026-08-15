@@ -317,7 +317,7 @@ Applies **Peer Isolation**:
 
 - Prevents sibling files and folders from importing each other unless an explicit hierarchy is configured:
   - **Inside a Fragment**: Flow is governed by the `roles` array order.
-  - **Between folders**: Flow is governed by `localHorizontalHierarchies` or `globalHorizontalHierarchies`. If undefined, the linter falls back to mapped roles. Otherwise, peer isolation is strictly enforced.
+  - **Between folders**: Flow is governed exclusively by `localHorizontalHierarchies` or `globalHorizontalHierarchies`; a sibling pair without a matching entry is denied in both directions.
   - **Root Nodes**: Flow is governed exclusively by the defined index order in `rootFragments.rootNodes`. Root Nodes are exempt from the Role naming convention, so relationships between them never fall back to the `roles` scale: any relationship without a matching `rootNodes` entry is denied.
 
 ### 7. `faf/category-mutually-exclusive`
