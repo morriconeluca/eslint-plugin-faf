@@ -1,3 +1,12 @@
+export type TAncestorEntry = {
+  dir: string;
+  folderName: string;
+  parentDir: string;
+  parentFolderName: string;
+  parentType: TFolderType;
+  type: TFolderType;
+};
+
 export type TCategoryConfig = {
   allowedExtensions?: string[];
   allowSingleFiles?: boolean;

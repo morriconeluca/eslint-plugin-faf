@@ -12,18 +12,41 @@ import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-pa
 import { getPrivateCategoryInfo } from '#_rules@shared/_utils/_systems/get-private-category-info/index.js';
 
 /**
+ * Returns the path of the closest Fractal Branch ancestor (the "_<Scope>@shared" directory
+ * itself, not its owner), or null if relPath isn't inside one.
+ */
+function getFractalBranchPath(relPath: string): null | string {
+  let current = relPath;
+  while (current && current !== '.' && current !== '/') {
+    const folderName = path.basename(current);
+    if (folderName.startsWith('_') && folderName.includes('@shared')) {
+      return current;
+    }
+    const parent = path.dirname(current).replace(/\\/g, '/');
+    if (parent === current) {
+      break;
+    }
+    current = parent;
+  }
+  return null;
+}
+
+/**
  * @fileoverview Rule: faf/no-fractal-branch-leak
  * Enforces the FAF Law of Fractal Branch Encapsulation.
  *
  * FAF Law: Fractal Branches (directories following the `_<Scope>@shared` naming convention)
  * hold internal shared implementations. They are private to their parent Scope's subtree
- * and cannot leak or be imported by files outside of that scope.
+ * and cannot leak or be imported by files outside of that scope. Conversely, a Fractal
+ * Branch acts exclusively as a provider of those details: it must never depend, not even
+ * indirectly, on the subtree it serves.
  *
  * Valid:
  * - A utility inside `src/_rules/_rules@shared/_utils/` importing from `src/_rules/_rules@shared/`.
  *
  * Invalid:
  * - A rule inside `src/_rules/naming-conventions/` importing from `src/_rules/_rules@shared/_utils/_utils@shared/` (out-of-scope).
+ * - A file inside `src/_rules/_rules@shared/` importing from `src/_rules/naming-conventions/` (inverse dependency).
  */
 const rule: Rule.RuleModule = {
   create(context) {
@@ -101,6 +124,27 @@ const rule: Rule.RuleModule = {
               });
             }
           }
+        }
+      }
+
+      // A Fractal Branch must never depend, even indirectly, on the subtree it serves
+      const importerBranchPath = getFractalBranchPath(path.dirname(relPath));
+      if (importerBranchPath) {
+        const importerBranchOwner = path
+          .dirname(importerBranchPath)
+          .replace(/\\/g, '/');
+        const isImportedInsideOwnBranch =
+          resolvedRelPath === importerBranchPath ||
+          resolvedRelPath.startsWith(importerBranchPath + '/');
+        const isImportedInsideServedSubtree =
+          resolvedRelPath === importerBranchOwner ||
+          resolvedRelPath.startsWith(importerBranchOwner + '/');
+
+        if (isImportedInsideServedSubtree && !isImportedInsideOwnBranch) {
+          context.report({
+            message: `Fractal Branch "${importerBranchPath}" cannot depend on "${resolvedRelPath}" from the subtree it serves. A Fractal Branch may only provide implementation details to its parent scope; it must never depend on it, not even indirectly.`,
+            node,
+          });
         }
       }
     }

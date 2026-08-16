@@ -1,10 +1,13 @@
 import type {
+  TAncestorEntry,
   TCategoryConfig,
   TFolderType,
   TTreeConfig,
 } from '../../../../_types/faf.type.js';
 
+export type TAncestorChainCache = Map<string, TAncestorEntry[]>;
 export type TCacheState = {
+  ancestorChainCache: TAncestorChainCache;
   categoryConfigCache: TCategoryConfigCache;
   classifyCache: TClassifyCache;
   dirCache: TDirCache;

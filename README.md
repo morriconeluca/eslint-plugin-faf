@@ -11,7 +11,7 @@ This plugin is designed for complex TypeScript/JavaScript codebases to ensure **
 - **Strict Enforcing of FAF Taxonomy**: Ensures your folder structure strictly maps to Layers, Categories, Fragments, and Fractal Branches.
 - **Law of Separation between Peers**: Prevents lateral dependency coupling between sibling modules without explicit hierarchy.
 - **Access Node Encapsulation**: Guarantees that internal Fragment files are never imported directly, enforcing consumption solely through the Fragment's barrel file (`index.ts`).
-- **High-Performance Architecture**: Features optimized caching (`dirCache`, `classifyCache`, `rolesCache`) to minimize disk I/O during linting runs.
+- **High-Performance Architecture**: Features optimized caching (`dirCache`, `classifyCache`, `ancestorChainCache`, `rolesCache`) to minimize disk I/O during linting runs.
 
 ---
 
@@ -273,59 +273,107 @@ Determines horizontal import flow (Peer Separation). Each hierarchy is an array 
 
 ### 1. `faf/naming-conventions`
 
-Verifies folders, files, and roles comply with FAF taxonomy:
+Verifies pure lexical FAF naming conventions:
 
 - Enforces `kebab-case` naming for all folders and files in the logical domain.
-- Validates that internal Fragment files share their parent Fragment's name prefix (e.g. files in folder `button/` must be named `button.<role>.<ext>`).
-- Enforces role suffix validation on Fragment Nodes and Logical Nodes, restricted to a single Role segment per file name.
-- Requires every Fragment to contain at least one Fragment Node (its Master Node), and forbids two Fragment Nodes from sharing the same Role.
-- Assures route terminal Fragments contain the appropriate Master Node (e.g. a `.api.ts` file under `_apis`) and that the Fragment name follows the `<method>-<object>` pattern (e.g. `get-todo`), with the HTTP method restricted to `routeHierarchies[].httpMethods` or, by default, all standard HTTP methods.
-- Enforces FAF logical domain containment rules:
-  - Root Fragments can only reside directly in the Root Container or another Root Fragment.
-  - Layers cannot reside inside Fragments.
-  - Fragments cannot be placed directly inside other Fragments (they must be nested within a Private Category), Fractal Branches, or nested Root Fragments.
-  - Fractal Branches cannot be nested inside other Fractal Branches.
+- Requires an underscore prefix for Layers/Categories/Sub-Categories, and forbids it for Fragments/Sub-Fragments/Root Fragments.
+- Validates that a Fractal Branch's name matches its parent scope (`_<Scope>@shared`).
+- Restricts a Logical Node's name to a single Role segment, whether it is a Fragment Node or a loose file inside a Category.
+- For loose files inside a Category: validates the file extension against the category's whitelist, requires a role suffix on code files, and validates that the role matches the Category's configured role.
 
-### 2. `faf/enforce-access-node`
+### 2. `faf/logical-domain-placement`
+
+Enforces FAF topological placement constraints between Logical Domains:
+
+- Root Fragments can only reside directly in the Root Container or another Root Fragment.
+- Layers cannot reside inside Fragments, and cannot contain files or Fragments directly, except the terminal Layer of a configured Route Hierarchy.
+- Fragments cannot be placed directly inside other Fragments (they must be nested within a Private Category), Layers (unless terminating a Route Hierarchy), Fractal Branches, or nested Root Fragments.
+- Fractal Branches cannot be nested inside other Fractal Branches, and cannot contain files directly.
+
+### 3. `faf/enforce-access-node`
 
 Enforces Access Node (`index.ts` / `index.js`) integrity:
 
+- Requires a directory that isn't a Category, Layer, Fractal Branch, or Root Fragment to have an Access Node.
+- Restricts Access Nodes to Fragments: an index file directly inside any other Logical Domain is forbidden.
+- Requires every Fragment to contain at least one Fragment Node (its Master Node).
 - Restricts the Access Node to import/export only its own sibling Fragment Nodes.
 - Prevents import of nested Private Categories, Fractal Branches, or unrelated external paths.
 
-### 3. `faf/no-direct-fragment-import`
+### 4. `faf/fragment-master-node`
+
+Enforces Fragment Node identity and Master Node integrity:
+
+- Validates that internal Fragment files share their parent Fragment's name prefix (e.g. files in folder `button/` must be named `button.<role>.<ext>`).
+- Requires a role suffix on every Fragment Node, and forbids two Fragment Nodes from sharing the same Role.
+- Assures a Fragment placed under a Category (or terminating a Route Hierarchy) contains a Master Node carrying the Role imposed by that Category/Route (e.g. a `.api.ts` file under `_apis`).
+- Assures route terminal Fragments follow the `<method>-<object>` naming pattern (e.g. `get-todo`), with the HTTP method restricted to `routeHierarchies[].httpMethods` or, by default, all standard HTTP methods.
+
+### 5. `faf/no-direct-fragment-import`
 
 Applies **Fragment Encapsulation**:
 
 - Prevents external files from directly importing a Fragment's internal files. All imports must pass through the Fragment's Access Node (`index.ts`).
 
-### 4. `faf/no-private-category-leak`
+### 6. `faf/no-private-category-leak`
 
 Applies **Private Category Encapsulation**:
 
 - Restricts consumption of elements inside a Private Category (e.g. `_components/` nested inside a Fragment) to the direct child Fragment Nodes of the owning Fragment/Root Fragment, and to sibling nodes within the same immediate sub-domain of the Private Category. Access does not extend to other sub-domains, nor to a Fractal Branch nested inside the Private Category (governed instead by its own encapsulation rule).
 
-### 5. `faf/no-fractal-branch-leak`
+### 7. `faf/no-fractal-branch-leak`
 
 Applies **Fractal Branch Encapsulation**:
 
 - Fractal Branches named `_<Scope>@shared` are only importable by modules residing inside the parent Scope's subtree.
+- A Fractal Branch itself must never depend, not even indirectly, on the subtree it serves: importing anything from its owner's subtree that isn't part of the branch itself is forbidden.
 
-### 6. `faf/no-peer-dependency`
+### 8. `faf/no-peer-dependency`
 
-Applies **Peer Isolation**:
+Applies **Peer Isolation** via horizontal hierarchy resolution:
 
-- Prevents sibling files and folders from importing each other unless an explicit hierarchy is configured:
-  - **Inside a Fragment**: Flow is governed by the `roles` array order.
-  - **Between folders**: Flow is governed exclusively by `localHorizontalHierarchies` or `globalHorizontalHierarchies`; a sibling pair without a matching entry is denied in both directions.
-  - **Root Nodes**: Flow is governed exclusively by the defined index order in `rootFragments.rootNodes`. Root Nodes are exempt from the Role naming convention, so relationships between them never fall back to the `roles` scale: any relationship without a matching `rootNodes` entry is denied.
+- **Inside a Fragment**: Flow is governed by the `roles` array order.
+- **Between folders**: Flow is governed exclusively by `localHorizontalHierarchies` or `globalHorizontalHierarchies`; a sibling pair without a matching entry is denied in both directions.
 
-### 7. `faf/category-mutually-exclusive`
+Foreign Domain imports and Root Node dependency direction are handled by dedicated rules (see below).
+
+### 9. `faf/foreign-domain-isolation`
+
+Applies **Foreign Domain isolation**:
+
+- Prevents Logical Nodes from importing a file from a Foreign Domain (e.g. `src/configs`).
+- Prevents a Foreign Domain file from importing a Logical Node from the FAF tree.
+
+### 10. `faf/root-node-dependency-direction`
+
+Enforces explicit, non-Role-based dependency direction between **Root Nodes**:
+
+- Flow is governed exclusively by the defined index order in `rootFragments.rootNodes`. Root Nodes are exempt from the Role naming convention, so relationships between them (sibling or nested Root Fragments) never fall back to the `roles` scale: any relationship without a matching `rootNodes` entry is denied.
+
+### 11. `faf/category-mutually-exclusive`
 
 Ensures category purity:
 
 - Blocks mixing single files (Logical Nodes) and subfolders (Fragments) in the same category.
 - Blocks direct file placement inside categories configured with `allowSingleFiles: false`.
+
+---
+
+## Migrating from 7 rules to 11
+
+Starting with this release, five checks that used to live inside two large rules (`naming-conventions` and `no-peer-dependency`) have moved to dedicated rules with their own `id`. The underlying checks and their error messages are unchanged — only the `ruleId` reporting them is different. This is a breaking change for anyone who doesn't use `configs.recommended` (which picks up the new rules automatically) or who references a specific rule `id` directly, e.g. in `// eslint-disable-next-line faf/<id>` comments or a hand-written `rules` block.
+
+| Old rule id                                                                                                                          | Check moved to                           |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| `naming-conventions` — folder/file placement (Root Fragment, Layer, Fragment, Fractal Branch containment)                            | `logical-domain-placement` (new)         |
+| `naming-conventions` — Access Node existence, Master Node existence                                                                  | `enforce-access-node`                    |
+| `naming-conventions` — Fragment Node name prefix, role requirement/uniqueness, Category/Route Master Node role, route naming pattern | `fragment-master-node` (new)             |
+| `naming-conventions` — kebab-case, underscore prefix, Fractal Branch naming, single-Role-segment, Category loose-file naming         | unchanged, stays in `naming-conventions` |
+| `no-peer-dependency` — Foreign Domain imports (both directions)                                                                      | `foreign-domain-isolation` (new)         |
+| `no-peer-dependency` — Root Node dependency direction (`rootFragments.rootNodes`)                                                    | `root-node-dependency-direction` (new)   |
+| `no-peer-dependency` — horizontal hierarchy resolution (Fragment Node roles, sibling folders)                                        | unchanged, stays in `no-peer-dependency` |
+
+`no-direct-fragment-import`, `no-private-category-leak`, `category-mutually-exclusive` are unaffected. `no-fractal-branch-leak` keeps its `id` and gains one new check: a Fractal Branch depending on the subtree it serves is now reported.
 
 ---
 
@@ -335,6 +383,7 @@ To prevent sluggish linting in large codebases, the core engine implements aggre
 
 - **Directory Cache (`dirCache`)**: Inspects the physical disk exactly once per folder, storing the contents in-memory. It is optimized to perform exactly one system call on cache misses by removing redundant `fs.existsSync` checks.
 - **Classification Cache (`classifyCache`)**: Memoizes the structural type (`FolderType`) of each directory for the lifetime of the ESLint run.
+- **Ancestor Chain Cache (`ancestorChainCache`)**: Memoizes the full chain of classified ancestors above a directory, so rules that walk upward from a file (folder taxonomy, topological placement) do so once per directory rather than once per file.
 - **Role Cache (`rolesCache`)**: Uses a `WeakMap` to cache the allowed roles per tree configuration as a native `Set`, avoiding memory leaks, redundant array flattening allocations, and speeding up role lookup checks to $O(1)$.
 - **Category Configuration Cache (`categoryConfigCache`)**: Memoizes resolved category configurations per folder path to eliminate repetitive directory walks and path parent traversals.
 - **Tree Configuration Cache (`treeConfigCache` / `treeConfigIncludingExcludedCache`)**: Memoizes resolved tree configurations per file path, reducing tree lookup checks to a simple map-lookup.

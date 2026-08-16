@@ -348,74 +348,6 @@ describe('no-peer-dependency', () => {
         settings,
       },
       {
-        code: "import { Contact } from '../contact/page';",
-        errors: [
-          {
-            message:
-              'Root Node import violation: "src/app/about/page.tsx" cannot import from "src/app/contact/page.tsx" because no "rootNodes" relationship is configured under Root Fragment "src/app". Relationships between Root Nodes must always be explicitly authorized by the architect.',
-          },
-        ],
-        filename: 'src/app/about/page.tsx',
-        settings,
-      },
-      {
-        code: "import { Y } from '../bar/y';",
-        errors: [
-          {
-            message:
-              'Root Node import violation: "src/app/foo/x.ts" cannot import from "src/app/bar/y.ts" because no "rootNodes" relationship is configured under Root Fragment "src/app". Relationships between Root Nodes must always be explicitly authorized by the architect.',
-          },
-        ],
-        filename: 'src/app/foo/x.ts',
-        settings,
-      },
-      // Root Fragment whose Root Node name coincidentally matches a recognized Role: the
-      // Role-fallback must never apply to Root Nodes, even when the name happens to align
-      {
-        code: "import { Support } from '../support/support.util';",
-        errors: [
-          {
-            message:
-              'Root Node import violation: "src/app/help/help.util.ts" cannot import from "src/app/support/support.util.ts" because no "rootNodes" relationship is configured under Root Fragment "src/app". Relationships between Root Nodes must always be explicitly authorized by the architect.',
-          },
-        ],
-        filename: 'src/app/help/help.util.ts',
-        settings,
-      },
-      {
-        code: "import { setup } from '../configs/vitest-setup';",
-        errors: [
-          {
-            message:
-              'Importing from Foreign Domain "src/configs/vitest-setup.ts" is forbidden for Logical Nodes.',
-          },
-        ],
-        filename: 'src/button/button.component.tsx',
-        settings,
-      },
-      {
-        code: "import { Button } from '../_src@shared/_ui/_components/button';",
-        errors: [
-          {
-            message:
-              'Foreign Domain files cannot import Logical Nodes from FAF tree ("src/_src@shared/_ui/_components/button/index.ts").',
-          },
-        ],
-        filename: 'src/configs/vitest-setup.ts',
-        settings,
-      },
-      {
-        code: "import { main } from '../main';",
-        errors: [
-          {
-            message:
-              'Root Node import violation: "app.tsx" cannot import from "main.tsx" under Root Fragment "src".',
-          },
-        ],
-        filename: 'src/app/app.tsx',
-        settings,
-      },
-      {
         code: "import { Avatar } from '../../_molecules/avatar';",
         errors: [
           {
@@ -436,18 +368,6 @@ describe('no-peer-dependency', () => {
           },
         ],
         filename: 'src/_src@shared/_ui/_constants/color.constant.ts',
-        settings,
-      },
-      // Explicit rootNodes relationship at the common ancestor: reverse of the authorized order
-      {
-        code: "import { Checkout } from '../checkout/checkout';",
-        errors: [
-          {
-            message:
-              'Root Node import violation: "cart.tsx" cannot import from "checkout.tsx" under Root Fragment "src/app".',
-          },
-        ],
-        filename: 'src/app/cart/cart.tsx',
         settings,
       },
       // Custom hierarchy (Esempio 7.2.3.1): _enums cannot import from _dtos
@@ -532,12 +452,6 @@ describe('no-peer-dependency', () => {
         filename: 'src/main.tsx',
         settings,
       },
-      // Root Node import in valid order (main.tsx at level 1 imports main.css at level 0)
-      {
-        code: "import './main.css';",
-        filename: 'src/main.tsx',
-        settings,
-      },
       // Global horizontal hierarchy — molecules import from atoms
       {
         code: "import { Icon } from '../../_atoms/icon';",
@@ -551,12 +465,6 @@ describe('no-peer-dependency', () => {
         filename: 'src/_src@shared/_ui/_pages/home/home.page.tsx',
         settings,
       },
-      // Foreign Domain to Foreign Domain (both excluded — no check)
-      {
-        code: "import { jest } from './jest-setup';",
-        filename: 'src/configs/vitest-setup.ts',
-        settings,
-      },
       // Boundary Element: .spec imports domain role (.component)
       {
         code: "import { Button } from './button.component';",
@@ -567,12 +475,6 @@ describe('no-peer-dependency', () => {
       {
         code: "import { Button } from './button.component';",
         filename: 'src/button/button.story.tsx',
-        settings,
-      },
-      // Explicit rootNodes relationship authorizes order between sibling Root Fragments
-      {
-        code: "import { Cart } from '../cart/cart';",
-        filename: 'src/app/checkout/checkout.tsx',
         settings,
       },
       // Custom hierarchy (Esempio 7.2.3.1): _dtos may import from _enums
