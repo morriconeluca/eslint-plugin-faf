@@ -2,10 +2,7 @@ import type { Rule } from 'eslint';
 
 import path from 'path';
 
-import type {
-  TFafSettings,
-  THttpMethod,
-} from '#_rules@shared/_types/faf.type.js';
+import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
 
 import { classifyFolder } from '#_rules@shared/_utils/_aggregates/classify-folder/index.js';
 import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
@@ -18,31 +15,17 @@ import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-pa
 import { walkAncestors } from '#_rules@shared/_utils/_systems/walk-ancestors/index.js';
 
 const KEBAB_CASE_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
-const DEFAULT_HTTP_METHODS: THttpMethod[] = [
-  'connect',
-  'delete',
-  'get',
-  'head',
-  'options',
-  'patch',
-  'post',
-  'put',
-  'trace',
-];
 
 /**
  * @fileoverview Rule: faf/naming-conventions
- * Enforces FAF folder taxonomy, naming conventions, and file role suffixes.
+ * Enforces pure lexical FAF naming conventions.
  *
  * FAF Law:
  * - Folders and files in the logical domain must use kebab-case.
- * - Categories/Layers must start with an underscore (e.g. `_components`).
- * - Fragments must NOT start with an underscore.
- * - Sibling Fragment Nodes must share the parent Fragment folder's name.
- * - All logical nodes must end with a valid role suffix (e.g. `[name].[role].ts`).
- * - Fragments placed under a Category (or Route) must contain a Master Node with the corresponding role.
- * - Every Fragment must have a Master Node, and Fragment Nodes must have unique Roles.
- * - A route terminal Fragment's name must follow the "<method>-<object>" pattern.
+ * - Layers/Categories/Sub-Categories must be prefixed with an underscore (e.g. `_components`).
+ * - Fragments/Sub-Fragments/Root Fragments must NOT be prefixed with an underscore.
+ * - A Fractal Branch's name must match its parent scope: `_<Scope>@shared`.
+ * - A Logical Node's name admits exactly one Role segment.
  */
 const rule: Rule.RuleModule = {
   create(context) {
@@ -62,7 +45,6 @@ const rule: Rule.RuleModule = {
         }
 
         const relDir = path.dirname(relPath);
-        const folderName = path.basename(relDir);
         const parentType = classifyFolder(relDir, config);
 
         if (parentType === 'foreign') {
@@ -75,9 +57,6 @@ const rule: Rule.RuleModule = {
         for (const {
           dir: currentDir,
           folderName: currentFolderName,
-          parentDir: relParentDir,
-          parentFolderName,
-          parentType: relParentType,
           type: currentType,
         } of walkAncestors(relDir, config)) {
           // Layers and Categories must be prefixed with an underscore
@@ -144,121 +123,20 @@ const rule: Rule.RuleModule = {
               });
             }
           }
-
-          if (currentType === 'invalid-fragment') {
-            context.report({
-              message: `Fragment directory "${currentFolderName}" is missing an Access Node (index.ts/index.js).`,
-              node,
-            });
-          }
-
-          if (currentType === 'root-fragment') {
-            if (
-              relParentType !== 'root-fragment' &&
-              relParentType !== 'unknown'
-            ) {
-              context.report({
-                message: `Root Fragment directory "${currentFolderName}" must be placed directly inside a Root Container or another Root Fragment, not inside "${parentFolderName}" (classified as ${relParentType}).`,
-                node,
-              });
-            }
-          }
-
-          if (currentType === 'layer') {
-            if (
-              relParentType === 'fragment' ||
-              relParentType === 'invalid-fragment'
-            ) {
-              context.report({
-                message: `Layer directory "${currentFolderName}" cannot be placed inside "${parentFolderName}" (classified as ${relParentType}). Layers cannot reside within Fragments.`,
-                node,
-              });
-            }
-          }
-
-          // A Fragment cannot be placed directly:
-          // - under a Layer (unless it terminates a configured Route Hierarchy)
-          // - inside another Fragment (must be nested within a Private Category)
-          // - inside a Fractal Branch
-          // - inside a nested Root Fragment (must be contained within a Category)
-          if (
-            currentType === 'fragment' ||
-            currentType === 'invalid-fragment'
-          ) {
-            const isParentRootContainer =
-              config.includes.includes(relParentDir);
-            if (relParentType === 'layer') {
-              const isParentRoute =
-                config.routeHierarchies &&
-                config.routeHierarchies.some((rh) =>
-                  rh.paths.some(
-                    (rp) =>
-                      relParentDir === rp || relParentDir.startsWith(rp + '/')
-                  )
-                );
-              if (!isParentRoute) {
-                context.report({
-                  message: `Fragment directory "${currentFolderName}" cannot be placed directly inside Layer "${parentFolderName}". Fragments must be contained within a Category.`,
-                  node,
-                });
-              }
-            } else if (
-              relParentType === 'fragment' ||
-              relParentType === 'invalid-fragment'
-            ) {
-              context.report({
-                message: `Fragment directory "${currentFolderName}" cannot be placed directly inside Fragment "${parentFolderName}". Sub-Fragments must be contained within a Private Category.`,
-                node,
-              });
-            } else if (relParentType === 'fractal-branch') {
-              context.report({
-                message: `Fragment directory "${currentFolderName}" cannot be placed directly inside Fractal Branch "${parentFolderName}". Fragments must be contained within a Category.`,
-                node,
-              });
-            } else if (
-              relParentType === 'root-fragment' &&
-              !isParentRootContainer
-            ) {
-              context.report({
-                message: `Fragment directory "${currentFolderName}" cannot be placed directly inside Root Fragment "${parentFolderName}". Fragments must be contained within a Category.`,
-                node,
-              });
-            }
-          }
-
-          if (currentType === 'fractal-branch') {
-            if (relParentType === 'fractal-branch') {
-              context.report({
-                message: `Fractal Branch "${currentFolderName}" cannot be placed inside another Fractal Branch "${parentFolderName}".`,
-                node,
-              });
-            }
-          }
         }
 
-        if (parentType === 'layer') {
-          context.report({
-            message: `Layers cannot contain files directly. File "${fileName}" is placed directly inside Layer "${folderName}".`,
-            node,
-          });
+        // Placement and Access Node integrity are handled by logical-domain-placement
+        // and enforce-access-node; only lexical checks continue past this point
+        if (
+          parentType === 'layer' ||
+          parentType === 'fractal-branch' ||
+          parentType === 'invalid-fragment'
+        ) {
           return;
         }
 
-        if (parentType === 'fractal-branch') {
-          context.report({
-            message: `Fractal Branches cannot contain files directly. File "${fileName}" is placed directly inside Fractal Branch "${folderName}".`,
-            node,
-          });
-          return;
-        }
-
-        if (parentType === 'invalid-fragment') {
-          return; // Already reported by ancestor loop
-        }
-
-        // Must run before the Access Node check below: a Root Fragment's internal
-        // naming (including a file named "index.ts") is governed by "rootNodes", not
-        // by the ordinary Fragment taxonomy
+        // A Root Fragment's internal naming (including role suffixes) is governed by
+        // "rootNodes", not by the ordinary Logical Node role conventions
         const rfConfig = getRootFragmentConfig(relDir, config);
         if (rfConfig) {
           const flatRootNodes = rfConfig.rootNodes.flat();
@@ -277,29 +155,7 @@ const rule: Rule.RuleModule = {
         }
 
         if (fileName === 'index.ts' || fileName === 'index.js') {
-          if (parentType !== 'fragment') {
-            context.report({
-              message: `Access Nodes ("index.ts/index.js") are exclusive to Fragments. Found index file directly inside "${folderName}" (classified as ${parentType}).`,
-              node,
-            });
-          } else {
-            const contents = readDirCached(relDir);
-            const hasFragmentNode = contents.files.some(
-              (f) =>
-                f !== 'index.ts' &&
-                f !== 'index.js' &&
-                f !== 'README.md' &&
-                f !== 'package.json' &&
-                f !== 'tsconfig.json'
-            );
-            if (!hasFragmentNode) {
-              context.report({
-                message: `Fragment "${folderName}" has no Master Node. Every Fragment must contain at least one Fragment Node establishing its Role.`,
-                node,
-              });
-            }
-          }
-          return;
+          return; // Access Node, handled by enforce-access-node
         }
 
         if (
@@ -322,107 +178,12 @@ const rule: Rule.RuleModule = {
           .filter((part) => allRoleNames.has(part));
         const multiRoleMessage = `File "${fileName}" composes multiple Roles ("${roleSegments.join('", "')}") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.`;
 
-        if (parentType === 'fragment') {
-          // Check route hierarchy role constraint
-          const matchedRoute = config.routeHierarchies?.find((rh) =>
-            rh.paths.some((rp) => relDir === rp || relDir.startsWith(rp + '/'))
-          );
-          if (matchedRoute) {
-            const contents = readDirCached(relDir);
-            const fileRoles = contents.files.map((f) => getFileRole(f, config));
-            if (!fileRoles.includes(matchedRoute.role)) {
-              context.report({
-                message: `Route terminal Fragment "${folderName}" must contain a Master Node with role "${matchedRoute.role}" (e.g. "${folderName}.${matchedRoute.role}.ts").`,
-                node,
-              });
-            }
-
-            const httpMethods =
-              matchedRoute.httpMethods ?? DEFAULT_HTTP_METHODS;
-            const routeNameRegex = new RegExp(
-              `^(${httpMethods.join('|')})-[a-z0-9]+(-[a-z0-9]+)*$`
-            );
-            if (!routeNameRegex.test(folderName)) {
-              context.report({
-                message: `Route terminal Fragment "${folderName}" must follow the "<method>-<object>" pattern with a lowercase HTTP method (${httpMethods.join(', ')}).`,
-                node,
-              });
-            }
-          }
-
-          // Check category role constraint
-          let currentParent = path.dirname(relDir).replace(/\\/g, '/');
-          let categoryConfig = null;
-          let categoryFolderName = '';
-          while (
-            currentParent &&
-            currentParent !== '.' &&
-            currentParent !== '/'
-          ) {
-            const parentType = classifyFolder(currentParent, config);
-            if (parentType === 'category') {
-              categoryConfig = getCategoryConfig(currentParent, config);
-              categoryFolderName = path.basename(currentParent);
-              break;
-            } else if (
-              parentType === 'fragment' ||
-              parentType === 'root-fragment' ||
-              parentType === 'layer'
-            ) {
-              break;
-            }
-            const nextParent = path.dirname(currentParent).replace(/\\/g, '/');
-            if (nextParent === currentParent) break;
-            currentParent = nextParent;
-          }
-
-          if (categoryConfig && categoryConfig.role) {
-            const contents = readDirCached(relDir);
-            const fileRoles = contents.files.map((f) => getFileRole(f, config));
-            if (!fileRoles.includes(categoryConfig.role)) {
-              context.report({
-                message: `Fragment "${folderName}" inside Category "${categoryFolderName}" must contain a Master Node with role "${categoryConfig.role}" (e.g. "${folderName}.${categoryConfig.role}.ts").`,
-                node,
-              });
-            }
-          }
-
-          if (!fileName.startsWith(folderName + '.')) {
-            context.report({
-              message: `Fragment Node "${fileName}" must share the parent Fragment name: "${folderName}.<role>${ext}".`,
-              node,
-            });
-          }
-
-          // In a Fragment, ALL files must have a role, even if they have whitelisted extensions
-          if (!role) {
-            context.report({
-              message: `File "${fileName}" inside Fragment "${folderName}" must have an explicit role suffix (e.g. "${folderName}.style${ext}").`,
-              node,
-            });
-          } else if (roleSegments.length > 1) {
-            context.report({ message: multiRoleMessage, node });
-          } else {
-            const contents = readDirCached(relDir);
-            // Exclude the Access Node: it always resolves to role 'index', which a
-            // Fragment Node could otherwise also carry via an explicit ".index" suffix
-            const duplicate = contents.files.find(
-              (f) =>
-                f !== fileName &&
-                f !== 'index.ts' &&
-                f !== 'index.js' &&
-                getFileRole(f, config) === role
-            );
-            if (duplicate) {
-              context.report({
-                message: `Fragment Node "${fileName}" shares Role "${role}" with sibling "${duplicate}". Each Fragment Node must have a unique Role within its Fragment.`,
-                node,
-              });
-            }
-          }
+        if (parentType === 'fragment' && role && roleSegments.length > 1) {
+          context.report({ message: multiRoleMessage, node });
         }
 
         if (parentType === 'category') {
+          const folderName = path.basename(relDir);
           const catConfig = getCategoryConfig(relDir, config);
           if (catConfig) {
             const allowedExts = catConfig.allowedExtensions ?? [
@@ -473,7 +234,7 @@ const rule: Rule.RuleModule = {
   meta: {
     docs: {
       description:
-        'Enforce naming conventions and folder taxonomy in FAF architecture',
+        'Enforce lexical naming conventions for FAF folders and Logical Nodes',
     },
     schema: [],
     type: 'problem',

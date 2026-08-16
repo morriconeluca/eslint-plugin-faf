@@ -6,7 +6,7 @@ import { clearDirCache } from '#_rules@shared/_utils/_primitives/clear-dir-cache
 import { seedDirCache } from '#_rules@shared/_utils/_primitives/seed-dir-cache/index.js';
 import { setProjectRoot } from '#_rules@shared/_utils/_primitives/set-project-root/index.js';
 
-import namingConventions from './naming-conventions.rule.js';
+import logicalDomainPlacement from './logical-domain-placement.rule.js';
 
 // Bind Vitest globals to globalThis so RuleTester can find them
 Object.assign(globalThis, { afterAll, beforeAll, describe, it });
@@ -124,7 +124,7 @@ const ruleTester = new RuleTester({
   },
 });
 
-describe('naming-conventions', () => {
+describe('logical-domain-placement', () => {
   beforeAll(() => {
     clearDirCache();
     seedDirCache(
@@ -257,61 +257,28 @@ describe('naming-conventions', () => {
     );
   });
 
-  ruleTester.run('naming-conventions', namingConventions, {
+  ruleTester.run('logical-domain-placement', logicalDomainPlacement, {
     invalid: [
       {
         code: 'export type X = string;',
         errors: [
           {
             message:
-              'Folder name "_myFolder" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
+              'Layers cannot contain files directly. File "x.type.ts" is placed directly inside Layer "_component".',
+          },
+        ],
+        filename: 'src/_component/x.type.ts',
+        settings,
+      },
+      {
+        code: 'export type X = string;',
+        errors: [
+          {
+            message:
+              'Layers cannot contain files directly. File "x.type.ts" is placed directly inside Layer "_myFolder".',
           },
         ],
         filename: 'src/_myFolder/x.type.ts',
-        settings,
-      },
-      {
-        code: 'export const X = 1;',
-        errors: [
-          {
-            message:
-              'Folder name "myFolder" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
-          },
-        ],
-        filename: 'src/myFolder/myFolder.component.tsx',
-        settings,
-      },
-      {
-        code: 'export const X = 1;',
-        errors: [
-          {
-            message:
-              'Layer/Category directory "components" must be prefixed with an underscore (e.g. "_components").',
-          },
-        ],
-        filename: 'src/components/button/button.component.tsx',
-        settings,
-      },
-      {
-        code: 'export const getLead = () => null;',
-        errors: [
-          {
-            message:
-              'Folder name "_[lead_id]" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
-          },
-        ],
-        filename: 'src/_apis/_[lead_id]/get-lead/get-lead.api.ts',
-        settings,
-      },
-      {
-        code: 'export const add = (a: number, b: number) => a + b;',
-        errors: [
-          {
-            message:
-              'Layer/Category directory "utils" must be prefixed with an underscore (e.g. "_utils").',
-          },
-        ],
-        filename: 'src/utils/helper.util.ts',
         settings,
       },
       {
@@ -319,7 +286,29 @@ describe('naming-conventions', () => {
         errors: [
           {
             message:
-              'Directory "_button" has an Access Node (index.ts) but its name starts with "_". Fragments must not be prefixed with underscore.',
+              'Fragment directory "button" cannot be placed directly inside Layer "_ui". Fragments must be contained within a Category.',
+          },
+        ],
+        filename: 'src/_ui/button/button.component.tsx',
+        settings,
+      },
+      {
+        code: 'export const x = 1;',
+        errors: [
+          {
+            message:
+              'Layers cannot contain files directly. File "direct-file.ts" is placed directly inside Layer "_ui".',
+          },
+        ],
+        filename: 'src/_ui/direct-file.ts',
+        settings,
+      },
+      {
+        code: 'export const Button = () => null;',
+        errors: [
+          {
+            message:
+              'Layers cannot contain files directly. File "_button.component.tsx" is placed directly inside Layer "_button".',
           },
         ],
         filename: 'src/_button/_button.component.tsx',
@@ -330,10 +319,10 @@ describe('naming-conventions', () => {
         errors: [
           {
             message:
-              'File extension ".ts" is not allowed in Category "_styles". Allowed extensions: .css.',
+              'Fragment directory "sub-frag" cannot be placed directly inside Fragment "button". Sub-Fragments must be contained within a Private Category.',
           },
         ],
-        filename: 'src/_styles/theme-bad.ts',
+        filename: 'src/_components/button/sub-frag/sub-frag.component.tsx',
         settings,
       },
       {
@@ -341,10 +330,10 @@ describe('naming-conventions', () => {
         errors: [
           {
             message:
-              'Role "util" for file "user-bad.util.ts" does not match the expected Category role "type".',
+              'Fragment directory "direct-frag" cannot be placed directly inside Fractal Branch "_src@shared". Fragments must be contained within a Category.',
           },
         ],
-        filename: 'src/_types/user-bad.util.ts',
+        filename: 'src/_src@shared/direct-frag/direct-frag.component.tsx',
         settings,
       },
       {
@@ -352,107 +341,78 @@ describe('naming-conventions', () => {
         errors: [
           {
             message:
-              'Folder name "_src@shared@shared" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
+              'Fragment directory "direct-frag" cannot be placed directly inside Root Fragment "app". Fragments must be contained within a Category.',
+          },
+        ],
+        filename: 'src/app/direct-frag/direct-frag.component.tsx',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Fragment directory "child" cannot be placed directly inside Layer "_my-layer". Fragments must be contained within a Category.',
+          },
+          {
+            message:
+              'Layer directory "_my-layer" cannot be placed inside "button" (classified as fragment). Layers cannot reside within Fragments.',
+          },
+        ],
+        filename: 'src/_components/button/_my-layer/child/child.component.tsx',
+        settings,
+      },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Fractal Branch "_src@shared@shared" cannot be placed inside another Fractal Branch "_src@shared".',
+          },
+          {
+            message:
+              'Fractal Branches cannot contain files directly. File "some.type.ts" is placed directly inside Fractal Branch "_src@shared@shared".',
           },
         ],
         filename: 'src/_src@shared/_src@shared@shared/some.type.ts',
         settings,
       },
       {
-        code: 'export type Helper = string;',
+        code: 'export const X = 1;',
         errors: [
           {
             message:
-              'Fractal Branch name "_wrong@shared" must match its parent scope name: "_hooks@shared".',
+              'Root Fragment directory "my-root" must be placed directly inside a Root Container or another Root Fragment, not inside "_components" (classified as category).',
           },
         ],
-        filename: 'src/_hooks/_wrong@shared/_types/helper.type.ts',
-        settings,
-      },
-      // Fragment Node composing two Roles (util + spec) in its name
-      {
-        code: 'export const getPagination = () => 1;',
-        errors: [
-          {
-            message:
-              'File "pagination.util.spec.ts" composes multiple Roles ("util", "spec") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.',
+        filename: 'src/_components/my-root/page.tsx',
+        settings: {
+          faf: {
+            ...settings.faf,
+            trees: settings.faf.trees.map((tree, index) => {
+              if (index === 0) {
+                return {
+                  ...tree,
+                  rootFragments: [
+                    ...(tree.rootFragments || []),
+                    {
+                      paths: ['src/_components/my-root'],
+                      rootNodes: [['page.tsx']],
+                    },
+                  ],
+                };
+              }
+              return tree;
+            }),
           },
-        ],
-        filename: 'src/pagination/pagination.util.spec.ts',
-        settings,
-      },
-      // Category single file composing two Roles, even though the rightmost matches the expected Category role
-      {
-        code: 'export type Setting = string;',
-        errors: [
-          {
-            message:
-              'File "setting.util.type.ts" composes multiple Roles ("util", "type") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.',
-          },
-        ],
-        filename: 'src/_types/setting.util.type.ts',
-        settings,
-      },
-      // Fragment Node composing three Roles (util + type + spec) in its name
-      {
-        code: 'export const getPaginationDetails = () => 1;',
-        errors: [
-          {
-            message:
-              'File "pagination.util.type.spec.ts" composes multiple Roles ("util", "type", "spec") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.',
-          },
-        ],
-        filename: 'src/pagination/pagination.util.type.spec.ts',
-        settings,
-      },
-      // Route terminal Fragment with an uppercase HTTP method
-      {
-        code: 'export const getTodo = () => null;',
-        errors: [
-          {
-            message:
-              'Folder name "GET-todo" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
-          },
-        ],
-        filename: 'src/_apis/GET-todo/GET-todo.api.ts',
-        settings,
+        },
       },
     ],
     valid: [
-      // Dynamic route parameter in kebab-case
+      // Fragment inside Sub-Category
       {
-        code: 'export const getLead = () => null;',
-        filename: 'src/_apis/_[lead-id]/get-lead/get-lead.api.ts',
-        settings,
-      },
-      // Fractal Branch type file in shared Category
-      {
-        code: 'export type Mutate = string;',
-        filename: 'src/_apis/_apis@shared/_types/mutate.type.ts',
-        settings,
-      },
-      // Foreign Domain file (excluded path)
-      {
-        code: 'export default {}',
-        filename: 'src/configs/vitest-setup.ts',
-        settings,
-      },
-      // Asset with allowed extension in Category
-      {
-        code: '/* styles block */',
-        filename: 'src/_styles/theme.css',
-        settings,
-      },
-      // Single file in Category with allowSingleFiles
-      {
-        code: 'export type User = { id: string };',
-        filename: 'src/_types/user.type.ts',
-        settings,
-      },
-      // Single Role Fragment Node, sibling of a file composing two Roles
-      {
-        code: 'export const Pagination = () => null;',
-        filename: 'src/pagination/pagination.component.tsx',
+        code: 'export const Icon = () => null;',
+        filename: 'src/_components/_atoms/icon/icon.component.tsx',
         settings,
       },
     ],

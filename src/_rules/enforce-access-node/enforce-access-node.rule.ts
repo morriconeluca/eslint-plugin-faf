@@ -6,14 +6,25 @@ import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
 
 import { classifyFolder } from '#_rules@shared/_utils/_aggregates/classify-folder/index.js';
 import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
+import { getProjectRoot } from '#_rules@shared/_utils/_primitives/get-project-root/index.js';
+import { getRootFragmentConfig } from '#_rules@shared/_utils/_primitives/get-root-fragment-config/index.js';
+import { readDirCached } from '#_rules@shared/_utils/_primitives/read-dir-cached/index.js';
 import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
+import { walkAncestors } from '#_rules@shared/_utils/_systems/walk-ancestors/index.js';
 
 /**
  * @fileoverview Rule: faf/enforce-access-node
  * Enforces the FAF Law of Access Node Integrity.
  *
- * FAF Law: An Access Node (barrel file like `index.ts`) must only define and export the Fragment's public interface.
- * It is restricted to import/export only its own sibling Fragment Nodes using simple relative paths.
+ * FAF Law:
+ * - A directory that isn't a Category, Layer, Fractal Branch, or Root Fragment must have
+ *   an Access Node (index.ts/index.js).
+ * - Access Nodes are exclusive to Fragments: an index file directly inside any other
+ *   Logical Domain is forbidden.
+ * - Every Fragment must contain at least one Fragment Node establishing its Master Node.
+ * - An Access Node (barrel file like `index.ts`) must only define and export the Fragment's
+ *   public interface. It is restricted to import/export only its own sibling Fragment Nodes
+ *   using simple relative paths.
  *
  * Valid:
  * - `export * from './button.component';` inside `button/index.ts`.
@@ -28,28 +39,118 @@ const rule: Rule.RuleModule = {
   create(context) {
     const absPath = context.filename;
     const relPath = toRelativePath(absPath);
-    const fileName = path.basename(relPath);
-
-    if (fileName !== 'index.ts' && fileName !== 'index.js') {
-      return {};
-    }
-
     const settings = context.settings as { faf?: TFafSettings };
+
+    const listeners: Rule.RuleListener = {
+      Program(node) {
+        if (!settings.faf) {
+          return;
+        }
+
+        const config = findTreeConfig(relPath, settings.faf);
+        if (!config) {
+          return;
+        }
+
+        const relDir = path.dirname(relPath);
+        const folderName = path.basename(relDir);
+        const parentType = classifyFolder(relDir, config);
+
+        if (parentType === 'foreign') {
+          return;
+        }
+
+        const fileName = path.basename(relPath);
+
+        for (const {
+          folderName: currentFolderName,
+          type: currentType,
+        } of walkAncestors(relDir, config)) {
+          if (currentType === 'invalid-fragment') {
+            context.report({
+              message: `Fragment directory "${currentFolderName}" is missing an Access Node (index.ts/index.js).`,
+              node,
+            });
+          }
+        }
+
+        if (
+          parentType === 'layer' ||
+          parentType === 'fractal-branch' ||
+          parentType === 'invalid-fragment'
+        ) {
+          return;
+        }
+
+        // Must run before the Access Node check below: a Root Fragment's internal
+        // naming (including a file named "index.ts") is governed by "rootNodes", not
+        // by the ordinary Fragment taxonomy
+        const rfConfig = getRootFragmentConfig(relDir, config);
+        if (rfConfig) {
+          const flatRootNodes = rfConfig.rootNodes.flat();
+          const isMatchedRootNode = flatRootNodes.some((rn) => {
+            if (rn.includes('/')) {
+              const rfPath = rfConfig.paths[0] ?? '';
+              const absRn = path.resolve(getProjectRoot(), rfPath, rn);
+              return toRelativePath(absRn) === relPath;
+            }
+            return rn === fileName;
+          });
+
+          if (isMatchedRootNode) {
+            return; // Valid Root Node
+          }
+        }
+
+        if (fileName !== 'index.ts' && fileName !== 'index.js') {
+          return;
+        }
+
+        if (parentType !== 'fragment') {
+          context.report({
+            message: `Access Nodes ("index.ts/index.js") are exclusive to Fragments. Found index file directly inside "${folderName}" (classified as ${parentType}).`,
+            node,
+          });
+          return;
+        }
+
+        const contents = readDirCached(relDir);
+        const hasFragmentNode = contents.files.some(
+          (f) =>
+            f !== 'index.ts' &&
+            f !== 'index.js' &&
+            f !== 'README.md' &&
+            f !== 'package.json' &&
+            f !== 'tsconfig.json'
+        );
+        if (!hasFragmentNode) {
+          context.report({
+            message: `Fragment "${folderName}" has no Master Node. Every Fragment must contain at least one Fragment Node establishing its Role.`,
+            node,
+          });
+        }
+      },
+    };
+
+    const fileName = path.basename(relPath);
+    if (fileName !== 'index.ts' && fileName !== 'index.js') {
+      return listeners;
+    }
     if (!settings.faf) {
-      return {};
+      return listeners;
     }
 
     const config = findTreeConfig(relPath, settings.faf);
     if (!config) {
-      return {};
+      return listeners;
     }
 
     const relDir = path.dirname(relPath);
     const parentType = classifyFolder(relDir, config);
 
-    // If it's not a Fragment, naming-conventions handles it, but let's ignore it here
+    // If it's not a Fragment, the checks above already report it
     if (parentType !== 'fragment') {
-      return {};
+      return listeners;
     }
 
     function checkSource(node: Rule.Node, sourceVal: string) {
@@ -83,23 +184,23 @@ const rule: Rule.RuleModule = {
       }
     }
 
-    return {
-      ExportAllDeclaration(node) {
-        checkSource(node, node.source.value as string);
-      },
-      ExportNamedDeclaration(node) {
-        if (node.source) {
-          checkSource(node, node.source.value as string);
-        }
-      },
-      ImportDeclaration(node) {
-        checkSource(node, node.source.value as string);
-      },
+    listeners.ExportAllDeclaration = (node) => {
+      checkSource(node, node.source.value as string);
     };
+    listeners.ExportNamedDeclaration = (node) => {
+      if (node.source) {
+        checkSource(node, node.source.value as string);
+      }
+    };
+    listeners.ImportDeclaration = (node) => {
+      checkSource(node, node.source.value as string);
+    };
+
+    return listeners;
   },
   meta: {
     docs: {
-      description: 'Enforce Access Node rules for Fragments',
+      description: 'Enforce Access Node integrity for Fragments',
     },
     schema: [],
     type: 'problem',

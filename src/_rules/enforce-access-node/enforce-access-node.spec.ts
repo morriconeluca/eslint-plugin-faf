@@ -132,6 +132,9 @@ describe('enforce-access-node', () => {
       ['index.ts', 'button.component.tsx', 'button.hook.ts'],
       []
     );
+    seedDirCache('src/bad-folder', ['bad-folder.component.tsx'], []);
+    seedDirCache('src/_components', [], ['button', '_atoms']);
+    seedDirCache('src/empty-frag', ['index.ts'], []);
   });
 
   ruleTester.run('enforce-access-node', enforceAccessNode, {
@@ -191,6 +194,52 @@ describe('enforce-access-node', () => {
         filename: 'src/button/index.ts',
         settings,
       },
+      {
+        code: 'export const X = 1;',
+        errors: [
+          {
+            message:
+              'Fragment directory "bad-folder" is missing an Access Node (index.ts/index.js).',
+          },
+        ],
+        filename: 'src/bad-folder/bad-folder.component.tsx',
+        settings,
+      },
+      {
+        code: 'export * from "./x";',
+        errors: [
+          {
+            message:
+              'Access Nodes ("index.ts/index.js") are exclusive to Fragments. Found index file directly inside "_components" (classified as category).',
+          },
+        ],
+        filename: 'src/_components/index.ts',
+        settings,
+      },
+      // index.ts in a Root Fragment, not prescribed as a Root Node
+      {
+        code: 'export default {};',
+        errors: [
+          {
+            message:
+              'Access Nodes ("index.ts/index.js") are exclusive to Fragments. Found index file directly inside "app" (classified as root-fragment).',
+          },
+        ],
+        filename: 'src/app/index.ts',
+        settings,
+      },
+      // Fragment with an Access Node but no Fragment Node establishing its Role
+      {
+        code: 'export default {};',
+        errors: [
+          {
+            message:
+              'Fragment "empty-frag" has no Master Node. Every Fragment must contain at least one Fragment Node establishing its Role.',
+          },
+        ],
+        filename: 'src/empty-frag/index.ts',
+        settings,
+      },
     ],
     valid: [
       // Re-export of own Fragment Nodes
@@ -213,6 +262,37 @@ describe('enforce-access-node', () => {
         code: "import { X } from './index';",
         filename: 'src/button/index.ts',
         settings,
+      },
+      // Access Node inside Fragment
+      {
+        code: 'export default {}',
+        filename: 'src/button/index.ts',
+        settings,
+      },
+      // index.ts as a Root Node, explicitly prescribed by the architect
+      {
+        code: 'export default {};',
+        filename: 'src/widget-root/index.ts',
+        settings: {
+          faf: {
+            ...settings.faf,
+            trees: settings.faf.trees.map((tree, index) => {
+              if (index === 0) {
+                return {
+                  ...tree,
+                  rootFragments: [
+                    ...(tree.rootFragments || []),
+                    {
+                      paths: ['src/widget-root'],
+                      rootNodes: [['index.ts']],
+                    },
+                  ],
+                };
+              }
+              return tree;
+            }),
+          },
+        },
       },
     ],
   });

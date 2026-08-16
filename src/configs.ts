@@ -17,6 +17,8 @@ export const configs: TFafPlugin['configs'] = {
     rules: {
       'faf/category-mutually-exclusive': 'error',
       'faf/enforce-access-node': 'error',
+      'faf/fragment-master-node': 'error',
+      'faf/logical-domain-placement': 'error',
       'faf/naming-conventions': 'error',
       'faf/no-direct-fragment-import': 'error',
       'faf/no-fractal-branch-leak': 'error',

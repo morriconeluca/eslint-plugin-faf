@@ -6,7 +6,7 @@ import { clearDirCache } from '#_rules@shared/_utils/_primitives/clear-dir-cache
 import { seedDirCache } from '#_rules@shared/_utils/_primitives/seed-dir-cache/index.js';
 import { setProjectRoot } from '#_rules@shared/_utils/_primitives/set-project-root/index.js';
 
-import namingConventions from './naming-conventions.rule.js';
+import fragmentMasterNode from './fragment-master-node.rule.js';
 
 // Bind Vitest globals to globalThis so RuleTester can find them
 Object.assign(globalThis, { afterAll, beforeAll, describe, it });
@@ -124,7 +124,7 @@ const ruleTester = new RuleTester({
   },
 });
 
-describe('naming-conventions', () => {
+describe('fragment-master-node', () => {
   beforeAll(() => {
     clearDirCache();
     seedDirCache(
@@ -257,17 +257,32 @@ describe('naming-conventions', () => {
     );
   });
 
-  ruleTester.run('naming-conventions', namingConventions, {
+  ruleTester.run('fragment-master-node', fragmentMasterNode, {
     invalid: [
       {
-        code: 'export type X = string;',
+        code: 'export const X = 1;',
         errors: [
           {
             message:
-              'Folder name "_myFolder" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
+              'Fragment Node "wrong.component.tsx" must share the parent Fragment name: "button.<role>.tsx".',
+          },
+          {
+            message:
+              'Fragment Node "wrong.component.tsx" shares Role "component" with sibling "button.component.tsx". Each Fragment Node must have a unique Role within its Fragment.',
           },
         ],
-        filename: 'src/_myFolder/x.type.ts',
+        filename: 'src/button/wrong.component.tsx',
+        settings,
+      },
+      {
+        code: 'export const getProfile = () => null;',
+        errors: [
+          {
+            message:
+              'Route terminal Fragment "get-profile-bad" must contain a Master Node with role "api" (e.g. "get-profile-bad.api.ts").',
+          },
+        ],
+        filename: 'src/_apis/_me/get-profile-bad/get-profile-bad.component.tsx',
         settings,
       },
       {
@@ -275,10 +290,10 @@ describe('naming-conventions', () => {
         errors: [
           {
             message:
-              'Folder name "myFolder" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
+              'Fragment "button" inside Category "_utils" must contain a Master Node with role "util" (e.g. "button.util.ts").',
           },
         ],
-        filename: 'src/myFolder/myFolder.component.tsx',
+        filename: 'src/_utils/button/button.component.tsx',
         settings,
       },
       {
@@ -286,123 +301,50 @@ describe('naming-conventions', () => {
         errors: [
           {
             message:
-              'Layer/Category directory "components" must be prefixed with an underscore (e.g. "_components").',
+              'Fragment Node "helpers.ts" must share the parent Fragment name: "widget.<role>.ts".',
+          },
+          {
+            message:
+              'File "helpers.ts" inside Fragment "widget" must have an explicit role suffix (e.g. "widget.style.ts").',
           },
         ],
-        filename: 'src/components/button/button.component.tsx',
+        filename: 'src/widget/helpers.ts',
         settings,
       },
+      // Real asset (no code extension) inside a Fragment must still carry an explicit role suffix
       {
-        code: 'export const getLead = () => null;',
+        code: '/* styles */',
         errors: [
           {
             message:
-              'Folder name "_[lead_id]" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
+              'File "button.css" inside Fragment "button" must have an explicit role suffix (e.g. "button.style.css").',
           },
         ],
-        filename: 'src/_apis/_[lead_id]/get-lead/get-lead.api.ts',
+        filename: 'src/button/button.css',
         settings,
       },
+      // Two Fragment Nodes sharing the same Role in the same Fragment
       {
-        code: 'export const add = (a: number, b: number) => a + b;',
+        code: 'export const Duo = () => null;',
         errors: [
           {
             message:
-              'Layer/Category directory "utils" must be prefixed with an underscore (e.g. "_utils").',
+              'Fragment Node "duo.component.tsx" shares Role "component" with sibling "duo.component.jsx". Each Fragment Node must have a unique Role within its Fragment.',
           },
         ],
-        filename: 'src/utils/helper.util.ts',
+        filename: 'src/duo/duo.component.tsx',
         settings,
       },
+      // Route terminal Fragment with an unrecognized HTTP method
       {
-        code: 'export const Button = () => null;',
+        code: 'export const fetchTodo = () => null;',
         errors: [
           {
             message:
-              'Directory "_button" has an Access Node (index.ts) but its name starts with "_". Fragments must not be prefixed with underscore.',
+              'Route terminal Fragment "fetch-todo" must follow the "<method>-<object>" pattern with a lowercase HTTP method (connect, delete, get, head, options, patch, post, put, trace).',
           },
         ],
-        filename: 'src/_button/_button.component.tsx',
-        settings,
-      },
-      {
-        code: 'export const X = 1;',
-        errors: [
-          {
-            message:
-              'File extension ".ts" is not allowed in Category "_styles". Allowed extensions: .css.',
-          },
-        ],
-        filename: 'src/_styles/theme-bad.ts',
-        settings,
-      },
-      {
-        code: 'export const X = 1;',
-        errors: [
-          {
-            message:
-              'Role "util" for file "user-bad.util.ts" does not match the expected Category role "type".',
-          },
-        ],
-        filename: 'src/_types/user-bad.util.ts',
-        settings,
-      },
-      {
-        code: 'export const X = 1;',
-        errors: [
-          {
-            message:
-              'Folder name "_src@shared@shared" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
-          },
-        ],
-        filename: 'src/_src@shared/_src@shared@shared/some.type.ts',
-        settings,
-      },
-      {
-        code: 'export type Helper = string;',
-        errors: [
-          {
-            message:
-              'Fractal Branch name "_wrong@shared" must match its parent scope name: "_hooks@shared".',
-          },
-        ],
-        filename: 'src/_hooks/_wrong@shared/_types/helper.type.ts',
-        settings,
-      },
-      // Fragment Node composing two Roles (util + spec) in its name
-      {
-        code: 'export const getPagination = () => 1;',
-        errors: [
-          {
-            message:
-              'File "pagination.util.spec.ts" composes multiple Roles ("util", "spec") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.',
-          },
-        ],
-        filename: 'src/pagination/pagination.util.spec.ts',
-        settings,
-      },
-      // Category single file composing two Roles, even though the rightmost matches the expected Category role
-      {
-        code: 'export type Setting = string;',
-        errors: [
-          {
-            message:
-              'File "setting.util.type.ts" composes multiple Roles ("util", "type") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.',
-          },
-        ],
-        filename: 'src/_types/setting.util.type.ts',
-        settings,
-      },
-      // Fragment Node composing three Roles (util + type + spec) in its name
-      {
-        code: 'export const getPaginationDetails = () => 1;',
-        errors: [
-          {
-            message:
-              'File "pagination.util.type.spec.ts" composes multiple Roles ("util", "type", "spec") in its name. A Logical Node may declare only one Role; promote the detail that needs its own Role to an autonomous Sub-Fragment.',
-          },
-        ],
-        filename: 'src/pagination/pagination.util.type.spec.ts',
+        filename: 'src/_apis/fetch-todo/fetch-todo.api.ts',
         settings,
       },
       // Route terminal Fragment with an uppercase HTTP method
@@ -411,7 +353,7 @@ describe('naming-conventions', () => {
         errors: [
           {
             message:
-              'Folder name "GET-todo" must be in kebab-case (e.g. "_my-folder" or "_[my-param]").',
+              'Route terminal Fragment "GET-todo" must follow the "<method>-<object>" pattern with a lowercase HTTP method (connect, delete, get, head, options, patch, post, put, trace).',
           },
         ],
         filename: 'src/_apis/GET-todo/GET-todo.api.ts',
@@ -419,40 +361,40 @@ describe('naming-conventions', () => {
       },
     ],
     valid: [
-      // Dynamic route parameter in kebab-case
+      // Fragment Node shares parent Fragment name
       {
-        code: 'export const getLead = () => null;',
-        filename: 'src/_apis/_[lead-id]/get-lead/get-lead.api.ts',
+        code: 'export const Button = () => null;',
+        filename: 'src/button/button.component.tsx',
         settings,
       },
-      // Fractal Branch type file in shared Category
+      // Root Node in Root Fragment
       {
-        code: 'export type Mutate = string;',
-        filename: 'src/_apis/_apis@shared/_types/mutate.type.ts',
+        code: 'export const main = 1;',
+        filename: 'src/main.tsx',
         settings,
       },
-      // Foreign Domain file (excluded path)
+      // Route terminal Fragment with correct Master Node role
       {
-        code: 'export default {}',
-        filename: 'src/configs/vitest-setup.ts',
+        code: 'export const getProfile = () => null;',
+        filename: 'src/_apis/_me/get-profile/get-profile.api.ts',
         settings,
       },
-      // Asset with allowed extension in Category
+      // Fragment Node with explicit role inside Category
       {
-        code: '/* styles block */',
-        filename: 'src/_styles/theme.css',
+        code: 'export type MyType = string;',
+        filename: 'src/_components/button/button.type.ts',
         settings,
       },
-      // Single file in Category with allowSingleFiles
+      // .spec.tsx as valid Fragment Node
       {
-        code: 'export type User = { id: string };',
-        filename: 'src/_types/user.type.ts',
+        code: 'export const test = 1;',
+        filename: 'src/dialog/dialog.spec.tsx',
         settings,
       },
-      // Single Role Fragment Node, sibling of a file composing two Roles
+      // .story.tsx as valid Fragment Node
       {
-        code: 'export const Pagination = () => null;',
-        filename: 'src/pagination/pagination.component.tsx',
+        code: 'export const story = 1;',
+        filename: 'src/dialog/dialog.story.tsx',
         settings,
       },
     ],
