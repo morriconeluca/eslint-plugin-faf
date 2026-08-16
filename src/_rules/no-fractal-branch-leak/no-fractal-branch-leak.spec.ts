@@ -266,6 +266,18 @@ describe('no-fractal-branch-leak', () => {
           'src/app/_app@shared/_ui/_components/private-fragment/private-fragment.component.tsx',
         settings,
       },
+      // A Fractal Branch depending on a Root Node from the subtree it serves
+      {
+        code: "import { App } from '../../../app';",
+        errors: [
+          {
+            message:
+              'Fractal Branch "src/app/_app@shared" cannot depend on "src/app/app.tsx" from the subtree it serves. A Fractal Branch may only provide implementation details to its parent scope; it must never depend on it, not even indirectly.',
+          },
+        ],
+        filename: 'src/app/_app@shared/_hooks/use-custom/use-custom.hook.ts',
+        settings,
+      },
     ],
     valid: [
       // Descendant of scope imports from FB
@@ -283,7 +295,7 @@ describe('no-fractal-branch-leak', () => {
       },
       // Deeply nested sub-tree accesses parent scope's FB
       {
-        code: "import { useCustom } from '../../../../_hooks/use-custom';",
+        code: "import { useCustom } from '../../../_hooks/use-custom';",
         filename:
           'src/app/_app@shared/_ui/_components/private-fragment/private-fragment.component.tsx',
         settings,
