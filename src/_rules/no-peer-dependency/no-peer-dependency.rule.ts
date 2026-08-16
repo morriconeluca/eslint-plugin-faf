@@ -2,11 +2,7 @@ import type { Rule } from 'eslint';
 
 import path from 'path';
 
-import type {
-  TFafSettings,
-  TRootFragmentConfig,
-  TTreeConfig,
-} from '#_rules@shared/_types/faf.type.js';
+import type { TFafSettings } from '#_rules@shared/_types/faf.type.js';
 
 import { classifyFolder } from '#_rules@shared/_utils/_aggregates/classify-folder/index.js';
 import { resolveImportPath } from '#_rules@shared/_utils/_aggregates/resolve-import-path/index.js';
@@ -15,54 +11,10 @@ import { getFileRole } from '#_rules@shared/_utils/_primitives/get-file-role/ind
 import { getLcaAndSubBranches } from '#_rules@shared/_utils/_primitives/get-lca-and-sub-branches/index.js';
 import { getRoleHierarchyIndex } from '#_rules@shared/_utils/_primitives/get-role-hierarchy-index/index.js';
 import { getRootFragmentConfig } from '#_rules@shared/_utils/_primitives/get-root-fragment-config/index.js';
+import { getRootNodeIndex } from '#_rules@shared/_utils/_primitives/get-root-node-index/index.js';
 import { resolveHorizontalHierarchy } from '#_rules@shared/_utils/_primitives/resolve-horizontal-hierarchy/index.js';
 import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
-
-function getRootNodeIndex(
-  relPath: string,
-  rfConfig: TRootFragmentConfig,
-  lcaPath: string
-): number {
-  const relToLca = path.relative(lcaPath, relPath).replace(/\\/g, '/');
-  for (let i = 0; i < rfConfig.rootNodes.length; i++) {
-    const group = rfConfig.rootNodes[i];
-    if (group && group.includes(relToLca)) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-/**
- * Checks if B is inside a Private Category of the LCA directory.
- */
-function isInsidePrivateCategoryOfLca(
-  relPathB: string,
-  lcaPath: string,
-  config: TTreeConfig
-): boolean {
-  let current = relPathB;
-  while (current && current !== '.' && current !== '/' && current !== lcaPath) {
-    const parent = path.dirname(current).replace(/\\/g, '/');
-    if (parent === current) {
-      break;
-    }
-
-    const currentType = classifyFolder(current, config);
-    const parentType = classifyFolder(parent, config);
-
-    if (
-      currentType === 'category' &&
-      (parentType === 'fragment' || parentType === 'root-fragment') &&
-      parent === lcaPath
-    ) {
-      return true;
-    }
-
-    current = parent;
-  }
-  return false;
-}
+import { isInsidePrivateCategoryOfLca } from '#_rules@shared/_utils/_systems/is-inside-private-category-of-lca/index.js';
 
 /**
  * @fileoverview Rule: faf/no-peer-dependency
