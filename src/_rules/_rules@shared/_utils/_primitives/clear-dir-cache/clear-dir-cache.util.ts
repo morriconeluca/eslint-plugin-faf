@@ -8,6 +8,7 @@ import { state } from '#_utils@shared/_stores/cache/index.js';
 export function clearDirCache(): void {
   state.dirCache = {};
   state.classifyCache.clear();
+  state.ancestorChainCache.clear();
   state.categoryConfigCache.clear();
   state.treeConfigCache.clear();
   state.treeConfigIncludingExcludedCache.clear();

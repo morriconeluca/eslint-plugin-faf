@@ -4,7 +4,7 @@ import { state } from '#_utils@shared/_stores/cache/index.js';
 
 /**
  * Manually populates the directory cache for testing and validation.
- * Automatically invalidates dependent caches (`classifyCache`, `categoryConfigCache`, `resolvedImportPathCache`)
+ * Automatically invalidates dependent caches (`classifyCache`, `ancestorChainCache`, `categoryConfigCache`, `resolvedImportPathCache`)
  * to prevent test state leakage.
  *
  * @param relDirPath - Mocked directory path.
@@ -23,6 +23,7 @@ export function seedDirCache(
 
   // Invalidate caches that could be affected by new folder layouts
   state.classifyCache.clear();
+  state.ancestorChainCache.clear();
   state.categoryConfigCache.clear();
   state.resolvedImportPathCache.clear();
 }

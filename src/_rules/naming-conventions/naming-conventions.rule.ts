@@ -15,6 +15,7 @@ import { getProjectRoot } from '#_rules@shared/_utils/_primitives/get-project-ro
 import { getRootFragmentConfig } from '#_rules@shared/_utils/_primitives/get-root-fragment-config/index.js';
 import { readDirCached } from '#_rules@shared/_utils/_primitives/read-dir-cached/index.js';
 import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
+import { walkAncestors } from '#_rules@shared/_utils/_systems/walk-ancestors/index.js';
 
 const KEBAB_CASE_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const DEFAULT_HTTP_METHODS: THttpMethod[] = [
@@ -71,23 +72,14 @@ const rule: Rule.RuleModule = {
         const fileName = path.basename(relPath);
 
         // Validate folder conventions across all ancestors, not just the immediate parent
-        let currentDir = relDir;
-        while (currentDir && currentDir !== '.' && currentDir !== '/') {
-          const isInTree = config.includes.some(
-            (inc) => currentDir === inc || currentDir.startsWith(inc + '/')
-          );
-          const isExcluded =
-            config.excludes?.some(
-              (exc) => currentDir === exc || currentDir.startsWith(exc + '/')
-            ) ?? false;
-
-          if (!isInTree || isExcluded) {
-            break;
-          }
-
-          const currentFolderName = path.basename(currentDir);
-          const currentType = classifyFolder(currentDir, config);
-
+        for (const {
+          dir: currentDir,
+          folderName: currentFolderName,
+          parentDir: relParentDir,
+          parentFolderName,
+          parentType: relParentType,
+          type: currentType,
+        } of walkAncestors(relDir, config)) {
           // Layers and Categories must be prefixed with an underscore
           if (
             (currentType === 'layer' || currentType === 'category') &&
@@ -159,15 +151,6 @@ const rule: Rule.RuleModule = {
               node,
             });
           }
-
-          const relParentDir = path.dirname(currentDir).replace(/\\/g, '/');
-          const parentFolderName = path.basename(relParentDir);
-          // 'unknown' means relParentDir falls outside any configured tree path,
-          // i.e. it is the literal Root Container
-          const relParentType =
-            relParentDir === '.' || relParentDir === '/'
-              ? 'unknown'
-              : classifyFolder(relParentDir, config);
 
           if (currentType === 'root-fragment') {
             if (
@@ -251,8 +234,6 @@ const rule: Rule.RuleModule = {
               });
             }
           }
-
-          currentDir = path.dirname(currentDir).replace(/\\/g, '/');
         }
 
         if (parentType === 'layer') {

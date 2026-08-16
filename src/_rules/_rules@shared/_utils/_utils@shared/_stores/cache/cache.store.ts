@@ -6,6 +6,7 @@ import type { TCacheState } from './cache.type.js';
  * Cleaned up between testing suites dynamically using clearDirCache.
  */
 export const state: TCacheState = {
+  ancestorChainCache: new Map(),
   categoryConfigCache: new Map(),
   classifyCache: new Map(),
   dirCache: {},
