@@ -11,7 +11,7 @@ This plugin is designed for complex TypeScript/JavaScript codebases to ensure **
 - **Strict Enforcing of FAF Taxonomy**: Ensures your folder structure strictly maps to Layers, Categories, Fragments, and Fractal Branches.
 - **Law of Separation between Peers**: Prevents lateral dependency coupling between sibling modules without explicit hierarchy.
 - **Access Node Encapsulation**: Guarantees that internal Fragment files are never imported directly, enforcing consumption solely through the Fragment's barrel file (`index.ts`).
-- **High-Performance Architecture**: Features optimized caching (`dirCache`, `classifyCache`, `rolesCache`) to minimize disk I/O during linting runs.
+- **High-Performance Architecture**: Features optimized caching (`dirCache`, `classifyCache`, `ancestorChainCache`, `rolesCache`) to minimize disk I/O during linting runs.
 
 ---
 
