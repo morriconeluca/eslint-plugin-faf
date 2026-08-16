@@ -11,11 +11,8 @@ import type {
 import { classifyFolder } from '#_rules@shared/_utils/_aggregates/classify-folder/index.js';
 import { resolveImportPath } from '#_rules@shared/_utils/_aggregates/resolve-import-path/index.js';
 import { findTreeConfig } from '#_rules@shared/_utils/_primitives/find-tree-config/index.js';
-import { getFileRole } from '#_rules@shared/_utils/_primitives/get-file-role/index.js';
 import { getLcaAndSubBranches } from '#_rules@shared/_utils/_primitives/get-lca-and-sub-branches/index.js';
-import { getRoleHierarchyIndex } from '#_rules@shared/_utils/_primitives/get-role-hierarchy-index/index.js';
 import { getRootFragmentConfig } from '#_rules@shared/_utils/_primitives/get-root-fragment-config/index.js';
-import { resolveHorizontalHierarchy } from '#_rules@shared/_utils/_primitives/resolve-horizontal-hierarchy/index.js';
 import { toRelativePath } from '#_rules@shared/_utils/_primitives/to-relative-path/index.js';
 
 function getRootNodeIndex(
@@ -65,20 +62,18 @@ function isInsidePrivateCategoryOfLca(
 }
 
 /**
- * @fileoverview Rule: faf/no-peer-dependency
- * Enforces the FAF Law of Separation between Peers.
+ * @fileoverview Rule: faf/root-node-dependency-direction
+ * Enforces the FAF Law of dependency direction between Root Nodes.
  *
- * FAF Law: Sibling directories and files (at the same filesystem level) must not import each other
- * unless a horizontal hierarchy flow is explicitly configured (via local/global horizontal hierarchies).
- * For files inside a Fragment, peer imports flow according to the index order defined in the `roles` configuration.
+ * FAF Law: Root Nodes are exempt from the Role naming convention, so relationships between
+ * them (sibling or nested Root Fragments) can never fall back to the Role scale: they must
+ * always be explicitly authorized by the architect via "rootNodes" at the common ancestor.
  *
  * Valid:
- * - A compound utility importing from a primitive utility (if compounds ➔ primitives is configured).
- * - Sibling Fragment Nodes importing from each other according to the roles scale order (e.g. `util` imports `type`).
+ * - `main.tsx` importing `main.css` when `rootNodes: [['main.css'], ['main.tsx']]` authorizes it.
  *
  * Invalid:
- * - A primitive utility importing from a compound utility (violating horizontal hierarchy).
- * - Circular imports between sibling folders with no configured hierarchy.
+ * - Two sibling Root Nodes importing each other with no "rootNodes" relationship configured.
  */
 const rule: Rule.RuleModule = {
   create(context) {
@@ -124,31 +119,11 @@ const rule: Rule.RuleModule = {
 
       const importedDir = path.dirname(resolvedRelPath);
 
-      // Scenario 1: Same directory (Fragment Nodes or direct siblings)
+      // Sibling Fragment Nodes (same directory) never involve Root Nodes
       if (currentDir === importedDir) {
-        const fileA = path.basename(relPath);
-        const fileB = path.basename(resolvedRelPath);
-
-        const roleA = getFileRole(fileA, config!);
-        const roleB = getFileRole(fileB, config!);
-
-        if (roleA && roleB) {
-          const idxA = getRoleHierarchyIndex(roleA, config!);
-          const idxB = getRoleHierarchyIndex(roleB, config!);
-
-          if (idxA !== -1 && idxB !== -1) {
-            if (idxB >= idxA) {
-              context.report({
-                message: `Sibling import violation: "${fileA}" (role "${roleA}", level ${idxA}) cannot import from "${fileB}" (role "${roleB}", level ${idxB}). Imports must flow from lower to higher levels.`,
-                node,
-              });
-            }
-          }
-        }
         return;
       }
 
-      // Scenario 2: Different directories
       const lcaInfo = getLcaAndSubBranches(currentDir, importedDir);
       if (!lcaInfo) {
         return;
@@ -156,59 +131,49 @@ const rule: Rule.RuleModule = {
 
       const { lca, subA, subB } = lcaInfo;
 
-      // Exception: Fractal Branch
+      // Exception: Fractal Branch (handled by its own encapsulation law)
       if (subB.startsWith('_') && subB.includes('@shared')) {
-        // Allowed to import from own Fractal Branch
         return;
       }
 
-      // Exception: Private Category of the LCA
+      // Exception: Private Category of the LCA (handled by no-peer-dependency)
       if (isInsidePrivateCategoryOfLca(importedDir, lca, config!)) {
         return;
       }
 
-      // A descendant reaching for the Fragment root has no privileged access to it
+      // A descendant reaching for the Fragment root: handled by no-peer-dependency
       if (subB === '' && classifyFolder(lca, config!) === 'fragment') {
-        context.report({
-          message: `Peer separation violation: "${subA}" cannot import directly from the root of Fragment "${lca}". A node nested inside a Private Category or Fractal Branch has no privileged access to its owning Fragment's other direct children; promote the shared resource to a Fractal Branch if the sharing need is genuine.`,
-          node,
-        });
         return;
       }
 
-      // Dependency direction between Root Nodes is handled by root-node-dependency-direction
+      // Check if LCA is a Root Fragment and we are importing between Root Nodes
       const rfConfig = getRootFragmentConfig(lca, config!);
       if (rfConfig) {
         const idxRootA = getRootNodeIndex(relPath, rfConfig, lca);
         const idxRootB = getRootNodeIndex(resolvedRelPath, rfConfig, lca);
+
         if (idxRootA !== -1 && idxRootB !== -1) {
+          if (idxRootB >= idxRootA) {
+            context.report({
+              message: `Root Node import violation: "${path.basename(relPath)}" cannot import from "${path.basename(resolvedRelPath)}" under Root Fragment "${lca}".`,
+              node,
+            });
+          }
           return;
         }
       }
 
+      // Root Nodes are exempt from the Role naming convention, so relationships involving them
+      // (including nested or sibling Root Fragments) can never fall back to the Role scale: they
+      // must always be explicitly authorized by the architect via "rootNodes" at the common ancestor.
       const isSubARootFragment =
         classifyFolder(path.posix.join(lca, subA), config!) === 'root-fragment';
       const isSubBRootFragment =
         classifyFolder(path.posix.join(lca, subB), config!) === 'root-fragment';
 
       if (isSubARootFragment || isSubBRootFragment) {
-        return;
-      }
-
-      // Determine if there is a defined horizontal hierarchy at LCA and whether the import is allowed
-      const { allowed, defined: hasDefinedHierarchy } =
-        resolveHorizontalHierarchy(lca, subA, subB, config!);
-
-      if (hasDefinedHierarchy) {
-        if (!allowed) {
-          context.report({
-            message: `Horizontal hierarchy violation: "${subA}" cannot import from "${subB}" under parent "${lca}".`,
-            node,
-          });
-        }
-      } else {
         context.report({
-          message: `Peer separation violation: sibling directories "${subA}" and "${subB}" cannot import each other because no horizontal hierarchy is defined under parent "${lca}".`,
+          message: `Root Node import violation: "${relPath}" cannot import from "${resolvedRelPath}" because no "rootNodes" relationship is configured under Root Fragment "${lca}". Relationships between Root Nodes must always be explicitly authorized by the architect.`,
           node,
         });
       }
@@ -231,7 +196,7 @@ const rule: Rule.RuleModule = {
   meta: {
     docs: {
       description:
-        'Enforce the Law of Separation between Peers (no-peer-dependency)',
+        'Enforce explicit, non-Role-based dependency direction between Root Nodes',
     },
     schema: [],
     type: 'problem',
