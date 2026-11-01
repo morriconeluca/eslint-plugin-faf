@@ -8,8 +8,14 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+# Build, coverage and test artifacts
 dist
 dist-ssr
+coverage
+.stryker-tmp
+reports
+.cache
+*.tsbuildinfo
 *.local
 .env
 .env.*

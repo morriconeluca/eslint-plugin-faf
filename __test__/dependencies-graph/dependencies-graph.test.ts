@@ -5,13 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { formatViolation, isCruiseResult } from './dependencies-graph.util.js';
 
 describe('Fitness Function: Dependencies Graph', () => {
-  const srcPath = path.resolve(import.meta.dirname, '../../src');
-
-  // We use tsconfig.json because it contains the correct workspace configurations
+  const sourcePath = path.resolve(import.meta.dirname, '../../src');
   const tsConfigPath = path.resolve(import.meta.dirname, '../../tsconfig.json');
 
   it('should not have any cycles between modules and orphan modules', async () => {
-    const result = await cruise([srcPath], {
+    const result = await cruise([sourcePath], {
       exclude: {
         path: '([.](test|spec)[.](ts)$|[.]d[.]ts$)',
       },
@@ -64,9 +62,11 @@ describe('Fitness Function: Dependencies Graph', () => {
       );
     }
 
-    const violations = result.output.summary?.violations || [];
-    const errors = result.output.summary?.error || 0;
+    const violations = result.output.summary.violations;
+    const errors = result.output.summary.error;
 
-    expect(errors, violations.map(formatViolation).join('\n')).toBe(0);
+    expect(errors, violations.map((v) => formatViolation(v)).join('\n')).toBe(
+      0
+    );
   });
 });

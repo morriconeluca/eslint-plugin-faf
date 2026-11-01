@@ -10,6 +10,6 @@ export default defineConfig({
   entry: ['src/main.ts'],
   format: ['cjs', 'esm'],
   minify: false,
-  shims: true, // Auto-inject shims for CJS/ESM compatibility (e.g. __dirname, __filename)
+  shims: true,
   sourcemap: true,
 });

@@ -11,37 +11,43 @@
   "types": "./dist/main.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/main.d.ts",
-      "import": "./dist/main.js",
-      "require": "./dist/main.cjs"
+      "import": {
+        "types": "./dist/main.d.ts",
+        "default": "./dist/main.js"
+      },
+      "require": {
+        "types": "./dist/main.d.cts",
+        "default": "./dist/main.cjs"
+      }
     }
   },
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
-  "imports": {
-    "#_rules@shared/*": "./src/_rules/_rules@shared/*",
-    "#_utils@shared/*": "./src/_rules/_rules@shared/_utils/_utils@shared/*"
+  "sideEffects": false,
+  "engines": {
+    "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
   },
   "type": "module",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "npm run lint && tsup",
-    "test": "vitest run",
+    "build": "tsup",
+    "ci": "npm run gate:all",
     "dev": "vitest",
-    "lint": "npm run lint:types && npm run lint:eslint",
-    "lint:eslint": "eslint .",
-    "lint:types": "tsc --noEmit",
-    "lint:fix": "eslint --fix .",
-    "format": "prettier --write .",
-    "check-format": "prettier --check .",
-    "ci": "npm run build && npm run check-format && npm run test",
-    "prepublishOnly": "npm run ci",
+    "gate:1": "prettier --check --cache --cache-location .cache/prettier/.prettiercache . && tsc --noEmit",
+    "gate:2": "eslint --cache --cache-location .cache/eslint/ .",
+    "gate:3": "vitest run --coverage",
+    "gate:4": "stryker run && node scripts/check-mutation-threshold.ts",
+    "gate:5": "tsup && publint --strict && attw -q --pack .",
+    "gate:all": "npm run gate:1 && npm run gate:2 && npm run gate:3 && npm run gate:4 && npm run gate:5",
+    "gate:fast": "npm run gate:1 && npm run gate:2",
     "local-release": "changeset version && changeset publish",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "npm run build",
+    "sanitize": "eslint --fix --cache --cache-location .cache/eslint/ . && prettier --write --cache --cache-location .cache/prettier/.prettiercache ."
   },
   "keywords": [
     "eslint",
@@ -54,21 +60,30 @@
     "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@changesets/cli": "^2.31.0",
     "@commitlint/cli": "^21.0.2",
     "@commitlint/config-conventional": "^21.0.2",
+    "@commitlint/types": "^21.2.3",
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.8.1",
     "@eslint/js": "^10.0.1",
+    "@stryker-mutator/core": "^10.1.1",
+    "@stryker-mutator/vitest-runner": "^10.1.1",
     "@types/eslint": "^9.6.1",
     "@types/node": "^25.9.3",
     "@typescript-eslint/utils": "^8.24.1",
+    "@vitest/coverage-v8": "^4.1.12",
     "dependency-cruiser": "^17.4.3",
     "eslint": "^10.5.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import-x": "^4.16.2",
     "eslint-plugin-perfectionist": "^5.9.0",
+    "eslint-plugin-sonarjs": "^4.2.2",
+    "eslint-plugin-unicorn": "^79.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.4",
+    "publint": "^0.3.25",
     "tsup": "^8.3.6",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.0",

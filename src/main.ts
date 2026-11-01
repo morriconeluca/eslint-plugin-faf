@@ -1,26 +1,29 @@
-import type { TFafPlugin } from './types.js';
+import type { ESLint } from 'eslint';
 
-import pkg from '../package.json' with { type: 'json' };
-import { configs } from './configs.js';
-import { rules } from './rules.js';
+import { PLUGIN_NAME } from './constants.js';
 
-export { configs } from './configs.js';
-export { rules } from './rules.js';
+export interface FafPlugin extends ESLint.Plugin {
+  meta: PluginMeta;
+}
 
-/**
- * Default export representing the ESLint plugin for the Fractal Architecture Framework (FAF).
- * Assembles configs, rules, and package metadata.
- *
- * Exposes rules and configs both as named exports (for backward compatibility/direct consumption)
- * and within the default plugin export container.
- */
-const plugin: TFafPlugin = {
+export interface PluginMeta {
+  name: string;
+  version?: string;
+}
+
+export const configs: ESLint.Plugin['configs'] = {};
+
+export const meta: PluginMeta = {
+  name: PLUGIN_NAME,
+};
+
+export const rules: ESLint.Plugin['rules'] = {};
+
+const plugin: FafPlugin = {
   configs,
-  meta: {
-    name: '@morriconeluca/eslint-plugin-faf',
-    version: pkg.version,
-  },
+  meta,
   rules,
 };
 
+export { PLUGIN_NAME } from './constants.js';
 export default plugin;

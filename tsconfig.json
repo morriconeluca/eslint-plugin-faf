@@ -27,6 +27,8 @@
     /* Workspace Mode: typecheck only, do not emit from root config */
     "module": "NodeNext",
     "noEmit": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".cache/tsconfig.tsbuildinfo",
 
     /* Isomorphic - No DOM typings: */
     "lib": ["es2022"],
@@ -37,6 +39,8 @@
     "__test__/**/*",
     "eslint.config.ts",
     "commitlint.config.ts",
-    "tsup.config.ts"
+    "tsup.config.ts",
+    "vitest.config.ts",
+    "scripts/**/*"
   ]
 }

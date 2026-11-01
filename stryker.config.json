@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "mutate": ["src/**/*.ts", "!src/**/*.spec.ts"],
+  "plugins": ["@stryker-mutator/vitest-runner"],
+  "reporters": ["clear-text", "json"],
+  "testRunner": "vitest",
+  "thresholds": {
+    "break": 85,
+    "high": 85,
+    "low": 85
+  },
+  "warnings": {
+    "slow": false
+  },
+  "incremental": true,
+  "incrementalFile": ".cache/stryker/incremental.json",
+  "clearTextReporter": {
+    "skipFull": true,
+    "reportTests": false,
+    "reportMutants": true,
+    "logTests": false
+  }
+}
