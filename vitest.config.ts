@@ -3,12 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     coverage: {
-      exclude: [
-        'src/**/*.spec.ts',
-        'src/**/*.test.ts',
-        'src/**/types.ts',
-        'src/**/env.d.ts',
-      ],
+      exclude: ['src/**/*.spec.ts', 'src/**/*.type.ts'],
       include: ['src/**/*.ts'],
       provider: 'v8',
       reporter: ['text', 'html', 'json', 'lcov'],
@@ -20,6 +15,7 @@ export default defineConfig({
     },
     environment: 'node',
     globals: true,
+    include: ['src/**/*.spec.ts', 'test/**/*.test.ts'],
     reporters: ['agent'],
   },
 });

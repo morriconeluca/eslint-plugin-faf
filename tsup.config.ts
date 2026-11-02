@@ -8,6 +8,7 @@ export default defineConfig({
     },
   },
   entry: ['src/main.ts'],
+  external: ['oxc-parser', 'oxc-resolver'],
   format: ['cjs', 'esm'],
   minify: false,
   shims: true,

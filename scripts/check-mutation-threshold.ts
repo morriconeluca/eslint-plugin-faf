@@ -1,39 +1,39 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-interface FileReport {
-  mutants?: MutantResult[];
-}
+type TFileReport = {
+  readonly mutants?: readonly TMutantResult[];
+};
 
-interface MutantCounts {
+type TMutantCounts = {
   killed: number;
   noCoverage: number;
   survived: number;
   timeout: number;
-}
+};
 
-interface MutantResult {
-  status: string;
-}
+type TMutantResult = {
+  readonly status: string;
+};
 
-interface MutationReport {
-  files?: Record<string, FileReport>;
-}
+type TMutationReport = {
+  readonly files?: Record<string, TFileReport>;
+};
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const parseMutant = (raw: unknown): MutantResult | null =>
+const parseMutant = (raw: unknown): null | TMutantResult =>
   isObject(raw) && typeof raw['status'] === 'string'
     ? { status: raw['status'] }
     : null;
 
-const parseFileReport = (raw: unknown): FileReport => {
+const parseFileReport = (raw: unknown): TFileReport => {
   if (!isObject(raw)) {
     return {};
   }
   const rawMutants = Array.isArray(raw['mutants']) ? raw['mutants'] : [];
-  const mutants: MutantResult[] = [];
+  const mutants: TMutantResult[] = [];
   for (const m of rawMutants) {
     const mutant = parseMutant(m);
     if (mutant !== null) {
@@ -43,14 +43,14 @@ const parseFileReport = (raw: unknown): FileReport => {
   return { mutants };
 };
 
-const parseMutationReport = (raw: string): MutationReport => {
+const parseMutationReport = (raw: string): TMutationReport => {
   const parsed: unknown = JSON.parse(raw);
   if (!isObject(parsed)) {
     return {};
   }
 
   const rawFiles = isObject(parsed['files']) ? parsed['files'] : {};
-  const files: Record<string, FileReport> = {};
+  const files: Record<string, TFileReport> = {};
 
   for (const [key, value] of Object.entries(rawFiles)) {
     files[key] = parseFileReport(value);
@@ -59,7 +59,7 @@ const parseMutationReport = (raw: string): MutationReport => {
   return { files };
 };
 
-const tallyMutant = (mutant: MutantResult, counts: MutantCounts): void => {
+const tallyMutant = (mutant: TMutantResult, counts: TMutantCounts): void => {
   switch (mutant.status) {
     case 'Killed': {
       counts.killed += 1;
@@ -102,7 +102,7 @@ let hasViolations = false;
 
 for (const [filePath, fileData] of Object.entries(files)) {
   const mutants = fileData.mutants ?? [];
-  const counts: MutantCounts = {
+  const counts: TMutantCounts = {
     killed: 0,
     noCoverage: 0,
     survived: 0,

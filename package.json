@@ -27,7 +27,7 @@
   },
   "sideEffects": false,
   "engines": {
-    "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
+    "node": ">=24"
   },
   "type": "module",
   "files": [
@@ -57,7 +57,11 @@
   "author": "Luca Morricone",
   "license": "MIT",
   "peerDependencies": {
-    "eslint": "^8.57.0 || ^9.0.0 || ^10.0.0"
+    "eslint": "^9.0.0 || ^10.0.0"
+  },
+  "dependencies": {
+    "oxc-parser": "^0.156.0",
+    "oxc-resolver": "^11.24.2"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
@@ -69,17 +73,18 @@
     "@eslint/js": "^10.0.1",
     "@stryker-mutator/core": "^10.1.1",
     "@stryker-mutator/vitest-runner": "^10.1.1",
-    "@types/eslint": "^9.6.1",
     "@types/node": "^25.9.3",
     "@typescript-eslint/utils": "^8.24.1",
     "@vitest/coverage-v8": "^4.1.12",
     "dependency-cruiser": "^17.4.3",
-    "eslint": "^10.5.0",
+    "eslint": "^10.14.0",
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import-x": "^4.16.2",
+    "eslint-plugin-jsdoc": "^65.4.2",
     "eslint-plugin-perfectionist": "^5.9.0",
     "eslint-plugin-sonarjs": "^4.2.2",
     "eslint-plugin-unicorn": "^79.0.0",
+    "fs-fixture": "^2.16.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.4",

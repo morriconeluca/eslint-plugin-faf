@@ -1,11 +1,72 @@
 import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
 import js from '@eslint/js';
 import { importX } from 'eslint-plugin-import-x';
+import jsdocPlugin from 'eslint-plugin-jsdoc';
 import { configs as perfectionistConfigs } from 'eslint-plugin-perfectionist';
 import { configs as sonarjsConfigs } from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import { configs as tseslintConfigs } from 'typescript-eslint';
+
+import { commentPolicyRule } from './scripts/eslint/comment-policy.rule.js';
+
+const COMMON_FUNCTIONAL_RESTRICTIONS = [
+  {
+    message:
+      'Classes are forbidden. Use pure functions and functional composition.',
+    selector: 'ClassDeclaration',
+  },
+  {
+    message:
+      'Class expressions are forbidden. Use pure functions and functional composition.',
+    selector: 'ClassExpression',
+  },
+  {
+    message:
+      'The this keyword is forbidden. Use pure functions and functional composition.',
+    selector: 'ThisExpression',
+  },
+] as const;
+
+const THROW_RESTRICTION = {
+  message:
+    'Throwing exceptions is forbidden outside assert-invariant. Use typed results/outcomes.',
+  selector: 'ThrowStatement',
+} as const;
+
+const TYPE_FILE_RESTRICTIONS = [
+  {
+    message:
+      'Variable declarations are forbidden in type files. Type files must only contain types.',
+    selector: 'VariableDeclaration',
+  },
+  {
+    message:
+      'Function declarations are forbidden in type files. Type files must only contain types.',
+    selector: 'FunctionDeclaration',
+  },
+  {
+    message: 'Enums are forbidden in type files. Use union types.',
+    selector: 'TSEnumDeclaration',
+  },
+  {
+    message: 'Namespaces and module declarations are forbidden in type files.',
+    selector: 'TSModuleDeclaration',
+  },
+  {
+    message:
+      'Executable expression statements are forbidden in type files. Type files must only contain types.',
+    selector: 'ExpressionStatement',
+  },
+  {
+    message: 'Default exports of values are forbidden in type files.',
+    selector: 'ExportDefaultDeclaration',
+  },
+  {
+    message: 'Value imports are forbidden in type files. Use import type.',
+    selector: "ImportDeclaration[importKind='value']",
+  },
+] as const;
 
 export default defineConfig([
   globalIgnores([
@@ -34,6 +95,11 @@ export default defineConfig([
     },
     plugins: {
       '@eslint-community/eslint-comments': eslintComments,
+      repository: {
+        rules: {
+          'comment-policy': commentPolicyRule,
+        },
+      },
     },
     rules: {
       '@eslint-community/eslint-comments/no-use': ['error', { allow: [] }],
@@ -50,12 +116,21 @@ export default defineConfig([
         'error',
         { assertionStyle: 'never' },
       ],
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/consistent-type-exports': 'error',
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports' },
       ],
       '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          format: ['PascalCase'],
+          prefix: ['T'],
+          selector: 'typeAlias',
+        },
+      ],
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -86,6 +161,12 @@ export default defineConfig([
           maxDepth: 22,
         },
       ],
+      'no-restricted-syntax': [
+        'error',
+        ...COMMON_FUNCTIONAL_RESTRICTIONS,
+        THROW_RESTRICTION,
+      ],
+      'repository/comment-policy': 'error',
       'sonarjs/arguments-usage': 'error',
       'sonarjs/array-constructor': 'error',
       'sonarjs/arrow-function-convention': [
@@ -94,14 +175,6 @@ export default defineConfig([
       ],
       'sonarjs/bool-param-default': 'error',
       'sonarjs/cognitive-complexity': ['error', 15],
-      'sonarjs/comment-regex': [
-        'error',
-        {
-          message:
-            'Comments are forbidden: code must be self-documenting to prevent LLM cognitive bias.',
-          regularExpression: '.*',
-        },
-      ],
       'sonarjs/cyclomatic-complexity': ['error', { threshold: 10 }],
       'sonarjs/declarations-in-global-scope': 'error',
       'sonarjs/destructuring-assignment-syntax': 'error',
@@ -149,6 +222,47 @@ export default defineConfig([
       'import-x/resolver': {
         typescript: true,
       },
+    },
+  },
+  {
+    files: [
+      'src/_src@shared/_domain/_utils/assert-invariant/assert-invariant.util.ts',
+    ],
+    rules: {
+      'no-restricted-syntax': ['error', ...COMMON_FUNCTIONAL_RESTRICTIONS],
+    },
+  },
+  {
+    files: ['**/*.type.ts'],
+    plugins: {
+      jsdoc: jsdocPlugin,
+    },
+    rules: {
+      'jsdoc/check-tag-names': [
+        'error',
+        {
+          definedTags: ['default', 'example'],
+        },
+      ],
+      'jsdoc/informative-docs': 'error',
+      'jsdoc/no-blank-blocks': 'error',
+      'jsdoc/no-types': 'error',
+      'jsdoc/require-jsdoc': [
+        'error',
+        {
+          contexts: ['TSTypeAliasDeclaration', 'TSPropertySignature'],
+          require: {
+            FunctionDeclaration: false,
+          },
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        ...COMMON_FUNCTIONAL_RESTRICTIONS,
+        THROW_RESTRICTION,
+        ...TYPE_FILE_RESTRICTIONS,
+      ],
+      'unicorn/no-asterisk-prefix-in-documentation-comments': 'off',
     },
   },
   {

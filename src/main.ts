@@ -1,29 +1,20 @@
 import type { ESLint } from 'eslint';
 
-import { PLUGIN_NAME } from './constants.js';
-
-export interface FafPlugin extends ESLint.Plugin {
-  meta: PluginMeta;
-}
-
-export interface PluginMeta {
-  name: string;
-  version?: string;
-}
-
-export const configs: ESLint.Plugin['configs'] = {};
-
-export const meta: PluginMeta = {
-  name: PLUGIN_NAME,
+type TFafPlugin = {
+  readonly configs?: ESLint.Plugin['configs'];
+  readonly meta: {
+    readonly name: string;
+    readonly version?: string;
+  };
+  readonly rules?: ESLint.Plugin['rules'];
 };
 
-export const rules: ESLint.Plugin['rules'] = {};
+export const meta = {
+  name: '@morriconeluca/eslint-plugin-faf',
+};
 
-const plugin: FafPlugin = {
-  configs,
+const plugin: TFafPlugin = {
   meta,
-  rules,
 };
 
-export { PLUGIN_NAME } from './constants.js';
 export default plugin;

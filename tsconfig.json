@@ -36,11 +36,13 @@
   },
   "include": [
     "src/**/*",
-    "__test__/**/*",
+    "test/**/*",
+    "scripts/**/*",
+    "bench/**/*",
+    "fafconfig.ts",
     "eslint.config.ts",
     "commitlint.config.ts",
     "tsup.config.ts",
-    "vitest.config.ts",
-    "scripts/**/*"
+    "vitest.config.ts"
   ]
 }
