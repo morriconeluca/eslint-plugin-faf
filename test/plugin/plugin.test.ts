@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { TFAFConfig } from '../../src/main.js';
+
 import plugin, { meta } from '../../src/main.js';
 
 describe('plugin entrypoint', () => {
@@ -17,5 +19,18 @@ describe('plugin entrypoint', () => {
         name: '@morriconeluca/eslint-plugin-faf',
       },
     });
+  });
+
+  it('exports configuration types that validate configuration shapes', () => {
+    const validConfig = {
+      faf: {
+        locals: [
+          {
+            rootLayers: ['src'],
+          },
+        ],
+      },
+    } as const satisfies TFAFConfig;
+    expect(validConfig.faf.locals).toHaveLength(1);
   });
 });

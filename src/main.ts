@@ -1,5 +1,24 @@
 import type { ESLint } from 'eslint';
 
+export type {
+  TFAFCommonConfig,
+  TFAFConfig,
+  TFAFExternalDependency,
+  TFAFForeignNodeFamily,
+  TFAFHierarchy,
+  TFAFLocalConfig,
+  TFAFLocalHorizontalHierarchy,
+  TFAFMimeticPathStructure,
+  TFAFNonEmptyArray,
+  TFAFRole,
+  TFAFRoles,
+  TFAFRootDependencyEdge,
+  TFAFRootFragment,
+  TFAFSharedConfig,
+  TFAFSubGraphRole,
+  TFAFTreeDependency,
+} from './_src@shared/_domain/_types/faf-config.type.js';
+
 type TFafPlugin = {
   readonly configs?: ESLint.Plugin['configs'];
   readonly meta: {

@@ -1,3 +1,5 @@
+import type { TFAFConfig } from './src/main.ts';
+
 export default {
   faf: {
     locals: [
@@ -68,4 +70,4 @@ export default {
       },
     ],
   },
-} as const;
+} as const satisfies TFAFConfig;
