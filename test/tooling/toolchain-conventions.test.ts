@@ -46,9 +46,19 @@ describe('toolchain conventions', () => {
   const getRestrictedSyntaxRule = async (filePath: string): Promise<unknown> =>
     getRuleConfig(filePath, 'no-restricted-syntax');
 
-  beforeAll(() => {
+  const WARMUP_TIMEOUT_MS = 30_000;
+
+  beforeAll(async () => {
     fs.mkdirSync(fixtureDirectory, { recursive: true });
-  });
+    const warmupFilePath = path.join(fixtureDirectory, 'warmup.ts');
+    fs.writeFileSync(warmupFilePath, 'export const warmup = 1;\n');
+    try {
+      await eslint.lintFiles([warmupFilePath]);
+      await eslint.calculateConfigForFile(warmupFilePath);
+    } finally {
+      fs.rmSync(warmupFilePath, { force: true });
+    }
+  }, WARMUP_TIMEOUT_MS);
 
   afterAll(() => {
     fs.rmSync(fixtureDirectory, { force: true, recursive: true });

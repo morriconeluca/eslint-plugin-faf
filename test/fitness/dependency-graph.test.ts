@@ -7,7 +7,7 @@ import type {
 import { cruise } from 'dependency-cruiser';
 import { createFixture } from 'fs-fixture';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 const FORBIDDEN_RULES: readonly IForbiddenRuleType[] = [
   {
@@ -83,14 +83,28 @@ const formatViolation = (violation: IViolation): string => {
 describe('fitness: dependency graph', () => {
   const sourcePath = path.resolve(import.meta.dirname, '../../src');
   const tsConfigPath = path.resolve(import.meta.dirname, '../../tsconfig.json');
+  const WARMUP_TIMEOUT_MS = 30_000;
 
-  it('validates repository source files against cycles, orphans, and dist imports', async () => {
-    const result = await cruise([sourcePath], {
+  let repositoryCruiseResult: Awaited<ReturnType<typeof cruise>> | undefined;
+
+  beforeAll(async () => {
+    repositoryCruiseResult = await cruise([sourcePath], {
       ...BASE_CRUISE_OPTIONS,
       tsConfig: {
         fileName: tsConfigPath,
       },
     });
+  }, WARMUP_TIMEOUT_MS);
+
+  it('validates repository source files against cycles, orphans, and dist imports', async () => {
+    const result =
+      repositoryCruiseResult ??
+      (await cruise([sourcePath], {
+        ...BASE_CRUISE_OPTIONS,
+        tsConfig: {
+          fileName: tsConfigPath,
+        },
+      }));
 
     expect(isCruiseResult(result.output)).toBe(true);
     if (!isCruiseResult(result.output)) {

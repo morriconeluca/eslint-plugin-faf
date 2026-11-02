@@ -1,6 +1,6 @@
 import { ESLint, RuleTester } from 'eslint';
 import { parser as tsParser } from 'typescript-eslint';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import fafConfig from '../../fafconfig.js';
 import { symbolLawsRule } from '../../scripts/eslint/symbol-laws.rule.js';
@@ -459,12 +459,18 @@ ruleTester.run('symbol-laws', symbolLawsRule, {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
 
-const calculateConfig = async (filePath: string): Promise<unknown> => {
-  const eslint = new ESLint();
-  return eslint.calculateConfigForFile(filePath);
-};
+const eslint = new ESLint();
+
+const calculateConfig = async (filePath: string): Promise<unknown> =>
+  eslint.calculateConfigForFile(filePath);
 
 describe('symbol-laws integration in eslint.config.ts', () => {
+  const WARMUP_TIMEOUT_MS = 30_000;
+
+  beforeAll(async () => {
+    await eslint.calculateConfigForFile('src/main.ts');
+  }, WARMUP_TIMEOUT_MS);
+
   it('enables repository/symbol-laws with options derived from fafconfig on src/**/*.ts', async () => {
     const config = await calculateConfig(
       'src/_src@shared/_domain/_utils/assert-invariant/assert-invariant.util.ts'
