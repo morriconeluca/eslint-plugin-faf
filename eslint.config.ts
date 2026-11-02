@@ -8,7 +8,19 @@ import unicorn from 'eslint-plugin-unicorn';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import { configs as tseslintConfigs } from 'typescript-eslint';
 
+import fafConfig from './fafconfig.js';
 import { commentPolicyRule } from './scripts/eslint/comment-policy.rule.js';
+import { symbolLawsRule } from './scripts/eslint/symbol-laws.rule.js';
+
+const localTree = fafConfig.faf.locals[0];
+const roles = localTree.roles.map((r) => r.name);
+const categories = Object.fromEntries(
+  localTree.roles.map((r) => [r.category, r.name])
+);
+const allowMultipleSymbolsRoles = localTree.roles
+  .filter((r) => 'allowMultipleSymbols' in r)
+  .map((r) => r.name);
+const subGraphRoles = localTree.subGraphRoles.map((r) => r.name);
 
 const COMMON_FUNCTIONAL_RESTRICTIONS = [
   {
@@ -98,6 +110,7 @@ export default defineConfig([
       repository: {
         rules: {
           'comment-policy': commentPolicyRule,
+          'symbol-laws': symbolLawsRule,
         },
       },
     },
@@ -275,6 +288,20 @@ export default defineConfig([
     files: ['**/*.spec.ts', '**/*.test.ts'],
     rules: {
       'sonarjs/no-duplicate-string': 'off',
+    },
+  },
+  {
+    files: ['src/**/*.ts'],
+    rules: {
+      'repository/symbol-laws': [
+        'error',
+        {
+          allowMultipleSymbols: allowMultipleSymbolsRoles,
+          categories,
+          roles,
+          subGraphRoles,
+        },
+      ],
     },
   },
 ]);
