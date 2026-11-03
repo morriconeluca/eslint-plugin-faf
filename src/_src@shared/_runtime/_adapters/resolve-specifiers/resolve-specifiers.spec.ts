@@ -10,6 +10,12 @@ import type { TModuleImport } from '../../../_syntax/_types/module-record.type.j
 import { assertInvariant } from '../../../_domain/_utils/assert-invariant/index.js';
 import { resolveSpecifiers } from './resolve-specifiers.adapter.js';
 
+const isContinuing = (): boolean => false;
+
+const failWhen = (isAllowed: boolean, message: string): void => {
+  assertInvariant(isAllowed, message);
+};
+
 const createImport = (
   specifier: null | string,
   kind: TModuleImport['kind'] = 'named-import'
@@ -740,7 +746,8 @@ describe('resolveSpecifiers', () => {
       const spy = vi
         .spyOn(ResolverFactory.prototype, 'sync')
         .mockImplementationOnce(() => {
-          assertInvariant(false, 'Simulated oxc-resolver crash');
+          failWhen(isContinuing(), 'Simulated oxc-resolver crash');
+          return { error: 'Simulated oxc-resolver crash' };
         });
 
       const errorResult = resolver('src/main.ts', [createImport('./first.js')]);
@@ -791,7 +798,7 @@ describe('resolveSpecifiers', () => {
         .spyOn(nodeFs, 'realpathSync')
         .mockImplementation((targetPath, options) => {
           if (typeof targetPath === 'string' && targetPath.endsWith('dep.ts')) {
-            assertInvariant(false, 'Simulated realpath failure');
+            failWhen(isContinuing(), 'Simulated realpath failure');
           }
           return originalRealpathSync(targetPath, options);
         });

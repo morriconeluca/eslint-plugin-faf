@@ -1,4 +1,4 @@
-import type { TAstNode } from '../../../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
+import type { TAstNode } from '../../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
 export function isAstNode(value: unknown): value is TAstNode {
   const isObject =

@@ -4,7 +4,8 @@ import { isPlainRecord } from './is-plain-record.util.js';
 
 describe('isPlainRecord', () => {
   it('returns true for plain objects', () => {
-    expect(isPlainRecord({})).toBe(true);
+    const emptyRecord: unknown = {};
+    expect(isPlainRecord(emptyRecord)).toBe(true);
     expect(isPlainRecord({ a: 1 })).toBe(true);
   });
 

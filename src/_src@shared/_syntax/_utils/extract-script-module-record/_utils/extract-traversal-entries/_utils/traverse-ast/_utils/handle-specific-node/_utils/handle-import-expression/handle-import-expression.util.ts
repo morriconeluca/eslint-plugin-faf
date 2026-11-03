@@ -2,6 +2,7 @@ import type { TModuleImport } from '../../../../../../../../../../_types/module-
 import type { TSourceLocator } from '../../../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import type { TAstNode } from '../../../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
+import { isAstNode } from '../../../../_traverse-ast@shared/_utils/is-ast-node/index.js';
 import { extractStaticSpecifier } from '../../_handle-specific-node@shared/_utils/extract-static-specifier/index.js';
 
 export function handleImportExpression(
@@ -12,7 +13,8 @@ export function handleImportExpression(
   const start =
     typeof expression['start'] === 'number' ? expression['start'] : 0;
   const position = locator(start);
-  const specifier = extractStaticSpecifier(expression['source']);
+  const source = expression['source'];
+  const specifier = isAstNode(source) ? extractStaticSpecifier(source) : null;
 
   if (specifier !== null) {
     inlineImports.push({

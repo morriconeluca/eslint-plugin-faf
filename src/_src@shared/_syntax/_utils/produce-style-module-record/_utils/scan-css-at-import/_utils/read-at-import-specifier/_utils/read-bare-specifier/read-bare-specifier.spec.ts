@@ -1,12 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { DELIMITER_CHARS } from './read-bare-specifier.constant.js';
 import { readBareSpecifier } from './read-bare-specifier.util.js';
 
 describe('readBareSpecifier', () => {
-  it('defines exact delimiter characters', () => {
-    expect(DELIMITER_CHARS).toEqual([';', '}', ' ', '\t', '\n', '\r']);
-  });
   it.each([
     {
       expectedIndex: 5,

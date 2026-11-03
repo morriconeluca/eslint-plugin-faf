@@ -13,6 +13,10 @@ describe('extractStaticSpecifier', () => {
     const statement = result.program.body[0];
     assertInvariant(statement?.type === 'VariableDeclaration', 'Expected var');
     const init = statement.declarations[0]?.init;
+    assertInvariant(
+      init !== null && init !== undefined,
+      'Expected initializer'
+    );
 
     expect(extractStaticSpecifier(init)).toBe('literal-value');
   });
@@ -25,6 +29,10 @@ describe('extractStaticSpecifier', () => {
     const statement = result.program.body[0];
     assertInvariant(statement?.type === 'VariableDeclaration', 'Expected var');
     const init = statement.declarations[0]?.init;
+    assertInvariant(
+      init !== null && init !== undefined,
+      'Expected initializer'
+    );
 
     expect(extractStaticSpecifier(init)).toBe('template-value');
   });
@@ -37,13 +45,26 @@ describe('extractStaticSpecifier', () => {
     const statement = result.program.body[0];
     assertInvariant(statement?.type === 'VariableDeclaration', 'Expected var');
     const init = statement.declarations[0]?.init;
+    assertInvariant(
+      init !== null && init !== undefined,
+      'Expected initializer'
+    );
 
     expect(extractStaticSpecifier(init)).toBeNull();
   });
 
-  it('returns null for non-record or non-string nodes', () => {
-    expect(extractStaticSpecifier(null)).toBeNull();
-    expect(extractStaticSpecifier(123)).toBeNull();
-    expect(extractStaticSpecifier({ type: 'Literal', value: 42 })).toBeNull();
+  it('returns null for a numeric literal node a caller can produce', () => {
+    const numericLiteral = { type: 'Literal', value: 42 };
+    expect(extractStaticSpecifier(numericLiteral)).toBeNull();
+  });
+
+  it('returns null for a non-literal node that still carries a string value', () => {
+    const identifier = { type: 'Identifier', value: 'not-a-specifier' };
+    expect(extractStaticSpecifier(identifier)).toBeNull();
+  });
+
+  it('returns null for a literal node without a value property', () => {
+    const literal = { type: 'Literal' };
+    expect(extractStaticSpecifier(literal)).toBeNull();
   });
 });

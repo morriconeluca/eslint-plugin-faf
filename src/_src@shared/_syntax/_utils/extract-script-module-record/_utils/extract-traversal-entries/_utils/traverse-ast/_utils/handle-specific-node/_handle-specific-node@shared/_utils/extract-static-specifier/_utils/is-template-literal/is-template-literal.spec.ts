@@ -7,9 +7,7 @@ describe('isTemplateLiteral', () => {
     expect(isTemplateLiteral({ type: 'TemplateLiteral' })).toBe(true);
   });
 
-  it('returns false for other nodes or primitives', () => {
+  it('returns false for a non-template node a caller can produce', () => {
     expect(isTemplateLiteral({ type: 'Literal' })).toBe(false);
-    expect(isTemplateLiteral(null)).toBe(false);
-    expect(isTemplateLiteral('TemplateLiteral')).toBe(false);
   });
 });

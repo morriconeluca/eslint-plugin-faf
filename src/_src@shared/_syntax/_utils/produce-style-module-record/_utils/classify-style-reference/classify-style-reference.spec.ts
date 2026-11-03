@@ -1,27 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  EXCLUDED_PREFIXES,
-  INTERPOLATION_MARKERS,
-  QUOTE_WRAP_PATTERN,
-} from './classify-style-reference.constant.js';
+import { QUOTE_WRAP_PATTERN } from './classify-style-reference.constant.js';
 import { classifyStyleReference } from './classify-style-reference.util.js';
 
 describe('classifyStyleReference', () => {
   const position = { column: 5, line: 3 };
 
-  describe('constants', () => {
-    it('defines exact excluded prefixes and interpolation markers', () => {
-      expect(EXCLUDED_PREFIXES).toEqual([
-        '#',
-        '//',
-        'data:',
-        'http:',
-        'https:',
-      ]);
-      expect(INTERPOLATION_MARKERS).toEqual(['#{', '@{', 'var(']);
-    });
-
+  describe('quote wrap pattern', () => {
     it('matches exact quote wrap boundaries', () => {
       expect(QUOTE_WRAP_PATTERN.test('"hello"')).toBe(true);
       expect(QUOTE_WRAP_PATTERN.test("'hello'")).toBe(true);

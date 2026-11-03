@@ -61,7 +61,6 @@ export function resolveSpecifiers(
   const resolutionCache = new Map<string, TCachedResolution>();
 
   const toCanonicalPath = (filePath: string): string => {
-    assertInvariant(typeof filePath === 'string', 'Expected file path');
     try {
       return nodeFs.realpathSync(filePath);
     } catch {

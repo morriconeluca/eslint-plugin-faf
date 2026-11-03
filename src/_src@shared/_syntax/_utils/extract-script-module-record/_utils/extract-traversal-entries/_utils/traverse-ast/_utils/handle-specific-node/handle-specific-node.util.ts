@@ -6,7 +6,7 @@ import type { TSourceLocator } from '../../../../../../_extract-script-module-re
 import type { TAstNode } from '../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
 import { REQUIRE_NAME } from '../../_traverse-ast@shared/_constants/traversal-entries.constant.js';
-import { isRecord } from '../../_traverse-ast@shared/_utils/is-record/index.js';
+import { isAstNode } from '../../_traverse-ast@shared/_utils/is-ast-node/index.js';
 import { handleImportExpression } from './_utils/handle-import-expression/index.js';
 import { handleRequireCall } from './_utils/handle-require-call/index.js';
 import { handleTsImportType } from './_utils/handle-ts-import-type/index.js';
@@ -23,8 +23,8 @@ export function handleSpecificNode(
     const callee = node['callee'];
     if (
       !isRequireShadowed &&
-      isRecord(callee) &&
-      callee['type'] === 'Identifier' &&
+      isAstNode(callee) &&
+      callee.type === 'Identifier' &&
       callee['name'] === REQUIRE_NAME
     ) {
       handleRequireCall(node, locator, inlineImports, unsupportedSyntaxes);

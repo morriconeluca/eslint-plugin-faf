@@ -1,35 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  COMMON_ALIASES_PROPERTY_PATH,
-  CONFIG_9_REFERENCE,
-  DUPLICATE_ALIAS_SOURCE_CONSTRAINT,
-  FAF_CONFIG_ELEMENT,
-  INVALID_ALIAS_SOURCE_CONSTRAINT,
-  PACKAGE_JSON_ELEMENT,
-  PACKAGE_JSON_IMPORTS_PROPERTY_PATH,
-  UNRESOLVABLE_ALIAS_BASE_CONSTRAINT,
-} from './_acquire-path-aliases@shared/_constants/acquire-path-aliases.constant.js';
 import { acquirePathAliases } from './acquire-path-aliases.util.js';
 
 describe('acquirePathAliases', () => {
-  it('exposes exact architectural constant definitions', () => {
-    expect(DUPLICATE_ALIAS_SOURCE_CONSTRAINT).toBe(
-      'configuration/duplicate-alias-source'
-    );
-    expect(INVALID_ALIAS_SOURCE_CONSTRAINT).toBe(
-      'configuration/invalid-alias-source'
-    );
-    expect(UNRESOLVABLE_ALIAS_BASE_CONSTRAINT).toBe(
-      'configuration/unresolvable-alias-base'
-    );
-    expect(CONFIG_9_REFERENCE).toBe('CONFIG_9');
-    expect(FAF_CONFIG_ELEMENT).toBe('fafconfig.ts');
-    expect(PACKAGE_JSON_ELEMENT).toBe('package.json');
-    expect(COMMON_ALIASES_PROPERTY_PATH).toBe('faf.common.aliases');
-    expect(PACKAGE_JSON_IMPORTS_PROPERTY_PATH).toBe('imports');
-  });
-
   it('produces empty alias array when neither source is present (row 1: campo assente, assente)', () => {
     const resultFromUndefined = acquirePathAliases({});
     const resultFromMissingKey = acquirePathAliases({

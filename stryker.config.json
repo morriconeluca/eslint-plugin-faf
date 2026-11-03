@@ -1,6 +1,11 @@
 {
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
-  "mutate": ["src/**/*.ts", "!src/**/*.spec.ts", "!src/**/*.type.ts"],
+  "mutate": [
+    "src/**/*.ts",
+    "!src/**/*.mock.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/*.type.ts"
+  ],
   "ignorePatterns": ["coverage", "reports", "dist", ".cache", ".stryker-tmp"],
   "plugins": ["@stryker-mutator/vitest-runner"],
   "reporters": ["clear-text", "json"],

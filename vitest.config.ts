@@ -41,7 +41,7 @@ const createTimingReporter = (): Reporter => {
 export default defineConfig({
   test: {
     coverage: {
-      exclude: ['src/**/*.spec.ts', 'src/**/*.type.ts'],
+      exclude: ['src/**/*.mock.ts', 'src/**/*.spec.ts', 'src/**/*.type.ts'],
       include: ['src/**/*.ts'],
       provider: 'v8',
       reporter: ['text', 'html', 'json', 'lcov'],

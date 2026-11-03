@@ -41,6 +41,7 @@
     "gate:2": "eslint --cache --cache-location .cache/eslint/ .",
     "gate:3": "vitest run --coverage",
     "gate:4": "stryker run && node scripts/check-mutation-threshold.ts",
+    "gate:4:diff": "node scripts/mutate-diff.ts",
     "gate:5": "tsup && publint --strict && attw -q --pack .",
     "gate:all": "npm run gate:1 && npm run gate:2 && npm run gate:3 && npm run gate:4 && npm run gate:5",
     "gate:fast": "npm run gate:1 && npm run gate:2",

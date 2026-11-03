@@ -72,6 +72,24 @@ describe('handleImportExpression', () => {
     ]);
   });
 
+  it('treats a non-node source as a non-literal dynamic import', () => {
+    const locator = createSourceLocator('');
+    const inlineImports: TModuleImport[] = [];
+    const node: TAstNode = {
+      source: null,
+      type: 'ImportExpression',
+    };
+    handleImportExpression(node, locator, inlineImports);
+    expect(inlineImports).toEqual([
+      {
+        isTypeOnly: false,
+        kind: 'non-literal-dynamic-import',
+        position: { column: 1, line: 1 },
+        specifier: null,
+      },
+    ]);
+  });
+
   it('falls back to position 0 when start offset is missing', () => {
     const locator = createSourceLocator('');
     const inlineImports: TModuleImport[] = [];

@@ -158,6 +158,19 @@ Conventions are mechanically validated by ESLint and TypeScript compiler checks:
 - `@typescript-eslint/consistent-type-assertions: ['error', { assertionStyle: 'never' }]`: Disallows `as` casts, permitting only `as const`.
 - `@typescript-eslint/strict-boolean-expressions` and `@typescript-eslint/switch-exhaustiveness-check`: Ensure rigorous boolean handling and exhaustive pattern matching.
 - `no-restricted-syntax`: Prohibits `ClassDeclaration`, `ClassExpression`, `ThisExpression`, and `ThrowStatement` (with the exception of `assert-invariant`).
+- `repository/no-unknown-parameters`: Forbids `unknown` anywhere in a function parameter type annotation under `src/` (except `*.spec.ts`). It does not apply to `catch` clauses, local variables, or return types. `unknown` is allowed only in the Fragment directories listed below, where a value enters from outside the type system. Downstream functions receive an exact type. A type guard `(value: unknown) => value is T` belongs to the boundary Fragment.
+
+  Allowed boundaries:
+
+  - `src/_src@shared/_declarations/_utils/validate-config-format` and its private validator Fragments (`is-plain-record`, `is-faf-config`, `validate-aliases`, `validate-dependencies`, `validate-foreign-nodes`, `validate-hierarchies`, `validate-mimetic-structures`, `validate-roles`, `validate-root-fragments`, `validate-root-layers`, `validate-sub-graph-roles`): the exported value of `fafconfig.ts` is untyped until format validation. Each helper still receives an untyped slice of that value; FAF places each helper in its own Fragment, so each path is listed.
+  - `src/_src@shared/_runtime/_runtime@shared/_adapters/read-package-json`: `JSON.parse` of `package.json`.
+  - `src/_src@shared/_declarations/_utils/acquire-path-aliases/_utils/parse-package-json-imports` and `.../collect-subpath-targets`: the `imports` field and its targets are still untyped JSON.
+  - `src/_src@shared/_runtime/_adapters/load-config/_utils/classify-worker-outcome`: worker messages are unstructured clones.
+  - `src/_src@shared/_syntax/_utils/extract-script-module-record/_utils/extract-traversal-entries/_utils/traverse-ast/_traverse-ast@shared/_utils/is-ast-node`: the single generic entry for `oxc-parser` AST traversal. `is-statement` and `is-binding-pattern` are listed as well because a type predicate to an `oxc-parser` node is not assignable from the internal record model and must accept `unknown`.
+  - No cache-file reader exists yet. When one is added, its Fragment is the boundary for data read from cache files and must be added to this list.
+
+- `@typescript-eslint/no-unnecessary-condition` is enabled with `checkTypePredicates: true` in addition to its default options. A condition already decided by the types, including one passed to a type guard, is an error.
+- `repository/no-decided-assertion`: forbids `assertInvariant(typeof value === 'string', ...)` (and the other `typeof` kinds) when the operand type already decides the comparison. `typeof` comparisons are typed as `boolean`, so `checkTypePredicates` does not see them.
 
 ---
 
@@ -172,7 +185,34 @@ Conventions are mechanically validated by ESLint and TypeScript compiler checks:
 
 - Unit tests for pure layers (`_domain`, `_declarations`, `_syntax`, `_inventory`, `_taxonomy`, `_graph`) use exclusively in-memory data structures. They do not touch the disk or spawn child processes.
 
-### 4.3 Disk Fixtures with `fs-fixture`
+### 4.3 Assertions
+
+An `expect` or `expect.soft` subject that does not execute code (`CallExpression`, `NewExpression`, `AwaitExpression`, `TaggedTemplateExpression`) and whose every referenced identifier resolves, through the scope manager, to an import from `*.constant.js` or `*.config.js` is forbidden. The resolution includes namespace imports (`C.X`), arrays, objects, spreads, template literals, and `const` locals whose initializer satisfies the same condition.
+
+Allowed:
+
+```ts
+expect(fn()).toBe(X);
+expect(result.constraint).toBe(X);
+expect(result.constraint).toBe('configuration/x');
+expect(X.length > 0 ? f() : g());
+```
+
+Forbidden:
+
+```ts
+expect(X);
+expect(C.X);
+expect([X, Y]);
+expect({ a: X });
+expect(`${X}`);
+const y = X;
+expect(y);
+```
+
+Constant mutants stay killed only when the expected value is a literal on an observable output. Using an imported constant as the expected value is allowed, but it does not kill a mutant of that constant.
+
+### 4.4 Disk Fixtures with `fs-fixture`
 
 - Tests for adapters, services, rules, and acceptance test suites interact with real file system structures created in temporary directories using `fs-fixture`.
 - Virtual or simulated file systems (such as `mock-fs` or `memfs`) are strictly prohibited because `oxc-resolver` relies on native file system calls and actual disk paths.
@@ -195,7 +235,12 @@ The codebase enforces five sequential quality gates. All gates must pass in loca
 4. **`gate:4`** (`npm run gate:4`):
    - Mutation Testing: Runs Stryker Mutator followed by per-file threshold evaluation (`scripts/check-mutation-threshold.ts`).
    - Strict per-file threshold: **≥ 85% mutation score**.
-5. **`gate:5`** (`npm run gate:5`):
+   - `src/**/*.mock.ts` is excluded from coverage and mutation because those files are test data, not production code. `*.constant.ts` and `*.config.ts` remain covered and mutated. No other exclusions are allowed.
+5. **`gate:4:diff`** (`npm run gate:4:diff`):
+   - Use it while developing and when verifying every change. It mutates the source files in each touched `src/` directory (not recursively), excluding `*.spec.ts`, `*.type.ts`, `*.mock.ts`, and `index.ts`, so a Fragment whose only changed file is a spec is still mutated.
+   - Changed files are tracked differences from the comparison base (`main` by default, overridable by argument; CI uses `origin/main`) plus untracked non-ignored files. The script does not modify the git index. Deleted files and files outside `src/` are ignored. Stryker runs with `--incremental --force` and its own incremental file `.cache/stryker/diff.json`, then `scripts/check-mutation-threshold.ts` checks the report. No files to mutate is a successful outcome with an explicit message.
+   - The full forced mutation run remains `npm run gate:4` and is the periodic check on `main`.
+6. **`gate:5`** (`npm run gate:5`):
    - Packaging & Types: Bundles the package with `tsup`, executes package export validation via `publint --strict`, and validates TypeScript declaration exports via `@arethetypeswrong/cli` (`attw -q --pack .`).
 
 ### The Binding Principle
@@ -211,6 +256,11 @@ No quality gate constraint may be weakened or bypassed. All five gates (`npm run
 - **Run all quality gates**:
   ```bash
   npm run gate:all
+  ```
+- **Mutate the current diff** (development and verification of each change; base defaults to `main`):
+  ```bash
+  npm run gate:4:diff
+  npm run gate:4:diff -- origin/main
   ```
 - **Run fast check (format + type check + lint)**:
   ```bash

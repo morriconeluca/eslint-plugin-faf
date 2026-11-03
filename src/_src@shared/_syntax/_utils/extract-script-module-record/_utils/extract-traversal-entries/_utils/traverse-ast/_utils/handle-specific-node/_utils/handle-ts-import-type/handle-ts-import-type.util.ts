@@ -2,7 +2,7 @@ import type { TModuleImport } from '../../../../../../../../../../_types/module-
 import type { TSourceLocator } from '../../../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import type { TAstNode } from '../../../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
-import { isRecord } from '../../../../_traverse-ast@shared/_utils/is-record/index.js';
+import { isAstNode } from '../../../../_traverse-ast@shared/_utils/is-ast-node/index.js';
 
 export function handleTsImportType(
   importType: TAstNode,
@@ -14,7 +14,7 @@ export function handleTsImportType(
   const position = locator(start);
   const source = importType['source'];
   const specifier =
-    isRecord(source) && typeof source['value'] === 'string'
+    isAstNode(source) && typeof source['value'] === 'string'
       ? source['value']
       : '';
   inlineImports.push({
