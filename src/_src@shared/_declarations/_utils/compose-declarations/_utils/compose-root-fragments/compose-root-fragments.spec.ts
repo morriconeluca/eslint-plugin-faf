@@ -1,6 +1,34 @@
 import { describe, expect, it } from 'vitest';
 
+import { assertInvariant } from '../../../../../_domain/_utils/assert-invariant/index.js';
 import { composeRootFragments } from './compose-root-fragments.util.js';
+
+const nonEmpty = (
+  values: readonly string[]
+): readonly [string, ...string[]] => {
+  const [first, ...rest] = values;
+  assertInvariant(first !== undefined, 'Expected a non-empty name list');
+  return [first, ...rest];
+};
+
+const pairsFor = (
+  dependencyEdges: readonly {
+    readonly from: readonly string[];
+    readonly to: readonly string[];
+  }[]
+) => {
+  const [result] = composeRootFragments([
+    {
+      dependencyEdges: dependencyEdges.map((edge) => ({
+        from: nonEmpty(edge.from),
+        to: nonEmpty(edge.to),
+      })),
+      path: 'src',
+      rootNodes: [['b.ts']],
+    },
+  ]);
+  return result?.dependencyPairs;
+};
 
 describe('composeRootFragments', () => {
   it('returns empty array when given empty root fragments list', () => {
@@ -98,5 +126,30 @@ describe('composeRootFragments', () => {
     expect(sub.dependencyPairs).toEqual([
       { from: 'src/app/app.tsx', to: 'src/shared/leaf.ts' },
     ]);
+  });
+
+  it('orders dependency pairs by UTF-16 code units regardless of edge order', () => {
+    const forward = [
+      { from: ['b.ts'], to: ['_a.ts', '@x.ts'] },
+      { from: ['B.ts'], to: ['[id].ts', 'b.ts'] },
+    ];
+    const reversedEdges = [...forward];
+    reversedEdges.reverse();
+    const reversed = reversedEdges.map((edge) => {
+      const from = [...edge.from];
+      const to = [...edge.to];
+      from.reverse();
+      to.reverse();
+      return { from, to };
+    });
+    const expected = [
+      { from: 'src/B.ts', to: '[id].ts' },
+      { from: 'src/B.ts', to: 'b.ts' },
+      { from: 'src/b.ts', to: '@x.ts' },
+      { from: 'src/b.ts', to: '_a.ts' },
+    ];
+
+    expect(pairsFor(forward)).toEqual(expected);
+    expect(pairsFor(reversed)).toEqual(expected);
   });
 });

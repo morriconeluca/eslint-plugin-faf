@@ -6,6 +6,7 @@ import type { TRawInventoryEntry } from '../../../../../_inventory/_types/invent
 import type { TScanTreeOriginResult } from './scan-tree-origin.type.js';
 
 import { assertInvariant } from '../../../../../_domain/_utils/assert-invariant/index.js';
+import { compareOrdinal } from '../../../../../_domain/_utils/compare-ordinal/index.js';
 import { inspectOrigin } from './_utils/inspect-origin/index.js';
 import { processDirent } from './_utils/process-dirent/index.js';
 
@@ -78,7 +79,9 @@ export function scanTreeOrigin(
       };
     }
 
-    directoryEntries.sort((a, b) => a.name.localeCompare(b.name));
+    directoryEntries.sort((left, right) =>
+      compareOrdinal(left.name, right.name)
+    );
 
     const stepEntries: TRawInventoryEntry[] = [];
     const stepOutcomes: TOutcome[] = [];

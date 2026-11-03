@@ -4,6 +4,36 @@ import type { TInProgressInventoryEntry } from '../../_build-inventory@shared/_t
 
 import { groupTreeNodes } from './index.js';
 
+const inventoryEntry = (
+  path: string,
+  treeOrigin: string,
+  kind: 'directory' | 'file'
+): TInProgressInventoryEntry => ({
+  isSymlink: false,
+  kind,
+  path,
+  realPath: path,
+  treeOrigin,
+});
+
+const groupOrderedEntries = (
+  orderedRoots: readonly string[],
+  orderedChildren: readonly string[]
+) => {
+  const entries: [string, TInProgressInventoryEntry][] = [
+    ...orderedRoots.map((path): [string, TInProgressInventoryEntry] => [
+      path,
+      inventoryEntry(path, path, 'directory'),
+    ]),
+    ['src', inventoryEntry('src', 'src', 'directory')],
+    ...orderedChildren.map((path): [string, TInProgressInventoryEntry] => [
+      path,
+      inventoryEntry(path, 'src', 'file'),
+    ]),
+  ];
+  return groupTreeNodes(new Map(entries));
+};
+
 describe('groupTreeNodes', () => {
   it('groups items into root nodes and sorted children lists', () => {
     const map = new Map<string, TInProgressInventoryEntry>([
@@ -102,5 +132,39 @@ describe('groupTreeNodes', () => {
 
     const result = groupTreeNodes(map);
     expect(result.roots).toEqual(['apps', 'libs']);
+  });
+
+  it('orders roots and child names by UTF-16 code units regardless of map order', () => {
+    const roots = ['btree', 'Btree', '_tree', '@tree', '[tree]'];
+    const children = [
+      'src/b.ts',
+      'src/B.ts',
+      'src/_a.ts',
+      'src/@x.ts',
+      'src/[id].ts',
+    ];
+    const forward = groupOrderedEntries(roots, children);
+    const reversedRoots = [...roots];
+    const reversedChildren = [...children];
+    reversedRoots.reverse();
+    reversedChildren.reverse();
+    const backward = groupOrderedEntries(reversedRoots, reversedChildren);
+
+    expect(forward.roots).toEqual([
+      '@tree',
+      'Btree',
+      '[tree]',
+      '_tree',
+      'btree',
+      'src',
+    ]);
+    expect(forward.childrenMap.get('src')).toEqual([
+      'src/@x.ts',
+      'src/B.ts',
+      'src/[id].ts',
+      'src/_a.ts',
+      'src/b.ts',
+    ]);
+    expect(backward).toEqual(forward);
   });
 });

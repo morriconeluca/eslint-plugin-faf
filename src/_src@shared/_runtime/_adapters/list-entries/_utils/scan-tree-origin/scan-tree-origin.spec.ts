@@ -77,7 +77,35 @@ describe('scanTreeOrigin', () => {
 
       expect(outcomes).toEqual([]);
       const paths = entries.map((entry) => entry.path);
-      expect(paths).toEqual(['src', 'src/a.ts', 'src/B.ts']);
+      expect(paths).toEqual(['src', 'src/B.ts', 'src/a.ts']);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('orders directory entries by UTF-16 code units and repeats that order', async () => {
+    const fixture = await createFixture({
+      'src/@x.ts': 'export const at = 1;',
+      'src/[id].ts': 'export const bracket = 1;',
+      'src/_a.ts': 'export const underscore = 1;',
+      'src/B.ts': 'export const upper = 1;',
+      'src/c.ts': 'export const lower = 1;',
+    });
+    try {
+      const first = scanTreeOrigin('src', fixture.path);
+      const second = scanTreeOrigin('src', fixture.path);
+      const expected = [
+        'src',
+        'src/@x.ts',
+        'src/B.ts',
+        'src/[id].ts',
+        'src/_a.ts',
+        'src/c.ts',
+      ];
+
+      expect(first.outcomes).toEqual([]);
+      expect(first.entries.map((entry) => entry.path)).toEqual(expected);
+      expect(second.entries.map((entry) => entry.path)).toEqual(expected);
     } finally {
       await fixture.rm();
     }

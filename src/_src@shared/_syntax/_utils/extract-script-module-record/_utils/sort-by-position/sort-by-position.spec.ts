@@ -36,13 +36,29 @@ describe('sortByPosition', () => {
     ]);
   });
 
-  it('handles identical positions stably', () => {
+  it('preserves relative order when positions are identical', () => {
     const first = { id: 'first', position: { column: 5, line: 2 } };
     const second = { id: 'second', position: { column: 5, line: 2 } };
+    const reversed = [second, first];
 
-    const result = sortByPosition([first, second]);
-    expect(result).toHaveLength(2);
-    expect(result[0]?.position).toEqual({ column: 5, line: 2 });
-    expect(result[1]?.position).toEqual({ column: 5, line: 2 });
+    expect(sortByPosition([first, second]).map((item) => item.id)).toEqual([
+      'first',
+      'second',
+    ]);
+    expect(sortByPosition(reversed).map((item) => item.id)).toEqual([
+      'second',
+      'first',
+    ]);
+  });
+
+  it('does not mutate the received array', () => {
+    const items = [
+      { id: 'later', position: { column: 1, line: 2 } },
+      { id: 'earlier', position: { column: 1, line: 1 } },
+    ];
+    const snapshot = [...items];
+
+    expect(sortByPosition(items)).toEqual([items[1], items[0]]);
+    expect(items).toEqual(snapshot);
   });
 });

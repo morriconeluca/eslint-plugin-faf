@@ -3,6 +3,8 @@ import type {
   TInProgressInventoryEntry,
 } from '../../_build-inventory@shared/_types/build-inventory.type.js';
 
+import { compareOrdinal } from '../../../../../_domain/_utils/compare-ordinal/index.js';
+
 export function groupTreeNodes(
   entryMap: ReadonlyMap<string, TInProgressInventoryEntry>
 ): TGroupTreeNodesResult {
@@ -26,14 +28,15 @@ export function groupTreeNodes(
     }
   }
 
-  roots.sort((a, b) => a.localeCompare(b));
+  roots.sort(compareOrdinal);
 
   for (const children of childrenMap.values()) {
-    children.sort((pathA, pathB) => {
-      const nameA = pathA.slice(pathA.lastIndexOf('/') + 1);
-      const nameB = pathB.slice(pathB.lastIndexOf('/') + 1);
-      return nameA.localeCompare(nameB);
-    });
+    children.sort((left, right) =>
+      compareOrdinal(
+        left.slice(left.lastIndexOf('/') + 1),
+        right.slice(right.lastIndexOf('/') + 1)
+      )
+    );
   }
 
   return { childrenMap, roots };

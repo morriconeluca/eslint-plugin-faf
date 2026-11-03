@@ -12,6 +12,8 @@ import type {
 } from '../../../../_types/declarations.type.js';
 import type { TTreeScopedDeclarations } from './filter-by-tree-containment.type.js';
 
+import { compareOrdinal } from '../../../../../_domain/_utils/compare-ordinal/index.js';
+
 export const filterByTreeContainment = (
   originPath: string,
   common: TFAFCommonConfig | undefined,
@@ -36,21 +38,10 @@ export const filterByTreeContainment = (
       (item): item is TFAFForeignNodeFamily => typeof item !== 'string'
     );
 
-    const individualPaths: string[] = [];
-    for (const item of stringItems) {
-      if (isInherited && !isPathInTree(item)) {
-        continue;
-      }
-
-      const insertIndex = individualPaths.findIndex(
-        (p) => p.localeCompare(item) > 0
-      );
-      if (insertIndex === -1) {
-        individualPaths.push(item);
-      } else {
-        individualPaths.splice(insertIndex, 0, item);
-      }
-    }
+    const individualPaths = stringItems.filter(
+      (item) => !isInherited || isPathInTree(item)
+    );
+    individualPaths.sort(compareOrdinal);
 
     const families: TEffectiveForeignFamily[] = [];
     for (const item of familyItems) {
@@ -118,52 +109,19 @@ export const filterByTreeContainment = (
     return result;
   };
 
-  const buildPublicRootNodes = (): readonly string[] => {
-    const rawNodes = local.publicRootNodes ?? common?.publicRootNodes;
-    if (rawNodes === undefined) {
+  const buildSortedPaths = (
+    rawPaths: readonly string[] | undefined,
+    isInherited: boolean
+  ): readonly string[] => {
+    if (rawPaths === undefined) {
       return [];
     }
-    const isInherited = local.publicRootNodes === undefined;
-    const result: string[] = [];
-    for (const p of rawNodes) {
-      if (isInherited && !isPathInTree(p)) {
-        continue;
-      }
 
-      const insertIndex = result.findIndex(
-        (existing) => existing.localeCompare(p) > 0
-      );
-      if (insertIndex === -1) {
-        result.push(p);
-      } else {
-        result.splice(insertIndex, 0, p);
-      }
-    }
-    return result;
-  };
-
-  const buildForeignDomains = (): readonly string[] => {
-    const rawDomains = local.foreignDomains ?? common?.foreignDomains;
-    if (rawDomains === undefined) {
-      return [];
-    }
-    const isInherited = local.foreignDomains === undefined;
-    const result: string[] = [];
-    for (const d of rawDomains) {
-      if (isInherited && !isPathInTree(d)) {
-        continue;
-      }
-
-      const insertIndex = result.findIndex(
-        (existing) => existing.localeCompare(d) > 0
-      );
-      if (insertIndex === -1) {
-        result.push(d);
-      } else {
-        result.splice(insertIndex, 0, d);
-      }
-    }
-    return result;
+    const included = rawPaths.filter(
+      (path) => !isInherited || isPathInTree(path)
+    );
+    included.sort(compareOrdinal);
+    return included;
   };
 
   const buildExternalDependencyPairs =
@@ -190,24 +148,17 @@ export const filterByTreeContainment = (
           continue;
         }
         seen.add(key);
-
-        const newPair: TEffectiveOrientedPair = {
+        pairs.push({
           from: target.from,
           to: target.to,
-        };
-        const insertIndex = pairs.findIndex((p) => {
-          const comparison = p.from.localeCompare(newPair.from);
-          return (
-            comparison > 0 ||
-            (comparison === 0 && p.to.localeCompare(newPair.to) > 0)
-          );
         });
-        if (insertIndex === -1) {
-          pairs.push(newPair);
-        } else {
-          pairs.splice(insertIndex, 0, newPair);
-        }
       }
+      pairs.sort((left, right) => {
+        const fromComparison = compareOrdinal(left.from, right.from);
+        return fromComparison === 0
+          ? compareOrdinal(left.to, right.to)
+          : fromComparison;
+      });
       return pairs;
     };
 
@@ -233,36 +184,35 @@ export const filterByTreeContainment = (
         continue;
       }
       seen.add(key);
-
-      const newPair: TEffectiveOrientedPair = {
+      pairs.push({
         from: target.from,
         to: target.to,
-      };
-      const insertIndex = pairs.findIndex((p) => {
-        const comparison = p.from.localeCompare(newPair.from);
-        return (
-          comparison > 0 ||
-          (comparison === 0 && p.to.localeCompare(newPair.to) > 0)
-        );
       });
-      if (insertIndex === -1) {
-        pairs.push(newPair);
-      } else {
-        pairs.splice(insertIndex, 0, newPair);
-      }
     }
+    pairs.sort((left, right) => {
+      const fromComparison = compareOrdinal(left.from, right.from);
+      return fromComparison === 0
+        ? compareOrdinal(left.to, right.to)
+        : fromComparison;
+    });
     return pairs;
   };
 
   return {
     externalDependencyPairs: buildExternalDependencyPairs(),
-    foreignDomains: buildForeignDomains(),
+    foreignDomains: buildSortedPaths(
+      local.foreignDomains ?? common?.foreignDomains,
+      local.foreignDomains === undefined
+    ),
     foreignNodes: buildForeignNodes(),
     horizontalHierarchies:
       local.horizontalHierarchies ?? common?.horizontalHierarchies ?? [],
     localHorizontalHierarchies: buildLocalHierarchies(),
     mimeticPathStructures: buildMimeticStructures(),
-    publicRootNodes: buildPublicRootNodes(),
+    publicRootNodes: buildSortedPaths(
+      local.publicRootNodes ?? common?.publicRootNodes,
+      local.publicRootNodes === undefined
+    ),
     treeDependencyPairs: buildTreeDependencyPairs(),
   };
 };

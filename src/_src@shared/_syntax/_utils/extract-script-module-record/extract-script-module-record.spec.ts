@@ -651,10 +651,15 @@ describe('extractScriptModuleRecord', () => {
         const third = import('./third');
       `;
       const record = extractScriptModuleRecord('test.ts', code);
+      const repeated = extractScriptModuleRecord('test.ts', code);
       expect(record.imports).toHaveLength(3);
       expect(record.imports[0]?.specifier).toBe('./first');
       expect(record.imports[1]?.specifier).toBe('./second');
       expect(record.imports[2]?.specifier).toBe('./third');
+      expect(repeated.imports).toEqual(record.imports);
+      expect(repeated.symbols).toEqual(record.symbols);
+      expect(repeated.exports).toEqual(record.exports);
+      expect(repeated.unsupportedSyntaxes).toEqual(record.unsupportedSyntaxes);
     });
   });
 

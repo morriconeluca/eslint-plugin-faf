@@ -5,6 +5,8 @@ import type {
   TEffectiveRootNode,
 } from '../../../../_types/declarations.type.js';
 
+import { compareOrdinal } from '../../../../../_domain/_utils/compare-ordinal/index.js';
+
 export const composeRootFragments = (
   rootFragments: readonly TFAFRootFragment[]
 ): readonly TEffectiveRootFragment[] => {
@@ -33,24 +35,18 @@ export const composeRootFragments = (
         continue;
       }
       seenPairs.add(key);
-
-      const newPair: TEffectiveOrientedPair = {
+      dependencyPairs.push({
         from: target.fromPath,
         to: target.toPath,
-      };
-      const insertIndex = dependencyPairs.findIndex((p) => {
-        const comparison = p.from.localeCompare(newPair.from);
-        return (
-          comparison > 0 ||
-          (comparison === 0 && p.to.localeCompare(newPair.to) > 0)
-        );
       });
-      if (insertIndex === -1) {
-        dependencyPairs.push(newPair);
-      } else {
-        dependencyPairs.splice(insertIndex, 0, newPair);
-      }
     }
+
+    dependencyPairs.sort((left, right) => {
+      const fromComparison = compareOrdinal(left.from, right.from);
+      return fromComparison === 0
+        ? compareOrdinal(left.to, right.to)
+        : fromComparison;
+    });
 
     return {
       dependencyPairs,

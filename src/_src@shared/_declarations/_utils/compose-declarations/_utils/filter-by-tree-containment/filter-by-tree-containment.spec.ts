@@ -2,7 +2,31 @@ import { describe, expect, it } from 'vitest';
 
 import type { TFAFCommonConfig } from '../../../../../_domain/_types/faf-config.type.js';
 
+import { assertInvariant } from '../../../../../_domain/_utils/assert-invariant/index.js';
 import { filterByTreeContainment } from './filter-by-tree-containment.util.js';
+
+const nonEmpty = (
+  values: readonly string[]
+): readonly [string, ...string[]] => {
+  const [first, ...rest] = values;
+  assertInvariant(first !== undefined, 'Expected a non-empty path list');
+  return [first, ...rest];
+};
+
+const scopedDeclarations = (
+  orderedPaths: readonly string[],
+  orderedTargets: readonly string[]
+) =>
+  filterByTreeContainment('app', undefined, {
+    externalDependencies: [
+      { from: nonEmpty(orderedPaths), to: ['z.ts', '@t.ts'] },
+    ],
+    foreignDomains: orderedPaths,
+    foreignNodes: orderedPaths,
+    publicRootNodes: orderedPaths,
+    rootLayers: ['app'],
+    treeDependencies: [{ from: ['app'], to: nonEmpty(orderedTargets) }],
+  });
 
 describe('filterByTreeContainment', () => {
   it('applies default empty values when both local and common are empty', () => {
@@ -243,5 +267,45 @@ describe('filterByTreeContainment', () => {
 
     expect(result.publicRootNodes).toEqual(['src/main.ts']);
     expect(result.foreignDomains).toEqual(['src/_configs']);
+  });
+
+  it('orders paths and pairs by UTF-16 code units regardless of input order', () => {
+    const paths = [
+      'app/b.ts',
+      'app/B.ts',
+      'app/_a.ts',
+      'app/@x.ts',
+      'app/[id].ts',
+    ];
+    const reversed = [...paths];
+    reversed.reverse();
+    const expectedPaths = [
+      'app/@x.ts',
+      'app/B.ts',
+      'app/[id].ts',
+      'app/_a.ts',
+      'app/b.ts',
+    ];
+    const targets = ['b', 'B', '_a', '@x', '[id]'];
+    const expectedTargets = ['@x', 'B', '[id]', '_a', 'b'];
+    const forward = scopedDeclarations(paths, targets);
+    const reversedTargets = [...targets];
+    reversedTargets.reverse();
+    const backward = scopedDeclarations(reversed, reversedTargets);
+    const expectedPairs = expectedPaths.flatMap((from) => [
+      { from, to: '@t.ts' },
+      { from, to: 'z.ts' },
+    ]);
+    const expectedTreePairs = expectedTargets.map((to) => ({
+      from: 'app',
+      to,
+    }));
+
+    expect(forward.publicRootNodes).toEqual(expectedPaths);
+    expect(forward.foreignDomains).toEqual(expectedPaths);
+    expect(forward.foreignNodes.individualPaths).toEqual(expectedPaths);
+    expect(forward.externalDependencyPairs).toEqual(expectedPairs);
+    expect(forward.treeDependencyPairs).toEqual(expectedTreePairs);
+    expect(backward).toEqual(forward);
   });
 });
