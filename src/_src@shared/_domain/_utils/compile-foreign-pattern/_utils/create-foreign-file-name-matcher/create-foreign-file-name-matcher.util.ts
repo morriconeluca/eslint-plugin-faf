@@ -1,4 +1,4 @@
-import type { TForeignPatternMatcher } from '../../compile-foreign-pattern.type.js';
+import type { TForeignPatternMatcher } from '../../_compile-foreign-pattern@shared/_types/compile-foreign-pattern.type.js';
 
 import {
   ASTERISK_REGEX,

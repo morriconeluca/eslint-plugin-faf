@@ -3,7 +3,7 @@ import type {
   TExtensionEntry,
   TRoleEntry,
   TRolesValidationResult,
-} from '../../validate-config-format.type.js';
+} from '../../_validate-config-format@shared/_types/validate-config-format.type.js';
 
 import {
   CONFIG_2,

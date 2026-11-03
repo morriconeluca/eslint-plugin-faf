@@ -9,7 +9,7 @@ import {
   PACKAGE_JSON_ELEMENT,
   PACKAGE_JSON_IMPORTS_PROPERTY_PATH,
   UNRESOLVABLE_ALIAS_BASE_CONSTRAINT,
-} from './acquire-path-aliases.constant.js';
+} from './_acquire-path-aliases@shared/_constants/acquire-path-aliases.constant.js';
 import { acquirePathAliases } from './acquire-path-aliases.util.js';
 
 describe('acquirePathAliases', () => {

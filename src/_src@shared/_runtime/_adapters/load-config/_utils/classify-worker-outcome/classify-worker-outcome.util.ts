@@ -1,9 +1,7 @@
 import nodePath from 'node:path';
 
-import type { TLoadConfigResult } from '../../load-config.type.js';
+import type { TLoadConfigResult } from '../../_load-config@shared/_types/load-config.type.js';
 import type { TClassifyWorkerOutcomeInput } from './classify-worker-outcome.type.js';
-
-import { readPackageJson } from '../../../read-package-json/index.js';
 
 export function classifyWorkerOutcome(
   input: TClassifyWorkerOutcomeInput
@@ -32,15 +30,8 @@ export function classifyWorkerOutcome(
     ],
   });
 
-  const isCommonJsConfig = (): boolean => {
-    const configDirectory = nodePath.dirname(configPath);
-    const result = readPackageJson({ directory: configDirectory });
-    return (
-      result.ok &&
-      result.value.present &&
-      result.value.packageJson?.['type'] === 'commonjs'
-    );
-  };
+  const isCommonJsConfig = (): boolean =>
+    input.packageJson?.['type'] === 'commonjs';
 
   const classifyError = (errorPayload: unknown): TLoadConfigResult => {
     const parseDetails = (

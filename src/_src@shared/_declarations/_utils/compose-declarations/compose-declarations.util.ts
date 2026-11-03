@@ -7,12 +7,14 @@ import type {
   TEffectiveDeclarations,
   TEffectiveTree,
 } from '../../_types/declarations.type.js';
-import type { TOriginEntry } from './_utils/validate-origins/validate-origins.type.js';
 
 import { composeCatalog } from './_utils/compose-catalog/index.js';
 import { composeRootFragments } from './_utils/compose-root-fragments/index.js';
 import { filterByTreeContainment } from './_utils/filter-by-tree-containment/index.js';
-import { validateOrigins } from './_utils/validate-origins/index.js';
+import {
+  type TOriginEntry,
+  validateOrigins,
+} from './_utils/validate-origins/index.js';
 
 export const composeDeclarations = (
   config: TFAFConfig,

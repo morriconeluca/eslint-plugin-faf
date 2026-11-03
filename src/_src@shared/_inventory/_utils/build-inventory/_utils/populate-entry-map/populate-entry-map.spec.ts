@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TInProgressInventoryEntry } from '../../build-inventory.type.js';
+import type { TInProgressInventoryEntry } from '../../_build-inventory@shared/_types/build-inventory.type.js';
 
 import { populateEntryMap } from './index.js';
 

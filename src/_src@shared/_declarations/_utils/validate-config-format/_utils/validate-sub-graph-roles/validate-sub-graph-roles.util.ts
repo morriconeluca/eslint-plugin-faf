@@ -1,5 +1,5 @@
 import type { TConfigOutcome } from '../../../../../_domain/_types/outcome.type.js';
-import type { TSubGraphRoleEntry } from '../../validate-config-format.type.js';
+import type { TSubGraphRoleEntry } from '../../_validate-config-format@shared/_types/validate-config-format.type.js';
 
 import {
   CONFIG_2,

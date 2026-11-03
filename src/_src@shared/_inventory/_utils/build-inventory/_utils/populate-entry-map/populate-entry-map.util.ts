@@ -1,4 +1,4 @@
-import type { TInProgressInventoryEntry } from '../../build-inventory.type.js';
+import type { TInProgressInventoryEntry } from '../../_build-inventory@shared/_types/build-inventory.type.js';
 
 export function populateEntryMap(
   filteredEntries: readonly TInProgressInventoryEntry[],

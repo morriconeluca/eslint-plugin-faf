@@ -1,4 +1,4 @@
-import type { TForeignPatternRejectReason } from '../../compile-foreign-pattern.type.js';
+import type { TForeignPatternRejectReason } from '../../_compile-foreign-pattern@shared/_types/compile-foreign-pattern.type.js';
 
 import {
   BRACE_REGEX,

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import type { TInspectOriginResult } from './inspect-origin.type.js';
 
 import { assertInvariant } from '../../../../../../../_domain/_utils/assert-invariant/index.js';
-import { toRelativeRealPath } from '../../../to-relative-real-path/index.js';
+import { toRelativeRealPath } from '../../_scan-tree-origin@shared/_utils/to-relative-real-path/index.js';
 
 export function inspectOrigin(
   originAbs: string,

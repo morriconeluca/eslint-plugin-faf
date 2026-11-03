@@ -12,6 +12,7 @@ import type {
   TLoadConfigResult,
 } from './load-config.type.js';
 
+import { readPackageJson } from '../../_runtime@shared/_adapters/read-package-json/index.js';
 import { classifyWorkerOutcome } from './_utils/classify-worker-outcome/index.js';
 
 export function loadConfig(input: TLoadConfigInput): TLoadConfigResult {
@@ -156,8 +157,18 @@ export function loadConfig(input: TLoadConfigInput): TLoadConfigResult {
     const messageWrapper = receiveMessageOnPort(port1);
     const messagePayload: unknown = messageWrapper?.message;
 
+    const configDirectory = nodePath.dirname(resolvedConfigPath);
+    const packageJsonResult = readPackageJson({
+      directory: configDirectory,
+    });
+    const packageJson =
+      packageJsonResult.ok && packageJsonResult.value.present
+        ? packageJsonResult.value.packageJson
+        : undefined;
+
     return classifyWorkerOutcome({
       configPath: resolvedConfigPath,
+      packageJson,
       rawMessage: messagePayload,
     });
   } finally {

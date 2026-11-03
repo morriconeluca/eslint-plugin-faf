@@ -1,5 +1,3 @@
-import { createFixture } from 'fs-fixture';
-import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { classifyWorkerOutcome } from './classify-worker-outcome.util.js';
@@ -270,70 +268,52 @@ describe('classifyWorkerOutcome', () => {
     );
   });
 
-  it('returns commonjs-package-type outcome when package.json declares type commonjs', async () => {
-    const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};',
-      'package.json': JSON.stringify({ type: 'commonjs' }),
+  it('returns commonjs-package-type outcome when package.json declares type commonjs', () => {
+    const result = classifyWorkerOutcome({
+      configPath: '/project/fafconfig.ts',
+      packageJson: { type: 'commonjs' },
+      rawMessage: {
+        error: {
+          code: 'ERR_UNKNOWN',
+          message: 'Cannot use import statement',
+        },
+        kind: 'error',
+      },
     });
 
-    try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
-      const result = classifyWorkerOutcome({
-        configPath,
-        rawMessage: {
-          error: {
-            code: 'ERR_UNKNOWN',
-            message: 'Cannot use import statement',
-          },
-          kind: 'error',
-        },
-      });
-
-      expect(result.ok).toBe(false);
-      if (result.ok) {
-        return;
-      }
-      const outcome = result.outcomes[0];
-      expect(outcome?.constraint).toBe('configuration/commonjs-package-type');
-      expect(outcome?.message).toBe(
-        'Package configuration declaring "type": "commonjs" violates configuration constraints: Cannot use import statement (code: ERR_UNKNOWN). TypeScript ES module loading requires "type": "module" in package.json.'
-      );
-    } finally {
-      await fixture.rm();
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      return;
     }
+    const outcome = result.outcomes[0];
+    expect(outcome?.constraint).toBe('configuration/commonjs-package-type');
+    expect(outcome?.message).toBe(
+      'Package configuration declaring "type": "commonjs" violates configuration constraints: Cannot use import statement (code: ERR_UNKNOWN). TypeScript ES module loading requires "type": "module" in package.json.'
+    );
   });
 
-  it('returns config-load-failure outcome when error occurs without package.json or with non-commonjs package.json', async () => {
-    const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};',
-      'package.json': JSON.stringify({ type: 'module' }),
+  it('returns config-load-failure outcome when error occurs without package.json or with non-commonjs package.json', () => {
+    const result = classifyWorkerOutcome({
+      configPath: '/project/fafconfig.ts',
+      packageJson: { type: 'module' },
+      rawMessage: {
+        error: {
+          code: 'ERR_SYNTAX',
+          message: 'Unexpected token',
+        },
+        kind: 'error',
+      },
     });
 
-    try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
-      const result = classifyWorkerOutcome({
-        configPath,
-        rawMessage: {
-          error: {
-            code: 'ERR_SYNTAX',
-            message: 'Unexpected token',
-          },
-          kind: 'error',
-        },
-      });
-
-      expect(result.ok).toBe(false);
-      if (result.ok) {
-        return;
-      }
-      const outcome = result.outcomes[0];
-      expect(outcome?.constraint).toBe('configuration/config-load-failure');
-      expect(outcome?.message).toBe(
-        'Failed to load fafconfig.ts: Unexpected token (code: ERR_SYNTAX)'
-      );
-    } finally {
-      await fixture.rm();
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      return;
     }
+    const outcome = result.outcomes[0];
+    expect(outcome?.constraint).toBe('configuration/config-load-failure');
+    expect(outcome?.message).toBe(
+      'Failed to load fafconfig.ts: Unexpected token (code: ERR_SYNTAX)'
+    );
   });
 
   it('handles error record without code and with non-object error gracefully', () => {
@@ -375,37 +355,27 @@ describe('classifyWorkerOutcome', () => {
     expect(outcome?.message).toBe('Failed to load fafconfig.ts: ');
   });
 
-  it('returns config-load-failure outcome when error occurs with invalid json package.json', async () => {
-    const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};',
-      'package.json': '{ invalid-json',
+  it('returns config-load-failure outcome when error occurs with invalid json package.json', () => {
+    const result = classifyWorkerOutcome({
+      configPath: '/project/fafconfig.ts',
+      rawMessage: {
+        error: {
+          code: 'ERR_UNKNOWN',
+          message: 'Failed to load module',
+        },
+        kind: 'error',
+      },
     });
 
-    try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
-      const result = classifyWorkerOutcome({
-        configPath,
-        rawMessage: {
-          error: {
-            code: 'ERR_UNKNOWN',
-            message: 'Failed to load module',
-          },
-          kind: 'error',
-        },
-      });
-
-      expect(result.ok).toBe(false);
-      if (result.ok) {
-        return;
-      }
-      const outcome = result.outcomes[0];
-      expect(outcome?.constraint).toBe('configuration/config-load-failure');
-      expect(outcome?.message).toBe(
-        'Failed to load fafconfig.ts: Failed to load module (code: ERR_UNKNOWN)'
-      );
-    } finally {
-      await fixture.rm();
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      return;
     }
+    const outcome = result.outcomes[0];
+    expect(outcome?.constraint).toBe('configuration/config-load-failure');
+    expect(outcome?.message).toBe(
+      'Failed to load fafconfig.ts: Failed to load module (code: ERR_UNKNOWN)'
+    );
   });
 
   it('handles array error payload gracefully', () => {

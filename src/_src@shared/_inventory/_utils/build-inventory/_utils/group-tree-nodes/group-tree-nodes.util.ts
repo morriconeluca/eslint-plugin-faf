@@ -1,7 +1,7 @@
 import type {
   TGroupTreeNodesResult,
   TInProgressInventoryEntry,
-} from '../../build-inventory.type.js';
+} from '../../_build-inventory@shared/_types/build-inventory.type.js';
 
 export function groupTreeNodes(
   entryMap: ReadonlyMap<string, TInProgressInventoryEntry>

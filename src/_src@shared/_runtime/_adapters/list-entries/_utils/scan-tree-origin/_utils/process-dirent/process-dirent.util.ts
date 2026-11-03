@@ -5,7 +5,7 @@ import type { TEntryKind } from '../../../../../../../_inventory/_types/inventor
 import type { TProcessDirentResult } from './process-dirent.type.js';
 
 import { assertInvariant } from '../../../../../../../_domain/_utils/assert-invariant/index.js';
-import { toRelativeRealPath } from '../../../to-relative-real-path/index.js';
+import { toRelativeRealPath } from '../../_scan-tree-origin@shared/_utils/to-relative-real-path/index.js';
 import { UNREADABLE_ENTRY_CONSTRAINT } from './process-dirent.constant.js';
 
 export function processDirent(

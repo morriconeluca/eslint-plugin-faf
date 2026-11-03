@@ -3,14 +3,14 @@ import type {
   TAcquirePathAliasesResult,
 } from './acquire-path-aliases.type.js';
 
-import { convertCommonAliases } from './_utils/convert-common-aliases/index.js';
-import { parsePackageJsonImports } from './_utils/parse-package-json-imports/index.js';
 import {
   COMMON_ALIASES_PROPERTY_PATH,
   CONFIG_9_REFERENCE,
   DUPLICATE_ALIAS_SOURCE_CONSTRAINT,
   FAF_CONFIG_ELEMENT,
-} from './acquire-path-aliases.constant.js';
+} from './_acquire-path-aliases@shared/_constants/acquire-path-aliases.constant.js';
+import { convertCommonAliases } from './_utils/convert-common-aliases/index.js';
+import { parsePackageJsonImports } from './_utils/parse-package-json-imports/index.js';
 
 export function acquirePathAliases(
   input: TAcquirePathAliasesInput

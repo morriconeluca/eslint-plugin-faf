@@ -8,6 +8,11 @@ export type TClassifyWorkerOutcomeInput = {
   readonly configPath: string;
 
   /**
+   * Parsed package.json object if present in the configuration directory.
+   */
+  readonly packageJson?: Record<string, unknown>;
+
+  /**
    * Raw payload message received from the worker thread MessageChannel.
    */
   readonly rawMessage: unknown;
