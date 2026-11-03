@@ -94,6 +94,7 @@ const resolveDeclarationSource = async (): Promise<string> => {
 };
 
 describe('published declaration documentation', () => {
+  const WARMUP_TIMEOUT_MS = 30_000;
   let declarationSource = '';
   const typeAliasDeclarations = new Map<string, TypeAliasDeclaration>();
 
@@ -111,7 +112,7 @@ describe('published declaration documentation', () => {
         typeAliasDeclarations.set(statement.name.text, statement);
       }
     }
-  });
+  }, WARMUP_TIMEOUT_MS);
 
   it('declares all expected TFAF types in published main.d.ts', () => {
     for (const typeName of EXPECTED_TFAF_TYPE_NAMES) {

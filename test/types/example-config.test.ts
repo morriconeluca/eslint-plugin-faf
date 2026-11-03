@@ -1,8 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
-import { compileInBothModes } from './type-harness.js';
+import {
+  compileInBothModes,
+  WARMUP_TIMEOUT_MS,
+  warmupTypeHarness,
+} from './type-harness.js';
 
 const EXAMPLE_CONFIG_PATH =
   '/Users/lucamorricone/Workspace/my-projects/mine/faf_next/fafconfig.ts';
@@ -15,6 +19,10 @@ const HYPOTHETICAL_PATHS = [
 ] as const;
 
 describe('example configuration compilation', () => {
+  beforeAll(() => {
+    warmupTypeHarness();
+  }, WARMUP_TIMEOUT_MS);
+
   it('compiles faf_next example fafconfig.ts in both exactOptionalPropertyTypes modes', () => {
     const rawExample = fs.readFileSync(EXAMPLE_CONFIG_PATH, 'utf8');
     const transformedExample = rawExample.replace(

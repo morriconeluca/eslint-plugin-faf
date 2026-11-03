@@ -7,7 +7,7 @@ import {
   isInterfaceDeclaration,
   ScriptTarget,
 } from 'typescript';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import type { TFAFConfig } from '../../src/main.js';
 
@@ -16,6 +16,8 @@ import {
   compilerLoose,
   compilerStrict,
   CONFIG_TYPES_IMPORT,
+  WARMUP_TIMEOUT_MS,
+  warmupTypeHarness,
 } from './type-harness.js';
 
 const getEntryNames = (
@@ -255,6 +257,10 @@ const STATIC_RUNTIME_LIMIT_CASES = [
 ] as const;
 
 describe('static type contracts of public configuration', () => {
+  beforeAll(() => {
+    warmupTypeHarness();
+  }, WARMUP_TIMEOUT_MS);
+
   describe('readonly configuration composition and completions', () => {
     it('accepts readonly composition using as const satisfies in both modes', () => {
       const snippet = `

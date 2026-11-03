@@ -1,4 +1,42 @@
+import type { Reporter, TestModule } from 'vitest/node';
+
 import { defineConfig } from 'vitest/config';
+
+const createTimingReporter = (): Reporter => {
+  type TProjectTiming = {
+    end: number;
+    readonly name: string;
+    start: number;
+  };
+  const projectTimings = new Map<string, TProjectTiming>();
+
+  return {
+    onTestModuleEnd(testModule: TestModule): void {
+      const projectName = testModule.project.name;
+      const existing = projectTimings.get(projectName);
+      if (existing !== undefined) {
+        existing.end = performance.now();
+      }
+    },
+    onTestModuleStart(testModule: TestModule): void {
+      const projectName = testModule.project.name;
+      const existing = projectTimings.get(projectName);
+      if (existing === undefined) {
+        projectTimings.set(projectName, {
+          end: performance.now(),
+          name: projectName,
+          start: performance.now(),
+        });
+      }
+    },
+    onTestRunEnd(): void {
+      for (const [name, timing] of projectTimings) {
+        const durationSeconds = ((timing.end - timing.start) / 1000).toFixed(2);
+        console.log(`[project:${name}] duration: ${durationSeconds}s`);
+      }
+    },
+  };
+};
 
 export default defineConfig({
   test: {
@@ -15,7 +53,25 @@ export default defineConfig({
     },
     environment: 'node',
     globals: true,
-    include: ['src/**/*.spec.ts', 'test/**/*.test.ts'],
-    reporters: ['agent'],
+    projects: [
+      {
+        test: {
+          environment: 'node',
+          globals: true,
+          include: ['src/**/*.spec.ts'],
+          name: 'unit',
+        },
+      },
+      {
+        test: {
+          environment: 'node',
+          fileParallelism: false,
+          globals: true,
+          include: ['test/**/*.test.ts'],
+          name: 'integration',
+        },
+      },
+    ],
+    reporters: ['agent', createTimingReporter()],
   },
 });

@@ -191,6 +191,8 @@ const createVirtualCompiler = (hasExactOptional: boolean): TVirtualCompiler => {
   };
 };
 
+export const WARMUP_TIMEOUT_MS = 30_000;
+
 export const compilerStrict = createVirtualCompiler(true);
 export const compilerLoose = createVirtualCompiler(false);
 
@@ -204,4 +206,9 @@ export const compileInBothModes = (snippet: string): TBothModesResult => {
     looseErrors: looseResult.errors,
     strictErrors: strictResult.errors,
   };
+};
+
+export const warmupTypeHarness = (): void => {
+  compileInBothModes('type TWarmup = 1;');
+  compilerStrict.getCompletions('type TWarmup = 1;', 'TWarmup');
 };
