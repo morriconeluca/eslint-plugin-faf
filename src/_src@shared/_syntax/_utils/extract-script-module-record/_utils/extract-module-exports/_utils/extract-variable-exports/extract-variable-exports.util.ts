@@ -1,0 +1,29 @@
+import type { VariableDeclaration } from 'oxc-parser';
+
+import type { TModuleExport } from '../../../../../../_types/module-record.type.js';
+import type { TSourceLocator } from '../../../../extract-script-module-record.type.js';
+import type { TPatternIdentifier } from '../collect-pattern-identifiers/index.js';
+
+import { LOCAL_SYMBOL_ORIGIN } from '../../extract-module-exports.constant.js';
+import { collectPatternIdentifiers } from '../collect-pattern-identifiers/index.js';
+
+export function extractVariableExports(
+  declaration: VariableDeclaration,
+  locator: TSourceLocator,
+  exports: TModuleExport[],
+  seenExportNames: Set<string>
+): void {
+  const identifiers: TPatternIdentifier[] = [];
+  for (const declarator of declaration.declarations) {
+    collectPatternIdentifiers(declarator.id, identifiers);
+  }
+  for (const item of identifiers) {
+    seenExportNames.add(item.name);
+    exports.push({
+      exportedName: item.name,
+      isTypeOnly: false,
+      origin: { symbolName: item.name, type: LOCAL_SYMBOL_ORIGIN },
+      position: locator(item.start),
+    });
+  }
+}
