@@ -1,21 +1,6 @@
 import type { TEntryKind } from '../../_inventory/_types/inventory.type.js';
 
 /**
- * Membership and positional rank within a designated horizontal hierarchy.
- */
-export type THierarchyPlacement = {
-  /**
-   * Unique identifier of the horizontal hierarchy governing this placement.
-   */
-  readonly hierarchyId: string;
-
-  /**
-   * Assigned positional rank index within the specified horizontal hierarchy.
-   */
-  readonly rank: number;
-};
-
-/**
  * Complete architectural classification record computed for an inventory item.
  */
 export type TItemClassification = {
@@ -35,19 +20,9 @@ export type TItemClassification = {
   readonly fragmentInternalRank: null | number;
 
   /**
-   * Horizontal hierarchy placement governing peer dependency authorizations, or null if unplaced.
-   */
-  readonly hierarchyPlacement: null | THierarchyPlacement;
-
-  /**
    * Role name imposed by enclosing parent category, or null if none is imposed.
    */
   readonly imposedRoleName: null | string;
-
-  /**
-   * Flag indicating whether this node belongs to the tree public surface.
-   */
-  readonly isPublicSurface: boolean;
 
   /**
    * Corresponding integer identifier matching the inventory item.
