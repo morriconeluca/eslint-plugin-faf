@@ -27,8 +27,11 @@ const hasThrowStatementSelector = (ruleConfig: unknown): boolean =>
   hasSelector(ruleConfig, 'ThrowStatement');
 
 describe('toolchain conventions', () => {
-  const fixtureDirectory = path.resolve(import.meta.dirname, 'fixtures');
-  const eslint = new ESLint();
+  const fixtureDirectory = path.resolve(
+    import.meta.dirname,
+    `../../.cache/test-fixtures/toolchain-conventions-${String(process.pid)}`
+  );
+  const eslint = new ESLint({ ignore: false });
 
   const calculateConfig = async (filePath: string): Promise<unknown> =>
     eslint.calculateConfigForFile(filePath);
@@ -49,6 +52,7 @@ describe('toolchain conventions', () => {
   const WARMUP_TIMEOUT_MS = 30_000;
 
   beforeAll(async () => {
+    fs.rmSync(fixtureDirectory, { force: true, recursive: true });
     fs.mkdirSync(fixtureDirectory, { recursive: true });
     const warmupFilePath = path.join(fixtureDirectory, 'warmup.ts');
     fs.writeFileSync(warmupFilePath, 'export const warmup = 1;\n');
@@ -70,12 +74,16 @@ describe('toolchain conventions', () => {
   ): Promise<readonly string[]> => {
     const fullPath = path.join(fixtureDirectory, filename);
     fs.writeFileSync(fullPath, content);
-    const results = await eslint.lintFiles([fullPath]);
-    const firstResult = results[0];
-    const messages = firstResult?.messages ?? [];
-    return messages
-      .map((m) => m.ruleId)
-      .filter((id): id is string => typeof id === 'string');
+    try {
+      const results = await eslint.lintFiles([fullPath]);
+      const firstResult = results[0];
+      const messages = firstResult?.messages ?? [];
+      return messages
+        .map((m) => m.ruleId)
+        .filter((id): id is string => typeof id === 'string');
+    } finally {
+      fs.rmSync(fullPath, { force: true });
+    }
   };
 
   it('rejects interface declarations in favor of type aliases', async () => {

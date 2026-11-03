@@ -43,6 +43,7 @@
     "eslint.config.ts",
     "commitlint.config.ts",
     "tsup.config.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    ".cache/test-fixtures/**/*"
   ]
 }
