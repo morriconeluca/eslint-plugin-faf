@@ -6,7 +6,7 @@ import type {
   TUnsupportedSyntax,
 } from '../../_types/module-record.type.js';
 
-import { createSourceLocator } from './_utils/create-source-locator/index.js';
+import { createSourceLocator } from './_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import { extractModuleExports } from './_utils/extract-module-exports/index.js';
 import { extractParseErrors } from './_utils/extract-parse-errors/index.js';
 import { extractRootSymbols } from './_utils/extract-root-symbols/index.js';

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { TExtractedImportEquals } from './extract-import-equals.type.js';
 
 import { assertInvariant } from '../../../../../../../_domain/_utils/assert-invariant/index.js';
-import { createSourceLocator } from '../../../create-source-locator/index.js';
+import { createSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import { extractImportEquals } from './index.js';
 
 const parseImportEquals = (code: string): null | TExtractedImportEquals => {

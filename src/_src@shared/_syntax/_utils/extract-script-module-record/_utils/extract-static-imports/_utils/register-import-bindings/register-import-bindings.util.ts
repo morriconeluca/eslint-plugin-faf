@@ -1,6 +1,6 @@
 import type { ImportDeclaration } from 'oxc-parser';
 
-import type { TImportedBinding } from '../../../../extract-script-module-record.type.js';
+import type { TImportedBinding } from '../../../../_extract-script-module-record@shared/_types/imported-binding.type.js';
 
 export function registerImportBindings(
   statement: ImportDeclaration,

@@ -1,13 +1,13 @@
 import type { Statement } from 'oxc-parser';
 
 import type { TModuleExport } from '../../../../../../_types/module-record.type.js';
-import type { TSourceLocator } from '../../../../extract-script-module-record.type.js';
+import type { TSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
-import { extractClassExports } from '../extract-class-exports/index.js';
-import { extractFunctionExports } from '../extract-function-exports/index.js';
-import { extractNamespaceExports } from '../extract-namespace-exports/index.js';
-import { extractTypeExports } from '../extract-type-exports/index.js';
-import { extractVariableExports } from '../extract-variable-exports/index.js';
+import { extractClassExports } from './_utils/extract-class-exports/index.js';
+import { extractFunctionExports } from './_utils/extract-function-exports/index.js';
+import { extractNamespaceExports } from './_utils/extract-namespace-exports/index.js';
+import { extractTypeExports } from './_utils/extract-type-exports/index.js';
+import { extractVariableExports } from './_utils/extract-variable-exports/index.js';
 
 export function extractDeclarationExports(
   declaration: Statement,

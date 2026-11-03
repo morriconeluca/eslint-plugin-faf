@@ -1,7 +1,7 @@
 import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
-import type { TImportedBinding } from '../../../../extract-script-module-record.type.js';
+import type { TImportedBinding } from '../../../../_extract-script-module-record@shared/_types/imported-binding.type.js';
 
 import { assertInvariant } from '../../../../../../../_domain/_utils/assert-invariant/index.js';
 import { registerImportBindings } from './index.js';

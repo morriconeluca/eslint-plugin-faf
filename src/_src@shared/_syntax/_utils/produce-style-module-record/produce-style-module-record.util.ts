@@ -3,7 +3,7 @@ import type {
   TModuleRecord,
   TUnsupportedSyntax,
 } from '../../_types/module-record.type.js';
-import type { TClassifiedStyleReference } from './_utils/classify-style-reference/classify-style-reference.type.js';
+import type { TClassifiedStyleReference } from './_utils/classify-style-reference/index.js';
 
 import { advanceCoordinates } from './_utils/advance-coordinates/index.js';
 import { classifyStyleReference } from './_utils/classify-style-reference/index.js';

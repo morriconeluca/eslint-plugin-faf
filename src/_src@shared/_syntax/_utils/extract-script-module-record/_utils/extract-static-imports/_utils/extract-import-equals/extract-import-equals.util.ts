@@ -1,6 +1,6 @@
 import type { TSImportEqualsDeclaration } from 'oxc-parser';
 
-import type { TSourceLocator } from '../../../../extract-script-module-record.type.js';
+import type { TSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import type { TExtractedImportEquals } from './extract-import-equals.type.js';
 
 export function extractImportEquals(

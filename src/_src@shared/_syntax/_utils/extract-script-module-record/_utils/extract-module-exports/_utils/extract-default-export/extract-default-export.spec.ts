@@ -2,10 +2,10 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import type { TRootSymbol } from '../../../../../../_types/module-record.type.js';
-import type { TImportedBinding } from '../../../../extract-script-module-record.type.js';
+import type { TImportedBinding } from '../../../../_extract-script-module-record@shared/_types/imported-binding.type.js';
 
 import { assertInvariant } from '../../../../../../../_domain/_utils/assert-invariant/index.js';
-import { createSourceLocator } from '../../../create-source-locator/index.js';
+import { createSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import { extractDefaultExport } from './index.js';
 
 const parseAndExtractDefault = (

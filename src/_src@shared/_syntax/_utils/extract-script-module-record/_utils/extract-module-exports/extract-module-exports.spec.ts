@@ -1,12 +1,336 @@
+import type {
+  BindingPattern,
+  BindingRestElement,
+  Class,
+  ExportDefaultDeclaration,
+  IdentifierReference,
+  Function as OxcFunction,
+  Statement,
+  TSEnumDeclaration,
+  TSGlobalDeclaration,
+  TSInterfaceDeclaration,
+  TSModuleDeclaration,
+  TSTypeAliasDeclaration,
+  VariableDeclaration,
+} from 'oxc-parser';
+
 import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import type { TRootSymbol } from '../../../../_types/module-record.type.js';
+import type { TSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import type { TImportedBinding } from './extract-module-exports.type.js';
 
-import { createSourceLocator } from '../create-source-locator/index.js';
-import { extractRootSymbols } from '../extract-root-symbols/index.js';
+import { createSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import { extractModuleExports } from './index.js';
+
+const collectPatternSymbols = (
+  pattern: BindingPattern | BindingRestElement,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[]
+): void => {
+  switch (pattern.type) {
+    case 'ArrayPattern': {
+      for (const element of pattern.elements) {
+        if (element !== null) {
+          collectPatternSymbols(element, locator, symbols);
+        }
+      }
+      return;
+    }
+    case 'AssignmentPattern': {
+      collectPatternSymbols(pattern.left, locator, symbols);
+      return;
+    }
+    case 'Identifier': {
+      symbols.push({
+        name: pattern.name,
+        position: locator(pattern.start),
+        space: 'value',
+      });
+      return;
+    }
+    case 'ObjectPattern': {
+      for (const property of pattern.properties) {
+        const next =
+          property.type === 'Property' ? property.value : property.argument;
+        collectPatternSymbols(next, locator, symbols);
+      }
+      return;
+    }
+    case 'RestElement': {
+      collectPatternSymbols(pattern.argument, locator, symbols);
+      return;
+    }
+  }
+};
+
+const isValueDeclaration = (
+  target: Class | Statement | TSEnumDeclaration
+): boolean =>
+  target.type === 'ClassDeclaration' ||
+  target.type === 'FunctionDeclaration' ||
+  target.type === 'TSEnumDeclaration' ||
+  target.type === 'VariableDeclaration';
+
+const hasNamespaceValue = (body: TSModuleDeclaration['body']): boolean => {
+  if (body === null) {
+    return false;
+  }
+  return body.body.some((statement) => {
+    const target =
+      statement.type === 'ExportNamedDeclaration' &&
+      statement.declaration !== null
+        ? statement.declaration
+        : statement;
+    if (isValueDeclaration(target)) {
+      return true;
+    }
+    if (target.type === 'TSModuleDeclaration') {
+      return hasNamespaceValue(target.body);
+    }
+    return false;
+  });
+};
+
+const pushNamedSymbol = (
+  name: string,
+  offset: number,
+  space: TRootSymbol['space'],
+  locator: TSourceLocator,
+  symbols: TRootSymbol[]
+): void => {
+  symbols.push({ name, position: locator(offset), space });
+};
+
+const collectVariableSymbols = (
+  target: VariableDeclaration,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[]
+): void => {
+  for (const declarator of target.declarations) {
+    collectPatternSymbols(declarator.id, locator, symbols);
+  }
+};
+
+const collectNamespaceSymbol = (
+  target: TSGlobalDeclaration | TSModuleDeclaration,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[]
+): void => {
+  if (target.kind !== 'namespace' || target.id.type !== 'Identifier') {
+    return;
+  }
+  pushNamedSymbol(
+    target.id.name,
+    target.id.start,
+    hasNamespaceValue(target.body) ? 'value' : 'type',
+    locator,
+    symbols
+  );
+};
+
+const collectFunctionSymbol = (
+  target: OxcFunction,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[],
+  seenFunctions: Set<string>
+): void => {
+  if (target.id === null) {
+    pushNamedSymbol('default', target.start, 'value', locator, symbols);
+    return;
+  }
+  if (seenFunctions.has(target.id.name)) {
+    return;
+  }
+  seenFunctions.add(target.id.name);
+  pushNamedSymbol(target.id.name, target.id.start, 'value', locator, symbols);
+};
+
+const collectClassSymbol = (
+  target: Class,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[]
+): void => {
+  if (target.id === null) {
+    pushNamedSymbol('default', target.start, 'value', locator, symbols);
+    return;
+  }
+  pushNamedSymbol(target.id.name, target.id.start, 'value', locator, symbols);
+};
+
+const collectEnumSymbol = (
+  target: TSEnumDeclaration,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[]
+): void => {
+  pushNamedSymbol(target.id.name, target.id.start, 'value', locator, symbols);
+};
+
+const collectTypeSymbol = (
+  target: TSInterfaceDeclaration | TSTypeAliasDeclaration,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[]
+): void => {
+  pushNamedSymbol(target.id.name, target.id.start, 'type', locator, symbols);
+};
+
+const collectStatementSymbols = (
+  target: Statement,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[],
+  seenFunctions: Set<string>
+): void => {
+  if (target.type === 'VariableDeclaration') {
+    collectVariableSymbols(target, locator, symbols);
+    return;
+  }
+  if (target.type === 'TSModuleDeclaration') {
+    collectNamespaceSymbol(target, locator, symbols);
+    return;
+  }
+  if (
+    target.type === 'FunctionDeclaration' ||
+    target.type === 'TSDeclareFunction'
+  ) {
+    collectFunctionSymbol(target, locator, symbols, seenFunctions);
+    return;
+  }
+  if (target.type === 'ClassDeclaration') {
+    collectClassSymbol(target, locator, symbols);
+    return;
+  }
+  if (target.type === 'TSEnumDeclaration') {
+    collectEnumSymbol(target, locator, symbols);
+    return;
+  }
+  if (
+    target.type === 'TSInterfaceDeclaration' ||
+    target.type === 'TSTypeAliasDeclaration'
+  ) {
+    collectTypeSymbol(target, locator, symbols);
+  }
+};
+
+const collectDefaultClassSymbol = (
+  statement: ExportDefaultDeclaration,
+  declaration: Class,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[]
+): void => {
+  pushNamedSymbol(
+    declaration.id?.name ?? 'default',
+    statement.start,
+    'value',
+    locator,
+    symbols
+  );
+};
+
+const collectDefaultFunctionSymbol = (
+  statement: ExportDefaultDeclaration,
+  declaration: OxcFunction,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[],
+  seenFunctions: Set<string>
+): void => {
+  if (declaration.id === null) {
+    pushNamedSymbol('default', statement.start, 'value', locator, symbols);
+    return;
+  }
+  if (seenFunctions.has(declaration.id.name)) {
+    return;
+  }
+  seenFunctions.add(declaration.id.name);
+  pushNamedSymbol(
+    declaration.id.name,
+    declaration.id.start,
+    'value',
+    locator,
+    symbols
+  );
+};
+
+const collectDefaultIdentifierSymbol = (
+  declaration: IdentifierReference,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[],
+  importedNames: ReadonlySet<string>
+): void => {
+  const isKnown =
+    symbols.some((symbol) => symbol.name === declaration.name) ||
+    importedNames.has(declaration.name);
+  if (!isKnown) {
+    pushNamedSymbol('default', declaration.start, 'value', locator, symbols);
+  }
+};
+
+const collectDefaultSymbol = (
+  statement: ExportDefaultDeclaration,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[],
+  seenFunctions: Set<string>,
+  importedNames: ReadonlySet<string>
+): void => {
+  const declaration = statement.declaration;
+  if (declaration.type === 'ClassDeclaration') {
+    collectDefaultClassSymbol(statement, declaration, locator, symbols);
+    return;
+  }
+  if (declaration.type === 'FunctionDeclaration') {
+    collectDefaultFunctionSymbol(
+      statement,
+      declaration,
+      locator,
+      symbols,
+      seenFunctions
+    );
+    return;
+  }
+  if (declaration.type === 'Identifier') {
+    collectDefaultIdentifierSymbol(
+      declaration,
+      locator,
+      symbols,
+      importedNames
+    );
+    return;
+  }
+  pushNamedSymbol('default', declaration.start, 'value', locator, symbols);
+};
+
+const collectFixtureSymbols = (
+  body: readonly Statement[],
+  locator: TSourceLocator,
+  importedNames: ReadonlySet<string>
+): readonly TRootSymbol[] => {
+  const symbols: TRootSymbol[] = [];
+  const seenFunctions = new Set<string>();
+  for (const statement of body) {
+    if (statement.type === 'ExportDefaultDeclaration') {
+      continue;
+    }
+    const target =
+      statement.type === 'ExportNamedDeclaration' &&
+      statement.declaration !== null
+        ? statement.declaration
+        : statement;
+    collectStatementSymbols(target, locator, symbols, seenFunctions);
+  }
+  for (const statement of body) {
+    if (statement.type !== 'ExportDefaultDeclaration') {
+      continue;
+    }
+    collectDefaultSymbol(
+      statement,
+      locator,
+      symbols,
+      seenFunctions,
+      importedNames
+    );
+  }
+  return symbols;
+};
 
 const parseAndExtractExports = (
   sourceText: string,
@@ -20,7 +344,7 @@ const parseAndExtractExports = (
   const bindingMap = new Map(
     bindings.map((binding) => [binding.localName, binding])
   );
-  const symbols: readonly TRootSymbol[] = extractRootSymbols(
+  const symbols = collectFixtureSymbols(
     parseResult.program.body,
     locator,
     new Set(bindings.map((binding) => binding.localName))

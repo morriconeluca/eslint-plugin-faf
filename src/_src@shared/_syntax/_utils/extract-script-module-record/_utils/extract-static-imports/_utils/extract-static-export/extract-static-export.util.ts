@@ -1,7 +1,7 @@
 import type { ExportAllDeclaration, ExportNamedDeclaration } from 'oxc-parser';
 
 import type { TModuleImport } from '../../../../../../_types/module-record.type.js';
-import type { TSourceLocator } from '../../../../extract-script-module-record.type.js';
+import type { TSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
 export function extractStaticExport(
   statement: ExportAllDeclaration | ExportNamedDeclaration,

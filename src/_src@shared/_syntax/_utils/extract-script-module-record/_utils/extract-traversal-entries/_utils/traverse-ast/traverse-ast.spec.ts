@@ -5,9 +5,9 @@ import type {
   TModuleImport,
   TUnsupportedSyntax,
 } from '../../../../../../_types/module-record.type.js';
-import type { TAstNode } from '../../extract-traversal-entries.type.js';
+import type { TAstNode } from '../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
-import { createSourceLocator } from '../../../create-source-locator/index.js';
+import { createSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import { traverseAst } from './index.js';
 
 const parseAndTraverse = (code: string) => {

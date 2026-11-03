@@ -1,7 +1,7 @@
 import type { OxcError } from 'oxc-parser';
 
 import type { TUnsupportedSyntax } from '../../../../_types/module-record.type.js';
-import type { TSourceLocator } from '../../extract-script-module-record.type.js';
+import type { TSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
 export function extractParseErrors(
   errors: readonly OxcError[],

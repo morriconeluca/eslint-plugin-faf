@@ -1,10 +1,8 @@
 import type { Statement } from 'oxc-parser';
 
 import type { TModuleImport } from '../../../../_types/module-record.type.js';
-import type {
-  TImportedBinding,
-  TSourceLocator,
-} from '../../extract-script-module-record.type.js';
+import type { TImportedBinding } from '../../_extract-script-module-record@shared/_types/imported-binding.type.js';
+import type { TSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import type { TStaticImportsResult } from './extract-static-imports.type.js';
 
 import { extractImportEquals } from './_utils/extract-import-equals/index.js';

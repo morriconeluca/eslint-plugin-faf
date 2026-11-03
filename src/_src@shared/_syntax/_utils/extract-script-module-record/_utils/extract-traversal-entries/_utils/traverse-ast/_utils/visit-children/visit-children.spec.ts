@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TAstNode } from '../../../../extract-traversal-entries.type.js';
+import type { TAstNode } from '../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
 import { visitChildren } from './index.js';
 

@@ -2,15 +2,15 @@ import type {
   TModuleImport,
   TUnsupportedSyntax,
 } from '../../../../../../../../_types/module-record.type.js';
-import type { TSourceLocator } from '../../../../../../extract-script-module-record.type.js';
-import type { TAstNode } from '../../../../extract-traversal-entries.type.js';
+import type { TSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
+import type { TAstNode } from '../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
-import { REQUIRE_NAME } from '../../../../extract-traversal-entries.constant.js';
-import { handleImportExpression } from '../../../handle-import-expression/index.js';
-import { handleRequireCall } from '../../../handle-require-call/index.js';
-import { handleTsImportType } from '../../../handle-ts-import-type/index.js';
-import { handleUnsupportedSyntax } from '../../../handle-unsupported-syntax/index.js';
-import { isRecord } from '../../../is-record/index.js';
+import { REQUIRE_NAME } from '../../_traverse-ast@shared/_constants/traversal-entries.constant.js';
+import { isRecord } from '../../_traverse-ast@shared/_utils/is-record/index.js';
+import { handleImportExpression } from './_utils/handle-import-expression/index.js';
+import { handleRequireCall } from './_utils/handle-require-call/index.js';
+import { handleTsImportType } from './_utils/handle-ts-import-type/index.js';
+import { handleUnsupportedSyntax } from './_utils/handle-unsupported-syntax/index.js';
 
 export function handleSpecificNode(
   node: TAstNode,

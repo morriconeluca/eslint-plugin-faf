@@ -1,10 +1,10 @@
 import type { ExportAllDeclaration } from 'oxc-parser';
 
 import type { TModuleExport } from '../../../../../../_types/module-record.type.js';
-import type { TSourceLocator } from '../../../../extract-script-module-record.type.js';
+import type { TSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
-import { NAMESPACE_ORIGIN } from '../../extract-module-exports.constant.js';
-import { getExportedName } from '../get-exported-name/index.js';
+import { NAMESPACE_ORIGIN } from '../../_extract-module-exports@shared/_constants/module-exports.constant.js';
+import { getExportedName } from '../../_extract-module-exports@shared/_utils/get-exported-name/index.js';
 
 export function extractAllExport(
   statement: ExportAllDeclaration,

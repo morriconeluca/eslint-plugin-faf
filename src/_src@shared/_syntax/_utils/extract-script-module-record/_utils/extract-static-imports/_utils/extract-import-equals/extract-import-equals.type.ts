@@ -1,5 +1,5 @@
 import type { TModuleImport } from '../../../../../../_types/module-record.type.js';
-import type { TImportedBinding } from '../../../../extract-script-module-record.type.js';
+import type { TImportedBinding } from '../../../../_extract-script-module-record@shared/_types/imported-binding.type.js';
 
 /**
  * Result of extracting a TypeScript import equals declaration.

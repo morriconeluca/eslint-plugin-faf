@@ -4,10 +4,8 @@ import type {
   TModuleExport,
   TRootSymbol,
 } from '../../../../_types/module-record.type.js';
-import type {
-  TImportedBinding,
-  TSourceLocator,
-} from '../../extract-script-module-record.type.js';
+import type { TImportedBinding } from '../../_extract-script-module-record@shared/_types/imported-binding.type.js';
+import type { TSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
 import { extractAllExport } from './_utils/extract-all-export/index.js';
 import { extractDeclarationExports } from './_utils/extract-declaration-exports/index.js';

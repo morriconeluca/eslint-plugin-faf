@@ -4,18 +4,16 @@ import type {
   TModuleExport,
   TRootSymbol,
 } from '../../../../../../_types/module-record.type.js';
-import type {
-  TImportedBinding,
-  TSourceLocator,
-} from '../../../../extract-script-module-record.type.js';
+import type { TImportedBinding } from '../../../../_extract-script-module-record@shared/_types/imported-binding.type.js';
+import type { TSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
 import {
   DEFAULT_NAME,
   IMPORTED_BINDING_ORIGIN,
   LOCAL_SYMBOL_ORIGIN,
   NAMESPACE_ORIGIN,
-} from '../../extract-module-exports.constant.js';
-import { isAllTypeSpace } from '../is-all-type-space/index.js';
+} from '../../_extract-module-exports@shared/_constants/module-exports.constant.js';
+import { isAllTypeSpace } from '../../_extract-module-exports@shared/_utils/is-all-type-space/index.js';
 
 export function extractDefaultExport(
   statement: ExportDefaultDeclaration,

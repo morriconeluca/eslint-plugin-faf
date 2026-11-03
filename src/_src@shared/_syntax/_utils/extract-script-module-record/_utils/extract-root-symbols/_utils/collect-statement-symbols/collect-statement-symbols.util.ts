@@ -1,13 +1,13 @@
 import type { Statement } from 'oxc-parser';
 
 import type { TRootSymbol } from '../../../../../../_types/module-record.type.js';
-import type { TSourceLocator } from '../../../../extract-script-module-record.type.js';
+import type { TSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
-import { collectClassOrEnumSymbols } from '../collect-class-or-enum-symbols/index.js';
-import { collectFunctionSymbols } from '../collect-function-symbols/index.js';
-import { collectNamespaceSymbols } from '../collect-namespace-symbols/index.js';
-import { collectTypeSymbols } from '../collect-type-symbols/index.js';
-import { collectVariableSymbols } from '../collect-variable-symbols/index.js';
+import { collectClassOrEnumSymbols } from './_utils/collect-class-or-enum-symbols/index.js';
+import { collectFunctionSymbols } from './_utils/collect-function-symbols/index.js';
+import { collectNamespaceSymbols } from './_utils/collect-namespace-symbols/index.js';
+import { collectTypeSymbols } from './_utils/collect-type-symbols/index.js';
+import { collectVariableSymbols } from './_utils/collect-variable-symbols/index.js';
 
 export function collectStatementSymbols(
   target: Statement,

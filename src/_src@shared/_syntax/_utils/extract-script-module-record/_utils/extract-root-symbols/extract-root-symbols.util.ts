@@ -1,7 +1,7 @@
 import type { Statement } from 'oxc-parser';
 
 import type { TRootSymbol } from '../../../../_types/module-record.type.js';
-import type { TSourceLocator } from '../../extract-script-module-record.type.js';
+import type { TSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
 import { collectStatementSymbols } from './_utils/collect-statement-symbols/index.js';
 import { extractDefaultDeclaration } from './_utils/extract-default-declaration/index.js';
