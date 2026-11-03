@@ -1,0 +1,1 @@
+export const MODULE_RECORD_CACHE_SCHEMA_VERSION = 1;

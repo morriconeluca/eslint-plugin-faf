@@ -4,6 +4,7 @@ import type {
   TResult,
 } from '../../../_domain/_types/outcome.type.js';
 
+import { isPlainRecord } from '../../../_domain/_utils/is-plain-record/index.js';
 import { validateAliases } from './_schemas/validate-aliases/index.js';
 import { validateDependencies } from './_schemas/validate-dependencies/index.js';
 import { validateForeignNodes } from './_schemas/validate-foreign-nodes/index.js';
@@ -15,7 +16,6 @@ import { validateRootLayers } from './_schemas/validate-root-layers/index.js';
 import { validateSubGraphRoles } from './_schemas/validate-sub-graph-roles/index.js';
 import { checkCatalogInvariants } from './_utils/check-catalog-invariants/index.js';
 import { isFafConfig } from './_utils/is-faf-config/index.js';
-import { isPlainRecord } from './_utils/is-plain-record/index.js';
 import {
   COMMON_ALLOWED_PROPERTIES,
   CONFIG_1,
