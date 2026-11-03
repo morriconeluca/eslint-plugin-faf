@@ -1,8 +1,4 @@
-import type {
-  TImportResolution,
-  TResolvedTarget,
-} from '../../../_graph/_types/dependency-graph.type.js';
-import type { TModuleImport } from '../../../_syntax/_types/module-record.type.js';
+import type { TResolvedTarget } from '../../../_graph/_types/dependency-graph.type.js';
 
 /**
  * Memoized resolution result caching target and matched alias metadata.
@@ -23,11 +19,3 @@ export type TCachedResolution = {
    */
   readonly target: TResolvedTarget;
 };
-
-/**
- * Synchronous resolver function mapping import references within a file to their concrete resolutions.
- */
-export type TSpecifierResolver = (
-  sourcePath: string,
-  imports: readonly TModuleImport[]
-) => readonly TImportResolution[];

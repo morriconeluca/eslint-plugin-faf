@@ -5,14 +5,13 @@ import { ResolverFactory } from 'oxc-resolver';
 import type { TEffectivePathAlias } from '../../../_declarations/_types/declarations.type.js';
 import type { TImportResolution } from '../../../_graph/_types/dependency-graph.type.js';
 import type { TModuleImport } from '../../../_syntax/_types/module-record.type.js';
-import type {
-  TCachedResolution,
-  TSpecifierResolver,
-} from './resolve-specifiers.type.js';
+import type { TSpecifierResolver } from '../../_types/specifier-resolver.type.js';
+import type { TCachedResolution } from './resolve-specifiers.type.js';
 
 import { matchPathAlias } from '../../../_declarations/_utils/match-path-alias/index.js';
 import { assertInvariant } from '../../../_domain/_utils/assert-invariant/index.js';
 import { toPosixPath } from '../../../_domain/_utils/to-posix-path/index.js';
+import { canonicalizeDirectory } from '../../_runtime@shared/_adapters/canonicalize-directory/index.js';
 import { NON_LITERAL_DYNAMIC_IMPORT_REASON } from './_resolve-specifiers@shared/_constants/resolve-specifiers.constant.js';
 import { classifyResolutionTarget } from './_utils/classify-resolution-target/index.js';
 
@@ -21,11 +20,7 @@ export function resolveSpecifiers(
   aliases: readonly TEffectivePathAlias[]
 ): TSpecifierResolver {
   const resolvedBase = nodePath.resolve(baseDirectory);
-  const canonicalBase = toPosixPath(
-    nodeFs.existsSync(resolvedBase)
-      ? nodeFs.realpathSync(resolvedBase)
-      : resolvedBase
-  );
+  const canonicalBase = toPosixPath(canonicalizeDirectory(baseDirectory));
 
   const tsconfigCandidate = nodePath.join(resolvedBase, 'tsconfig.json');
   const hasTsconfig = nodeFs.existsSync(tsconfigCandidate);
