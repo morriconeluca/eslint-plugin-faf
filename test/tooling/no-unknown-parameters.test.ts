@@ -13,11 +13,6 @@ const ruleTester = new RuleTester({
   },
 });
 
-const BOUNDARY_FRAGMENT =
-  'src/_src@shared/_declarations/_utils/validate-config-format';
-const BOUNDARY_FILE = `${BOUNDARY_FRAGMENT}/validate-config-format.util.ts`;
-const boundaryOptions = [{ allowedFragments: [BOUNDARY_FRAGMENT] }];
-
 ruleTester.run('no-unknown-parameters', noUnknownParametersRule, {
   invalid: [
     {
@@ -48,8 +43,47 @@ ruleTester.run('no-unknown-parameters', noUnknownParametersRule, {
     {
       code: 'export function read(x: unknown): void {}',
       errors: [{ messageId: 'unknownParameter' }],
-      filename: `${BOUNDARY_FRAGMENT}/_utils/downstream/downstream.util.ts`,
-      options: boundaryOptions,
+      filename: 'src/read.norm.ts',
+    },
+    {
+      code: 'export function read(x: unknown): void {}',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/read.service.ts',
+    },
+    {
+      code: 'export function read(x: unknown): void {}',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/read.store.ts',
+    },
+    {
+      code: 'export function read(x: unknown): void {}',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/read.rule.ts',
+    },
+    {
+      code: 'export function read(x: unknown): void {}',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/read.ts',
+    },
+    {
+      code: 'export function read(value: unknown, other: string): other is string { return false; }',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/read.util.ts',
+    },
+    {
+      code: 'export function read(value: unknown, other: unknown): value is string { return true; }',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/read.util.ts',
+    },
+    {
+      code: 'export function read(value: unknown): asserts value { return; }',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/read.util.ts',
+    },
+    {
+      code: 'export function read(value: unknown, cb: (item: unknown) => void): value is string { return true; }',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/_schemas/read/read.util.ts',
     },
   ],
   valid: [
@@ -70,9 +104,36 @@ ruleTester.run('no-unknown-parameters', noUnknownParametersRule, {
       filename: 'src/read.util.ts',
     },
     {
+      code: 'export function isReady(value: unknown): value is string { return typeof value === "string"; }',
+      filename: 'src/is-ready.util.ts',
+    },
+    {
+      code: 'export function assertReady(value: unknown): asserts value is string { return; }',
+      filename: 'src/assert-ready.util.ts',
+    },
+    {
+      code: 'export const isReady = function (value: unknown): value is string { return typeof value === "string"; };',
+      filename: 'src/is-ready.util.ts',
+    },
+    {
+      code: 'export const isReady = (value: unknown): value is string => typeof value === "string";',
+      filename: 'src/is-ready.util.ts',
+    },
+    {
+      code: 'export const assertReady = (value: unknown): asserts value is string => { return; };',
+      filename: 'src/assert-ready.util.ts',
+    },
+    {
       code: 'export function read(raw: unknown): void {}',
-      filename: BOUNDARY_FILE,
-      options: boundaryOptions,
+      filename: 'src/load.adapter.ts',
+    },
+    {
+      code: 'export function read(raw: unknown): void {}',
+      filename: 'src/parse.schema.ts',
+    },
+    {
+      code: 'export function read(raw: Record<string, unknown>): void {}',
+      filename: 'src/_utils/parse/parse.schema.ts',
     },
   ],
 });

@@ -39,8 +39,15 @@ const isMutableSource = (filePath: string): boolean => {
   );
 };
 
-const comparePaths = (left: string, right: string): number =>
-  left.localeCompare(right);
+const comparePaths = (left: string, right: string): number => {
+  if (left < right) {
+    return -1;
+  }
+  if (left > right) {
+    return 1;
+  }
+  return 0;
+};
 
 export const selectMutationTargets = (
   changedPaths: readonly string[],

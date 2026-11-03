@@ -1,12 +1,16 @@
 import type { Rule } from 'eslint';
 
 const SKIPPED_CHILD_KEYS = new Set(['end', 'loc', 'parent', 'range', 'start']);
+const EXEMPT_ROLES = new Set(['adapter', 'schema']);
 
 const isNode = (value: unknown): value is Rule.Node =>
   typeof value === 'object' &&
   value !== null &&
   'type' in value &&
   typeof value.type === 'string';
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null;
 
 const appendNode = (children: Rule.Node[], value: unknown): void => {
   if (isNode(value)) {
@@ -59,46 +63,26 @@ const reportUnknownKeywords = (
   }
 };
 
-const directoryOf = (filename: string): string => {
-  const normalized = filename.replaceAll('\\', '/');
-  const slash = normalized.lastIndexOf('/');
-  return slash === -1 ? '' : normalized.slice(0, slash);
-};
-
-const isFragmentMatch = (directory: string, fragment: string): boolean => {
-  const normalized = fragment.replaceAll('\\', '/').replace(/\/$/u, '');
-  return directory === normalized || directory.endsWith(`/${normalized}`);
-};
-
-const isAllowedFragment = (
-  filename: string,
-  fragments: readonly string[]
-): boolean => {
-  const directory = directoryOf(filename);
-  return fragments.some((fragment) => isFragmentMatch(directory, fragment));
-};
-
-const readAllowedFragments = (
-  options: readonly unknown[]
-): readonly string[] => {
-  const first = options[0];
-  if (
-    typeof first !== 'object' ||
-    first === null ||
-    !('allowedFragments' in first)
-  ) {
-    return [];
+const readIdentifierName = (value: unknown): string | undefined => {
+  if (!isRecord(value) || value['type'] !== 'Identifier') {
+    return undefined;
   }
-  const { allowedFragments } = first;
-  return Array.isArray(allowedFragments)
-    ? allowedFragments.filter(
-        (entry): entry is string => typeof entry === 'string'
-      )
-    : [];
+  const name = value['name'];
+  return typeof name === 'string' ? name : undefined;
 };
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
+const readParameterName = (parameter: unknown): string | undefined => {
+  if (!isRecord(parameter)) {
+    return undefined;
+  }
+  if (
+    parameter['type'] === 'AssignmentPattern' ||
+    parameter['type'] === 'RestElement'
+  ) {
+    return readParameterName(parameter['left'] ?? parameter['argument']);
+  }
+  return readIdentifierName(parameter);
+};
 
 const readTypeAnnotation = (parameter: unknown): null | Rule.Node => {
   if (!isRecord(parameter)) {
@@ -111,6 +95,30 @@ const readTypeAnnotation = (parameter: unknown): null | Rule.Node => {
   return isNode(annotation) ? annotation : null;
 };
 
+const readPredicateSubject = (node: unknown): string | undefined => {
+  const returnType = isRecord(node) ? node['returnType'] : undefined;
+  const predicate = isRecord(returnType)
+    ? returnType['typeAnnotation']
+    : undefined;
+  return isRecord(predicate) &&
+    predicate['type'] === 'TSTypePredicate' &&
+    isNode(predicate['typeAnnotation'])
+    ? readIdentifierName(predicate['parameterName'])
+    : undefined;
+};
+
+const explicitFileRole = (filename: string): string | undefined => {
+  const normalized = filename.replaceAll('\\', '/');
+  const baseName = normalized.slice(normalized.lastIndexOf('/') + 1);
+  const dotParts = baseName.split('.');
+  return dotParts.length === 3 ? dotParts[1] : undefined;
+};
+
+const isExemptRole = (filename: string): boolean => {
+  const role = explicitFileRole(filename);
+  return role !== undefined && EXEMPT_ROLES.has(role);
+};
+
 const checkFunction = (context: Rule.RuleContext, node: unknown): void => {
   if (!isRecord(node)) {
     return;
@@ -119,7 +127,14 @@ const checkFunction = (context: Rule.RuleContext, node: unknown): void => {
   if (!Array.isArray(parameters)) {
     return;
   }
+  const predicateSubject = readPredicateSubject(node);
   for (const parameter of parameters) {
+    if (
+      predicateSubject !== undefined &&
+      readParameterName(parameter) === predicateSubject
+    ) {
+      continue;
+    }
     const annotation = readTypeAnnotation(parameter);
     if (annotation !== null) {
       reportUnknownKeywords(context, annotation);
@@ -129,8 +144,7 @@ const checkFunction = (context: Rule.RuleContext, node: unknown): void => {
 
 export const noUnknownParametersRule: Rule.RuleModule = {
   create(context) {
-    const allowedFragments = readAllowedFragments(context.options);
-    if (isAllowedFragment(context.filename, allowedFragments)) {
+    if (isExemptRole(context.filename)) {
       return {};
     }
 
@@ -155,24 +169,13 @@ export const noUnknownParametersRule: Rule.RuleModule = {
   meta: {
     docs: {
       description:
-        'Forbid unknown in function parameter type annotations outside explicit external boundaries.',
+        'Forbid unknown in function parameter type annotations unless the parameter is the subject of a type predicate or the file Role is adapter or schema.',
     },
     messages: {
       unknownParameter:
-        'Function parameters must not use unknown. Narrow external values at an allowed boundary and pass an exact type.',
+        'Function parameters must not use unknown unless the function is a type guard or assertion on that parameter, or the file Role is adapter or schema.',
     },
-    schema: [
-      {
-        additionalProperties: false,
-        properties: {
-          allowedFragments: {
-            items: { type: 'string' },
-            type: 'array',
-          },
-        },
-        type: 'object',
-      },
-    ],
+    schema: [],
     type: 'problem',
   },
 };

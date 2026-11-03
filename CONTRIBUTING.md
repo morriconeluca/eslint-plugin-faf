@@ -59,20 +59,22 @@ The repository defines the following catalog of Roles:
 | 1    | `type`              | `_types`     | Category Nodes, multiple Symbols | Static type definitions; mandatory JSDoc.                                                    |
 | 2    | `mock`              | `_mocks`     | Category Nodes, multiple Symbols | In-memory synthetic fixtures and sample data.                                                |
 | 3    | `config`            | `_configs`   | Category Nodes, multiple Symbols | Typed immutable domain values (containment matrix, message catalogs).                        |
-| 4    | `util`              | `_utils`     | Fragments                        | Pure functional processing functions.                                                        |
-| 5    | `norm`              | `_norms`     | Fragments                        | Verification of a FAF norm: `(model) → outcomes`.                                            |
-| 6    | `adapter`           | `_adapters`  | Fragments                        | Side effects (file system, config loader, resolver, cache); converts exceptions to outcomes. |
-| 7    | `service`           | `_services`  | Fragments                        | Pipeline coordination (`verifyProject`).                                                     |
-| 8    | `store`             | `_stores`    | Fragments                        | Process state encapsulated in module closures (session).                                     |
-| 9    | `rule`              | `_rules`     | Fragments                        | ESLint rule definition object (`faf/conformity`).                                            |
-| 10   | Access Node, `spec` | —            | —                                | Top Rank.                                                                                    |
+| 4    | `schema`            | `_schemas`   | Fragments                        | Runtime validation and parsing of untyped data that arrives from outside the type system.    |
+| 5    | `util`              | `_utils`     | Fragments                        | Pure functional processing of already typed data.                                            |
+| 6    | `norm`              | `_norms`     | Fragments                        | Verification of a FAF norm: `(model) → outcomes`.                                            |
+| 7    | `adapter`           | `_adapters`  | Fragments                        | Side effects (file system, config loader, resolver, cache); converts exceptions to outcomes. |
+| 8    | `service`           | `_services`  | Fragments                        | Pipeline coordination (`verifyProject`).                                                     |
+| 9    | `store`             | `_stores`    | Fragments                        | Process state encapsulated in module closures (session).                                     |
+| 10   | `rule`              | `_rules`     | Fragments                        | ESLint rule definition object (`faf/conformity`).                                            |
+| 11   | Access Node, `spec` | —            | —                                | Top Rank.                                                                                    |
 
 Sub-Graph Role: `spec` designates unit test entry points.
 
 #### Rationales for Specific Roles
 
-- **`norm`**: FAF architectural norms represent the core domain concept of the plugin. Because FAF constraints are conjunctive and cannot override or suppress each other, norms must remain mutually independent. As sibling Fragments within `_norms/`, two norms cannot import each other, rendering independence mechanically verifiable. The name distinguishes FAF specification norms from configuration format validation, which are pure `util` validators.
-- **`adapter`**: In the FAF reference model, `util` denotes pure processing. Implementing side effects inside `util` would compromise Role/Symbol coherence. Adapters exist exclusively within `_runtime`.
+- **`schema`**: The FAF reference model assigns `schema` to validation schemas and runtime parsing. In this repository the competence is validating and parsing untyped data that arrives from outside the type system (the exported value of `fafconfig.ts`, `package.json` JSON, worker messages). A `util` receives only data that is already typed. Rank is immediately after `config` and before `util`, so a `schema` does not import a `util` of the same Layer.
+- **`norm`**: FAF architectural norms represent the core domain concept of the plugin. Because FAF constraints are conjunctive and cannot override or suppress each other, norms must remain mutually independent. As sibling Fragments within `_norms/`, two norms cannot import each other, rendering independence mechanically verifiable. The name distinguishes FAF specification norms from configuration format validation, which is a `schema`.
+- **`adapter`**: In the FAF reference model, `util` denotes pure processing. Implementing side effects inside `util` would compromise Role/Symbol coherence. Adapters exist exclusively within `_runtime`. An adapter may accept `unknown` because the value arrives from an effect (`JSON.parse`, a worker, or the disk).
 - **`service`**: `verifyProject` coordinates adapters and pure stages. It is neither pure functional processing (`util`) nor an elementary effect (`adapter`), but a pipeline coordinator.
 - **`rule`**: The export is an ESLint `{ meta, create }` module governed by ESLint's plugin contract, distinct from pure functions and static configurations.
 
@@ -81,7 +83,7 @@ Roles such as `class` and `error` are omitted in accordance with the functional 
 ### 2.4 Layout within Layers and Norm Naming
 
 - **Category Hierarchy**: Each Layer organizes its units under a consistent Category hierarchy:
-  `[['_constants'], ['_types'], ['_mocks'], ['_configs'], ['_utils'], ['_norms'], ['_adapters'], ['_services'], ['_stores'], ['_rules']]`.
+  `[['_constants'], ['_types'], ['_mocks'], ['_configs'], ['_schemas'], ['_utils'], ['_norms'], ['_adapters'], ['_services'], ['_stores'], ['_rules']]`.
   Layers only introduce the Categories they need (`_norms` is present only in `_taxonomy` and `_graph`; `_adapters`, `_services`, `_stores`, and `_rules` are present only in `_runtime`).
 - **Function Composition Rules**:
   - Sibling Fragments in the same Category cannot import each other.
@@ -158,16 +160,12 @@ Conventions are mechanically validated by ESLint and TypeScript compiler checks:
 - `@typescript-eslint/consistent-type-assertions: ['error', { assertionStyle: 'never' }]`: Disallows `as` casts, permitting only `as const`.
 - `@typescript-eslint/strict-boolean-expressions` and `@typescript-eslint/switch-exhaustiveness-check`: Ensure rigorous boolean handling and exhaustive pattern matching.
 - `no-restricted-syntax`: Prohibits `ClassDeclaration`, `ClassExpression`, `ThisExpression`, and `ThrowStatement` (with the exception of `assert-invariant`).
-- `repository/no-unknown-parameters`: Forbids `unknown` anywhere in a function parameter type annotation under `src/` (except `*.spec.ts`). It does not apply to `catch` clauses, local variables, or return types. `unknown` is allowed only in the Fragment directories listed below, where a value enters from outside the type system. Downstream functions receive an exact type. A type guard `(value: unknown) => value is T` belongs to the boundary Fragment.
+- `repository/no-unknown-parameters`: Forbids `unknown` anywhere in a function parameter type annotation under `src/` (except `*.spec.ts`). It does not apply to `catch` clauses, local variables, or return types. A parameter `unknown` is legitimate only when the function's competence is to turn an untyped value into a typed value. The rule recognizes that competence from syntax and from the file Role, not from a path list:
 
-  Allowed boundaries:
+  - **(a) Type guard or assertion on the same parameter.** `unknown` is allowed on a parameter `p` when the function returns `p is T` or `asserts p is T`. The return type must be explicit. Function declarations, function expressions, and arrow functions all qualify. A predicate on a different parameter does not exempt `p`.
+  - **(b) File Role.** `unknown` is allowed on parameters of functions in files whose explicit Role, read from the file name as `<name>.<role>.<extension>`, is `adapter` (`*.adapter.ts`: the value arrives from an effect such as `JSON.parse`, a worker, or the disk) or `schema` (`*.schema.ts`: runtime validation and parsing of external untyped data).
 
-  - `src/_src@shared/_declarations/_utils/validate-config-format` and its private validator Fragments (`is-plain-record`, `is-faf-config`, `validate-aliases`, `validate-dependencies`, `validate-foreign-nodes`, `validate-hierarchies`, `validate-mimetic-structures`, `validate-roles`, `validate-root-fragments`, `validate-root-layers`, `validate-sub-graph-roles`): the exported value of `fafconfig.ts` is untyped until format validation. Each helper still receives an untyped slice of that value; FAF places each helper in its own Fragment, so each path is listed.
-  - `src/_src@shared/_runtime/_runtime@shared/_adapters/read-package-json`: `JSON.parse` of `package.json`.
-  - `src/_src@shared/_declarations/_utils/acquire-path-aliases/_utils/parse-package-json-imports` and `.../collect-subpath-targets`: the `imports` field and its targets are still untyped JSON.
-  - `src/_src@shared/_runtime/_adapters/load-config/_utils/classify-worker-outcome`: worker messages are unstructured clones.
-  - `src/_src@shared/_syntax/_utils/extract-script-module-record/_utils/extract-traversal-entries/_utils/traverse-ast/_traverse-ast@shared/_utils/is-ast-node`: the single generic entry for `oxc-parser` AST traversal. `is-statement` and `is-binding-pattern` are listed as well because a type predicate to an `oxc-parser` node is not assignable from the internal record model and must accept `unknown`.
-  - No cache-file reader exists yet. When one is added, its Fragment is the boundary for data read from cache files and must be added to this list.
+  Every other parameter `unknown` is forbidden, including in `*.util.ts`, `*.norm.ts`, `*.service.ts`, `*.store.ts`, `*.rule.ts`, and files with no Role. A `util` receives only already typed data.
 
 - `@typescript-eslint/no-unnecessary-condition` is enabled with `checkTypePredicates: true` in addition to its default options. A condition already decided by the types, including one passed to a type guard, is an error.
 - `repository/no-decided-assertion`: forbids `assertInvariant(typeof value === 'string', ...)` (and the other `typeof` kinds) when the operand type already decides the comparison. `typeof` comparisons are typed as `boolean`, so `checkTypePredicates` does not see them.

@@ -25,28 +25,6 @@ const allowMultipleSymbolsRoles = localTree.roles
   .map((r) => r.name);
 const subGraphRoles = localTree.subGraphRoles.map((r) => r.name);
 
-const UNKNOWN_PARAMETER_BOUNDARIES = [
-  'src/_src@shared/_declarations/_utils/acquire-path-aliases/_utils/parse-package-json-imports',
-  'src/_src@shared/_declarations/_utils/acquire-path-aliases/_utils/parse-package-json-imports/_utils/collect-subpath-targets',
-  'src/_src@shared/_declarations/_utils/validate-config-format',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/is-faf-config',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/is-plain-record',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/validate-aliases',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/validate-dependencies',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/validate-foreign-nodes',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/validate-hierarchies',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/validate-mimetic-structures',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/validate-roles',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/validate-root-fragments',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/validate-root-layers',
-  'src/_src@shared/_declarations/_utils/validate-config-format/_utils/validate-sub-graph-roles',
-  'src/_src@shared/_runtime/_adapters/load-config/_utils/classify-worker-outcome',
-  'src/_src@shared/_runtime/_runtime@shared/_adapters/read-package-json',
-  'src/_src@shared/_syntax/_utils/extract-script-module-record/_utils/extract-traversal-entries/_utils/traverse-ast/_traverse-ast@shared/_utils/is-ast-node',
-  'src/_src@shared/_syntax/_utils/extract-script-module-record/_utils/extract-traversal-entries/_utils/traverse-ast/_utils/does-node-declare-require/_does-node-declare-require@shared/_utils/is-binding-pattern',
-  'src/_src@shared/_syntax/_utils/extract-script-module-record/_utils/extract-traversal-entries/_utils/traverse-ast/_utils/does-node-declare-require/_does-node-declare-require@shared/_utils/is-statement',
-] as const;
-
 const COMMON_FUNCTIONAL_RESTRICTIONS = [
   {
     message:
@@ -327,10 +305,7 @@ export default defineConfig([
     files: ['src/**/*.ts'],
     ignores: ['src/**/*.spec.ts'],
     rules: {
-      'repository/no-unknown-parameters': [
-        'error',
-        { allowedFragments: [...UNKNOWN_PARAMETER_BOUNDARIES] },
-      ],
+      'repository/no-unknown-parameters': 'error',
     },
   },
   {
