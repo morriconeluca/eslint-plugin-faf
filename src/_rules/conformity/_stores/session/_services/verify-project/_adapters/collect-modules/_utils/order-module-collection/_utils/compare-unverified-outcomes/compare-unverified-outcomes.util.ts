@@ -4,7 +4,7 @@ import type {
 } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
 import { compareOrdinal } from '../../../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { compareSourceLocations } from '../../../../_collect-modules@shared/_utils/compare-source-locations/index.js';
+import { compareSourceLocations } from '../../../../../../_verify-project@shared/_utils/compare-source-locations/index.js';
 
 export function compareUnverifiedOutcomes(
   left: TUnverifiedOutcome,

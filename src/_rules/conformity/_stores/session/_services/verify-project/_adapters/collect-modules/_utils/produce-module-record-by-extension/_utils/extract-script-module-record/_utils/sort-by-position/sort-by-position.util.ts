@@ -1,6 +1,6 @@
 import type { TSourceLocation } from '../../../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
-import { compareSourceLocations } from '../../../../../../_collect-modules@shared/_utils/compare-source-locations/index.js';
+import { compareSourceLocations } from '../../../../../../../../_verify-project@shared/_utils/compare-source-locations/index.js';
 
 export function sortByPosition<
   T extends { readonly position: TSourceLocation },

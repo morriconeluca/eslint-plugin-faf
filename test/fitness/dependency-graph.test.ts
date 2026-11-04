@@ -21,14 +21,17 @@ const FORBIDDEN_RULES: readonly IForbiddenRuleType[] = [
   },
   {
     comment:
-      'This module is not used by any other module and does not use any other module.',
+      'Every production module must be reachable from the package entry.',
     from: {
-      orphan: true,
-      pathNot: '^src/main[.]ts$',
+      path: '^src/main[.]ts$',
     },
-    name: 'no-orphans',
+    name: 'not-reachable-from-main',
     severity: 'error',
-    to: {},
+    to: {
+      path: '^src/',
+      pathNot: '[.](spec|mock)[.]ts$',
+      reachable: false,
+    },
   },
   {
     comment:
@@ -69,8 +72,8 @@ const formatViolation = (violation: IViolation): string => {
     return `Cycle detected: ${pathChain}`;
   }
 
-  if (violation.rule.name === 'no-orphans') {
-    return `Orphan module: ${violation.from}`;
+  if (violation.rule.name === 'not-reachable-from-main') {
+    return `Unreachable from src/main.ts: ${violation.from}`;
   }
 
   if (violation.rule.name === 'no-dist-imports') {
@@ -81,26 +84,50 @@ const formatViolation = (violation: IViolation): string => {
 };
 
 describe('fitness: dependency graph', () => {
-  const sourcePath = path.resolve(import.meta.dirname, '../../src');
+  const repositoryRoot = path.resolve(import.meta.dirname, '../..');
   const tsConfigPath = path.resolve(import.meta.dirname, '../../tsconfig.json');
   const WARMUP_TIMEOUT_MS = 30_000;
 
   let repositoryCruiseResult: Awaited<ReturnType<typeof cruise>> | undefined;
 
   beforeAll(async () => {
-    repositoryCruiseResult = await cruise([sourcePath], {
+    repositoryCruiseResult = await cruise(['src'], {
       ...BASE_CRUISE_OPTIONS,
+      baseDir: repositoryRoot,
       tsConfig: {
         fileName: tsConfigPath,
       },
     });
   }, WARMUP_TIMEOUT_MS);
 
-  it('validates repository source files against cycles, orphans, and dist imports', async () => {
+  it('excludes only spec and mock modules from reachability', () => {
+    const reachability = FORBIDDEN_RULES.find(
+      (rule) => rule.name === 'not-reachable-from-main'
+    );
+    expect(reachability !== undefined && 'to' in reachability).toBe(true);
+    if (reachability === undefined || !('to' in reachability)) {
+      return;
+    }
+    const pathNot = reachability.to.pathNot;
+    expect(pathNot).toBe('[.](spec|mock)[.]ts$');
+    if (typeof pathNot !== 'string') {
+      return;
+    }
+    const excluded = new RegExp(pathNot);
+    expect(excluded.test('src/widget.spec.ts')).toBe(true);
+    expect(excluded.test('src/inventory-from-entries.mock.ts')).toBe(true);
+    expect(excluded.test('src/main.ts')).toBe(false);
+    expect(excluded.test('src/outcome.type.ts')).toBe(false);
+    expect(excluded.test('src/mock.ts')).toBe(false);
+    expect(excluded.test('src/widget.specification.ts')).toBe(false);
+  });
+
+  it('validates repository source files against cycles, reachability, and dist imports', async () => {
     const result =
       repositoryCruiseResult ??
-      (await cruise([sourcePath], {
+      (await cruise(['src'], {
         ...BASE_CRUISE_OPTIONS,
+        baseDir: repositoryRoot,
         tsConfig: {
           fileName: tsConfigPath,
         },
@@ -159,10 +186,12 @@ describe('fitness: dependency graph', () => {
     }
   });
 
-  it('detects orphan modules outside of the declared entry point', async () => {
+  it('detects modules that are not reachable from src/main.ts', async () => {
     const fixture = await createFixture({
+      'src/helper.ts': 'export const helper = 1;\n',
       'src/main.ts': "export const main = 'entry';\n",
-      'src/orphan.ts': 'export const unused = 42;\n',
+      'src/used.ts':
+        "import { helper } from './helper.js';\nexport const used = helper;\n",
       'tsconfig.json': JSON.stringify({
         compilerOptions: {
           module: 'NodeNext',
@@ -187,16 +216,29 @@ describe('fitness: dependency graph', () => {
       }
 
       const violations = result.output.summary.violations;
-      const orphanViolations = violations.filter(
-        (v) => v.rule.name === 'no-orphans'
+      const unreachable = violations.filter(
+        (v) => v.rule.name === 'not-reachable-from-main'
       );
-      expect(orphanViolations.length).toBeGreaterThan(0);
-      expect(orphanViolations.some((v) => v.from === 'src/orphan.ts')).toBe(
-        true
-      );
+      expect(unreachable.some((v) => v.from === 'src/used.ts')).toBe(true);
+      expect(unreachable.some((v) => v.from === 'src/helper.ts')).toBe(true);
+      expect(unreachable.some((v) => v.from === 'src/main.ts')).toBe(false);
     } finally {
       await fixture.rm();
     }
+  });
+
+  it('reports no climb violations from the edge check', async () => {
+    const { execFileSync } = await import('node:child_process');
+    const output = execFileSync(
+      'python3',
+      [
+        '/Users/lucamorricone/Workspace/my-projects/mine/eslint-plugin-faf/briefs/_tools/faf-edge-check.py',
+        repositoryRoot,
+      ],
+      { encoding: 'utf8' }
+    );
+    expect(output).toContain('peer 0');
+    expect(output).not.toMatch(/climb [1-9]/);
   });
 
   it('detects forbidden imports from dist folder', async () => {

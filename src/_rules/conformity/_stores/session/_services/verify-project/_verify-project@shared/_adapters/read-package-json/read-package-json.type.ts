@@ -1,4 +1,4 @@
-import type { TResult } from '../../../../../../../../_conformity@shared/_types/outcome.type.js';
+import type { TResult } from '../../../../../../../_conformity@shared/_types/outcome.type.js';
 
 /**
  * Parsed payload of package.json containing optional object record and existence flag.

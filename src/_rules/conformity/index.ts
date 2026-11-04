@@ -1,1 +1,1 @@
-export { conformity } from './conformity.rule.js';
+export { createConformity } from './conformity.rule.js';

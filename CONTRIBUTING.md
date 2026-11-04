@@ -32,22 +32,30 @@ src/                              Root Fragment
 
 - **Origin `src/` is a Root Fragment, not a Root Layer**: The package entry is a boundary with Node.js and ESLint and must expose heterogeneous Symbols: the plugin object (`default`) and the public configuration types. Only a Root Node may declare multiple Symbols and re-export heterogeneous declarations.
 - **Single Root Node: `src/main.ts`**: It is the only element of the Public Surface (`publicRootNodes: ['src/main.ts']`). It composes the plugin object, registers `rules.conformity`, exposes `configs.recommended`, and re-exports `TFAFConfig` and associated types. There is no CLI and no programmatic API.
-- **Single outgoing external dependency**: `src/main.ts` reads the package version from `package.json` via an authorized edge in `externalDependencies`.
+- **Single outgoing external dependency**: `src/main.ts` statically imports `package.json` (`import packageJson from '../package.json' with { type: 'json' }`) and reads `name` and `version`. That edge is the authorized `externalDependencies` entry. No other file may import or `require` the package manifest.
 
 ### 2.2 Dependency Chain
 
 Direct dependencies, from the outside inward:
 
 ```text
-main.ts → _rules/conformity (rule)
-       → _stores/session (store)
-       → _services/verify-project (service)
-       → stages
-main.ts → _configs/recommended.config.ts
-main.ts → _src@shared/_types
+main.ts
+  package.json → meta.name, meta.version, meta.namespace = 'faf'
+  createConformity(version) → rules.conformity
+  configs.recommended = recommended.config + plugins.faf
+recommended.config.ts
+  files = LINTABLE_EXTENSIONS from _src@shared/_constants/faf.constant.ts
+create(context): Rule.RuleModule
+  discoverConfig({ configFile: settings.faf?.configFile, workingDirectory: context.cwd })
+  session.outcomesFor({ configPath, filename, packageVersion, sourceText, workingDirectory })
+    verifyProject({ configPath, fileOverlays?, workingDirectory })
+      loadConfig → validateConfigFormat → readPackageJson → acquirePathAliases
+      → composeDeclarations → listEntries → buildInventory → validateConfigReferences
+      → classifyTaxonomy → verifyClassificationCompleteness → collectModules
+      → collectGraphOutcomes → anchorOutcomes
 ```
 
-Verification stages do not import one another. `verify-project` composes them. There is no local Horizontal Hierarchy between internal domains. The pipeline stays synchronous: ESLint discards deferred `context.report()` calls. Disk access uses synchronous `node:fs`, script parsing uses `parseSync`, and module resolution uses synchronous `oxc-resolver`. Loading `fafconfig.ts` runs in a worker thread waited on synchronously.
+Verification stages do not import one another. `verifyProject` composes them in that order and stops on a blocking configuration or inventory failure. Classification outcomes and unverified module outcomes accumulate. `collectGraphOutcomes` is the extension point for later graph and norm stages: it currently returns the unverified outcomes, and later stages are added there without rewriting the earlier calls. `anchorOutcomes` indexes every outcome by one absolute lintable file. The session memoizes that index per `fafconfig.ts`, invalidates it from the `mtime` and size of `fafconfig.ts` and of the local files the loader returned, and from a changed source overlay. It loads the Module Record cache from `node_modules/.cache/eslint-plugin-faf` under the configuration directory, writes the records used by each verification, and clears the in-memory cache when the configuration changes. The pipeline stays synchronous: ESLint discards deferred `context.report()` calls. Disk access uses synchronous `node:fs`, script parsing uses `parseSync`, and module resolution uses synchronous `oxc-resolver`. Loading `fafconfig.ts` runs in a worker thread waited on synchronously.
 
 ### 2.3 Placement Criterion
 

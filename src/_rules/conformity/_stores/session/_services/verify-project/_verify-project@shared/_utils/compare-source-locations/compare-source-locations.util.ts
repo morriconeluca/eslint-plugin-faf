@@ -1,4 +1,4 @@
-import type { TSourceLocation } from '../../../../../../../../../_conformity@shared/_types/outcome.type.js';
+import type { TSourceLocation } from '../../../../../../../_conformity@shared/_types/outcome.type.js';
 
 export function compareSourceLocations(
   left: TSourceLocation,

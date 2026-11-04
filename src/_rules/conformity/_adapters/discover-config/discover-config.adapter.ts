@@ -6,6 +6,8 @@ import type {
   TDiscoverConfigResult,
 } from './discover-config.type.js';
 
+import { CONFIG_FILE_NAME } from '../../../../_src@shared/_constants/faf.constant.js';
+
 export function discoverConfig(
   input: TDiscoverConfigInput
 ): TDiscoverConfigResult {
@@ -62,7 +64,7 @@ export function discoverConfig(
   let isReachedRoot = false;
 
   while (!isReachedRoot) {
-    const candidatePath = nodePath.join(currentDirectory, 'fafconfig.ts');
+    const candidatePath = nodePath.join(currentDirectory, CONFIG_FILE_NAME);
     const stats = nodeFs.statSync(candidatePath, { throwIfNoEntry: false });
 
     if (stats !== undefined && stats.isFile()) {
@@ -92,7 +94,7 @@ export function discoverConfig(
         constraint: missingConstraint,
         element: resolvedWorkingDirectory,
         family: 'configuration',
-        message: `No fafconfig.ts configuration file found in working directory or parent directories: ${resolvedWorkingDirectory}`,
+        message: `No ${CONFIG_FILE_NAME} configuration file found in working directory or parent directories: ${resolvedWorkingDirectory}`,
         normativeReference: 'CONFIG_1',
         propertyPath: 'faf',
       },

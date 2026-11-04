@@ -1,4 +1,4 @@
-import type { TOutcome } from '../../../../_conformity@shared/_types/outcome.type.js';
+import type { TAnchorOutcomesResult } from './_utils/anchor-outcomes/index.js';
 
 /**
  * Execution input parameters provided to verifyProject for architectural evaluation.
@@ -11,6 +11,7 @@ export type TVerifyProjectInput = {
 
   /**
    * In-memory file content overrides provided for unsaved open editor documents.
+   * Keys are absolute paths or paths relative to the configuration directory.
    */
   readonly fileOverlays?: ReadonlyMap<string, string>;
 
@@ -23,9 +24,14 @@ export type TVerifyProjectInput = {
 /**
  * Verification outcome payload produced by the verifyProject pipeline coordinator.
  */
-export type TVerifyProjectResult = {
+export type TVerifyProjectResult = TAnchorOutcomesResult & {
   /**
-   * Complete sequence of diagnostic outcomes detected across all project stages.
+   * Whether module collection ran and the session may persist used Module Records.
    */
-  readonly outcomes: readonly TOutcome[];
+  readonly collectedModules: boolean;
+
+  /**
+   * Absolute paths of local files loaded while evaluating fafconfig.ts.
+   */
+  readonly loadedFiles: readonly string[];
 };

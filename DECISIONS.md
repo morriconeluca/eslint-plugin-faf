@@ -402,6 +402,9 @@ ESLint rules can only report diagnostics on files that ESLint is currently visit
 2. **Partial Linting Limitation**:
    - Because ESLint only displays diagnostics for files included in its current invocation, linting a subset of files (e.g., a single file opened in an editor) may not surface architectural diagnostics anchored to unlinted files.
    - Comprehensive architectural conformity requires linting the entire project (e.g., `npx eslint .` or CI runs).
+3. **Missing configuration file**:
+   - When discovery does not find `fafconfig.ts`, there is no configuration file that can receive the global fallback.
+   - The rule reports `configuration/missing-config-file` on every file ESLint is linting. That is the only visible and deterministic anchor.
 
 ### Rationale
 
@@ -411,6 +414,7 @@ Architectural invariants are global properties of the codebase. Anchoring to a d
 
 - A missing `index.ts` in a Fragment will be reported on the Fragment's Master node.
 - Global configuration errors will be reported on `fafconfig.ts`.
+- A missing `fafconfig.ts` is reported on every linted file as `configuration/missing-config-file`.
 - Running ESLint over the entire project guarantees 100% visibility of all architectural diagnostics.
 
 ### Normative References
