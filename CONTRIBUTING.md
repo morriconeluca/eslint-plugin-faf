@@ -215,6 +215,7 @@ Constant mutants stay killed only when the expected value is a literal on an obs
 - Tests for adapters, services, rules, and acceptance test suites interact with real file system structures created in temporary directories using `fs-fixture`.
 - Virtual or simulated file systems (such as `mock-fs` or `memfs`) are strictly prohibited because `oxc-resolver` relies on native file system calls and actual disk paths.
 - Fixture creation logic relies directly on `fs-fixture` without duplicated custom fixture generator utilities.
+- Create test temporary files only through `os.tmpdir()` or `fs-fixture`. The test harness places that directory outside the repository.
 
 ---
 

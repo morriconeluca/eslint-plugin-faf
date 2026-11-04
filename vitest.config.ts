@@ -2,6 +2,8 @@ import type { Reporter, TestModule } from 'vitest/node';
 
 import { defineConfig } from 'vitest/config';
 
+import { resolveExecutionTestTemporaryDirectory } from './test/support/test-temp-dir.js';
+
 const createTimingReporter = (): Reporter => {
   type TProjectTiming = {
     end: number;
@@ -38,6 +40,14 @@ const createTimingReporter = (): Reporter => {
   };
 };
 
+const testTemporaryDirectory = resolveExecutionTestTemporaryDirectory();
+
+const testTemporaryDirectoryEnvironment = {
+  TEMP: testTemporaryDirectory,
+  TMP: testTemporaryDirectory,
+  TMPDIR: testTemporaryDirectory,
+};
+
 export default defineConfig({
   test: {
     coverage: {
@@ -51,11 +61,14 @@ export default defineConfig({
         perFile: true,
       },
     },
+    env: testTemporaryDirectoryEnvironment,
     environment: 'node',
     globals: true,
+    globalSetup: ['./test/support/test-temp-dir.ts'],
     projects: [
       {
         test: {
+          env: testTemporaryDirectoryEnvironment,
           environment: 'node',
           globals: true,
           include: ['src/**/*.spec.ts'],
@@ -64,6 +77,7 @@ export default defineConfig({
       },
       {
         test: {
+          env: testTemporaryDirectoryEnvironment,
           environment: 'node',
           fileParallelism: false,
           globals: true,
