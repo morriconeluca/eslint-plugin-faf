@@ -7,6 +7,7 @@ import type {
   TAnchorOutcomesResult,
 } from './anchor-outcomes.type.js';
 
+import { toPosixPath } from '../../../../_session@shared/_utils/to-posix-path/index.js';
 import { compareAnchoredOutcomes } from './_utils/compare-anchored-outcomes/index.js';
 import { selectAnchorPath } from './_utils/select-anchor-path/index.js';
 
@@ -23,14 +24,14 @@ export function anchorOutcomes(
       model: input.model,
       outcome,
     });
-    const elementRelative = nodePath.isAbsolute(outcome.element)
-      ? nodePath
-          .relative(input.baseDirectory, outcome.element)
-          .replaceAll('\\', '/')
-      : outcome.element.replaceAll('\\', '/');
-    const anchorRelative = nodePath
-      .relative(input.baseDirectory, anchorPath)
-      .replaceAll('\\', '/');
+    const elementRelative = toPosixPath(
+      nodePath.isAbsolute(outcome.element)
+        ? nodePath.relative(input.baseDirectory, outcome.element)
+        : outcome.element
+    );
+    const anchorRelative = toPosixPath(
+      nodePath.relative(input.baseDirectory, anchorPath)
+    );
     const isSameFile = elementRelative === anchorRelative;
     anchored.push({
       anchorPath,

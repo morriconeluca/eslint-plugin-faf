@@ -227,20 +227,6 @@ describe('fitness: dependency graph', () => {
     }
   });
 
-  it('reports no climb violations from the edge check', async () => {
-    const { execFileSync } = await import('node:child_process');
-    const output = execFileSync(
-      'python3',
-      [
-        '/Users/lucamorricone/Workspace/my-projects/mine/eslint-plugin-faf/briefs/_tools/faf-edge-check.py',
-        repositoryRoot,
-      ],
-      { encoding: 'utf8' }
-    );
-    expect(output).toContain('peer 0');
-    expect(output).not.toMatch(/climb [1-9]/);
-  });
-
   it('detects forbidden imports from dist folder', async () => {
     const fixture = await createFixture({
       'dist/compiled.js': "export const compiled = 'built';\n",

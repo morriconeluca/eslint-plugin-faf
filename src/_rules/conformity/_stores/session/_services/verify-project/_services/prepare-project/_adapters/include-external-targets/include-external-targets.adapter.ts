@@ -7,6 +7,8 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
+import { toPosixPath } from '../../../../../../_session@shared/_utils/to-posix-path/index.js';
+
 export function includeExternalTargets(
   inventory: TInventory,
   config: TFAFConfig,
@@ -28,7 +30,7 @@ export function includeExternalTargets(
     }
   }
   for (const target of targets) {
-    const normalized = target.replaceAll('\\', '/');
+    const normalized = toPosixPath(target);
     const absolute = nodePath.resolve(baseDirectory, normalized);
     const stats = nodeFs.statSync(absolute, { throwIfNoEntry: false });
     if (stats === undefined || !stats.isFile() || pathToId.has(normalized)) {

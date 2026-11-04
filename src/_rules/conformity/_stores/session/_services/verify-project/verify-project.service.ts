@@ -5,6 +5,7 @@ import type {
   TVerifyProjectResult,
 } from './verify-project.type.js';
 
+import { toPosixPath } from '../../_session@shared/_utils/to-posix-path/index.js';
 import { collectModules } from './_adapters/collect-modules/index.js';
 import { verifyClassificationCompleteness } from './_norms/classification-completeness/index.js';
 import { prepareProject } from './_services/prepare-project/index.js';
@@ -42,9 +43,9 @@ export function verifyProject(
       const absolute = nodePath.isAbsolute(filePath)
         ? filePath
         : nodePath.resolve(prepared.baseDirectory, filePath);
-      const relative = nodePath
-        .relative(prepared.baseDirectory, absolute)
-        .replaceAll('\\', '/');
+      const relative = toPosixPath(
+        nodePath.relative(prepared.baseDirectory, absolute)
+      );
       textOverrides.set(relative, text);
     }
   }

@@ -4,6 +4,7 @@ import type {
   TRawInventoryEntry,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
+import { toPosixPath } from '../../../../../../_session@shared/_utils/to-posix-path/index.js';
 import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 
 type TPreparedEntry = TRawInventoryEntry & {
@@ -11,7 +12,7 @@ type TPreparedEntry = TRawInventoryEntry & {
 };
 
 const normalizeOrigin = (rawOrigin: string): string => {
-  const posix = rawOrigin.replaceAll('\\', '/');
+  const posix = toPosixPath(rawOrigin);
   const withoutPrefix = posix.startsWith('./') ? posix.slice(2) : posix;
   return withoutPrefix.endsWith('/') && withoutPrefix.length > 1
     ? withoutPrefix.slice(0, -1)

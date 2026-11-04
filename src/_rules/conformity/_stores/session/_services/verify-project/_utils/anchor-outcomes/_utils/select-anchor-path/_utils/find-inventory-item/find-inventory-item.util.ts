@@ -5,12 +5,14 @@ import type {
   TInventoryItem,
 } from '../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
+import { toPosixPath } from '../../../../../../../../_session@shared/_utils/to-posix-path/index.js';
+
 export function findInventoryItem(
   inventory: TInventory,
   baseDirectory: string,
   element: string
 ): TInventoryItem | undefined {
-  const normalizedId = inventory.pathToId.get(element.replaceAll('\\', '/'));
+  const normalizedId = inventory.pathToId.get(toPosixPath(element));
   if (normalizedId !== undefined) {
     return inventory.items[normalizedId];
   }
@@ -18,7 +20,7 @@ export function findInventoryItem(
     return undefined;
   }
   const relativeId = inventory.pathToId.get(
-    nodePath.relative(baseDirectory, element).replaceAll('\\', '/')
+    toPosixPath(nodePath.relative(baseDirectory, element))
   );
   return relativeId === undefined ? undefined : inventory.items[relativeId];
 }

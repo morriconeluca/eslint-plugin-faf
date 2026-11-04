@@ -257,6 +257,12 @@ The codebase enforces five sequential quality gates. All gates must pass in loca
 3. **`gate:3`** (`npm run gate:3`):
    - Testing & Coverage: Runs Vitest test suite with v8 coverage analysis.
    - Strict per-file thresholds: **≥ 95% line coverage** and **≥ 90% branch coverage**.
+   - Fitness tests in `test/fitness/` include the dependency graph (cycles, reachability from `src/main.ts`, and `dist/` imports) and the FAF edge laws on every relative import in `src/**/*.ts`, specs included. The edge-law fitness test reads Horizontal Hierarchies and `externalDependencies` from `fafconfig.ts` and reports every violated edge with its law:
+     - **Peer separation**: no edge between the subtrees of two different children of a Category or Sub-Category, except toward that domain's Fractal Branch or toward a sibling of strictly lower rank in the same Horizontal Hierarchy. The catalog Category hierarchy does not order Private Category siblings.
+     - **Unidirectionality**: a file in a Private Category subtree does not import the direct child files of the parent Fragment or Root Fragment; a file in a Fractal Branch subtree does not import the direct child files of the parent domain or any other subtree of that parent.
+     - **Encapsulation**: from outside a Fragment, only that Fragment's `index.ts` is importable. Category Nodes and Sub-Category chains declared by the Horizontal Hierarchies are not Fragments.
+     - **Climb**: an import that climbs to an ancestor and descends again must reach a Fractal Branch, or a sibling domain of strictly lower rank in the same Horizontal Hierarchy. That hierarchy orders catalog Categories only when they are non-private siblings (children of a Layer, a Root Layer, or a Fractal Branch). Every edge between Private Category siblings is forbidden, including edges from their subtrees. Ordered Sub-Categories (`_primitives` < `_compounds` < …) remain ordered even inside a Private Category.
+     - **Tree exit**: a relative import that resolves outside every Fractal Tree origin is allowed only when the source/target pair is authorized by `externalDependencies`.
 4. **`gate:4`** (`npm run gate:4`):
    - Mutation Testing: Runs Stryker Mutator followed by per-file threshold evaluation (`scripts/check-mutation-threshold.ts`).
    - Strict per-file threshold: **≥ 85% mutation score**.
