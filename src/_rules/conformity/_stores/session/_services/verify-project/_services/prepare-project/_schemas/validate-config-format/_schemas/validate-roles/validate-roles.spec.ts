@@ -1,23 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
-
 import { validateRoles } from './validate-roles.schema.js';
 
 describe('validateRoles', () => {
   it('returns empty collections when roles is undefined', () => {
-    const outcomes: TConfigOutcome[] = [];
-    const result = validateRoles(undefined, 'faf.common', outcomes);
+    const result = validateRoles(undefined, 'faf.common');
     expect(result.roleEntries).toHaveLength(0);
     expect(result.extensionEntries).toHaveLength(0);
-    expect(outcomes).toHaveLength(0);
+    expect(result.outcomes).toHaveLength(0);
   });
 
   it('rejects null roles', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRoles(null, 'faf.common', outcomes);
-    expect(outcomes).toHaveLength(1);
-    const outcome = outcomes[0];
+    const validation = validateRoles(null, 'faf.common');
+    expect(validation.outcomes).toHaveLength(1);
+    const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('CONFIG_2');
@@ -27,10 +23,9 @@ describe('validateRoles', () => {
   });
 
   it('rejects non-array roles', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRoles('util', 'faf.common', outcomes);
-    expect(outcomes).toHaveLength(1);
-    const outcome = outcomes[0];
+    const validation = validateRoles('util', 'faf.common');
+    expect(validation.outcomes).toHaveLength(1);
+    const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('CONFIG_2');
@@ -40,10 +35,9 @@ describe('validateRoles', () => {
   });
 
   it('rejects null element in roles list', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRoles([null], 'faf.common', outcomes);
-    expect(outcomes).toHaveLength(1);
-    const outcome = outcomes[0];
+    const validation = validateRoles([null], 'faf.common');
+    expect(validation.outcomes).toHaveLength(1);
+    const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('CONFIG_2');
@@ -53,10 +47,9 @@ describe('validateRoles', () => {
   });
 
   it('rejects primitive element in roles list', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRoles(['invalid'], 'faf.common', outcomes);
-    expect(outcomes).toHaveLength(1);
-    const outcome = outcomes[0];
+    const validation = validateRoles(['invalid'], 'faf.common');
+    expect(validation.outcomes).toHaveLength(1);
+    const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('CONFIG_2');
@@ -66,10 +59,9 @@ describe('validateRoles', () => {
   });
 
   it('rejects empty role group', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRoles([[]], 'faf.common', outcomes);
-    expect(outcomes).toHaveLength(1);
-    const outcome = outcomes[0];
+    const validation = validateRoles([[]], 'faf.common');
+    expect(validation.outcomes).toHaveLength(1);
+    const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/empty-list');
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('CONFIG_3');
@@ -79,10 +71,9 @@ describe('validateRoles', () => {
   });
 
   it('rejects null element inside role group', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRoles([[null]], 'faf.common', outcomes);
-    expect(outcomes).toHaveLength(1);
-    const outcome = outcomes[0];
+    const validation = validateRoles([[null]], 'faf.common');
+    expect(validation.outcomes).toHaveLength(1);
+    const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('CONFIG_2');
@@ -92,14 +83,12 @@ describe('validateRoles', () => {
   });
 
   it('rejects further nesting of role groups', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRoles(
+    const validation = validateRoles(
       [[[{ category: '_utils', name: 'util' }]]],
-      'faf.common',
-      outcomes
+      'faf.common'
     );
-    expect(outcomes).toHaveLength(1);
-    const outcome = outcomes[0];
+    expect(validation.outcomes).toHaveLength(1);
+    const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('CONFIG_3');
@@ -111,10 +100,9 @@ describe('validateRoles', () => {
   });
 
   it('rejects non-object item inside role group', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRoles([[123]], 'faf.common', outcomes);
-    expect(outcomes).toHaveLength(1);
-    const outcome = outcomes[0];
+    const validation = validateRoles([[123]], 'faf.common');
+    expect(validation.outcomes).toHaveLength(1);
+    const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('CONFIG_2');
@@ -124,7 +112,6 @@ describe('validateRoles', () => {
   });
 
   it('accepts valid single role and role group with options', () => {
-    const outcomes: TConfigOutcome[] = [];
     const result = validateRoles(
       [
         [
@@ -141,10 +128,9 @@ describe('validateRoles', () => {
           name: 'util',
         },
       ],
-      'faf.common',
-      outcomes
+      'faf.common'
     );
-    expect(outcomes).toHaveLength(0);
+    expect(result.outcomes).toHaveLength(0);
     expect(result.roleEntries).toHaveLength(2);
     expect(result.extensionEntries).toHaveLength(1);
   });
@@ -435,10 +421,9 @@ describe('validateRoles', () => {
   ])(
     'rejects invalid role configuration producing $constraint',
     ({ constraint, message, normativeReference, payload, propertyPath }) => {
-      const outcomes: TConfigOutcome[] = [];
-      validateRoles(payload, 'faf.common', outcomes);
-      expect(outcomes.length).toBeGreaterThanOrEqual(1);
-      const outcome = outcomes.find(
+      const validation = validateRoles(payload, 'faf.common');
+      expect(validation.outcomes.length).toBeGreaterThanOrEqual(1);
+      const outcome = validation.outcomes.find(
         (o) => o.constraint === constraint && o.propertyPath === propertyPath
       );
       expect(outcome).toBeDefined();

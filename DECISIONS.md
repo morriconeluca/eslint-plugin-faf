@@ -530,3 +530,29 @@ The table below defines the authoritative vocabulary of diagnostic constraints f
 | `unverified/unresolved-import`                  | `unverified`     | Future      | D-03, D-08, FAF §5, §7.3  | Module specifier could not be resolved to a known codebase file or external package                               |
 | `unverified/unsupported-file-type`              | `unverified`     | Future      | D-07, FAF §4, §6.7        | Imported file has an extension or format with no available parser or extractor                                    |
 | `unverified/unsupported-syntax`                 | `unverified`     | Future      | D-07, FAF §4, §5          | Source file contains unsupported language syntax that prevents reliable static analysis                           |
+
+---
+
+## D-13: Zod v4 for untyped format boundaries
+
+### Context
+
+The format validator, `package.json#imports` parsing, and the load-config worker message were hand-written guards. Those checks repeat closed-object, type, null, explicit-undefined, and non-empty constraints that Zod v4 already implements, and they reported a property path for every failure.
+
+### Decision
+
+Zod v4 is a runtime dependency for those three boundaries only. Schemas use `strictObject` (no coercion). `TFAFLocalConfig` is one object with an explicit origin check, not `z.union`, so failures are not nested `invalid_union` issues. Semantic rules (repetitions, catalog invariants, implicit extensions, scopes, literal paths, foreign patterns) stay project functions. Zod issues are translated to the existing `configuration` outcomes: `constraint`, `propertyPath`, `element`, `normativeReference`, and family are unchanged. `TFAFConfig` stays hand-written, with JSDoc, and `test/types` checks that `z.output` of the format schema and `TFAFConfig` are mutually assignable with and without `exactOptionalPropertyTypes`. The Module Record cache is not validated with Zod until a warm-cache measurement against the 300 ms budget is reviewed. `zod` is an external package dependency, not bundled.
+
+### Rationale
+
+A schema library removes duplicated shape guards and keeps the property path of each failure. Keeping the public type hand-written preserves the published JSDoc. Leaving the cache unchanged avoids spending the warm budget before the measurement exists.
+
+### Observable Consequences
+
+- `zod` is declared in `dependencies` and left external by the bundler.
+- Invalid configuration, imports, and worker messages still produce the same constraint, property path, and normative reference as before this decision.
+- A type divergence between the schema output and `TFAFConfig` fails `test/types`.
+
+### Normative References
+
+- `FAF.md` format contract: closed objects, no coercion, required and admitted properties, value types, optional empty arrays versus required non-empty selectors, order-independent sets, hierarchies without repetition.

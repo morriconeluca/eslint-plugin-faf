@@ -1,19 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
-
 import { validateDependencies } from './validate-dependencies.schema.js';
 
 describe('validateDependencies', () => {
   it('does nothing when dependencies are omitted', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateDependencies({}, 'faf.common', outcomes);
+    const outcomes = validateDependencies({}, 'faf.common');
     expect(outcomes).toHaveLength(0);
   });
 
   it('accepts valid dependencies declarations', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateDependencies(
+    const outcomes = validateDependencies(
       {
         externalDependencies: [
           {
@@ -29,8 +25,7 @@ describe('validateDependencies', () => {
           },
         ],
       },
-      'faf.common',
-      outcomes
+      'faf.common'
     );
     expect(outcomes).toHaveLength(0);
   });
@@ -229,8 +224,7 @@ describe('validateDependencies', () => {
   ])(
     'rejects invalid dependency configuration producing $constraint',
     ({ config, constraint, message, normativeReference, propertyPath }) => {
-      const outcomes: TConfigOutcome[] = [];
-      validateDependencies(config, 'faf.common', outcomes);
+      const outcomes = validateDependencies(config, 'faf.common');
       expect(outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = outcomes.find(
         (o) => o.constraint === constraint && o.propertyPath === propertyPath
@@ -244,16 +238,14 @@ describe('validateDependencies', () => {
   );
 
   it('rejects explicit undefined in dependency object', () => {
-    const outcomes: TConfigOutcome[] = [];
     const dependencyRecord: Record<string, unknown> = { to: ['lib'] };
     Object.defineProperty(dependencyRecord, 'from', {
       enumerable: true,
       value: void 0,
     });
-    validateDependencies(
+    const outcomes = validateDependencies(
       { treeDependencies: [dependencyRecord] },
-      'faf.common',
-      outcomes
+      'faf.common'
     );
     expect(
       outcomes.some((o) => o.constraint === 'configuration/explicit-undefined')

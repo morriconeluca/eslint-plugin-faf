@@ -55,7 +55,7 @@ const emitDeclarations = async (): Promise<void> => {
 export default defineConfig({
   clean: true,
   entry: ['src/main.ts'],
-  external: ['oxc-parser', 'oxc-resolver'],
+  external: ['oxc-parser', 'oxc-resolver', 'zod'],
   footer: (context) =>
     context.format === 'cjs'
       ? { js: 'module.exports = module.exports.default;' }

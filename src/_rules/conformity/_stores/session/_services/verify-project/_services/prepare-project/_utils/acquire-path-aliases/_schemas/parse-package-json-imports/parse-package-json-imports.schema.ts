@@ -11,17 +11,14 @@ import {
   PACKAGE_JSON_IMPORTS_PROPERTY_PATH,
 } from '../../_acquire-path-aliases@shared/_constants/acquire-path-aliases.constant.js';
 import { collectSubpathTargets } from './_schemas/collect-subpath-targets/index.js';
+import { importsObjectSchema } from './_schemas/imports-object-schema/index.js';
 import { validateSubpathKey } from './_utils/validate-subpath-key/index.js';
 
 export function parsePackageJsonImports(
   rawImports: unknown
 ): TResult<readonly TEffectivePathAlias[]> {
-  const isNotObject =
-    typeof rawImports !== 'object' ||
-    rawImports === null ||
-    Array.isArray(rawImports);
-
-  if (isNotObject) {
+  const parsedImports = importsObjectSchema.safeParse(rawImports);
+  if (!parsedImports.success) {
     return {
       ok: false,
       outcomes: [
@@ -71,7 +68,7 @@ export function parsePackageJsonImports(
     return null;
   };
 
-  for (const [key, rawValue] of Object.entries(rawImports)) {
+  for (const [key, rawValue] of Object.entries(parsedImports.data)) {
     const outcome = processEntry(key, rawValue);
     if (outcome !== null) {
       outcomes.push(outcome);

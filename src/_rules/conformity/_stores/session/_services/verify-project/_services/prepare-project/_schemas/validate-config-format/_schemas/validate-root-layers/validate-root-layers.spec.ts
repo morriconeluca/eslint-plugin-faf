@@ -1,19 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
-
 import { validateRootLayers } from './validate-root-layers.schema.js';
 
 describe('validateRootLayers', () => {
   it('does nothing when rootLayers is undefined', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRootLayers(undefined, 'faf.locals[0]', outcomes);
+    const outcomes = validateRootLayers(undefined, 'faf.locals[0]');
     expect(outcomes).toHaveLength(0);
   });
 
   it('rejects null rootLayers', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRootLayers(null, 'faf.locals[0]', outcomes);
+    const outcomes = validateRootLayers(null, 'faf.locals[0]');
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
@@ -25,8 +21,7 @@ describe('validateRootLayers', () => {
   });
 
   it('rejects non-array rootLayers', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRootLayers('src', 'faf.locals[0]', outcomes);
+    const outcomes = validateRootLayers('src', 'faf.locals[0]');
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
@@ -38,11 +33,9 @@ describe('validateRootLayers', () => {
   });
 
   it('accepts valid rootLayers array', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRootLayers(
+    const outcomes = validateRootLayers(
       ['packages/a/src', 'packages/b/src'],
-      'faf.locals[0]',
-      outcomes
+      'faf.locals[0]'
     );
     expect(outcomes).toHaveLength(0);
   });
@@ -86,8 +79,7 @@ describe('validateRootLayers', () => {
   ])(
     'rejects invalid rootLayer item producing $constraint',
     ({ constraint, message, normativeReference, payload, propertyPath }) => {
-      const outcomes: TConfigOutcome[] = [];
-      validateRootLayers(payload, 'faf.locals[0]', outcomes);
+      const outcomes = validateRootLayers(payload, 'faf.locals[0]');
       expect(outcomes).toHaveLength(1);
       const outcome = outcomes[0];
       expect(outcome?.constraint).toBe(constraint);

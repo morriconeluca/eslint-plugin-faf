@@ -17,9 +17,9 @@ import {
 
 export function checkCatalogInvariants(
   roleValidation: TRolesValidationResult,
-  subGraphEntries: readonly TSubGraphRoleEntry[],
-  outcomes: TConfigOutcome[]
-): void {
+  subGraphEntries: readonly TSubGraphRoleEntry[]
+): readonly TConfigOutcome[] {
+  const outcomes: TConfigOutcome[] = [];
   const addOutcome = (
     propertyPath: string,
     constraint: `configuration/${string}`,
@@ -134,4 +134,5 @@ export function checkCatalogInvariants(
       );
     }
   }
+  return outcomes;
 }

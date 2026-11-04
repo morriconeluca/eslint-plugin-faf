@@ -1,19 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
-
 import { validateHierarchies } from './validate-hierarchies.schema.js';
 
 describe('validateHierarchies', () => {
   it('does nothing when hierarchies are omitted', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateHierarchies({}, 'faf.common', outcomes);
+    const outcomes = validateHierarchies({}, 'faf.common');
     expect(outcomes).toHaveLength(0);
   });
 
   it('accepts valid horizontal and local hierarchies', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateHierarchies(
+    const outcomes = validateHierarchies(
       {
         horizontalHierarchies: [
           [],
@@ -27,8 +23,7 @@ describe('validateHierarchies', () => {
           },
         ],
       },
-      'faf.common',
-      outcomes
+      'faf.common'
     );
     expect(outcomes).toHaveLength(0);
   });
@@ -281,8 +276,7 @@ describe('validateHierarchies', () => {
   ])(
     'rejects invalid hierarchy configuration producing $constraint',
     ({ config, constraint, message, normativeReference, propertyPath }) => {
-      const outcomes: TConfigOutcome[] = [];
-      validateHierarchies(config, 'faf.common', outcomes);
+      const outcomes = validateHierarchies(config, 'faf.common');
       expect(outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = outcomes.find(
         (o) => o.constraint === constraint && o.propertyPath === propertyPath
@@ -296,16 +290,14 @@ describe('validateHierarchies', () => {
   );
 
   it('rejects explicit undefined in local horizontal hierarchy', () => {
-    const outcomes: TConfigOutcome[] = [];
     const localRecord: Record<string, unknown> = { hierarchies: [] };
     Object.defineProperty(localRecord, 'paths', {
       enumerable: true,
       value: void 0,
     });
-    validateHierarchies(
+    const outcomes = validateHierarchies(
       { localHorizontalHierarchies: [localRecord] },
-      'faf.common',
-      outcomes
+      'faf.common'
     );
     expect(
       outcomes.some((o) => o.constraint === 'configuration/explicit-undefined')

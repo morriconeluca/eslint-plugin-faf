@@ -7,6 +7,7 @@ import {
   PACKAGE_JSON_ELEMENT,
   PACKAGE_JSON_IMPORTS_PROPERTY_PATH,
 } from '../../../../_acquire-path-aliases@shared/_constants/acquire-path-aliases.constant.js';
+import { importTargetNodeSchema } from './_schemas/import-target-node-schema/index.js';
 import { resolveLocalSubpathTarget } from './_utils/resolve-local-subpath-target/index.js';
 
 export function collectSubpathTargets(
@@ -16,14 +17,23 @@ export function collectSubpathTargets(
 ): TCollectSubpathTargetsResult {
   const targets: string[] = [];
 
-  const traverse = (currentValue: unknown): null | TConfigOutcome => {
-    if (currentValue === null) {
-      return null;
-    }
+  const invalidType = (value: unknown): TConfigOutcome => ({
+    constraint: INVALID_ALIAS_SOURCE_CONSTRAINT,
+    element: PACKAGE_JSON_ELEMENT,
+    family: 'configuration',
+    message: `Invalid package.json imports target type: ${typeof value}`,
+    normativeReference: CONFIG_9_REFERENCE,
+    propertyPath: `${PACKAGE_JSON_IMPORTS_PROPERTY_PATH}.${subpathKey}`,
+  });
 
-    if (typeof currentValue === 'string') {
+  const traverse = (currentValue: unknown): null | TConfigOutcome => {
+    const parsed = importTargetNodeSchema.safeParse(currentValue);
+    if (!parsed.success) {
+      return invalidType(currentValue);
+    }
+    if (typeof parsed.data === 'string') {
       const resolution = resolveLocalSubpathTarget(
-        currentValue,
+        parsed.data,
         subpathKey,
         hasWildcardKey
       );
@@ -35,33 +45,22 @@ export function collectSubpathTargets(
       }
       return null;
     }
-
-    if (typeof currentValue === 'object') {
-      const children = Array.isArray(currentValue)
-        ? currentValue
-        : Object.values(currentValue);
-
-      for (const item of children) {
-        const outcome = traverse(item);
-        if (outcome !== null) {
-          return outcome;
-        }
-      }
+    if (parsed.data === null) {
       return null;
     }
-
-    return {
-      constraint: INVALID_ALIAS_SOURCE_CONSTRAINT,
-      element: PACKAGE_JSON_ELEMENT,
-      family: 'configuration',
-      message: `Invalid package.json imports target type: ${typeof currentValue}`,
-      normativeReference: CONFIG_9_REFERENCE,
-      propertyPath: `${PACKAGE_JSON_IMPORTS_PROPERTY_PATH}.${subpathKey}`,
-    };
+    const children = Array.isArray(parsed.data)
+      ? parsed.data
+      : Object.values(parsed.data);
+    for (const item of children) {
+      const outcome = traverse(item);
+      if (outcome !== null) {
+        return outcome;
+      }
+    }
+    return null;
   };
 
   const failureOutcome = traverse(entryValue);
-
   if (failureOutcome !== null) {
     return { outcome: failureOutcome };
   }
@@ -72,6 +71,5 @@ export function collectSubpathTargets(
       uniqueTargets.push(target);
     }
   }
-
   return { targets: uniqueTargets };
 }

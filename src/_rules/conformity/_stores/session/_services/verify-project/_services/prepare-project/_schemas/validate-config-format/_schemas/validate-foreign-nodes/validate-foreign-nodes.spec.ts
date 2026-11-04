@@ -1,19 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
-
 import { validateForeignNodes } from './validate-foreign-nodes.schema.js';
 
 describe('validateForeignNodes', () => {
+  it('reports only the array type outcome for a null domain list', () => {
+    const outcomes = validateForeignNodes(
+      { foreignDomains: null },
+      'faf.common'
+    );
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0]?.constraint).toBe('configuration/invalid-type');
+  });
   it('does nothing when foreign properties are omitted', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateForeignNodes({}, 'faf.common', outcomes);
+    const outcomes = validateForeignNodes({}, 'faf.common');
     expect(outcomes).toHaveLength(0);
   });
 
   it('accepts valid foreignDomains and foreignNodes', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateForeignNodes(
+    const outcomes = validateForeignNodes(
       {
         foreignDomains: ['src/_configs'],
         foreignNodes: [
@@ -24,8 +28,7 @@ describe('validateForeignNodes', () => {
           },
         ],
       },
-      'faf.common',
-      outcomes
+      'faf.common'
     );
     expect(outcomes).toHaveLength(0);
   });
@@ -234,8 +237,7 @@ describe('validateForeignNodes', () => {
   ])(
     'rejects invalid foreign configuration producing $constraint',
     ({ config, constraint, message, normativeReference, propertyPath }) => {
-      const outcomes: TConfigOutcome[] = [];
-      validateForeignNodes(config, 'faf.common', outcomes);
+      const outcomes = validateForeignNodes(config, 'faf.common');
       expect(outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = outcomes.find(
         (o) => o.constraint === constraint && o.propertyPath === propertyPath
@@ -249,16 +251,14 @@ describe('validateForeignNodes', () => {
   );
 
   it('rejects explicit undefined in foreign family', () => {
-    const outcomes: TConfigOutcome[] = [];
     const familyRecord: Record<string, unknown> = { patterns: ['*.md'] };
     Object.defineProperty(familyRecord, 'paths', {
       enumerable: true,
       value: void 0,
     });
-    validateForeignNodes(
+    const outcomes = validateForeignNodes(
       { foreignNodes: [familyRecord] },
-      'faf.common',
-      outcomes
+      'faf.common'
     );
     expect(
       outcomes.some((o) => o.constraint === 'configuration/explicit-undefined')

@@ -49,22 +49,31 @@ const collectPropertySignatures = (
   return propertySignatures;
 };
 
+const newestMtime = (directory: string): number => {
+  let newest = fs.statSync(directory).mtimeMs;
+  const entries = fs.readdirSync(directory, { withFileTypes: true });
+  for (const entry of entries) {
+    const entryPath = path.join(directory, entry.name);
+    const entryMtime = entry.isDirectory()
+      ? newestMtime(entryPath)
+      : fs.statSync(entryPath).mtimeMs;
+    if (entryMtime > newest) {
+      newest = entryMtime;
+    }
+  }
+  return newest;
+};
+
 const resolveDeclarationSource = async (): Promise<string> => {
   const rootDirectory = process.cwd();
   const distributionPath = path.resolve(rootDirectory, 'dist/main.d.ts');
   const mainTsPath = path.resolve(rootDirectory, 'src/main.ts');
-  const configTypePath = path.resolve(
-    rootDirectory,
-    'src/_src@shared/_types/faf-config.type.ts'
-  );
+  const sourceRoot = path.resolve(rootDirectory, 'src');
 
   const hasDistribution = fs.existsSync(distributionPath);
   if (hasDistribution) {
     const distributionMtime = fs.statSync(distributionPath).mtimeMs;
-    const mainMtime = fs.statSync(mainTsPath).mtimeMs;
-    const configMtime = fs.statSync(configTypePath).mtimeMs;
-    const isDistributionFresh =
-      distributionMtime >= Math.max(mainMtime, configMtime);
+    const isDistributionFresh = distributionMtime >= newestMtime(sourceRoot);
     if (isDistributionFresh) {
       return fs.readFileSync(distributionPath, UTF8);
     }

@@ -1,26 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
-
 import { validateAliases } from './validate-aliases.schema.js';
 
 describe('validateAliases', () => {
   it('accepts valid aliases map', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateAliases(
+    const outcomes = validateAliases(
       {
         '#shared': 'src/_src@shared',
         '#utils': 'src/_src@shared/_utils',
       },
-      'faf.common',
-      outcomes
+      'faf.common'
     );
     expect(outcomes).toHaveLength(0);
   });
 
   it('rejects null aliases', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateAliases(null, 'faf.common', outcomes);
+    const outcomes = validateAliases(null, 'faf.common');
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
@@ -32,8 +27,7 @@ describe('validateAliases', () => {
   });
 
   it('rejects non-object aliases like array or number', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateAliases(['src'], 'faf.common', outcomes);
+    const outcomes = validateAliases(['src'], 'faf.common');
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
@@ -99,8 +93,7 @@ describe('validateAliases', () => {
   ])(
     'rejects invalid alias entry producing $constraint',
     ({ constraint, map, message, normativeReference, propertyPath }) => {
-      const outcomes: TConfigOutcome[] = [];
-      validateAliases(map, 'faf.common', outcomes);
+      const outcomes = validateAliases(map, 'faf.common');
       expect(outcomes).toHaveLength(1);
       const outcome = outcomes[0];
       expect(outcome?.constraint).toBe(constraint);

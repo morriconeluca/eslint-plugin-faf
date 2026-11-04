@@ -3,6 +3,8 @@ import nodePath from 'node:path';
 import type { TLoadConfigResult } from '../../_load-config@shared/_types/load-config.type.js';
 import type { TClassifyWorkerOutcomeInput } from './classify-worker-outcome.type.js';
 
+import { workerMessageSchema } from './_schemas/worker-message-schema/index.js';
+
 export function classifyWorkerOutcome(
   input: TClassifyWorkerOutcomeInput
 ): TLoadConfigResult {
@@ -158,9 +160,8 @@ export function classifyWorkerOutcome(
       ? dispatchKind(payload, payload.kind)
       : makeFailure(configLoadFailure, invalidPayloadMessage);
 
-  return typeof rawMessage === 'object' &&
-    rawMessage !== null &&
-    !Array.isArray(rawMessage)
-    ? dispatchValidKind(rawMessage)
+  const parsedMessage = workerMessageSchema.safeParse(rawMessage);
+  return parsedMessage.success
+    ? dispatchValidKind(parsedMessage.data)
     : makeFailure(configLoadFailure, invalidPayloadMessage);
 }

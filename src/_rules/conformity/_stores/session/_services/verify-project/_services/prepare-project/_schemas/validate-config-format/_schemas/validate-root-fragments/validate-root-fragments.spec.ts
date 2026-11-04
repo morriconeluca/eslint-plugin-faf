@@ -1,19 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
-
 import { validateRootFragments } from './validate-root-fragments.schema.js';
 
 describe('validateRootFragments', () => {
   it('does nothing when rootFragments is undefined', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRootFragments(undefined, 'faf.locals[0]', outcomes);
+    const outcomes = validateRootFragments(undefined, 'faf.locals[0]');
     expect(outcomes).toHaveLength(0);
   });
 
   it('rejects null rootFragments', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRootFragments(null, 'faf.locals[0]', outcomes);
+    const outcomes = validateRootFragments(null, 'faf.locals[0]');
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
@@ -25,8 +21,7 @@ describe('validateRootFragments', () => {
   });
 
   it('rejects non-array rootFragments', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRootFragments('src', 'faf.locals[0]', outcomes);
+    const outcomes = validateRootFragments('src', 'faf.locals[0]');
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
@@ -38,18 +33,15 @@ describe('validateRootFragments', () => {
   });
 
   it('accepts valid rootFragment with empty rootNodes', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRootFragments(
+    const outcomes = validateRootFragments(
       [{ path: 'src', rootNodes: [] }],
-      'faf.locals[0]',
-      outcomes
+      'faf.locals[0]'
     );
     expect(outcomes).toHaveLength(0);
   });
 
   it('accepts valid rootFragment with nested subRootFragments and dependencyEdges', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateRootFragments(
+    const outcomes = validateRootFragments(
       [
         {
           dependencyEdges: [
@@ -68,8 +60,7 @@ describe('validateRootFragments', () => {
           ],
         },
       ],
-      'faf.locals[0]',
-      outcomes
+      'faf.locals[0]'
     );
     expect(outcomes).toHaveLength(0);
   });
@@ -443,8 +434,7 @@ describe('validateRootFragments', () => {
   ])(
     'rejects invalid rootFragment configuration producing $constraint',
     ({ constraint, message, normativeReference, payload, propertyPath }) => {
-      const outcomes: TConfigOutcome[] = [];
-      validateRootFragments(payload, 'faf.locals[0]', outcomes);
+      const outcomes = validateRootFragments(payload, 'faf.locals[0]');
       expect(outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = outcomes.find(
         (o) => o.constraint === constraint && o.propertyPath === propertyPath
@@ -458,7 +448,6 @@ describe('validateRootFragments', () => {
   );
 
   it('rejects explicit undefined property on rootFragment', () => {
-    const outcomes: TConfigOutcome[] = [];
     const withUndefined: Record<string, unknown> = {
       path: 'src',
       rootNodes: [],
@@ -467,7 +456,7 @@ describe('validateRootFragments', () => {
       enumerable: true,
       value: void 0,
     });
-    validateRootFragments([withUndefined], 'faf.locals[0]', outcomes);
+    const outcomes = validateRootFragments([withUndefined], 'faf.locals[0]');
     expect(
       outcomes.some((o) => o.constraint === 'configuration/explicit-undefined')
     ).toBe(true);

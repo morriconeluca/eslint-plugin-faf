@@ -1,23 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
-
 import { checkCatalogInvariants } from './check-catalog-invariants.util.js';
 
 describe('checkCatalogInvariants', () => {
   it('passes for empty catalog entries', () => {
-    const outcomes: TConfigOutcome[] = [];
-    checkCatalogInvariants(
+    const outcomes = checkCatalogInvariants(
       { extensionEntries: [], roleEntries: [] },
-      [],
-      outcomes
+      []
     );
     expect(outcomes).toHaveLength(0);
   });
 
   it('passes for distinct roles, categories, and non-conflicting extensions', () => {
-    const outcomes: TConfigOutcome[] = [];
-    checkCatalogInvariants(
+    const outcomes = checkCatalogInvariants(
       {
         extensionEntries: [
           {
@@ -36,15 +31,13 @@ describe('checkCatalogInvariants', () => {
           { category: '_images', name: 'image', path: 'faf.common.roles[1]' },
         ],
       },
-      [{ name: 'spec', path: 'faf.common.subGraphRoles[0]' }],
-      outcomes
+      [{ name: 'spec', path: 'faf.common.subGraphRoles[0]' }]
     );
     expect(outcomes).toHaveLength(0);
   });
 
   it('rejects duplicate role names', () => {
-    const outcomes: TConfigOutcome[] = [];
-    checkCatalogInvariants(
+    const outcomes = checkCatalogInvariants(
       {
         extensionEntries: [],
         roleEntries: [
@@ -52,8 +45,7 @@ describe('checkCatalogInvariants', () => {
           { category: '_helpers', name: 'util', path: 'faf.common.roles[1]' },
         ],
       },
-      [],
-      outcomes
+      []
     );
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
@@ -66,8 +58,7 @@ describe('checkCatalogInvariants', () => {
   });
 
   it('rejects duplicate category across roles', () => {
-    const outcomes: TConfigOutcome[] = [];
-    checkCatalogInvariants(
+    const outcomes = checkCatalogInvariants(
       {
         extensionEntries: [],
         roleEntries: [
@@ -75,8 +66,7 @@ describe('checkCatalogInvariants', () => {
           { category: '_utils', name: 'helper', path: 'faf.common.roles[1]' },
         ],
       },
-      [],
-      outcomes
+      []
     );
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
@@ -91,14 +81,12 @@ describe('checkCatalogInvariants', () => {
   });
 
   it('rejects duplicate sub-graph role names', () => {
-    const outcomes: TConfigOutcome[] = [];
-    checkCatalogInvariants(
+    const outcomes = checkCatalogInvariants(
       { extensionEntries: [], roleEntries: [] },
       [
         { name: 'spec', path: 'faf.common.subGraphRoles[0]' },
         { name: 'spec', path: 'faf.common.subGraphRoles[1]' },
-      ],
-      outcomes
+      ]
     );
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
@@ -111,16 +99,14 @@ describe('checkCatalogInvariants', () => {
   });
 
   it('rejects conflict between role name and sub-graph role name', () => {
-    const outcomes: TConfigOutcome[] = [];
-    checkCatalogInvariants(
+    const outcomes = checkCatalogInvariants(
       {
         extensionEntries: [],
         roleEntries: [
           { category: '_specs', name: 'spec', path: 'faf.common.roles[0]' },
         ],
       },
-      [{ name: 'spec', path: 'faf.common.subGraphRoles[0]' }],
-      outcomes
+      [{ name: 'spec', path: 'faf.common.subGraphRoles[0]' }]
     );
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
@@ -135,8 +121,7 @@ describe('checkCatalogInvariants', () => {
   });
 
   it('rejects same implicit extension assigned to different roles', () => {
-    const outcomes: TConfigOutcome[] = [];
-    checkCatalogInvariants(
+    const outcomes = checkCatalogInvariants(
       {
         extensionEntries: [
           {
@@ -155,8 +140,7 @@ describe('checkCatalogInvariants', () => {
           { category: '_photos', name: 'photo', path: 'faf.common.roles[1]' },
         ],
       },
-      [],
-      outcomes
+      []
     );
     expect(outcomes).toHaveLength(1);
     const outcome = outcomes[0];
@@ -177,8 +161,7 @@ describe('checkCatalogInvariants', () => {
   });
 
   it('rejects implicit extension whose first segment matches a role name or sub-graph role name', () => {
-    const outcomes: TConfigOutcome[] = [];
-    checkCatalogInvariants(
+    const outcomes = checkCatalogInvariants(
       {
         extensionEntries: [
           {
@@ -202,8 +185,7 @@ describe('checkCatalogInvariants', () => {
           },
         ],
       },
-      [{ name: 'spec', path: 'faf.common.subGraphRoles[0]' }],
-      outcomes
+      [{ name: 'spec', path: 'faf.common.subGraphRoles[0]' }]
     );
     expect(outcomes).toHaveLength(2);
     expect(outcomes[0]?.constraint).toBe(

@@ -1,19 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
-
 import { validateMimeticStructures } from './validate-mimetic-structures.schema.js';
 
 describe('validateMimeticStructures', () => {
   it('does nothing when mimeticStructures is undefined', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateMimeticStructures(undefined, 'faf.common', outcomes);
+    const outcomes = validateMimeticStructures(undefined, 'faf.common');
     expect(outcomes).toHaveLength(0);
   });
 
   it('accepts valid mimetic structures with and without actions', () => {
-    const outcomes: TConfigOutcome[] = [];
-    validateMimeticStructures(
+    const outcomes = validateMimeticStructures(
       [
         {
           actions: ['get', 'post', 'delete'],
@@ -23,8 +19,7 @@ describe('validateMimeticStructures', () => {
           paths: ['src/_src@shared/_ui/_pages'],
         },
       ],
-      'faf.common',
-      outcomes
+      'faf.common'
     );
     expect(outcomes).toHaveLength(0);
   });
@@ -195,8 +190,7 @@ describe('validateMimeticStructures', () => {
   ])(
     'rejects invalid mimetic structure producing $constraint',
     ({ constraint, message, normativeReference, payload, propertyPath }) => {
-      const outcomes: TConfigOutcome[] = [];
-      validateMimeticStructures(payload, 'faf.common', outcomes);
+      const outcomes = validateMimeticStructures(payload, 'faf.common');
       expect(outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = outcomes.find(
         (o) => o.constraint === constraint && o.propertyPath === propertyPath
@@ -210,13 +204,12 @@ describe('validateMimeticStructures', () => {
   );
 
   it('rejects explicit undefined in mimetic structure', () => {
-    const outcomes: TConfigOutcome[] = [];
     const mimeticRecord: Record<string, unknown> = { paths: ['src/_apis'] };
     Object.defineProperty(mimeticRecord, 'actions', {
       enumerable: true,
       value: void 0,
     });
-    validateMimeticStructures([mimeticRecord], 'faf.common', outcomes);
+    const outcomes = validateMimeticStructures([mimeticRecord], 'faf.common');
     expect(
       outcomes.some((o) => o.constraint === 'configuration/explicit-undefined')
     ).toBe(true);

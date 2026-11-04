@@ -310,6 +310,8 @@ No quality gate constraint may be weakened or bypassed. All five gates (`npm run
   npm run build
   ```
 
+Runtime dependencies are `oxc-parser`, `oxc-resolver`, and `zod` (v4). Zod validates only untyped boundaries: the `fafconfig` format, `package.json#imports`, and the load-config worker message. `TFAFConfig` stays hand-written; schema output equivalence is checked in `test/types`.
+
 ### 6.2 Commit Conventions
 
 - Commit messages must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
