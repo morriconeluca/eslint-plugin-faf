@@ -55,7 +55,7 @@ const resolveDeclarationSource = async (): Promise<string> => {
   const mainTsPath = path.resolve(rootDirectory, 'src/main.ts');
   const configTypePath = path.resolve(
     rootDirectory,
-    'src/_src@shared/_domain/_types/faf-config.type.ts'
+    'src/_src@shared/_types/faf-config.type.ts'
   );
 
   const hasDistribution = fs.existsSync(distributionPath);

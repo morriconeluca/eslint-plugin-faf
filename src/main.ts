@@ -1,5 +1,8 @@
 import type { ESLint } from 'eslint';
 
+import { recommended } from './_configs/recommended.config.js';
+import { conformity } from './_rules/conformity/index.js';
+
 export type {
   TFAFCommonConfig,
   TFAFConfig,
@@ -17,7 +20,7 @@ export type {
   TFAFSharedConfig,
   TFAFSubGraphRole,
   TFAFTreeDependency,
-} from './_src@shared/_domain/_types/faf-config.type.js';
+} from './_src@shared/_types/faf-config.type.js';
 
 type TFafPlugin = {
   readonly configs?: ESLint.Plugin['configs'];
@@ -33,7 +36,11 @@ export const meta = {
 };
 
 const plugin: TFafPlugin = {
+  configs: recommended,
   meta,
+  rules: {
+    conformity,
+  },
 };
 
 export default plugin;

@@ -17,39 +17,54 @@ Welcome to the `eslint-plugin-faf` contributor guide. This document outlines the
 
 The repository is structured strictly according to FAF principles.
 
-### 2.1 Scaffold: Root Fragment and Public Surface
+### 2.1 First Level
 
-- **Origin `src/` is a Root Fragment, not a Root Layer**: The entry point of the package serves as a boundary with external tooling (Node.js and ESLint resolve the entry points defined in `package.json#exports`) and must expose heterogeneous Symbols: the plugin object (`default`) alongside public configuration types. In FAF, only a Root Node may declare multiple Symbols and re-export heterogeneous declarations. If `src/` were a Root Layer, its entry point would have to be an `index.ts` Access Node of a Fragment, which may only re-export the Symbols of its own Fragment Nodes.
-- **Single Root Node: `src/main.ts`**: `src/main.ts` is the sole Root Node of the repository and the only element in the Public Surface (`publicRootNodes: ['src/main.ts']`). It composes the plugin object, configures `configs.recommended`, and re-exports public types (`TFAFConfig` and associated types). There is no CLI and no programmatic API; ESLint natively provides execution runners, Node.js APIs, formatters, and process exit codes.
-- **No nested Root Fragments and no Private Categories in `src/`**: Sibling Private Categories cannot depend on one another or be ordered, which would prevent a staged pipeline.
-- **Single outgoing external dependency**: `src/main.ts` reads the package version from `package.json` via an authorized outgoing edge declared in `externalDependencies`.
-
-### 2.2 Fractal Branch and Layers
-
-All internal implementation lives inside the Fractal Branch `src/_src@shared/`, partitioned into seven Layers ordered by a local Horizontal Hierarchy:
+`src/` is a Root Fragment. The important concepts are visible at the first level; implementation details sit under their only consumer.
 
 ```text
-src/                     Root Fragment
-  main.ts                Root Node, Public Surface
-  _src@shared/           Fractal Branch
-    _domain/             R0 — Public config types, outcome model, invariants, POSIX path helpers
-    _declarations/       R1 — Configuration validation, normalization, effective catalog composition, aliases
-    _syntax/             R1 — Module Records from source: oxc parser, CSS scanner
-    _inventory/          R2 — File/directory inventory, item IDs, preorder intervals, LCA, tree containment
-    _taxonomy/           R3 — Role from file name, relational classification, hierarchies, structural norms
-    _graph/              R4 — Dependency graph, edge norms, Symbol norms, global norms (SCC condensation)
-    _runtime/            R5 — Imperative shell: file system, fafconfig.ts loading, resolver, cache, session, verifyProject, rule
+src/                              Root Fragment
+  main.ts                         Root Node: plugin object and public type re-exports
+  _configs/recommended.config.ts  Private Category: recommended files and rules
+  _rules/conformity/              Private Category: the conformity rule; verification is its detail
+  _src@shared/                    Fractal Branch: only what main.ts and the rule share
+    _types/faf-config.type.ts     Public configuration contract
 ```
 
-#### Pure Layers (R0–R4) vs Imperative Shell (R5)
+- **Origin `src/` is a Root Fragment, not a Root Layer**: The package entry is a boundary with Node.js and ESLint and must expose heterogeneous Symbols: the plugin object (`default`) and the public configuration types. Only a Root Node may declare multiple Symbols and re-export heterogeneous declarations.
+- **Single Root Node: `src/main.ts`**: It is the only element of the Public Surface (`publicRootNodes: ['src/main.ts']`). It composes the plugin object, registers `rules.conformity`, exposes `configs.recommended`, and re-exports `TFAFConfig` and associated types. There is no CLI and no programmatic API.
+- **Single outgoing external dependency**: `src/main.ts` reads the package version from `package.json` via an authorized edge in `externalDependencies`.
 
-- **Pure Layers (`_domain`, `_declarations`, `_syntax`, `_inventory`, `_taxonomy`, `_graph`)**: Layers R0 through R4 are strictly functional and side-effect free. They perform no file system I/O, access no environment or process variables, invoke no dynamic loaders, and call no side-effecting libraries. They accept data structures and return data structures. Their `_mocks` categories contain purely in-memory fixtures.
-- **Imperative Shell (`_runtime`)**: R5 is the sole layer permitted to execute effects. It handles file system reading via synchronous `node:fs`, worker-based synchronous configuration loading, module resolution via `oxc-resolver`, caching, session memoization, coordination in `verifyProject`, and the `faf/conformity` ESLint rule.
-- **Downward dependency enforcement**: Because Horizontal Hierarchies forbid upward dependencies toward higher Ranks, pure layers can never import from `_runtime`. Architectural purity is structurally enforced.
-- **Layers of the same Rank**: Layers sharing the same Rank (such as `_declarations` and `_syntax` at R1) cannot import each other; both depend exclusively on `_domain`.
-- **Synchronous pipeline**: ESLint runs rule listeners synchronously and discards deferred `context.report()` calls. The entire verification pipeline is synchronous; no `async` functions or `Promise` primitives exist in `_runtime`. Disk operations use synchronous `node:fs`, `parseSync` from `oxc-parser`, and synchronous `oxc-resolver`. Configuration loading executes in a dedicated worker thread waited synchronously via `Atomics.wait`.
+### 2.2 Dependency Chain
 
-### 2.3 Role Catalog
+Direct dependencies, from the outside inward:
+
+```text
+main.ts → _rules/conformity (rule)
+       → _stores/session (store)
+       → _services/verify-project (service)
+       → stages
+main.ts → _configs/recommended.config.ts
+main.ts → _src@shared/_types
+```
+
+Verification stages do not import one another. `verify-project` composes them. There is no local Horizontal Hierarchy between internal domains. The pipeline stays synchronous: ESLint discards deferred `context.report()` calls. Disk access uses synchronous `node:fs`, script parsing uses `parseSync`, and module resolution uses synchronous `oxc-resolver`. Loading `fafconfig.ts` runs in a worker thread waited on synchronously.
+
+### 2.3 Placement Criterion
+
+Place each unit from its production consumers only (actual imports, specs excluded). A spec never decides where production code lives.
+
+1. A unit with one production consumer lives in that consumer's Private Category, in the Category of its own Role.
+2. A unit with several production consumers lives in the Fractal Branch of their nearest common domain (`<domain>/_<domain>@shared/<Category>/`).
+3. Promote a unit when a new production consumer appears. Do not place it in a higher domain to dodge a sibling import, and do not place it for a consumer that does not exist yet.
+4. A unit with no production consumers is not part of the tree. A stage that `verify-project` will compose stays in that service's Private Category until the call exists.
+
+Sibling Fragments in one Category do not import each other. When shared units in the same Category must depend on each other, order them with Systemic Design Sub-Categories inside that Category: `_primitives` (Rank 0) < `_compounds` (Rank 1) < `_aggregates` < `_systems` < `_ecosystems`. Do not lift them into a higher domain. The general Horizontal Hierarchy declares that order as `[['_primitives'], ['_compounds'], ['_aggregates'], ['_systems'], ['_ecosystems']]`. A Sub-Category propagates the Parent Category's Role and is not itself a catalog Category.
+
+A helper used by one Fragment lives in that Fragment's Private Category. A helper used by several units of the same domain lives in that domain's Fractal Branch. From outside a Fragment, import only its `index.ts`.
+
+A spec tests only its own Fragment. It imports only what that Fragment's Fragment Nodes can import. It does not retest Sub-Fragments, which have their own spec. Inputs are data, `_mocks`, or legal imports of the Fragment. A case that truly composes several stages belongs to the spec of the composer (`verify-project`) or to `test/`, not to one stage's spec.
+
+### 2.4 Role Catalog
 
 The repository defines the following catalog of Roles:
 
@@ -72,30 +87,33 @@ Sub-Graph Role: `spec` designates unit test entry points.
 
 #### Rationales for Specific Roles
 
-- **`schema`**: The FAF reference model assigns `schema` to validation schemas and runtime parsing. In this repository the competence is validating and parsing untyped data that arrives from outside the type system (the exported value of `fafconfig.ts`, `package.json` JSON, worker messages). A `util` receives only data that is already typed. Rank is immediately after `config` and before `util`, so a `schema` does not import a `util` of the same Layer.
+- **`schema`**: The FAF reference model assigns `schema` to validation schemas and runtime parsing. In this repository the competence is validating and parsing untyped data that arrives from outside the type system (the exported value of `fafconfig.ts`, `package.json` JSON, worker messages). A `util` receives only data that is already typed. Rank is immediately after `config` and before `util`, so a `schema` does not import a `util` of the same domain.
 - **`norm`**: FAF architectural norms represent the core domain concept of the plugin. Because FAF constraints are conjunctive and cannot override or suppress each other, norms must remain mutually independent. As sibling Fragments within `_norms/`, two norms cannot import each other, rendering independence mechanically verifiable. The name distinguishes FAF specification norms from configuration format validation, which is a `schema`.
-- **`adapter`**: In the FAF reference model, `util` denotes pure processing. Implementing side effects inside `util` would compromise Role/Symbol coherence. Adapters exist exclusively within `_runtime`. An adapter may accept `unknown` because the value arrives from an effect (`JSON.parse`, a worker, or the disk).
+- **`adapter`**: In the FAF reference model, `util` denotes pure processing. Implementing side effects inside `util` would compromise Role/Symbol coherence. A helper that performs effects (`node:fs`, a worker, or the resolver) is an `adapter` even inside another adapter's Private Category (`<fragment>/_adapters/<helper>/<helper>.adapter.ts`). An adapter may accept `unknown` because the value arrives from an effect (`JSON.parse`, a worker, or the disk).
 - **`service`**: `verifyProject` coordinates adapters and pure stages. It is neither pure functional processing (`util`) nor an elementary effect (`adapter`), but a pipeline coordinator.
 - **`rule`**: The export is an ESLint `{ meta, create }` module governed by ESLint's plugin contract, distinct from pure functions and static configurations.
 
 Roles such as `class` and `error` are omitted in accordance with the functional paradigm.
 
-### 2.4 Layout within Layers and Norm Naming
+### 2.5 Purity by Role
 
-- **Category Hierarchy**: Each Layer organizes its units under a consistent Category hierarchy:
-  `[['_constants'], ['_types'], ['_mocks'], ['_configs'], ['_schemas'], ['_utils'], ['_norms'], ['_adapters'], ['_services'], ['_stores'], ['_rules']]`.
-  Layers only introduce the Categories they need (`_norms` is present only in `_taxonomy` and `_graph`; `_adapters`, `_services`, `_stores`, and `_rules` are present only in `_runtime`).
-- **Function Composition Rules**:
-  - Sibling Fragments in the same Category cannot import each other.
-  - A private helper dedicated to a single Fragment resides in that Fragment's Private Category (`<fragment>/_utils/<helper>/`).
-  - A helper shared across multiple units within the same Layer resides in the Layer's Fractal Branch (`_<layer>@shared/_utils/`).
-  - A helper consumed by higher Layers resides in the `_utils` Category of the lowest Layer that requires it.
-- **Norm Naming Convention**: Each Fragment under `_norms/` bears the exact English designation of the FAF specification clause it enforces:
-  - In `_taxonomy/_norms/`: `classification-completeness`, `containment-matrix`, `exclusive-forms`, `fragment-anatomy`, `category-role`, `nomenclature`, `horizontal-hierarchies`, `public-surface`.
-  - In `_graph/_norms/`: `peer-separation`, `fragment-encapsulation`, `private-category-visibility`, `fractal-branch-visibility`, `root-node-discipline`, `sub-graph-node-isolation`, `foreign-node-isolation`, `access-node-contract`, `tree-frontier`, `external-dependencies`, `path-alias-anchoring`, `symbol-uniqueness`, `re-export-prohibition`, `acyclicity`, `fractal-branch-unidirectionality`, `re-entry-prohibition`.
-    Any helper needed by an individual norm resides in its own Private Category.
+Purity is enforced by Role, not by a separate imperative shell. On `src/**/*.ts` excluding specs:
 
-### 2.5 Fragment Anatomy
+- Only `*.adapter.ts` may import `node:fs`, `fs`, `node:worker_threads`, `worker_threads`, `node:child_process`, `child_process`, or `oxc-resolver`, and only an adapter may read `process`.
+- Files whose Role is `util`, `schema`, `norm`, `config`, `constant`, `type`, or `mock` must not import through an `_adapters` Category. Pure units do not depend on effects.
+- `service`, `store`, and `rule` may import adapters. They are not pure, and they are not themselves the effect boundary.
+
+A `util` is always pure. Expected failures remain data. The only `throw` is `assertInvariant` in the invariant Fragment under `verify-project`.
+
+### 2.6 Category Order and Norm Names
+
+Sibling Categories follow one general Horizontal Hierarchy:
+`[['_constants'], ['_types'], ['_mocks'], ['_configs'], ['_schemas'], ['_utils'], ['_norms'], ['_adapters'], ['_services'], ['_stores'], ['_rules']]`.
+Sibling Sub-Categories follow the Systemic Design hierarchy:
+`[['_primitives'], ['_compounds'], ['_aggregates'], ['_systems'], ['_ecosystems']]`.
+Private Categories of one Fragment are not ordered against each other. Each norm Fragment is named after the FAF prescription it checks. A helper used by one norm lives in that norm's Private Category.
+
+### 2.7 Fragment Anatomy
 
 Every Fragment consists of:
 
@@ -103,7 +121,7 @@ Every Fragment consists of:
 - **Access Node (`index.ts`)**: The mandatory public boundary of the Fragment. It re-exports the Symbol of the Master Node (and optionally Symbols from other internal Fragment Nodes) and defines no Symbols of its own.
 - **Sub-Graph Node (`<name>.spec.ts`)**: Sibling unit test entry point carrying the Sub-Graph Role `spec`.
 
-### 2.6 Code Outside the Tree
+### 2.8 Code Outside the Tree
 
 Code residing outside the Fractal Tree (`src/`):
 
@@ -140,14 +158,14 @@ All code must strictly adhere to the following conventions:
 
 ### 3.4 Functional Paradigm and Immutability
 
-- **Functional composition over inheritance**: No `class` declarations, no `this`, and no `extends`. The use of external dependency classes (such as `oxc-resolver`) is confined strictly to `_runtime/_adapters/`.
+- **Functional composition over inheritance**: No `class` declarations, no `this`, and no `extends`. The use of external dependency classes (such as `oxc-resolver`) is confined strictly to `*.adapter.ts` files.
 - **Expected failures are data**: No exceptions for expected failures. Errors are returned as typed outcome data (`TOutcome`, discriminated unions).
-- **No `throw` statements**: The `throw` keyword is forbidden throughout the repository, with a single authorized exception: the `assertInvariant(condition, message): asserts condition` function in `_domain/_utils/assert-invariant/`. Invariant assertions throw a plain `Error` to immediately halt execution when an internal defect or broken assumption occurs.
+- **No `throw` statements**: The `throw` keyword is forbidden throughout the repository, with a single authorized exception: the `assertInvariant(condition, message): asserts condition` function. Invariant assertions throw a plain `Error` to immediately halt execution when an internal defect or broken assumption occurs.
 - **External exception handling**: Exceptions thrown by Node.js or third-party libraries (`fs`, `import()`, `JSON.parse`) are caught inside adapters and translated into structured outcome records.
 - **Boundary immutability**: All interface and type contracts use `readonly` modifiers on properties and collections. Function arguments must not be mutated.
 - **Local mutation**: Local mutation is permitted exclusively on temporary data structures allocated and kept private within the executing function (e.g., Tarjan's SCC algorithm or CSR adjacency construction in `Int32Array`) to meet performance budgets.
-- **Side effects**: Side effects are strictly confined to `_runtime/_adapters/`.
-- **Shared state**: Process state is strictly confined to `_runtime/_stores/` and encapsulated within module closures.
+- **Side effects**: Side effects are strictly confined to `*.adapter.ts` files.
+- **Shared state**: Process state is strictly confined to `store` Fragments and encapsulated within module closures.
 
 ### 3.5 Automated Rule Enforcement
 
@@ -179,9 +197,9 @@ Conventions are mechanically validated by ESLint and TypeScript compiler checks:
 - **Unit tests**: Every Fragment must include a sibling test file `<name>.spec.ts` located in the same directory as the Master Node `<name>.<role>.ts`.
 - **External tests**: Acceptance tests, type assertions, and tooling verification reside in `test/` outside the Fractal Tree and interact exclusively with `src/main.ts`.
 
-### 4.2 In-Memory Fixtures for Pure Layers
+### 4.2 In-Memory Fixtures for Pure Roles
 
-- Unit tests for pure layers (`_domain`, `_declarations`, `_syntax`, `_inventory`, `_taxonomy`, `_graph`) use exclusively in-memory data structures. They do not touch the disk or spawn child processes.
+- Unit tests for pure Roles (`util`, `schema`, `norm`, `config`, `constant`, `type`, `mock`) use exclusively in-memory data structures. They do not touch the disk or spawn child processes.
 
 ### 4.3 Assertions
 

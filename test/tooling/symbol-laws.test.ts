@@ -473,7 +473,7 @@ describe('symbol-laws integration in eslint.config.ts', () => {
 
   it('enables repository/symbol-laws with options derived from fafconfig on src/**/*.ts', async () => {
     const config = await calculateConfig(
-      'src/_src@shared/_domain/_utils/assert-invariant/assert-invariant.util.ts'
+      'src/_rules/conformity/_stores/session/_services/verify-project/_verify-project@shared/_utils/assert-invariant/assert-invariant.util.ts'
     );
     const rules =
       isRecord(config) && isRecord(config['rules'])

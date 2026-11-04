@@ -14,11 +14,18 @@ describe('plugin entrypoint', () => {
   });
 
   it('matches exact plugin structure', () => {
-    expect(plugin).toEqual({
-      meta: {
-        name: '@morriconeluca/eslint-plugin-faf',
+    expect(plugin['meta']).toEqual({
+      name: '@morriconeluca/eslint-plugin-faf',
+    });
+    expect(plugin['configs']).toEqual({
+      recommended: {
+        rules: {
+          'faf/conformity': 'error',
+        },
       },
     });
+    expect(plugin['rules']?.['conformity']?.meta?.type).toBe('problem');
+    expect(plugin['rules']?.['conformity']?.meta?.schema).toEqual([]);
   });
 
   it('exports configuration types that validate configuration shapes', () => {

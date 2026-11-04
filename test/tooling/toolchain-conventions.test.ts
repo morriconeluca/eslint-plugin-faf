@@ -198,7 +198,7 @@ describe('toolchain conventions', () => {
 
   it('allows throw statements inside assert-invariant utility', async () => {
     const ruleConfig = await getRestrictedSyntaxRule(
-      'src/_src@shared/_domain/_utils/assert-invariant/assert-invariant.util.ts'
+      'src/_rules/conformity/_stores/session/_services/verify-project/_verify-project@shared/_utils/assert-invariant/assert-invariant.util.ts'
     );
     expect(hasThrowStatementSelector(ruleConfig)).toBe(false);
 
@@ -215,7 +215,7 @@ describe('toolchain conventions', () => {
 
   it('enforces classes and this prohibitions on assert-invariant utility', async () => {
     const ruleConfig = await getRestrictedSyntaxRule(
-      'src/_src@shared/_domain/_utils/assert-invariant/assert-invariant.util.ts'
+      'src/_rules/conformity/_stores/session/_services/verify-project/_verify-project@shared/_utils/assert-invariant/assert-invariant.util.ts'
     );
     expect(hasSelector(ruleConfig, 'ClassDeclaration')).toBe(true);
     expect(hasSelector(ruleConfig, 'ClassExpression')).toBe(true);

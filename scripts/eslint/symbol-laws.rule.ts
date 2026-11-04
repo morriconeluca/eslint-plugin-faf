@@ -272,7 +272,7 @@ const getNodeLocation = (node: unknown): TSourceLocation | undefined => {
 const isMainFilePath = (filePath: string, filename: string): boolean =>
   filePath === 'src/main.ts' ||
   filePath.endsWith('/src/main.ts') ||
-  (filename === 'main.ts' && !filePath.includes('_src@shared'));
+  (filename === 'main.ts' && filePath.split('/').at(-2) === 'src');
 
 const isRoleInCatalog = (
   role: string,
@@ -320,7 +320,8 @@ const classifyFile = (
 
   const isMain = isMainFilePath(filePath, filename);
   const isAccessNode =
-    filename === 'index.ts' && filePath.includes('_src@shared');
+    filename === 'index.ts' &&
+    directoryParts.some((part) => options.categories.has(part));
 
   const fragmentRole = findFragmentRole(directoryParts, options.categories);
 

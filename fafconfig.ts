@@ -1,4 +1,4 @@
-import type { TFAFConfig } from './src/main.ts';
+import type { TFAFConfig } from './src/main.js';
 
 export default {
   faf: {
@@ -19,19 +19,13 @@ export default {
             ['_stores'],
             ['_rules'],
           ],
-        ],
-        localHorizontalHierarchies: [
-          {
-            hierarchies: [
-              ['_domain'],
-              ['_declarations', '_syntax'],
-              ['_inventory'],
-              ['_taxonomy'],
-              ['_graph'],
-              ['_runtime'],
-            ],
-            paths: ['src/_src@shared'],
-          },
+          [
+            ['_primitives'],
+            ['_compounds'],
+            ['_aggregates'],
+            ['_systems'],
+            ['_ecosystems'],
+          ],
         ],
         publicRootNodes: ['src/main.ts'],
         roles: [

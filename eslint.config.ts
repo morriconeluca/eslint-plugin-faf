@@ -49,6 +49,28 @@ const THROW_RESTRICTION = {
   selector: 'ThrowStatement',
 } as const;
 
+const FILE_SYSTEM_RESTRICTION =
+  'File system access is allowed only in adapter files.';
+const WORKER_RESTRICTION = 'Worker threads are allowed only in adapter files.';
+const CHILD_PROCESS_RESTRICTION =
+  'Child processes are allowed only in adapter files.';
+const RESOLVER_RESTRICTION =
+  'oxc-resolver is an effect and is allowed only in adapter files.';
+const PROCESS_RESTRICTION = 'process is allowed only in adapter files.';
+const PURE_ADAPTER_RESTRICTION = 'Pure units must not depend on effects.';
+const SRC_SPEC_GLOB = 'src/**/*.spec.ts';
+const SRC_GLOB = 'src/**/*.ts';
+
+const EFFECT_IMPORT_PATHS = [
+  { message: FILE_SYSTEM_RESTRICTION, name: 'node:fs' },
+  { message: FILE_SYSTEM_RESTRICTION, name: 'fs' },
+  { message: WORKER_RESTRICTION, name: 'node:worker_threads' },
+  { message: WORKER_RESTRICTION, name: 'worker_threads' },
+  { message: CHILD_PROCESS_RESTRICTION, name: 'node:child_process' },
+  { message: CHILD_PROCESS_RESTRICTION, name: 'child_process' },
+  { message: RESOLVER_RESTRICTION, name: 'oxc-resolver' },
+] as const;
+
 const TYPE_FILE_RESTRICTIONS = [
   {
     message:
@@ -250,7 +272,7 @@ export default defineConfig([
   },
   {
     files: [
-      'src/_src@shared/_domain/_utils/assert-invariant/assert-invariant.util.ts',
+      'src/_rules/conformity/_stores/session/_services/verify-project/_verify-project@shared/_utils/assert-invariant/assert-invariant.util.ts',
     ],
     rules: {
       'no-restricted-syntax': ['error', ...COMMON_FUNCTIONAL_RESTRICTIONS],
@@ -302,8 +324,8 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/**/*.ts'],
-    ignores: ['src/**/*.spec.ts'],
+    files: [SRC_GLOB],
+    ignores: [SRC_SPEC_GLOB],
     rules: {
       'repository/no-unknown-parameters': 'error',
     },
@@ -315,7 +337,59 @@ export default defineConfig([
     },
   },
   {
-    files: ['src/**/*.ts'],
+    files: [SRC_GLOB],
+    ignores: [SRC_SPEC_GLOB, 'src/**/*.adapter.ts'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        {
+          message: PROCESS_RESTRICTION,
+          name: 'process',
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [...EFFECT_IMPORT_PATHS],
+        },
+      ],
+      'no-restricted-properties': [
+        'error',
+        {
+          message: PROCESS_RESTRICTION,
+          object: 'process',
+        },
+      ],
+    },
+  },
+  {
+    files: [
+      'src/**/*.util.ts',
+      'src/**/*.schema.ts',
+      'src/**/*.norm.ts',
+      'src/**/*.config.ts',
+      'src/**/*.constant.ts',
+      'src/**/*.type.ts',
+      'src/**/*.mock.ts',
+    ],
+    ignores: [SRC_SPEC_GLOB],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [...EFFECT_IMPORT_PATHS],
+          patterns: [
+            {
+              group: ['**/_adapters/**'],
+              message: PURE_ADAPTER_RESTRICTION,
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: [SRC_GLOB],
     rules: {
       'repository/symbol-laws': [
         'error',

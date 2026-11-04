@@ -15,7 +15,7 @@ describe('unnecessary type predicate conditions', () => {
     fs.writeFileSync(
       fixturePath,
       [
-        "import { assertInvariant } from '../../src/_src@shared/_domain/_utils/assert-invariant/index.js';",
+        "import { assertInvariant } from '../../src/_rules/conformity/_stores/session/_services/verify-project/_verify-project@shared/_utils/assert-invariant/index.js';",
         '',
         'export const check = (value: string): void => {',
         "  assertInvariant(typeof value === 'string', 'Expected string');",
