@@ -3,11 +3,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import {
+  comparePaths,
+  normalizePath,
+  readRepositoryChanges,
+} from './changed-files.js';
+
 const SOURCE_EXTENSION = '.ts';
 const EXCLUDED_SUFFIXES = ['.mock.ts', '.spec.ts', '.type.ts'] as const;
-
-const normalizePath = (filePath: string): string =>
-  filePath.replaceAll('\\', '/').replace(/^\.\//u, '');
 
 const directoryOf = (filePath: string): string => {
   const normalized = normalizePath(filePath);
@@ -37,16 +40,6 @@ const isMutableSource = (filePath: string): boolean => {
     isUnderSrc(normalized) &&
     !isExcludedSource(normalized)
   );
-};
-
-const comparePaths = (left: string, right: string): number => {
-  if (left < right) {
-    return -1;
-  }
-  if (left > right) {
-    return 1;
-  }
-  return 0;
 };
 
 export const selectMutationTargets = (
@@ -83,31 +76,6 @@ export const selectMutationTargets = (
 const INCREMENTAL_FILE = '.cache/stryker/diff.json';
 const STRYKER_BIN = './node_modules/.bin/stryker';
 const THRESHOLD_SCRIPT = 'scripts/check-mutation-threshold.ts';
-const GIT_CANDIDATES = ['/usr/bin/git', '/opt/homebrew/bin/git'] as const;
-
-const resolveGit = (): string => {
-  const found = GIT_CANDIDATES.find((candidate) => fs.existsSync(candidate));
-  if (found === undefined) {
-    console.error('git executable was not found');
-    process.exit(1);
-  }
-  return found;
-};
-
-const readGitLines = (gitArguments: readonly string[]): readonly string[] => {
-  const result = spawnSync(resolveGit(), [...gitArguments], {
-    encoding: 'utf8',
-  });
-  if (result.status !== 0) {
-    const details = result.stderr.trim();
-    console.error(details.length > 0 ? details : 'git command failed');
-    process.exit(result.status ?? 1);
-  }
-  return result.stdout
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0);
-};
 
 const runChecked = (
   executable: string,
@@ -137,16 +105,11 @@ const runMutation = (targets: readonly string[]): void => {
 
 const main = (): void => {
   const base = process.argv[2] ?? 'main';
-  const changedTracked = readGitLines(['diff', '--name-only', base]);
-  const untracked = readGitLines([
-    'ls-files',
-    '--others',
-    '--exclude-standard',
-  ]);
-  const trackedPresent = readGitLines(['ls-files']);
-  const changedPaths = [...changedTracked, ...untracked];
-  const presentFiles = [...trackedPresent, ...untracked];
-  const targets = selectMutationTargets(changedPaths, presentFiles);
+  const changes = readRepositoryChanges(base);
+  const targets = selectMutationTargets(
+    changes.changedPaths,
+    changes.presentFiles
+  );
 
   if (targets.length === 0) {
     console.log(

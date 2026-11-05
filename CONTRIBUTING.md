@@ -293,6 +293,21 @@ No quality gate constraint may be weakened or bypassed. All five gates (`npm run
   npm run gate:4:diff
   npm run gate:4:diff -- origin/main
   ```
+- **Check types, lint, fitness, and related tests** after each Fragment. This does not replace `gate:all`. The base defaults to `main`:
+
+  ```bash
+  npm run check
+  npm run check -- origin/main
+  ```
+
+  The command stops at the first failure. It prints each step's name, duration, and outcome, then the total duration. Steps, in order:
+  1. `tsc --noEmit` on the whole project.
+  2. ESLint on changed `.ts` files, tracked and untracked, deleted files excluded, with the same options as `gate:2`.
+  3. Fitness tests in `test/fitness/`.
+  4. Vitest tests related to the changed files (`vitest related --run`), without coverage.
+
+  When no file changed, the lint and related steps state that there is nothing to check. The script does not modify the git index or repository files.
+
 - **Run fast check (format + type check + lint)**:
   ```bash
   npm run gate:fast
