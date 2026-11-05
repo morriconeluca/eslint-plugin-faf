@@ -1,6 +1,6 @@
 import { createFixture } from 'fs-fixture';
 import nodePath from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { verifyProject } from './index.js';
 
@@ -191,6 +191,52 @@ describe('verifyProject', () => {
       );
       expect(unresolved?.position.line).toBe(2);
     } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('populates verification model crossings from a real project with external files', async () => {
+    const fixture = await createFixture({
+      'external/bridge.ts':
+        "import { target } from '../src/_utils/target/index.js';\nexport function bridge() { return target(); }\n",
+      'fafconfig.ts': configSource(''),
+      'package.json': packageJson,
+      'src/_utils/source/index.ts':
+        "import { bridge } from '../../../external/bridge.js';\nexport function source() { return bridge(); }\n",
+      'src/_utils/target/index.ts':
+        "export { target } from './target.util.js';\n",
+      'src/_utils/target/target.util.ts':
+        "export function target() {\n  return 'ok';\n}\n",
+    });
+
+    const treeFrontierModule = await import('./_norms/tree-frontier/index.js');
+    const spy = vi.spyOn(treeFrontierModule, 'verifyTreeFrontier');
+    try {
+      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      verifyProject({
+        configPath,
+        workingDirectory: fixture.path,
+      });
+
+      expect(spy).toHaveBeenCalled();
+      const model = spy.mock.calls[0]?.[0];
+      expect(model).toBeDefined();
+      expect(model?.crossings).toEqual([
+        {
+          chain: [
+            'src/_utils/source/index.ts',
+            'external/bridge.ts',
+            'src/_utils/target/index.ts',
+          ],
+          destinationPath: 'src/_utils/target/index.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'src/_utils/source/index.ts',
+          specifier: '../../../external/bridge.js',
+        },
+      ]);
+    } finally {
+      spy.mockRestore();
       await fixture.rm();
     }
   });

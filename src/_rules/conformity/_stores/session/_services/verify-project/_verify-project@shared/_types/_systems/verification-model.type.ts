@@ -2,6 +2,7 @@ import type { TModuleCollection } from '../_aggregates/module-collection.type.js
 import type { TProjectBasis } from '../_aggregates/project-basis.type.js';
 import type { TTaxonomyModel } from '../_compounds/classification.type.js';
 import type { TDependencyGraph } from '../_compounds/dependency-graph.type.js';
+import type { TExternalCrossing } from '../_compounds/external-crossing.type.js';
 import type { THorizontalHierarchies } from '../_compounds/horizontal-hierarchies.type.js';
 import type { TPublicSurface } from '../_compounds/public-surface.type.js';
 
@@ -13,6 +14,11 @@ export type TVerificationModel = {
    * Ready preparation of configuration, inventory, and acquired aliases.
    */
   readonly basis: TProjectBasis;
+
+  /**
+   * Observed crossings through external local files between tree nodes.
+   */
+  readonly crossings: readonly TExternalCrossing[];
 
   /**
    * Resolved dependency graph of the codebase.

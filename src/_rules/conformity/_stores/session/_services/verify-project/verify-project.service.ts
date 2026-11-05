@@ -36,6 +36,7 @@ import { prepareProject } from './_services/prepare-project/index.js';
 import { anchorOutcomes } from './_utils/anchor-outcomes/index.js';
 import { buildDependencyGraph } from './_utils/build-dependency-graph/index.js';
 import { classifyTaxonomy } from './_utils/classify-taxonomy/index.js';
+import { deriveExternalCrossings } from './_utils/derive-external-crossings/index.js';
 import { deriveHorizontalHierarchies } from './_utils/derive-horizontal-hierarchies/index.js';
 import { derivePublicSurface } from './_utils/derive-public-surface/index.js';
 
@@ -83,8 +84,10 @@ export function verifyProject(
     textOverrides,
   });
   const graph = buildDependencyGraph(prepared, taxonomy.model, modules);
+  const crossings = deriveExternalCrossings(graph.graph);
   const model: TVerificationModel = {
     basis: prepared,
+    crossings,
     graph: graph.graph,
     hierarchies: hierarchies.hierarchies,
     modules,

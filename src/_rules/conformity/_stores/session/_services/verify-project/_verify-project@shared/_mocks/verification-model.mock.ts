@@ -23,6 +23,7 @@ export function verificationModel(): TVerificationModel {
       kind: 'ready',
       loadedFiles: [],
     },
+    crossings: [],
     graph: {
       columnTargets: new Int32Array(0),
       edgeCount: 0,
