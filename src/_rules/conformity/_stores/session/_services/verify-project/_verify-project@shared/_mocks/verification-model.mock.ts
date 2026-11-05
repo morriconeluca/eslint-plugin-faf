@@ -36,7 +36,7 @@ export function verificationModel(): TVerificationModel {
       vertexNatures: [],
       vertexToPath: [],
     },
-    hierarchies: { sets: [] },
+    hierarchies: { conflicts: [], sets: [] },
     modules: {
       records: new Map<string, TModuleRecord>(),
       resolutions: new Map<string, readonly TImportResolution[]>(),

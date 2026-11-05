@@ -32,7 +32,6 @@ const unimplementedParts = [
   'acyclicity',
   'category-role',
   'containment-matrix',
-  'derive-horizontal-hierarchies',
   'exclusive-forms',
   'external-dependencies',
   'foreign-node-isolation',
