@@ -205,6 +205,8 @@ Conventions are mechanically validated by ESLint and TypeScript compiler checks:
 - **Unit tests**: Every Fragment must include a sibling test file `<name>.spec.ts` located in the same directory as the Master Node `<name>.<role>.ts`.
 - **External tests**: Acceptance tests, type assertions, and tooling verification reside in `test/` outside the Fractal Tree and interact exclusively with `src/main.ts`.
 
+Acceptance suites use `test/support/acceptance-project.ts`: `createProject(tree, config)`, `beforeAll(warmupESLint, 120_000)`, `lintScenario(cwd, files)`, and `expectScenario(result, responsiblePart, expected)`; results retain all diagnostics except separately indexed `unimplementedParts`, while `lintProject` exposes every raw diagnostic.
+
 ### 4.2 In-Memory Fixtures for Pure Roles
 
 - Unit tests for pure Roles (`util`, `schema`, `norm`, `config`, `constant`, `type`, `mock`) use exclusively in-memory data structures. They do not touch the disk or spawn child processes.

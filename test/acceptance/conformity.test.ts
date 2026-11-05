@@ -1,42 +1,27 @@
-import { ESLint } from 'eslint';
 import { createFixture } from 'fs-fixture';
 import nodeFs from 'node:fs';
 import nodePath from 'node:path';
-import { parser } from 'typescript-eslint';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import plugin from '../../src/main.js';
+import {
+  createProject,
+  lintProject,
+  warmupESLint,
+} from '../support/acceptance-project.js';
 
-type TLintFile = {
-  readonly filePath: string;
-  readonly messages: readonly TLintMessage[];
-};
-
-type TLintMessage = {
-  readonly line: number;
-  readonly message: string;
-  readonly messageId: null | string;
-  readonly ruleId: null | string;
-};
-
-const packageJson = JSON.stringify({ type: 'module' });
-
-const configSource = (extra: string): string => `export default {
+const config = {
   faf: {
     locals: [
       {
-        roles: [{ name: 'util', category: '_utils' }],
-        subGraphRoles: [{ name: 'spec' }],
+        roles: [{ category: '_utils', name: 'util' }],
         rootLayers: ['src'],
+        subGraphRoles: [{ name: 'spec' }],
       },
     ],
   },
-  ${extra}
 };
-`;
 
 const conformingTree = {
-  'package.json': packageJson,
   'src/_utils/widget/index.ts': "export { widget } from './widget.util.js';\n",
   'src/_utils/widget/widget.util.ts':
     "export function widget() {\n  return 'ok';\n}\n",
@@ -68,75 +53,13 @@ const unimplementedParts = [
   'tree-frontier',
 ];
 
-const recommendedConfig = {
-  languageOptions: {
-    parser,
-  },
-  ...plugin.configs.recommended,
-};
-
-const lintProject = async (
-  cwd: string,
-  files: readonly string[]
-): Promise<readonly TLintFile[]> => {
-  const eslint = new ESLint({
-    cwd,
-    overrideConfig: [recommendedConfig],
-    overrideConfigFile: true,
-  });
-  const results = await eslint.lintFiles([...files]);
-  return results.map((result) => ({
-    filePath: result.filePath,
-    messages: result.messages.map((message) => ({
-      line: message.line,
-      message: message.message,
-      messageId: message.messageId ?? null,
-      ruleId: message.ruleId,
-    })),
-  }));
-};
-
-const compareText = (left: string, right: string): number => {
-  if (left < right) {
-    return -1;
-  }
-  if (left > right) {
-    return 1;
-  }
-  return 0;
-};
-
-const sortMessages = (results: readonly TLintFile[]): readonly TLintFile[] => {
-  const files = [...results];
-  files.sort((left, right) => compareText(left.filePath, right.filePath));
-  return files.map((result) => {
-    const messages = [...result.messages];
-    messages.sort((left, right) =>
-      left.line === right.line
-        ? compareText(left.message, right.message)
-        : left.line - right.line
-    );
-    return { ...result, messages };
-  });
-};
-
 describe('acceptance: faf/conformity', () => {
   const WARMUP_TIMEOUT_MS = 120_000;
 
-  beforeAll(async () => {
-    const eslint = new ESLint({
-      cwd: nodePath.resolve(import.meta.dirname, '../..'),
-      overrideConfig: [recommendedConfig],
-      overrideConfigFile: true,
-    });
-    await eslint.lintFiles(['src/main.ts']);
-  }, WARMUP_TIMEOUT_MS);
+  beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
 
   it('reports one not-implemented outcome for every unbuilt part, anchored to fafconfig.ts', async () => {
-    const fixture = await createFixture({
-      ...conformingTree,
-      'fafconfig.ts': configSource(''),
-    });
+    const fixture = await createProject(conformingTree, config);
 
     try {
       const results = await lintProject(fixture.path, ['.']);
@@ -162,7 +85,6 @@ describe('acceptance: faf/conformity', () => {
       const ordered = names.filter(
         (name): name is string => name !== undefined
       );
-      ordered.sort(compareText);
       expect(ordered).toEqual(unimplementedParts);
     } finally {
       await fixture.rm();
@@ -170,10 +92,7 @@ describe('acceptance: faf/conformity', () => {
   });
 
   it('verifies a conforming project once when linting several files', async () => {
-    const fixture = await createFixture({
-      ...conformingTree,
-      'fafconfig.ts': configSource(''),
-    });
+    const fixture = await createProject(conformingTree, config);
     const cachePath = nodePath.join(
       fixture.path,
       'node_modules/.cache/eslint-plugin-faf/records.cache'
@@ -217,9 +136,9 @@ describe('acceptance: faf/conformity', () => {
   });
 
   it('reports an unknown property as configuration on fafconfig.ts', async () => {
-    const fixture = await createFixture({
-      ...conformingTree,
-      'fafconfig.ts': configSource('extra: true,'),
+    const fixture = await createProject(conformingTree, {
+      ...config,
+      extra: true,
     });
 
     try {
@@ -239,12 +158,14 @@ describe('acceptance: faf/conformity', () => {
   });
 
   it('anchors an unclassifiable directory to the first lintable child', async () => {
-    const fixture = await createFixture({
-      ...conformingTree,
-      'fafconfig.ts': configSource(''),
-      'src/mystery/a.ts': 'export const earlier = 1;\n',
-      'src/mystery/b.ts': 'export const later = 2;\n',
-    });
+    const fixture = await createProject(
+      {
+        ...conformingTree,
+        'src/mystery/a.ts': 'export const earlier = 1;\n',
+        'src/mystery/b.ts': 'export const later = 2;\n',
+      },
+      config
+    );
 
     try {
       const results = await lintProject(fixture.path, [
@@ -277,12 +198,14 @@ describe('acceptance: faf/conformity', () => {
   });
 
   it('reports an unresolved import as unverified on the import line', async () => {
-    const fixture = await createFixture({
-      ...conformingTree,
-      'fafconfig.ts': configSource(''),
-      'src/_utils/widget/index.ts':
-        "import { widget } from './widget.util.js';\nimport { missing } from './missing.js';\nexport { widget };\n",
-    });
+    const fixture = await createProject(
+      {
+        ...conformingTree,
+        'src/_utils/widget/index.ts':
+          "import { widget } from './widget.util.js';\nimport { missing } from './missing.js';\nexport { widget };\n",
+      },
+      config
+    );
 
     try {
       const filePath = nodePath.join(
@@ -326,22 +249,20 @@ describe('acceptance: faf/conformity', () => {
   });
 
   it('produces the same outcomes when the same project is linted in two file orders', async () => {
-    const fixture = await createFixture({
-      ...conformingTree,
-      'fafconfig.ts': configSource(''),
-      'src/mystery/a.ts': 'export const earlier = 1;\n',
-      'src/mystery/b.ts': 'export const later = 2;\n',
-    });
+    const fixture = await createProject(
+      {
+        ...conformingTree,
+        'src/mystery/a.ts': 'export const earlier = 1;\n',
+        'src/mystery/b.ts': 'export const later = 2;\n',
+      },
+      config
+    );
 
     try {
       const earlier = nodePath.join(fixture.path, 'src/mystery/a.ts');
       const later = nodePath.join(fixture.path, 'src/mystery/b.ts');
-      const forward = sortMessages(
-        await lintProject(fixture.path, [earlier, later])
-      );
-      const reverse = sortMessages(
-        await lintProject(fixture.path, [later, earlier])
-      );
+      const forward = await lintProject(fixture.path, [earlier, later]);
+      const reverse = await lintProject(fixture.path, [later, earlier]);
       expect(reverse).toEqual(forward);
       expect(
         forward.flatMap((result) => result.messages).length
