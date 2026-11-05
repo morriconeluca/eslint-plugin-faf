@@ -27,19 +27,69 @@ const conformingFiles = {
     "export function widget() {\n  return 'ok';\n}\n",
 };
 
+const unimplementedParts = [
+  'access-node-contract',
+  'acyclicity',
+  'build-dependency-graph',
+  'category-role',
+  'containment-matrix',
+  'derive-horizontal-hierarchies',
+  'derive-public-surface',
+  'exclusive-forms',
+  'external-dependencies',
+  'foreign-node-isolation',
+  'fractal-branch-unidirectionality',
+  'fractal-branch-visibility',
+  'fragment-anatomy',
+  'fragment-encapsulation',
+  'horizontal-hierarchies',
+  'nomenclature',
+  'path-alias-anchoring',
+  'peer-separation',
+  'private-category-visibility',
+  'public-surface',
+  're-entry-prohibition',
+  're-export-prohibition',
+  'root-node-discipline',
+  'sub-graph-node-isolation',
+  'symbol-uniqueness',
+  'tree-frontier',
+];
+
+const compareText = (left: string, right: string): number => {
+  if (left < right) {
+    return -1;
+  }
+  if (left > right) {
+    return 1;
+  }
+  return 0;
+};
+
 describe('verifyProject', () => {
-  it('returns no outcomes for a conforming root layer', async () => {
+  it('returns one not-implemented outcome for every unbuilt part of a conforming root layer', async () => {
     const fixture = await createFixture({
       ...conformingFiles,
       'fafconfig.ts': configSource(''),
     });
 
     try {
+      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
       const result = verifyProject({
-        configPath: nodePath.join(fixture.path, 'fafconfig.ts'),
+        configPath,
         workingDirectory: fixture.path,
       });
-      expect(result.outcomes).toEqual([]);
+      const elements = result.outcomes.map((item) => item.outcome.element);
+      const ordered = [...elements];
+      ordered.sort(compareText);
+      expect(ordered).toEqual(unimplementedParts);
+      expect(result.outcomes).toHaveLength(unimplementedParts.length);
+      for (const item of result.outcomes) {
+        expect(item.anchorPath).toBe(configPath);
+        expect(item.outcome.constraint).toBe('unverified/not-implemented');
+        expect(item.outcome.family).toBe('unverified');
+        expect(item.position).toEqual({ column: 1, line: 1 });
+      }
       expect(result.collectedModules).toBe(true);
     } finally {
       await fixture.rm();

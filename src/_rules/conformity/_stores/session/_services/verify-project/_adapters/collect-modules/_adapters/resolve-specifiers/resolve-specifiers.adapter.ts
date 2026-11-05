@@ -3,9 +3,9 @@ import nodePath from 'node:path';
 import { ResolverFactory } from 'oxc-resolver';
 
 import type { TModuleImport } from '../../../../../../_session@shared/_types/module-record.type.js';
+import type { TImportResolution } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 import type { TEffectivePathAlias } from '../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 import type { TSpecifierResolver } from '../../_collect-modules@shared/_types/_compounds/specifier-resolver.type.js';
-import type { TImportResolution } from '../../_collect-modules@shared/_types/_primitives/dependency-graph.type.js';
 import type { TCachedResolution } from './resolve-specifiers.type.js';
 
 import { toPosixPath } from '../../../../../../_session@shared/_utils/to-posix-path/index.js';

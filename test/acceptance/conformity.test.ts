@@ -42,6 +42,35 @@ const conformingTree = {
     "export function widget() {\n  return 'ok';\n}\n",
 };
 
+const unimplementedParts = [
+  'access-node-contract',
+  'acyclicity',
+  'build-dependency-graph',
+  'category-role',
+  'containment-matrix',
+  'derive-horizontal-hierarchies',
+  'derive-public-surface',
+  'exclusive-forms',
+  'external-dependencies',
+  'foreign-node-isolation',
+  'fractal-branch-unidirectionality',
+  'fractal-branch-visibility',
+  'fragment-anatomy',
+  'fragment-encapsulation',
+  'horizontal-hierarchies',
+  'nomenclature',
+  'path-alias-anchoring',
+  'peer-separation',
+  'private-category-visibility',
+  'public-surface',
+  're-entry-prohibition',
+  're-export-prohibition',
+  'root-node-discipline',
+  'sub-graph-node-isolation',
+  'symbol-uniqueness',
+  'tree-frontier',
+];
+
 const recommendedConfig = {
   languageOptions: {
     parser,
@@ -106,7 +135,7 @@ describe('acceptance: faf/conformity', () => {
     await eslint.lintFiles(['src/main.ts']);
   }, WARMUP_TIMEOUT_MS);
 
-  it('reports no messages for a minimal conforming root layer', async () => {
+  it('reports one not-implemented outcome for every unbuilt part, anchored to fafconfig.ts', async () => {
     const fixture = await createFixture({
       ...conformingTree,
       'fafconfig.ts': configSource(''),
@@ -114,8 +143,30 @@ describe('acceptance: faf/conformity', () => {
 
     try {
       const results = await lintProject(fixture.path, ['.']);
-      const messages = results.flatMap((result) => result.messages);
-      expect(messages).toEqual([]);
+      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const otherMessages = results
+        .filter((result) => result.filePath !== configPath)
+        .flatMap((result) => result.messages);
+      const configMessages =
+        results.find((result) => result.filePath === configPath)?.messages ??
+        [];
+      expect(otherMessages).toEqual([]);
+      expect(configMessages).toHaveLength(unimplementedParts.length);
+      const names = configMessages.map((message) => {
+        expect(message.ruleId).toBe('faf/conformity');
+        expect(message.messageId).toBe('unverified');
+        expect(message.line).toBe(1);
+        expect(message.message).toContain('unverified/not-implemented');
+        const matched = /Part '([^']+)' is not implemented/.exec(
+          message.message
+        );
+        return matched?.[1];
+      });
+      const ordered = names.filter(
+        (name): name is string => name !== undefined
+      );
+      ordered.sort(compareText);
+      expect(ordered).toEqual(unimplementedParts);
     } finally {
       await fixture.rm();
     }
@@ -145,7 +196,22 @@ describe('acceptance: faf/conformity', () => {
         'src/_utils/widget/index.ts',
         'src/_utils/widget/widget.util.ts',
       ]);
-      expect(results.flatMap((result) => result.messages)).toEqual([]);
+      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const otherMessages = results
+        .filter((result) => result.filePath !== configPath)
+        .flatMap((result) => result.messages);
+      const configMessages =
+        results.find((result) => result.filePath === configPath)?.messages ??
+        [];
+      expect(otherMessages).toEqual([]);
+      expect(configMessages).toHaveLength(unimplementedParts.length);
+      expect(
+        configMessages.every(
+          (message) =>
+            message.messageId === 'unverified' &&
+            message.message.includes('unverified/not-implemented')
+        )
+      ).toBe(true);
       expect(verifications).toBe(1);
     } finally {
       nodeFs.renameSync = originalRename;

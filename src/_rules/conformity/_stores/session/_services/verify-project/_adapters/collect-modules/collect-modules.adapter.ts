@@ -1,10 +1,8 @@
 import type { TUnverifiedOutcome } from '../../../../../../_conformity@shared/_types/outcome.type.js';
 import type { TModuleRecord } from '../../../../_session@shared/_types/module-record.type.js';
-import type { TImportResolution } from './_collect-modules@shared/_types/_primitives/dependency-graph.type.js';
-import type {
-  TCollectModulesInput,
-  TModuleCollection,
-} from './collect-modules.type.js';
+import type { TModuleCollection } from '../../_verify-project@shared/_types/_aggregates/module-collection.type.js';
+import type { TImportResolution } from '../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
+import type { TCollectModulesInput } from './collect-modules.type.js';
 
 import { moduleRecordStore } from '../../../../_session@shared/_stores/module-record-store/index.js';
 import { assertInvariant } from '../../_verify-project@shared/_utils/assert-invariant/index.js';

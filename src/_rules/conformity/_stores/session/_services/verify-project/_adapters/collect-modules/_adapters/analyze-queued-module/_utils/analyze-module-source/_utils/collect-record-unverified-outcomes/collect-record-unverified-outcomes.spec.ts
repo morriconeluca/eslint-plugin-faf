@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TModuleRecord } from '../../../../../../../../../../_session@shared/_types/module-record.type.js';
-import type { TImportResolution } from '../../../../../../_collect-modules@shared/_types/_primitives/dependency-graph.type.js';
+import type { TImportResolution } from '../../../../../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
 import { collectRecordUnverifiedOutcomes } from './index.js';
 

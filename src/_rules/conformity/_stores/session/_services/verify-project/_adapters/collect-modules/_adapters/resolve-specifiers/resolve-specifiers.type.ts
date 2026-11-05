@@ -1,4 +1,4 @@
-import type { TResolvedTarget } from '../../_collect-modules@shared/_types/_primitives/dependency-graph.type.js';
+import type { TResolvedTarget } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
 /**
  * Memoized resolution result caching target and matched alias metadata.

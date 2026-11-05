@@ -3,10 +3,10 @@ import type {
   TModuleRecord,
   TModuleRecordProducer,
 } from '../../../../../../../_session@shared/_types/module-record.type.js';
+import type { TImportResolution } from '../../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 import type { TEffectivePathAlias } from '../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 import type { TInventory } from '../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 import type { TSpecifierResolver } from '../_compounds/specifier-resolver.type.js';
-import type { TImportResolution } from '../_primitives/dependency-graph.type.js';
 
 /**
  * Input of the pure analysis step after the file text has been acquired.
@@ -116,26 +116,6 @@ export type TModuleAnalysis = {
    * Resolutions aligned with the record imports, empty when resolution did not run.
    */
   readonly resolutions: readonly TImportResolution[];
-};
-
-/**
- * Ordered collection consumed by pure graph construction and project verification.
- */
-export type TModuleCollection = {
-  /**
-   * Module Records keyed by POSIX path relative to the base.
-   */
-  readonly records: ReadonlyMap<string, TModuleRecord>;
-
-  /**
-   * Import resolutions keyed by source path, in Module Record import order.
-   */
-  readonly resolutions: ReadonlyMap<string, readonly TImportResolution[]>;
-
-  /**
-   * Blocking unverified outcomes for files and imports that could not be analyzed.
-   */
-  readonly unverifiedOutcomes: readonly TUnverifiedOutcome[];
 };
 
 /**

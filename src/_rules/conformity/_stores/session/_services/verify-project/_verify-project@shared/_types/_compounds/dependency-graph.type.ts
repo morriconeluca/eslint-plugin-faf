@@ -1,7 +1,7 @@
-import type { TSourceLocation } from '../../../../../../../../../_conformity@shared/_types/outcome.type.js';
+import type { TSourceLocation } from '../../../../../../../_conformity@shared/_types/outcome.type.js';
 
 /**
- * Compact CSR dependency graph representation storing directed edges in Int32Array buffers.
+ * Compact CSR dependency graph of resolved edges between codebase files.
  */
 export type TDependencyGraph = {
   /**

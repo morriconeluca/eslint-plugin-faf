@@ -1,9 +1,7 @@
 import type { TModuleRecord } from '../../../../../../_session@shared/_types/module-record.type.js';
-import type {
-  TModuleCollection,
-  TUnorderedModuleCollection,
-} from '../../_collect-modules@shared/_types/_aggregates/collect-modules.type.js';
-import type { TImportResolution } from '../../_collect-modules@shared/_types/_primitives/dependency-graph.type.js';
+import type { TModuleCollection } from '../../../../_verify-project@shared/_types/_aggregates/module-collection.type.js';
+import type { TImportResolution } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
+import type { TUnorderedModuleCollection } from '../../_collect-modules@shared/_types/_aggregates/collect-modules.type.js';
 
 import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 import { compareUnverifiedOutcomes } from './_utils/compare-unverified-outcomes/index.js';

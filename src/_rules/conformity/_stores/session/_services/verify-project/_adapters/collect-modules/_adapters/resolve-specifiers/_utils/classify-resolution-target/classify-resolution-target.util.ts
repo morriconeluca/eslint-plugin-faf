@@ -1,6 +1,6 @@
 import nodePath from 'node:path';
 
-import type { TResolvedTarget } from '../../../../_collect-modules@shared/_types/_primitives/dependency-graph.type.js';
+import type { TResolvedTarget } from '../../../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 import type { TClassifyResolutionInput } from './classify-resolution-target.type.js';
 
 import { toPosixPath } from '../../../../../../../../_session@shared/_utils/to-posix-path/index.js';
