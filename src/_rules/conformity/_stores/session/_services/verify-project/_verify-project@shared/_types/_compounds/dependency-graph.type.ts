@@ -1,4 +1,5 @@
 import type { TSourceLocation } from '../../../../../../../_conformity@shared/_types/outcome.type.js';
+import type { TImportSyntaxKind } from '../../../../../_session@shared/_types/module-record.type.js';
 
 /**
  * Compact CSR dependency graph of resolved edges between codebase files.
@@ -15,9 +16,24 @@ export type TDependencyGraph = {
   readonly edgeCount: number;
 
   /**
-   * Parallel array of edge metadata records aligned with CSR column targets.
+   * Parallel array of local-edge metadata aligned with CSR column targets.
    */
   readonly edgeMetadata: readonly TEdgeMetadata[];
+
+  /**
+   * Edge indices into columnTargets and edgeMetadata for each source file.
+   */
+  readonly edgesBySourcePath: ReadonlyMap<string, readonly number[]>;
+
+  /**
+   * Import arcs toward external libraries, which are not local-graph vertices.
+   */
+  readonly libraryNotes: readonly TLibraryNote[];
+
+  /**
+   * Library-note indices for each source file that imports an external library.
+   */
+  readonly libraryNotesBySourcePath: ReadonlyMap<string, readonly number[]>;
 
   /**
    * Map translating relative POSIX file paths to integer vertex indices.
@@ -35,15 +51,35 @@ export type TDependencyGraph = {
   readonly vertexCount: number;
 
   /**
+   * Nature of each vertex, aligned with vertexToPath.
+   */
+  readonly vertexNatures: readonly TVertexNature[];
+
+  /**
    * Array translating integer vertex indices back to relative POSIX file paths.
    */
   readonly vertexToPath: readonly string[];
 };
 
 /**
- * Structural metadata associated with an individual directed graph edge.
+ * Structural metadata associated with one directed edge between local files.
  */
 export type TEdgeMetadata = {
+  /**
+   * Alternative base paths of the path alias matched by the specifier.
+   */
+  readonly aliasAlternatives: readonly string[];
+
+  /**
+   * Path alias prefix matched by the specifier, or null when none was used.
+   */
+  readonly aliasUsed: null | string;
+
+  /**
+   * Relative POSIX path of the resolved local destination file.
+   */
+  readonly destinationPath: string;
+
   /**
    * Zero-based import index within the source module record.
    */
@@ -58,6 +94,21 @@ export type TEdgeMetadata = {
    * Source coordinates where the import reference originated.
    */
   readonly position: TSourceLocation;
+
+  /**
+   * Relative POSIX path of the file that contains the import.
+   */
+  readonly sourcePath: string;
+
+  /**
+   * Verbatim module specifier written by the source file.
+   */
+  readonly specifier: string;
+
+  /**
+   * Syntactic form of the import or re-export that produced the edge.
+   */
+  readonly syntaxKind: TImportSyntaxKind;
 };
 
 /**
@@ -88,6 +139,56 @@ export type TImportResolution = {
    * Resolved target destination or failure justification.
    */
   readonly target: TResolvedTarget;
+};
+
+/**
+ * Import arc toward an external library, retained without a local vertex.
+ */
+export type TLibraryNote = {
+  /**
+   * Alternative base paths of the path alias matched by the specifier.
+   */
+  readonly aliasAlternatives: readonly string[];
+
+  /**
+   * Path alias prefix matched by the specifier, or null when none was used.
+   */
+  readonly aliasUsed: null | string;
+
+  /**
+   * Zero-based import index within the source module record.
+   */
+  readonly importIndex: number;
+
+  /**
+   * Flag indicating whether the library import is type-only.
+   */
+  readonly isTypeOnly: boolean;
+
+  /**
+   * External package or built-in module name recorded for this import arc.
+   */
+  readonly packageName: string;
+
+  /**
+   * Source coordinates where the library import originated.
+   */
+  readonly position: TSourceLocation;
+
+  /**
+   * Relative POSIX path of the file that contains the import.
+   */
+  readonly sourcePath: string;
+
+  /**
+   * Verbatim module specifier written by the source file.
+   */
+  readonly specifier: string;
+
+  /**
+   * Syntactic form of the import that refers to the external library.
+   */
+  readonly syntaxKind: TImportSyntaxKind;
 };
 
 /**
@@ -126,4 +227,26 @@ export type TResolvedTarget =
        * Target discriminant for unresolvable import references.
        */
       readonly type: 'unresolved';
+    };
+
+/**
+ * Membership of a dependency-graph vertex in a Fractal Tree or outside every Tree.
+ */
+export type TVertexNature =
+  | {
+      /**
+       * Discriminant for a file that belongs to no Fractal Tree.
+       */
+      readonly kind: 'external-local-file';
+    }
+  | {
+      /**
+       * Inventory identifier of the file inside its Fractal Tree.
+       */
+      readonly inventoryId: number;
+
+      /**
+       * Discriminant for a file that belongs to a Fractal Tree.
+       */
+      readonly kind: 'tree-node';
     };

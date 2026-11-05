@@ -30,7 +30,6 @@ const conformingFiles = {
 const unimplementedParts = [
   'access-node-contract',
   'acyclicity',
-  'build-dependency-graph',
   'category-role',
   'containment-matrix',
   'derive-horizontal-hierarchies',

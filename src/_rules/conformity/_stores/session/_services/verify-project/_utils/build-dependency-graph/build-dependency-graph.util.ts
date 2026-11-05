@@ -4,26 +4,36 @@ import type { TProjectBasis } from '../../_verify-project@shared/_types/_aggrega
 import type { TTaxonomyModel } from '../../_verify-project@shared/_types/_compounds/classification.type.js';
 import type { TDependencyGraph } from '../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
-import { notImplementedOutcome } from '../../_verify-project@shared/_utils/not-implemented-outcome/index.js';
+import { assembleDependencyGraph } from './_utils/assemble-dependency-graph/index.js';
+import { collectGraphVertices } from './_utils/collect-graph-vertices/index.js';
+import { collectResolvedArcs } from './_utils/collect-resolved-arcs/index.js';
 
 export function buildDependencyGraph(
-  _basis: TProjectBasis,
+  basis: TProjectBasis,
   _taxonomy: TTaxonomyModel,
-  _modules: TModuleCollection
+  modules: TModuleCollection
 ): {
   readonly graph: TDependencyGraph;
   readonly outcomes: readonly TOutcome[];
 } {
+  const vertices = collectGraphVertices(
+    basis.inventory,
+    modules.records,
+    modules.resolutions
+  );
+  const arcs = collectResolvedArcs(
+    modules.records,
+    modules.resolutions,
+    vertices.paths,
+    vertices.pathToVertex
+  );
   return {
-    graph: {
-      columnTargets: new Int32Array(0),
-      edgeCount: 0,
-      edgeMetadata: [],
-      pathToVertex: new Map<string, number>(),
-      rowOffsets: new Int32Array([0]),
-      vertexCount: 0,
-      vertexToPath: [],
-    },
-    outcomes: [notImplementedOutcome('build-dependency-graph', '§4, §5, §7.4')],
+    graph: assembleDependencyGraph(
+      vertices.paths,
+      vertices.natures,
+      arcs.edges,
+      arcs.libraryNotes
+    ),
+    outcomes: [],
   };
 }
