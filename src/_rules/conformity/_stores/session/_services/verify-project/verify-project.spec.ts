@@ -33,7 +33,6 @@ const unimplementedParts = [
   'external-dependencies',
   'fractal-branch-unidirectionality',
   'fractal-branch-visibility',
-  'nomenclature',
   'path-alias-anchoring',
   'peer-separation',
   'private-category-visibility',

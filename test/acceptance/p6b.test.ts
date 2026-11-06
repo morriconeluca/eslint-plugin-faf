@@ -1294,7 +1294,12 @@ describe('acceptance: Mimetic Path Structures', () => {
         { [`${path}/index.ts`]: 'export {};\n' },
         mimetic(),
         'fragment-anatomy',
-        [missingMasterNode(`${path}/index.ts`, path)]
+        segment === '[todo-id]'
+          ? [
+              missingMasterNode(`${path}/index.ts`, path),
+              invalidNomenclature(`${path}/index.ts`, path),
+            ]
+          : [missingMasterNode(`${path}/index.ts`, path)]
       );
       return;
     }
@@ -1926,7 +1931,7 @@ describe('acceptance: naming of Root Nodes and Foreign Nodes without exception c
         localHorizontalHierarchies: [{ hierarchies: [], paths: [path] }],
       }),
       'nomenclature',
-      [invalidNomenclature(`${path}/_utils/widget/widget.util.ts`, path)]
+      [invalidNomenclature('fafconfig.ts', path)]
     );
   });
 });
