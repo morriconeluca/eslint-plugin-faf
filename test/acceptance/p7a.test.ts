@@ -819,13 +819,16 @@ describe('acceptance: p7a', () => {
         };
         const responsiblePart = getResponsiblePart();
 
+        const indexExport = "export { value } from './unit.component.js';\n";
+        const sourceTail = from === 'index' ? indexExport : value;
+        const destinationContent = to === 'index' ? indexExport : value;
+
         await runScenario(
           {
-            [`${directory}/index.ts`]:
-              "export { value } from './unit.component.js';\n",
+            [`${directory}/index.ts`]: indexExport,
             [`${directory}/unit.component.ts`]: value,
-            [destination]: value,
-            [source]: `${value}import '${specifier(source, destination)}';\n`,
+            [destination]: destinationContent,
+            [source]: `import '${specifier(source, destination)}';\n${sourceTail}`,
           },
           {
             faf: {
@@ -1388,20 +1391,23 @@ describe('acceptance: p7a', () => {
     ] as const)(
       'forbids flow from private details to direct nodes of the parent: %s to %s',
       async (source, destination) => {
+        const spec = specifier(source, destination);
+        const violations = [
+          privateCategoryUnidirectionalityOutcome(source, destination, spec),
+        ];
+        if (destination === `${table}/table.spec.ts`) {
+          violations.push(
+            subGraphNodeIsolationOutcome(source, destination, spec)
+          );
+        }
         await runScenario(
           {
             ...tableTree,
-            [source]: `import '${specifier(source, destination)}';\n${value}`,
+            [source]: `import '${spec}';\n${value}`,
           },
           { faf: { locals: [local] } },
           'private-category-visibility',
-          [
-            privateCategoryUnidirectionalityOutcome(
-              source,
-              destination,
-              specifier(source, destination)
-            ),
-          ]
+          violations
         );
       }
     );

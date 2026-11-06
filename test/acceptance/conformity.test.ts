@@ -41,7 +41,6 @@ const unimplementedParts = [
   'private-category-visibility',
   're-entry-prohibition',
   'root-node-discipline',
-  'sub-graph-node-isolation',
   'tree-frontier',
 ];
 
