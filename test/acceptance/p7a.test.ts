@@ -791,6 +791,14 @@ describe('acceptance: p7a', () => {
           }
         }
 
+        const rankRoles = new Set(['context', 'job', 'repository', 'service']);
+        if (rankRoles.has(from)) {
+          violations.push(fragmentNodeRankOutcome(source));
+        }
+        if (rankRoles.has(to)) {
+          violations.push(fragmentNodeRankOutcome(destination));
+        }
+
         const getResponsiblePart = (): string => {
           if (to === 'spec' || to === 'story') {
             return 'sub-graph-node-isolation';
@@ -2245,8 +2253,15 @@ describe('acceptance: p7a', () => {
       async (path) => {
         const isTooling = path.startsWith('src/_tooling');
         const isMimetic = path.includes('_pages');
+        const usersFragment: FileTree = isMimetic
+          ? {
+              [`${table}/_table@shared/_pages/users/index.ts`]:
+                "export { value } from './users.page.js';\n",
+              [`${table}/_table@shared/_pages/users/users.page.tsx`]: value,
+            }
+          : {};
         await runScenario(
-          { ...tableTree, [path]: value },
+          { ...tableTree, ...usersFragment, [path]: value },
           {
             faf: {
               locals: [

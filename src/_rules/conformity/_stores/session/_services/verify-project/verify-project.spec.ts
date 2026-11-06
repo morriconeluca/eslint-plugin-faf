@@ -37,7 +37,6 @@ const unimplementedParts = [
   'foreign-node-isolation',
   'fractal-branch-unidirectionality',
   'fractal-branch-visibility',
-  'fragment-anatomy',
   'fragment-encapsulation',
   'horizontal-hierarchies',
   'nomenclature',

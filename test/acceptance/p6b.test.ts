@@ -217,6 +217,18 @@ const missingMasterNode = (
     'FAF §6.1.1'
   );
 
+const fragmentAnatomyViolation = (
+  element: string,
+  filePath = element
+): TScenarioMessage =>
+  elementMessage(
+    filePath,
+    element,
+    'classification/fragment-node-anatomy',
+    'is not a Fragment Node, Access Node or Sub-Graph Node named after its Fragment',
+    'FAF §6.1.1'
+  );
+
 const incompatibleMimetic = (element: string): TScenarioMessage =>
   elementMessage(
     'fafconfig.ts',
@@ -664,6 +676,18 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
         );
         return;
       }
+      const expectedViolations = (): readonly TScenarioMessage[] => {
+        if (valid) {
+          return [];
+        }
+        if (kind === 'Fragment') {
+          return [
+            categoryRoleViolation(path, path),
+            fragmentAnatomyViolation(path, 'src/_utils/widget/widget.util.ts'),
+          ];
+        }
+        return [categoryRoleViolation(path, path)];
+      };
       await scenario(
         { ...fragment('src/_utils/widget'), [path]: 'body {}\n' },
         rootLayer({
@@ -673,7 +697,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
           ],
         }),
         'category-role',
-        valid ? [] : [categoryRoleViolation(path, path)]
+        expectedViolations()
       );
     }
   );
@@ -804,6 +828,31 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
   });
 });
 
+const buildSiblingTree = (
+  kind: string,
+  parent: string,
+  low: string,
+  high: string
+): FileTree => {
+  if (kind === 'Category Nodes') {
+    return {
+      [`${parent}/${high}`]: 'export type THigh = string;\n',
+      [`${parent}/${low}`]: 'export type TLow = string;\n',
+    };
+  }
+  const isFragmentHigh = kind === 'Fragments' || kind.includes('Path Fragment');
+  const isFragmentLow = kind === 'Fragments' || kind === 'Path Fragments';
+  const fragmentRole = parent === 'src/_apis' ? 'api' : 'util';
+  return {
+    ...(isFragmentHigh
+      ? fragment(`${parent}/${high}`, fragmentRole)
+      : { [`${parent}/${high}`]: {} }),
+    ...(isFragmentLow
+      ? fragment(`${parent}/${low}`, fragmentRole)
+      : { [`${parent}/${low}`]: {} }),
+  };
+};
+
 describe('acceptance: admissible Horizontal Hierarchies', () => {
   it('rejects a hierarchy mixing Logical Nodes and Logical Domains', async () => {
     await scenario(
@@ -885,12 +934,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
     ['Foreign Domain', 'src', '_foreign', '_high', false],
   ])('validates sibling set %s', async (kind, parent, low, high, valid) => {
     const isNode = kind === 'Category Nodes';
-    const tree: FileTree = isNode
-      ? {
-          [`${parent}/${high}`]: 'export type THigh = string;\n',
-          [`${parent}/${low}`]: 'export type TLow = string;\n',
-        }
-      : { [`${parent}/${high}`]: {}, [`${parent}/${low}`]: {} };
+    const tree = buildSiblingTree(kind, parent, low, high);
     await scenario(
       tree,
       rootLayer({
@@ -1274,6 +1318,10 @@ describe('acceptance: Mimetic Path Structures', () => {
         categoryRoleViolation(
           'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/patch-todo-status.util.ts',
           'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/patch-todo-status.util.ts'
+        ),
+        missingMasterNode(
+          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/index.ts',
+          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status'
         ),
       ]
     );
