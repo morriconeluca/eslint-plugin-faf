@@ -10,9 +10,8 @@ describe('verifyPrivateCategoryVisibility', () => {
         constraint: 'unverified/not-implemented',
         element: 'private-category-visibility',
         family: 'unverified',
-        message:
-          "Part 'private-category-visibility' is not implemented (§6.3.3).",
-        normativeReference: '§6.3.3',
+        message: "'private-category-visibility' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

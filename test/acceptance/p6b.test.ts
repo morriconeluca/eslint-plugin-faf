@@ -122,7 +122,7 @@ describe('acceptance: contextual nomenclature', () => {
                 'fafconfig.ts',
                 path,
                 'classification/unclassifiable-directory',
-                `Directory '${path}' has no unique Logical Domain classification.`
+                `'${path}' has no unique Logical Domain classification (FAF §6.9).`
               ),
             ]
       );
@@ -980,9 +980,9 @@ describe('acceptance: Public Surface designation and structural determination', 
         : [
             diagnostic(
               'fafconfig.ts',
-              'fafconfig.ts',
+              path,
               'configuration/public-root-node-not-enumerated',
-              `Public root node "${path}" is not an enumerated root node.`,
+              `'${path}' must be an enumerated root node of its tree in publicRootNodes (FAF §7.1).`,
               'configuration'
             ),
           ]
@@ -1090,9 +1090,9 @@ describe('acceptance: structural scenarios owned by adjacent norms', () => {
       [
         diagnostic(
           'fafconfig.ts',
-          'fafconfig.ts',
+          'faf.locals[0].roles[0].implicitRoleExtensions[0]',
           'configuration/invalid-implicit-extension',
-          'Implicit extension ".ts" cannot be a TypeScript or JavaScript code extension.',
+          "'faf.locals[0].roles[0].implicitRoleExtensions[0]' must start with a dot and contain only lowercase letters (FAF §6.3.1).",
           'configuration'
         ),
       ]
@@ -1109,7 +1109,7 @@ describe('acceptance: structural scenarios owned by adjacent norms', () => {
           'fafconfig.ts',
           'src/_types',
           'configuration/incompatible-mimetic-designation',
-          "Mimetic path 'src/_types' does not identify a Category of Fragments.",
+          "'src/_types' must identify a Category of Fragments (FAF §6.3.5).",
           'configuration'
         ),
       ]
@@ -1363,9 +1363,9 @@ describe('acceptance: structural scenarios owned by adjacent norms', () => {
           : [
               diagnostic(
                 'fafconfig.ts',
-                'fafconfig.ts',
+                'faf.locals[0].roles[1].implicitRoleExtensions[0]',
                 'configuration/implicit-extension-role-name-prefix',
-                `First segment "${extension.split('.', 2)[1] ?? ''}" of implicit extension "${extension}" cannot match a role name.`,
+                `'faf.locals[0].roles[1].implicitRoleExtensions[0]' cannot start with a segment matching a role name: First segment "${extension.split('.', 2)[1] ?? ''}" of implicit extension "${extension}" cannot match a role name (FAF §6.3.1).`,
                 'configuration'
               ),
             ]
@@ -1688,19 +1688,19 @@ describe('acceptance: structural scenarios owned by adjacent norms', () => {
           'src/_types/value/index.ts',
           'src/_types/value',
           'classification/unclassifiable-directory',
-          "Directory 'src/_types/value' has no unique Logical Domain classification."
+          "'src/_types/value' has no unique Logical Domain classification (FAF §6.9)."
         ),
         diagnostic(
           'src/_types/value/index.ts',
           'src/_types/value/index.ts',
           'classification/unclassifiable-file',
-          "File 'src/_types/value/index.ts' is neither a uniquely classified Logical Node nor a Foreign Node."
+          "'src/_types/value/index.ts' is neither a uniquely classified Logical Node nor a Foreign Node (FAF §6.9)."
         ),
         diagnostic(
           'src/_types/value/value.type.ts',
           'src/_types/value/value.type.ts',
           'classification/unclassifiable-file',
-          "File 'src/_types/value/value.type.ts' is neither a uniquely classified Logical Node nor a Foreign Node."
+          "'src/_types/value/value.type.ts' is neither a uniquely classified Logical Node nor a Foreign Node (FAF §6.9)."
         ),
       ]
     );

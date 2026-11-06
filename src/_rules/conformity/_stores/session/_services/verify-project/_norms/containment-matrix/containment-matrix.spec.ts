@@ -10,8 +10,8 @@ describe('verifyContainmentMatrix', () => {
         constraint: 'unverified/not-implemented',
         element: 'containment-matrix',
         family: 'unverified',
-        message: "Part 'containment-matrix' is not implemented (§6.8).",
-        normativeReference: '§6.8',
+        message: "'containment-matrix' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

@@ -12,6 +12,7 @@ import type {
   TLoadConfigResult,
 } from './load-config.type.js';
 
+import { createOutcome } from '../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { readPackageJson } from '../../../../_verify-project@shared/_adapters/read-package-json/index.js';
 import { classifyWorkerOutcome } from './_schemas/classify-worker-outcome/index.js';
 
@@ -22,34 +23,14 @@ export function loadConfig(input: TLoadConfigInput): TLoadConfigResult {
     throwIfNoEntry: false,
   });
 
-  if (stats === undefined) {
+  if (stats === undefined || !stats.isFile()) {
     return {
       ok: false,
       outcomes: [
-        {
-          constraint: 'configuration/missing-config-file',
+        createOutcome('configuration/missing-config-file', {
           element: resolvedConfigPath,
-          family: 'configuration',
-          message: `Configuration file not found at path: ${resolvedConfigPath}`,
-          normativeReference: 'CONFIG_1',
           propertyPath: 'faf',
-        },
-      ],
-    };
-  }
-
-  if (!stats.isFile()) {
-    return {
-      ok: false,
-      outcomes: [
-        {
-          constraint: 'configuration/missing-config-file',
-          element: resolvedConfigPath,
-          family: 'configuration',
-          message: `Configuration path is not a file: ${resolvedConfigPath}`,
-          normativeReference: 'CONFIG_1',
-          propertyPath: 'faf',
-        },
+        }),
       ],
     };
   }
@@ -142,14 +123,10 @@ export function loadConfig(input: TLoadConfigInput): TLoadConfigResult {
       return {
         ok: false,
         outcomes: [
-          {
-            constraint: 'unverified/config-loading-timeout',
+          createOutcome('unverified/config-loading-timeout', {
             element: resolvedConfigPath,
-            family: 'unverified',
-            message: `Loading fafconfig.ts timed out after ${timeoutBudget}ms`,
-            normativeReference: 'CONFIG_1',
             reason: `Worker execution exceeded timeout budget of ${timeoutBudget}ms`,
-          },
+          }),
         ],
       };
     }

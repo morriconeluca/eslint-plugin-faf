@@ -1,7 +1,7 @@
 import { ESLint } from 'eslint';
 import fs from 'node:fs';
 import path from 'node:path';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const fixtureRoot = path.resolve(
   import.meta.dirname,
@@ -32,6 +32,10 @@ const restricted = (ruleIds: readonly string[]): readonly string[] =>
   ruleIds.filter((ruleId) => ruleId.startsWith('no-restricted-'));
 
 describe('role purity', () => {
+  beforeAll(async () => {
+    await eslint.lintFiles(['src/main.ts']);
+  }, 120_000);
+
   afterAll(() => {
     fs.rmSync(fixtureRoot, { force: true, recursive: true });
   });

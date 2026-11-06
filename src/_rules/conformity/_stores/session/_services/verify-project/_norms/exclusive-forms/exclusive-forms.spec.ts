@@ -10,8 +10,8 @@ describe('verifyExclusiveForms', () => {
         constraint: 'unverified/not-implemented',
         element: 'exclusive-forms',
         family: 'unverified',
-        message: "Part 'exclusive-forms' is not implemented (§6.3–§6.6).",
-        normativeReference: '§6.3–§6.6',
+        message: "'exclusive-forms' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

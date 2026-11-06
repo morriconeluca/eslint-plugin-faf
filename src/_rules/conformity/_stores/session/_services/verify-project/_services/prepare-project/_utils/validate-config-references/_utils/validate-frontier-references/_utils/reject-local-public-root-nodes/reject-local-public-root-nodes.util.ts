@@ -2,10 +2,8 @@ import type { TFAFLocalConfig } from '../../../../../../../../../../../../../../
 import type { TConfigOutcome } from '../../../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type { TReferenceContext } from '../../../../_validate-config-references@shared/_types/reference-context.type.js';
 
-import {
-  CONFIG_10,
-  CONSTRAINT_PUBLIC_ROOT_NODES_IN_ROOT_LAYER_TREE,
-} from '../../../../_validate-config-references@shared/_constants/reference-constraints.constant.js';
+import { createOutcome } from '../../../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
+import { CONSTRAINT_PUBLIC_ROOT_NODES_IN_ROOT_LAYER_TREE } from '../../../../_validate-config-references@shared/_constants/reference-constraints.constant.js';
 import { rejectPublicRootNode } from '../../_validate-frontier-references@shared/_utils/reject-public-root-node/index.js';
 import { hasOnlyRootLayers } from './_utils/has-only-root-layers/index.js';
 
@@ -17,14 +15,12 @@ export function rejectLocalPublicRootNodes(
   const nodes = local.publicRootNodes ?? [];
   const basePath = `faf.locals[${localIndex}].publicRootNodes`;
   if (hasOnlyRootLayers(local)) {
-    return nodes.map((path, index) => ({
-      constraint: CONSTRAINT_PUBLIC_ROOT_NODES_IN_ROOT_LAYER_TREE,
-      element: path,
-      family: 'configuration' as const,
-      message: `Public root node "${path}" cannot be declared for a local configuration that has only Root Layers.`,
-      normativeReference: CONFIG_10,
-      propertyPath: `${basePath}[${index}]`,
-    }));
+    return nodes.map((path, index) =>
+      createOutcome(CONSTRAINT_PUBLIC_ROOT_NODES_IN_ROOT_LAYER_TREE, {
+        element: path,
+        propertyPath: `${basePath}[${index}]`,
+      })
+    );
   }
 
   return nodes.flatMap((path, index) =>

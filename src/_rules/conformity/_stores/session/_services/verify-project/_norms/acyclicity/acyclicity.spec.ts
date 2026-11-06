@@ -10,8 +10,8 @@ describe('verifyAcyclicity', () => {
         constraint: 'unverified/not-implemented',
         element: 'acyclicity',
         family: 'unverified',
-        message: "Part 'acyclicity' is not implemented (§5, §7.2).",
-        normativeReference: '§5, §7.2',
+        message: "'acyclicity' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

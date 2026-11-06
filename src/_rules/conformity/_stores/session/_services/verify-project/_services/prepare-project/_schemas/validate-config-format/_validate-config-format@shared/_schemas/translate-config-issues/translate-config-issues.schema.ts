@@ -10,7 +10,6 @@ import { formatIssuePath } from './_utils/format-issue-path/index.js';
 import { hasExplicitProperty } from './_utils/has-explicit-property/index.js';
 import { joinPropertyPath } from './_utils/join-property-path/index.js';
 import { toFixedOutcome } from './_utils/to-fixed-outcome/index.js';
-import { unknownKeyMessage } from './_utils/unknown-key-message/index.js';
 
 export function translateConfigIssues(
   issues: readonly ZodError['issues'][number][],
@@ -33,8 +32,6 @@ export function translateConfigIssues(
           {
             constraint: diagnostic.constraint,
             kind: 'fixed',
-            message: unknownKeyMessage(diagnostic.messageStyle, key),
-            normativeReference: diagnostic.normativeReference,
           },
           joinPropertyPath(propertyPath, key)
         )

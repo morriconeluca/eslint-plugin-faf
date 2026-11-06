@@ -2,7 +2,6 @@ import type { TFAFRootFragment } from '../../../../../../../../../../../../../..
 import type { TConfigOutcome } from '../../../../../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type { TReferenceContext } from '../../../../../../_validate-config-references@shared/_types/reference-context.type.js';
 
-import { CONFIG_4 } from '../../../../../../_validate-config-references@shared/_constants/reference-constraints.constant.js';
 import { rejectOriginDirectory } from '../../_validate-local-roots@shared/_utils/reject-origin-directory/index.js';
 import { rejectDependencyEdges } from './_utils/reject-dependency-edges/index.js';
 import { rejectNestedRootFragment } from './_utils/reject-nested-root-fragment/index.js';
@@ -21,7 +20,6 @@ export function validateRootFragmentTree(
       ? rejectOriginDirectory({
           context,
           label: 'Declared root fragment directory',
-          normativeReference: CONFIG_4,
           path: fragment.path,
           propertyPath: `${pathPrefix}.path`,
         })

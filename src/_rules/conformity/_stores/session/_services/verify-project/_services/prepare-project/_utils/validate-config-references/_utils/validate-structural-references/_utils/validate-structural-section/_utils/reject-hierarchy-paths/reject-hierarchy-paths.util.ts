@@ -5,7 +5,6 @@ import type {
   TScopeBinding,
 } from '../../../../../../_validate-config-references@shared/_types/reference-context.type.js';
 
-import { CONFIG_7 } from '../../../../../../_validate-config-references@shared/_constants/reference-constraints.constant.js';
 import { rejectDirectoryInScope } from '../../../../../../_validate-config-references@shared/_utils/reject-directory-in-scope/index.js';
 
 export function rejectHierarchyPaths(
@@ -19,7 +18,6 @@ export function rejectHierarchyPaths(
       rejectDirectoryInScope({
         context,
         label: 'Hierarchy directory',
-        normativeReference: CONFIG_7,
         path,
         propertyPath: `${basePath}[${entryIndex}].paths[${pathIndex}]`,
         scope,

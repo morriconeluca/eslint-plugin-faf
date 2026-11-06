@@ -10,8 +10,8 @@ describe('verifyPeerSeparation', () => {
         constraint: 'unverified/not-implemented',
         element: 'peer-separation',
         family: 'unverified',
-        message: "Part 'peer-separation' is not implemented (§5).",
-        normativeReference: '§5',
+        message: "'peer-separation' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

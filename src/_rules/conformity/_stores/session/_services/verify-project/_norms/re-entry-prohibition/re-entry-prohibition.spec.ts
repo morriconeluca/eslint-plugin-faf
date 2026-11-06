@@ -10,8 +10,8 @@ describe('verifyReEntryProhibition', () => {
         constraint: 'unverified/not-implemented',
         element: 're-entry-prohibition',
         family: 'unverified',
-        message: "Part 're-entry-prohibition' is not implemented (§7.3).",
-        normativeReference: '§7.3',
+        message: "'re-entry-prohibition' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

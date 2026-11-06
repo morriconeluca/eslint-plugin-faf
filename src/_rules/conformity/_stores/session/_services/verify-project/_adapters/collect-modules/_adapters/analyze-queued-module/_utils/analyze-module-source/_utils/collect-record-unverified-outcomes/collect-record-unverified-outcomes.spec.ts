@@ -77,8 +77,9 @@ describe('collectRecordUnverifiedOutcomes', () => {
         constraint: 'unverified/unresolved-import',
         element: 'src/app.ts',
         family: 'unverified',
-        message: "Import in 'src/app.ts' could not be resolved: missing",
-        normativeReference: '§5',
+        message:
+          "'src/app.ts' contains an import that could not be resolved: missing",
+        normativeReference: 'D-08',
         position: { column: 1, line: 2 },
         reason: 'missing',
       },
@@ -86,8 +87,9 @@ describe('collectRecordUnverifiedOutcomes', () => {
         constraint: 'unverified/unsupported-syntax',
         element: 'src/app.ts',
         family: 'unverified',
-        message: "Unsupported syntax in 'src/app.ts': export = is unsupported",
-        normativeReference: '§4',
+        message:
+          "'src/app.ts' contains unsupported syntax: export = is unsupported",
+        normativeReference: 'D-07',
         position: { column: 1, line: 4 },
         reason: 'export = is unsupported',
       },
@@ -121,8 +123,8 @@ describe('collectRecordUnverifiedOutcomes', () => {
         element: 'src/app.ts',
         family: 'unverified',
         message:
-          "Non-literal dynamic import in 'src/app.ts' cannot be resolved statically.",
-        normativeReference: '§4',
+          "'src/app.ts' contains a non-literal dynamic import that cannot be resolved statically",
+        normativeReference: 'D-07',
         position: { column: 4, line: 2 },
         reason: 'Non-literal dynamic import cannot be resolved statically',
       },
@@ -140,8 +142,8 @@ describe('collectRecordUnverifiedOutcomes', () => {
         element: 'src/app.ts',
         family: 'unverified',
         message:
-          "Import in 'src/app.ts' could not be resolved: Cannot resolve module missing",
-        normativeReference: '§5',
+          "'src/app.ts' contains an import that could not be resolved: Cannot resolve module missing",
+        normativeReference: 'D-08',
         reason: 'Cannot resolve module missing',
       },
     ]);

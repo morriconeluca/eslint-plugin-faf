@@ -1,6 +1,8 @@
 import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type { TOriginEntry } from './validate-origins.type.js';
 
+import { createOutcome } from '../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
+
 export const validateOrigins = (
   origins: readonly TOriginEntry[]
 ): readonly TConfigOutcome[] => {
@@ -13,18 +15,17 @@ export const validateOrigins = (
       seenByPath.set(entry.path, entry);
     } else {
       const isDuplicate = previous.kind === entry.kind;
-      outcomes.push({
-        constraint: isDuplicate
-          ? 'configuration/duplicate-origin'
-          : 'configuration/conflicting-origin-kind',
-        element: entry.path,
-        family: 'configuration',
-        message: isDuplicate
-          ? `Origin '${entry.path}' is declared more than once.`
-          : `Origin '${entry.path}' cannot be designated as both a Root Layer and a Root Fragment.`,
-        normativeReference: 'CONFIG_5',
-        propertyPath: entry.propertyPath,
-      });
+      outcomes.push(
+        createOutcome(
+          isDuplicate
+            ? 'configuration/duplicate-origin'
+            : 'configuration/conflicting-origin-kind',
+          {
+            element: entry.path,
+            propertyPath: entry.propertyPath,
+          }
+        )
+      );
     }
   }
 
@@ -36,14 +37,13 @@ export const validateOrigins = (
         inner.path !== outer.path && (isRoot || inner.path.startsWith(prefix))
     );
     for (const inner of containedOrigins) {
-      outcomes.push({
-        constraint: 'configuration/overlapping-origins',
-        element: inner.path,
-        family: 'configuration',
-        message: `Origin '${inner.path}' is contained within origin '${outer.path}'.`,
-        normativeReference: 'CONFIG_5',
-        propertyPath: inner.propertyPath,
-      });
+      outcomes.push(
+        createOutcome('configuration/overlapping-origins', {
+          detail: `Origin '${inner.path}' is contained within origin '${outer.path}'`,
+          element: inner.path,
+          propertyPath: inner.propertyPath,
+        })
+      );
     }
   }
 

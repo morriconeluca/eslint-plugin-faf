@@ -201,16 +201,24 @@ describe('classification helpers', () => {
     };
     expect(
       compareConfigOutcomes(
-        { ...base, constraint: 'configuration/b', propertyPath: 'p' },
-        { ...base, constraint: 'configuration/a', propertyPath: 'p' }
+        { ...base, constraint: 'configuration/empty-list', propertyPath: 'p' },
+        {
+          ...base,
+          constraint: 'configuration/duplicate-element',
+          propertyPath: 'p',
+        }
       )
     ).toBeGreaterThan(0);
     expect(
       compareConfigOutcomes(
-        { ...base, constraint: 'configuration/a', propertyPath: 'p' },
         {
           ...base,
-          constraint: 'configuration/a',
+          constraint: 'configuration/duplicate-element',
+          propertyPath: 'p',
+        },
+        {
+          ...base,
+          constraint: 'configuration/duplicate-element',
           element: 'src/b',
           propertyPath: 'p',
         }
@@ -218,8 +226,16 @@ describe('classification helpers', () => {
     ).toBeLessThan(0);
     expect(
       compareConfigOutcomes(
-        { ...base, constraint: 'configuration/a', propertyPath: 'z' },
-        { ...base, constraint: 'configuration/a', propertyPath: 'a' }
+        {
+          ...base,
+          constraint: 'configuration/duplicate-element',
+          propertyPath: 'z',
+        },
+        {
+          ...base,
+          constraint: 'configuration/duplicate-element',
+          propertyPath: 'a',
+        }
       )
     ).toBeGreaterThan(0);
   });
@@ -957,8 +973,9 @@ describe('classifyTaxonomy', () => {
       constraint: 'configuration/contradictory-root-foreign',
       element: 'src/main.ts',
       family: 'configuration',
-      message: "Root Node 'src/main.ts' is also designated as a Foreign Node.",
-      normativeReference: '§6.2',
+      message:
+        "'src/main.ts' cannot be declared as both a Root Node and a Foreign Node",
+      normativeReference: 'FAF §6.7',
       propertyPath: 'trees[0].rootFragments[0].rootNodes',
     });
     expect(result.outcomes).toContainEqual({
@@ -966,8 +983,8 @@ describe('classifyTaxonomy', () => {
       element: 'src/extra.ts',
       family: 'configuration',
       message:
-        "Direct file 'src/extra.ts' of a Root Fragment is neither enumerated nor designated Foreign.",
-      normativeReference: '§6.2',
+        "'src/extra.ts' must be either enumerated as a Root Node or designated as a Foreign Node",
+      normativeReference: 'FAF §6.2.2',
       propertyPath: 'trees[0].rootFragments[0]',
     });
   });
@@ -1043,8 +1060,8 @@ describe('classifyTaxonomy', () => {
         element: 'src/_components',
         family: 'configuration',
         message:
-          "externalDependencies.from 'src/_components' must identify a Logical Node that is neither an Access Node nor a Foreign Node.",
-        normativeReference: 'CONFIG_10',
+          "'src/_components' must be an authorized logical node in externalDependencies",
+        normativeReference: 'FAF §7.3',
         propertyPath: 'trees[0].externalDependencyPairs[2].from',
       },
       {
@@ -1052,8 +1069,8 @@ describe('classifyTaxonomy', () => {
         element: 'src/_components/button/README.md',
         family: 'configuration',
         message:
-          "externalDependencies.from 'src/_components/button/README.md' must identify a Logical Node that is neither an Access Node nor a Foreign Node.",
-        normativeReference: 'CONFIG_10',
+          "'src/_components/button/README.md' must be an authorized logical node in externalDependencies",
+        normativeReference: 'FAF §7.3',
         propertyPath: 'trees[0].externalDependencyPairs[1].from',
       },
       {
@@ -1061,8 +1078,8 @@ describe('classifyTaxonomy', () => {
         element: 'src/_components/button/index.ts',
         family: 'configuration',
         message:
-          "externalDependencies.from 'src/_components/button/index.ts' must identify a Logical Node that is neither an Access Node nor a Foreign Node.",
-        normativeReference: 'CONFIG_10',
+          "'src/_components/button/index.ts' must be an authorized logical node in externalDependencies",
+        normativeReference: 'FAF §7.3',
         propertyPath: 'trees[0].externalDependencyPairs[0].from',
       },
     ]);
@@ -1105,8 +1122,8 @@ describe('classifyTaxonomy', () => {
         element: 'src/_components/button/index.ts',
         family: 'configuration',
         message:
-          "publicRootNodes entry 'src/_components/button/index.ts' does not identify a Root Node.",
-        normativeReference: 'CONFIG_10',
+          "'src/_components/button/index.ts' must identify an enumerated Root Node in publicRootNodes",
+        normativeReference: 'FAF §7.1',
         propertyPath: 'trees[0].publicRootNodes[1]',
       },
       {
@@ -1114,8 +1131,8 @@ describe('classifyTaxonomy', () => {
         element: 'src/_types/user.type.ts',
         family: 'configuration',
         message:
-          "publicRootNodes entry 'src/_types/user.type.ts' does not identify a Root Node.",
-        normativeReference: 'CONFIG_10',
+          "'src/_types/user.type.ts' must identify an enumerated Root Node in publicRootNodes",
+        normativeReference: 'FAF §7.1',
         propertyPath: 'trees[0].publicRootNodes[2]',
       },
     ]);
@@ -1488,7 +1505,7 @@ describe('classifyTaxonomy', () => {
     expect(
       conflicted.outcomes.filter(
         (outcome) =>
-          outcome.constraint === 'configuration/duplicate-mimetic-designation'
+          outcome.constraint === 'configuration/duplicate-mimetic-path'
       ).length
     ).toBeGreaterThan(0);
     expect(
@@ -1561,8 +1578,7 @@ describe('classifyTaxonomy', () => {
     expect(
       nestedForeign.outcomes.filter(
         (outcome) =>
-          outcome.constraint ===
-            'configuration/duplicate-mimetic-designation' &&
+          outcome.constraint === 'configuration/duplicate-mimetic-path' &&
           outcome.element === 'src/_pages'
       )
     ).toHaveLength(2);
@@ -1623,9 +1639,8 @@ describe('observable classification contract', () => {
         constraint: 'configuration/undeclared-sub-root-fragment',
         element: 'src/blog',
         family: 'configuration',
-        message:
-          "Frontier directory 'src/blog' is not declared in subRootFragments.",
-        normativeReference: '§6.2',
+        message: "'src/blog' must be declared in subRootFragments",
+        normativeReference: 'FAF §6.2.2',
         propertyPath: 'trees[0].rootFragments[0].subRootFragments',
       },
     ]);
@@ -1652,9 +1667,8 @@ describe('observable classification contract', () => {
         constraint: 'configuration/undeclared-sub-root-fragment',
         element: 'src/blog',
         family: 'configuration',
-        message:
-          "Frontier directory 'src/blog' is not declared in subRootFragments.",
-        normativeReference: '§6.2',
+        message: "'src/blog' must be declared in subRootFragments",
+        normativeReference: 'FAF §6.2.2',
         propertyPath: 'trees[0].rootFragments.subRootFragments',
       },
       {
@@ -1662,8 +1676,8 @@ describe('observable classification contract', () => {
         element: 'src/main.ts',
         family: 'configuration',
         message:
-          "Direct file 'src/main.ts' of a Root Fragment is neither enumerated nor designated Foreign.",
-        normativeReference: '§6.2',
+          "'src/main.ts' must be either enumerated as a Root Node or designated as a Foreign Node",
+        normativeReference: 'FAF §6.2.2',
         propertyPath: 'trees[0].rootFragments',
       },
     ]);

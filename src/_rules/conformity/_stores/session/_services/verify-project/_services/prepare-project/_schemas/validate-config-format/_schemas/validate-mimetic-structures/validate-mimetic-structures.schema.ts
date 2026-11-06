@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
+import type {
+  TConfigConstraint,
+  TConfigOutcome,
+} from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
 import { collectStringDuplicates } from '../../_validate-config-format@shared/_schemas/collect-string-duplicates/index.js';
 import { formFields } from '../../_validate-config-format@shared/_schemas/form-fields/index.js';
@@ -16,11 +19,7 @@ export const validateMimeticStructures = (() => {
     if (!isKebabCase(value)) {
       context.addIssue({
         code: 'custom',
-        message: formFields.fixed(
-          'configuration/invalid-action-name',
-          'CONFIG_8',
-          `Action "${value}" must be in kebab-case.`
-        ),
+        message: formFields.fixed('configuration/invalid-action-name'),
       });
     }
   });
@@ -55,17 +54,13 @@ export const validateMimeticStructures = (() => {
     items: unknown,
     listPath: string,
     seen: Set<string>,
-    message: (value: string) => string,
-    normativeReference: string,
-    constraint: `configuration/${string}`
+    constraint: TConfigConstraint
   ): readonly TConfigOutcome[] =>
     Array.isArray(items)
       ? collectStringDuplicates(
           items,
           seen,
           (index) => `${listPath}[${index}]`,
-          message,
-          normativeReference,
           constraint
         )
       : [];
@@ -102,25 +97,18 @@ export const validateMimeticStructures = (() => {
           item['paths'],
           `${itemPath}.paths`,
           new Set<string>(),
-          (value) => `Duplicate path "${value}".`,
-          'CONFIG_2',
           'configuration/duplicate-element'
         ),
         ...listDuplicates(
           item['paths'],
           `${itemPath}.paths`,
           seenPaths,
-          (value) =>
-            `Path "${value}" is declared in multiple mimetic path structures.`,
-          'CONFIG_8',
           'configuration/duplicate-mimetic-path'
         ),
         ...listDuplicates(
           item['actions'],
           `${itemPath}.actions`,
           new Set<string>(),
-          (value) => `Duplicate action "${value}".`,
-          'CONFIG_8',
           'configuration/duplicate-element'
         ),
         ...actionOutcomes(item['actions'], `${itemPath}.actions`)

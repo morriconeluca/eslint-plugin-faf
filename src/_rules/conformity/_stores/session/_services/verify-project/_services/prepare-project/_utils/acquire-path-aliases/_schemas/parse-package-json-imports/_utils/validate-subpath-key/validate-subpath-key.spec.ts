@@ -61,7 +61,7 @@ describe('validateSubpathKey', () => {
         'configuration'
       );
       expect('outcome' in result && result.outcome.normativeReference).toBe(
-        'CONFIG_9'
+        'FAF §7.4'
       );
       expect('outcome' in result && result.outcome.propertyPath).toBe(
         `imports.${key}`

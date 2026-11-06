@@ -10,9 +10,8 @@ describe('verifyFractalBranchVisibility', () => {
         constraint: 'unverified/not-implemented',
         element: 'fractal-branch-visibility',
         family: 'unverified',
-        message:
-          "Part 'fractal-branch-visibility' is not implemented (§6.6.2).",
-        normativeReference: '§6.6.2',
+        message: "'fractal-branch-visibility' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

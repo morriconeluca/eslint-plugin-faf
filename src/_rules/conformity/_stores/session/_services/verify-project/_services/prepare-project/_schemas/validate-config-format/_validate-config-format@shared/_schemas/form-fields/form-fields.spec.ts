@@ -6,7 +6,7 @@ import { formFields } from './form-fields.schema.js';
 describe('formFields', () => {
   it('rejects null, explicit undefined, and accepts a missing key', () => {
     const object = z.strictObject({
-      roles: formFields.optionalProperty('roles'),
+      roles: formFields.optionalProperty(),
     });
     expect(object.safeParse({}).success).toBe(true);
     expect(object.safeParse({ roles: null }).success).toBe(false);
@@ -20,7 +20,7 @@ describe('formFields', () => {
   });
 
   it('distinguishes a missing required string from null', () => {
-    const name = formFields.requiredText('name', 'CONFIG_2', 'CONFIG_3');
+    const name = formFields.requiredText();
     expect(name.safeParse('util').success).toBe(true);
     expect(name.safeParse(undefined).success).toBe(false);
     expect(name.safeParse(null).success).toBe(false);
@@ -28,12 +28,7 @@ describe('formFields', () => {
   });
 
   it('rejects null, a non-string, and an empty string', () => {
-    const text = formFields.textValue(
-      'Path element cannot be null.',
-      'Path element must be a string.',
-      'Path element cannot be empty.',
-      'CONFIG_2'
-    );
+    const text = formFields.textValue();
     expect(text.safeParse('src').success).toBe(true);
     expect(text.safeParse('').success).toBe(false);
     expect(text.safeParse(null).success).toBe(false);
@@ -45,9 +40,13 @@ describe('formFields', () => {
       formFields.encode({
         constraint: 'configuration/unknown-property',
         kind: 'keys',
-        messageStyle: 'plain',
-        normativeReference: 'CONFIG_2',
       })
     ).toContain('"kind":"keys"');
+  });
+
+  it('handles presenceIssue for null, undefined, and other inputs', () => {
+    expect(formFields.presenceIssue(null)).toContain('null-forbidden');
+    expect(formFields.presenceIssue(undefined)).toContain('explicit-undefined');
+    expect(formFields.presenceIssue(123)).toContain('invalid-type');
   });
 });

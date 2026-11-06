@@ -50,17 +50,20 @@ ESLint plugins often expose numerous rules with configurable severity levels (`w
 
 1. **Single ESLint Rule**: The plugin will expose exactly one ESLint rule, `faf/conformity`, enabled as `error` in `configs.recommended`, with zero configuration options.
 2. **Uniform Severity**: All diagnostic outcomes are strictly blocking (`error`, severity 2). No warnings (`warn`) or suggestions exist.
-3. **Outcome Families**: Diagnostic outcomes are grouped into three conceptual families:
-   - **Configuration Errors** (`configuration`): Invalid structure, type mismatches, or malformed declarations in `fafconfig.ts`.
-   - **Demonstrated Violations** (`classification`, `symbol`, `dependency`, `acyclicity`): Concrete, proven infringements of FAF structural, naming, visibility, or graph laws.
-   - **Unverified Checks** (`unverified`): Analysis that cannot be decisively completed due to missing data, unresolvable paths, or unexercised ambiguous declarations.
-4. **Structural Message Identifiers**: At the ESLint rule level, `meta.messages` will define six message identifiers corresponding to the `TOutcomeFamily` discriminated union:
-   - `configuration`: Settings syntax, type, and format violations.
-   - `classification`: File/directory classification failures, containment matrix violations, and nomenclature errors.
-   - `symbol`: Root-scope symbol count violations, non-exempt multi-symbol files, and unauthorized re-exports.
-   - `dependency`: Unauthorized imports across boundary planes (peer separation, fragment encapsulation, private category, fractal branch, tree frontier).
-   - `acyclicity`: Circular dependencies detected in the dependency graph, transitive branch return loops, or inter-Tree cycles.
-   - `unverified`: Incomplete verification due to unresolved imports, non-literal dynamic imports, unreadable files, or filesystem symlinks.
+3. **Outcome Families**: Diagnostic outcomes are grouped into six conceptual families that coincide with the ESLint rule's message identifiers:
+   - **Configuration Errors** (`configuration`): format and declarations of `fafconfig.ts`, configuration loading.
+   - **Classification Violations** (`classification`): structure, containment, forms, anatomy, nomenclature, Horizontal Hierarchies as statements on sibling sets.
+   - **Symbol Violations** (`symbol`): root-scope symbols, exports, and re-exports.
+   - **Dependency Prohibitions** (`dependency`): prohibitions on edges or paths of the Dependency Graph, including transitive return from Fractal Branch, external re-entry, and induced inter-Tree dependencies.
+   - **Acyclicity Violations** (`acyclicity`): cycle detection only (Logical Node DAG, inter-Tree DAG).
+   - **Unverified Checks** (`unverified`): verification checks that the plugin cannot complete.
+4. **Structural Message Identifiers**: At the ESLint rule level, `meta.messages` defines six message identifiers corresponding to the `TOutcomeFamily` discriminated union:
+   - `configuration`: `{{constraint}}: {{message}} ({{reference}}).`
+   - `classification`: `{{constraint}}: {{message}} ({{reference}}).`
+   - `symbol`: `{{constraint}}: {{message}} ({{reference}}).`
+   - `dependency`: `{{constraint}}: {{message}} ({{reference}}).`
+   - `acyclicity`: `{{constraint}}: {{message}} ({{reference}}).`
+   - `unverified`: `{{constraint}}: {{message}} ({{reference}}).`
 
 ### Rationale
 
@@ -96,13 +99,12 @@ Key instances producing `unverified` outcomes:
   - **Unreadable Origin Directories**: Tree origins that cannot be read due to filesystem I/O errors emit `constraint: 'unverified/unreadable-origin'`.
   - **Unreadable Directory Entries**: Entries or subdirectories within an origin that cannot be inspected emit `constraint: 'unverified/unreadable-entry'`.
   - **Configuration Loading Timeout**: Evaluation of `fafconfig.ts` in the worker thread exceeding the execution budget emits `constraint: 'unverified/config-loading-timeout'`.
+  - **Unresolved Imports**: Specifiers that cannot be resolved to a known codebase file, workspace package, or external package via `oxc-resolver` emit `constraint: 'unverified/unresolved-import'`.
+  - **Non-Literal Dynamic Imports**: `import(expression)` calls where the module specifier cannot be statically determined as a string literal emit `constraint: 'unverified/non-literal-dynamic-import'`.
+  - **Unreadable External Files**: Local external files reached during graph traversal that cannot be accessed or parsed emit `constraint: 'unverified/unreadable-external-file'`.
+  - **Unsupported Syntax**: Syntactic constructs within recognized files that cannot be parsed by available extractors emit `constraint: 'unverified/unsupported-syntax'`.
+  - **Unimplemented Parts**: Architectural norms or analysis stages not yet realized in the verification pipeline emit `constraint: 'unverified/not-implemented'`.
 - **Planned for Future Analysis Stages**:
-  - **Unresolved Imports**: Specifiers that cannot be resolved to a known codebase file, workspace package, or external package via `oxc-resolver` will emit `constraint: 'unverified/unresolved-import'`.
-  - **Non-Literal Dynamic Imports**: `import(expression)` calls where the module specifier cannot be statically determined as a string literal will emit `constraint: 'unverified/non-literal-dynamic-import'`.
-  - **Unreadable External Files**: Local external files reached during graph traversal that cannot be accessed or parsed will emit `constraint: 'unverified/unreadable-external-file'`.
-  - **Missing or Ambiguous Data**: Missing required declaration context or unclassifiable references will emit `constraint: 'unverified/missing-data'`.
-  - **Unsupported File Types**: Imported files whose extension or format lacks an available parser or extractor will emit `constraint: 'unverified/unsupported-file-type'`.
-  - **Unsupported Syntax**: Syntactic constructs within recognized files that cannot be parsed by available extractors will emit `constraint: 'unverified/unsupported-syntax'`.
   - **Unexercised Cyclic Tree Authorizations**: Reciprocal authorizations declared between Trees without physical import cycles will emit `constraint: 'unverified/cyclic-tree-authorization'`.
   - **Unexercised Cyclic Root Authorizations**: Reciprocal authorizations declared between Root Fragments without physical import cycles will emit `constraint: 'unverified/cyclic-root-authorization'`.
 
@@ -136,7 +138,7 @@ A check that cannot be completed is not proof of conformity. Silently ignoring u
    - For reciprocal authorizations between distinct Root Fragments (`rootFragments[].dependencyEdges`), the plugin will emit `constraint: 'unverified/cyclic-root-authorization'`.
 3. **Strict Prohibition on Real Cycles**: If actual source imports exercise both directions and form a physical cycle, the plugin will immediately emit a demonstrated acyclicity violation with the complete cycle chain:
    - For physical import cycles between separate Trees, the plugin will emit `constraint: 'acyclicity/inter-tree-cycle'`.
-   - For physical import cycles between distinct Root Fragments, the plugin will emit `constraint: 'acyclicity/root-dependency-cycle'`.
+   - For physical import cycles within a module dependency graph, including between Root Nodes of distinct Root Fragments, the plugin will emit `constraint: 'acyclicity/dependency-cycle'` without a separate code.
 
 ### Rationale
 
@@ -147,7 +149,7 @@ FAF §5 and §7.2 mandate that the Dependency Graph must be a Directed Acyclic G
 - Reciprocal configuration authorizations between Trees without reciprocal imports will produce `family: 'unverified'` with `constraint: 'unverified/cyclic-tree-authorization'`.
 - Reciprocal configuration authorizations between Root Fragments without reciprocal imports will produce `family: 'unverified'` with `constraint: 'unverified/cyclic-root-authorization'`.
 - Code is blocked from passing as conformant until the reciprocal authorization is clarified or removed.
-- If reciprocal imports are introduced in code, an `acyclicity` violation is emitted with the exact cycle witness chain (`acyclicity/inter-tree-cycle` or `acyclicity/root-dependency-cycle`).
+- If reciprocal imports are introduced in code, an `acyclicity` violation is emitted with the exact cycle witness chain (`acyclicity/inter-tree-cycle` or `acyclicity/dependency-cycle`).
 
 ### Normative References
 
@@ -199,15 +201,13 @@ Cross-platform filesystem inconsistencies (case insensitivity on macOS/Windows, 
 
 ### Observable Consequences
 
-- A file, directory, or Fragment name on the filesystem that deviates from the kebab-case grammar will emit `classification/invalid-nomenclature`.
-- A declared identifier in `fafconfig.ts` (such as a role name) that violates naming syntax will emit `configuration/invalid-naming-syntax`.
+- A file, directory, or Fragment name on the filesystem that deviates from the kebab-case grammar will emit `classification/nomenclature`.
 - Malformed paths in `fafconfig.ts` will emit `configuration/invalid-literal-path`.
 - Non-compliant foreign patterns will emit `configuration/invalid-foreign-pattern` with the specific rejection reason (`empty-pattern`, `negation`, `brace-expansion`, `regular-expression`, `absolute-pattern`, `empty-segment`, `dot-segment`, `invalid-globstar`).
 
 ### Normative References
 
-- `FAF.md`: §4, §6.1, §6.3, §6.6, §6.7.
-- Configuration Format: CONFIG_6, CONFIG_10.
+- `FAF.md`: §4, §6.1, §6.3, §6.6, §6.7, §7.4.
 
 ---
 
@@ -225,7 +225,7 @@ Symbolic links can map files or directories from one location to another. If fol
    - The verification process continues without halting, and the inventory collector emits a blocking `unverified` diagnostic outcome:
      - `constraint`: `'unverified/symbolic-link'`
      - `family`: `'unverified'`
-     - `normativeReference`: `'§6'`
+     - `normativeReference`: `'D-06'`
      - `element`: The relative path of the symbolic link inside the tree.
      - `reason`: The resolved physical destination path (`realPath`).
 3. **Tree Origin Validation and Filesystem Errors**:
@@ -251,7 +251,6 @@ FAF architectural laws rely on strict tree containment and hierarchical ancestry
 ### Normative References
 
 - `FAF.md`: §6, §6.9, §7.1.
-- Configuration Format: CONFIG_5.
 
 ---
 
@@ -279,8 +278,7 @@ Real-world TypeScript projects frequently include assets, CSS, dynamic imports, 
 3. **Binary Assets (Images, Fonts, Media, Documents)**:
    - Treated as leaf Asset nodes with **zero outgoing edges** (terminal nodes).
    - Can receive incoming edges (e.g., imported by a TS component or CSS file).
-4. **Unsupported Syntax and File Types**:
-   - If an imported file has an extension or file type for which no extractor is available, the plugin will emit `constraint: 'unverified/unsupported-file-type'`.
+4. **Unsupported Syntax**:
    - If a file contains syntax constructs that cannot be parsed by available extractors, the plugin will emit `constraint: 'unverified/unsupported-syntax'`.
    - The absence of an extractor is never treated as a pass.
 
@@ -294,7 +292,6 @@ Architectural analysis must be predictable and statically verifiable. Relying on
 - CSS files will track stylesheet dependencies.
 - Binary assets will be recognized as leaf nodes without outgoing edges.
 - Non-literal dynamic imports will emit `unverified/non-literal-dynamic-import`.
-- Unsupported file types will emit `unverified/unsupported-file-type`.
 - Unsupported syntax will emit `unverified/unsupported-syntax`.
 
 ### Normative References
@@ -382,7 +379,7 @@ Spawning an ephemeral worker thread isolates the linter from configuration side 
 
 ### Normative References
 
-- Configuration Format: CONFIG_1.
+- `FAF.md`: §1.2, §5.
 
 ---
 
@@ -481,58 +478,6 @@ Architectural corrections require intentional engineering judgment:
 
 ---
 
-## Vocabulary of Diagnostic Constraints
-
-### Context
-
-Diagnostic outcomes in `eslint-plugin-faf` are structured objects bearing a specific `constraint` identifier. Each constraint belongs to one of the six outcome families (`configuration`, `classification`, `symbol`, `dependency`, `acyclicity`, `unverified`). For predictable static analysis, every identifier must be unique, unambiguous, and formatted as `<family>/<kebab-case>`.
-
-### Decision
-
-The table below defines the authoritative vocabulary of diagnostic constraints for `eslint-plugin-faf`. It records all constraints currently produced by the codebase in `src/` alongside those established by `DECISIONS.md` (`D-01` through `D-12`) for future implementation phases.
-
-| Constraint Identifier                           | Family           | Status      | Reference                 | Description                                                                                                       |
-| ----------------------------------------------- | ---------------- | ----------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `configuration/commonjs-package-type`           | `configuration`  | Implemented | D-09, CONFIG_1            | Nearest `package.json` declares `"type": "commonjs"`, which is incompatible with native TypeScript type stripping |
-| `configuration/config-load-failure`             | `configuration`  | Implemented | D-09, CONFIG_1            | Worker terminated unexpectedly or raised an unclassified runtime error during `fafconfig.ts` evaluation           |
-| `configuration/conflicting-origin-kind`         | `configuration`  | Implemented | D-06, CONFIG_5            | The same origin path is declared as both a Root Layer and a Root Fragment                                         |
-| `configuration/duplicate-origin`                | `configuration`  | Implemented | D-06, CONFIG_5            | The same origin path is declared more than once with an identical origin kind                                     |
-| `configuration/invalid-default-export-function` | `configuration`  | Implemented | D-09, CONFIG_1            | The default export of `fafconfig.ts` is a function instead of a configuration object                              |
-| `configuration/invalid-default-export-promise`  | `configuration`  | Implemented | D-09, CONFIG_1            | The default export of `fafconfig.ts` is a Promise/thenable instead of a synchronous configuration object          |
-| `configuration/invalid-foreign-pattern`         | `configuration`  | Future      | D-05, CONFIG_6            | Glob pattern in `foreignFamilies` violates the allowed deterministic pattern grammar                              |
-| `configuration/invalid-literal-path`            | `configuration`  | Future      | D-05, CONFIG_6, CONFIG_10 | Configuration path contains backslashes, empty segments, or illegal dot segments                                  |
-| `configuration/invalid-naming-syntax`           | `configuration`  | Future      | D-05, CONFIG_6, CONFIG_10 | Declared identifier in `fafconfig.ts` (e.g. role name) violates plugin kebab-case naming grammar                  |
-| `configuration/invalid-origin`                  | `configuration`  | Implemented | D-06, FAF §6              | Declared tree origin exists but is not a directory (even after symlink resolution)                                |
-| `configuration/invalid-package-json`            | `configuration`  | Implemented | D-09, CONFIG_1            | `package.json` is not a regular file, is not valid JSON, or does not contain a JSON object                        |
-| `configuration/missing-config-file`             | `configuration`  | Implemented | D-09, CONFIG_1            | `fafconfig.ts` was not found at explicit path or in directory traversal upwards towards root                      |
-| `configuration/missing-default-export`          | `configuration`  | Implemented | D-09, CONFIG_1            | `fafconfig.ts` module does not provide an `export default` declaration                                            |
-| `configuration/missing-origin`                  | `configuration`  | Implemented | D-06, FAF §6              | Declared tree origin directory does not exist on disk                                                             |
-| `configuration/missing-roles`                   | `configuration`  | Implemented | D-02, CONFIG_5            | Roles catalog is absent in both local and common configuration blocks                                             |
-| `configuration/overlapping-origins`             | `configuration`  | Implemented | D-06, CONFIG_5            | Declared tree origin is nested inside or overlaps another declared origin path                                    |
-| `configuration/unclonable-config-value`         | `configuration`  | Implemented | D-09, CONFIG_1            | Configuration default export value failed structured cloning across the worker thread                             |
-| `configuration/unresolved-relative-import`      | `configuration`  | Implemented | D-09, CONFIG_1            | Relative import inside `fafconfig.ts` lacks an explicit file extension                                            |
-| `configuration/unsupported-typescript-syntax`   | `configuration`  | Implemented | D-09, CONFIG_1            | Non-strippable TypeScript syntax (`enum`, runtime `namespace`, class parameter property) used in config           |
-| `classification/containment-matrix`             | `classification` | Future      | D-02, FAF §6.8            | Directory or file placed in invalid structural parent according to containment matrix                             |
-| `classification/invalid-nomenclature`           | `classification` | Future      | D-05, FAF §4, §6.6        | Filesystem file, directory, or Fragment name deviates from plugin kebab-case grammar                              |
-| `symbol/symbol-uniqueness`                      | `symbol`         | Future      | D-02, FAF §5, §6.1.1      | Root-scope symbol count exceeds limit or non-exempt file exports multiple symbols                                 |
-| `dependency/peer-separation`                    | `dependency`     | Future      | D-02, FAF §5              | Unauthorized import between sibling fragments or across unpermitted boundaries                                    |
-| `acyclicity/inter-tree-cycle`                   | `acyclicity`     | Future      | D-04, FAF §7.2            | Circular dependency physically formed by actual imports between two or more Fractal Trees                         |
-| `acyclicity/root-dependency-cycle`              | `acyclicity`     | Future      | D-04, FAF §6.2.2, §7.2    | Circular dependency physically formed by actual imports between Root Nodes of distinct Root Fragments             |
-| `unverified/config-loading-timeout`             | `unverified`     | Implemented | D-09, CONFIG_1            | Configuration worker execution exceeded synchronous timeout budget (default 30,000ms)                             |
-| `unverified/cyclic-root-authorization`          | `unverified`     | Future      | D-04, FAF §6.2.2, §7.2    | Reciprocal dependency authorizations configured between Root Fragments without physical code cycle                |
-| `unverified/cyclic-tree-authorization`          | `unverified`     | Future      | D-04, FAF §7.2            | Reciprocal dependency authorizations configured between separate Trees without physical code cycle                |
-| `unverified/missing-data`                       | `unverified`     | Future      | D-03, FAF §1.2            | Verification check cannot be completed due to missing declaration context or data                                 |
-| `unverified/non-literal-dynamic-import`         | `unverified`     | Future      | D-03, D-07, FAF §4, §5    | Dynamic `import()` call using a non-literal expression that cannot be statically resolved                         |
-| `unverified/symbolic-link`                      | `unverified`     | Implemented | D-06, FAF §6              | Symbolic link within tree origin creates ambiguous physical identity; link is not traversed                       |
-| `unverified/unreadable-entry`                   | `unverified`     | Implemented | D-06, FAF §6              | Filesystem entry or subdirectory within tree cannot be read or inspected                                          |
-| `unverified/unreadable-external-file`           | `unverified`     | Future      | D-03, FAF §7.3            | External local file reached during graph traversal cannot be read or parsed                                       |
-| `unverified/unreadable-origin`                  | `unverified`     | Implemented | D-06, FAF §6              | Declared tree origin directory exists but cannot be accessed due to I/O permissions or OS errors                  |
-| `unverified/unresolved-import`                  | `unverified`     | Future      | D-03, D-08, FAF §5, §7.3  | Module specifier could not be resolved to a known codebase file or external package                               |
-| `unverified/unsupported-file-type`              | `unverified`     | Future      | D-07, FAF §4, §6.7        | Imported file has an extension or format with no available parser or extractor                                    |
-| `unverified/unsupported-syntax`                 | `unverified`     | Future      | D-07, FAF §4, §5          | Source file contains unsupported language syntax that prevents reliable static analysis                           |
-
----
-
 ## D-13: Zod v4 for untyped format boundaries
 
 ### Context
@@ -556,3 +501,159 @@ A schema library removes duplicated shape guards and keeps the property path of 
 ### Normative References
 
 - `FAF.md` format contract: closed objects, no coercion, required and admitted properties, value types, optional empty arrays versus required non-empty selectors, order-independent sets, hierarchies without repetition.
+
+---
+
+## D-14: Declarations Configuration Format and Invariants
+
+### Context
+
+`fafconfig.ts` declares the architectural blueprint of the project. It is statically validated against a closed schema and structural invariants. Deviations from required types, missing keys, explicit undefined values, null values, empty collections, and unrecognized properties must be deterministically rejected.
+
+### Decision
+
+Format constraints on `fafconfig.ts` not directly assigned to a specific FAF normative section reference this decision (`D-14`). This includes closed-object boundaries, non-empty collections, empty tiers in hierarchy arrays (`empty-tier`), scalar types, absence distinctions (`missing-property`, `explicit-undefined`, `null-forbidden`), generic list duplicates (`duplicate-element`), and configuration scope verification (`scope-mismatch`).
+
+### Rationale
+
+FAF specifies architectural laws but relies on an external configuration file for declarations. Unambiguous configuration requires strict syntax and format validation. Grouping general format restrictions under D-14 ensures clear, versioned normative references for all format diagnostics without inventing speculative FAF section citations.
+
+### Observable Consequences
+
+- Diagnostics emitted for format syntax, absence, nullability, and generic list duplicates carry `normativeReference: 'D-14'`.
+
+### Normative References
+
+- FAF format contract: closed objects, no coercion, required and admitted properties, value types, non-empty selectors.
+
+---
+
+## Vocabulary of Diagnostic Constraints
+
+### Context
+
+Diagnostic outcomes in `eslint-plugin-faf` are structured objects bearing a specific `constraint` identifier. Each constraint belongs to one of the six outcome families (`configuration`, `classification`, `symbol`, `dependency`, `acyclicity`, `unverified`). For predictable static analysis, every identifier must be unique, unambiguous, and formatted as `<family>/<kebab-case>`.
+
+### Decision
+
+The table below defines the authoritative vocabulary of diagnostic constraints for `eslint-plugin-faf`. It records all constraints currently produced by the codebase in `src/` alongside those established by `DECISIONS.md` (`D-01` through `D-14`) for future implementation phases. It coincides exactly with the outcome catalog.
+
+| Constraint Identifier                                     | Family           | Status      | Reference                          | Description                                                                                                         |
+| --------------------------------------------------------- | ---------------- | ----------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `acyclicity/dependency-cycle`                             | `acyclicity`     | Future      | FAF §5                             | is part of a dependency cycle                                                                                       |
+| `acyclicity/inter-tree-cycle`                             | `acyclicity`     | Future      | FAF §7.2                           | is part of a dependency cycle between Fractal Trees                                                                 |
+| `classification/category-role`                            | `classification` | Future      | FAF §6.3.1                         | does not have the form or the Role imposed by its Category                                                          |
+| `classification/containment-matrix`                       | `classification` | Future      | FAF §6.8                           | is a child type that its parent Logical Domain does not admit                                                       |
+| `classification/duplicate-fragment-role`                  | `classification` | Future      | FAF §6.1.1                         | has more than one direct Logical Node with the same explicit Role                                                   |
+| `classification/exclusive-forms`                          | `classification` | Future      | FAF §6.3.2, §6.4.1, §6.5.1, §6.6.1 | mixes mutually exclusive forms among its direct children                                                            |
+| `classification/fragment-node-anatomy`                    | `classification` | Future      | FAF §6.1.1                         | is not a Fragment Node, Access Node or Sub-Graph Node named after its Fragment                                      |
+| `classification/fragment-node-rank`                       | `classification` | Future      | FAF §6.1.3                         | has a Rank not strictly lower than the Master Node of its Fragment                                                  |
+| `classification/horizontal-hierarchy-members`             | `classification` | Future      | FAF §6.9                           | has a Horizontal Hierarchy over children that FAF does not allow to be ordered                                      |
+| `classification/horizontal-hierarchy-overlap`             | `classification` | Future      | FAF §4                             | is selected by more than one Horizontal Hierarchy                                                                   |
+| `classification/missing-access-node`                      | `classification` | Future      | FAF §6.1.1                         | has no index.ts Access Node                                                                                         |
+| `classification/missing-master-node`                      | `classification` | Future      | FAF §6.1.1                         | has no direct Fragment Node with the Role imposed by its Category                                                   |
+| `classification/nomenclature`                             | `classification` | Future      | FAF §4, §6.3.5, §6.6               | does not follow the naming contract of its classification                                                           |
+| `classification/unclassifiable-directory`                 | `classification` | Implemented | FAF §6.9                           | has no unique Logical Domain classification                                                                         |
+| `classification/unclassifiable-file`                      | `classification` | Implemented | FAF §6.9                           | is neither a uniquely classified Logical Node nor a Foreign Node                                                    |
+| `configuration/commonjs-package-type`                     | `configuration`  | Implemented | D-09                               | requires nearest package.json not to declare "type": "commonjs"                                                     |
+| `configuration/config-load-failure`                       | `configuration`  | Implemented | D-09                               | failed to load configuration                                                                                        |
+| `configuration/conflicting-origin-kind`                   | `configuration`  | Implemented | D-06                               | cannot be declared as both a Root Layer and a Root Fragment                                                         |
+| `configuration/contradictory-root-foreign`                | `configuration`  | Implemented | FAF §6.7                           | cannot be declared as both a Root Node and a Foreign Node                                                           |
+| `configuration/duplicate-alias-source`                    | `configuration`  | Implemented | FAF §7.4                           | cannot declare path aliases when package.json imports are present                                                   |
+| `configuration/duplicate-category`                        | `configuration`  | Implemented | FAF §6.3.1                         | is declared more than once in the role catalog                                                                      |
+| `configuration/duplicate-element`                         | `configuration`  | Implemented | D-14                               | is a duplicate element                                                                                              |
+| `configuration/duplicate-implicit-extension`              | `configuration`  | Implemented | FAF §6.3.1                         | is declared more than once across roles                                                                             |
+| `configuration/duplicate-mimetic-path`                    | `configuration`  | Implemented | FAF §6.3.5                         | is designated more than once as a mimetic path                                                                      |
+| `configuration/duplicate-origin`                          | `configuration`  | Implemented | D-06                               | is declared more than once as a tree origin                                                                         |
+| `configuration/duplicate-role-name`                       | `configuration`  | Implemented | FAF §6.3.1                         | is declared more than once in the role catalog                                                                      |
+| `configuration/empty-list`                                | `configuration`  | Implemented | D-14                               | cannot be an empty list                                                                                             |
+| `configuration/empty-string`                              | `configuration`  | Implemented | D-14                               | cannot be an empty string                                                                                           |
+| `configuration/empty-tier`                                | `configuration`  | Implemented | D-14                               | cannot be an empty tier                                                                                             |
+| `configuration/expected-directory`                        | `configuration`  | Implemented | D-14                               | must be a directory                                                                                                 |
+| `configuration/expected-file`                             | `configuration`  | Implemented | D-14                               | must be a file                                                                                                      |
+| `configuration/explicit-undefined`                        | `configuration`  | Implemented | D-14                               | cannot be explicitly undefined                                                                                      |
+| `configuration/external-dependency-to-alias`              | `configuration`  | Implemented | FAF §7.3                           | cannot be targeted as an external dependency because it is a path alias                                             |
+| `configuration/external-dependency-to-inside-tree`        | `configuration`  | Implemented | FAF §7.3                           | must be outside all Fractal Trees as an external dependency target                                                  |
+| `configuration/external-dependency-to-library`            | `configuration`  | Implemented | FAF §7.3                           | cannot be targeted as an external dependency because it is a node_modules library                                   |
+| `configuration/implicit-extension-category-node-mismatch` | `configuration`  | Implemented | FAF §6.3.1                         | must be true for a role with implicit extensions                                                                    |
+| `configuration/implicit-extension-role-name-prefix`       | `configuration`  | Implemented | FAF §6.3.1                         | cannot start with a segment matching a role name                                                                    |
+| `configuration/incompatible-foreign-origin`               | `configuration`  | Implemented | FAF §6.7                           | cannot be designated as a foreign domain                                                                            |
+| `configuration/incompatible-mimetic-designation`          | `configuration`  | Implemented | FAF §6.3.5                         | must identify a Category of Fragments                                                                               |
+| `configuration/incompatible-root-in-foreign-domain`       | `configuration`  | Implemented | FAF §6.7                           | cannot be designated inside a foreign domain                                                                        |
+| `configuration/invalid-action-name`                       | `configuration`  | Implemented | FAF §6.3.5                         | must adhere to kebab-case grammar                                                                                   |
+| `configuration/invalid-alias-key`                         | `configuration`  | Implemented | FAF §7.4                           | must begin with an allowed prefix and follow valid syntax                                                           |
+| `configuration/invalid-alias-source`                      | `configuration`  | Implemented | FAF §7.4                           | must declare valid imports with subpath keys                                                                        |
+| `configuration/invalid-default-export-function`           | `configuration`  | Implemented | D-09                               | cannot export a function as its default export                                                                      |
+| `configuration/invalid-default-export-promise`            | `configuration`  | Implemented | D-09                               | cannot export a Promise as its default export                                                                       |
+| `configuration/invalid-external-dependency-source`        | `configuration`  | Implemented | FAF §7.3                           | must be an authorized logical node in externalDependencies                                                          |
+| `configuration/invalid-file-name`                         | `configuration`  | Implemented | FAF §4                             | must adhere to kebab-case grammar                                                                                   |
+| `configuration/invalid-foreign-pattern`                   | `configuration`  | Implemented | D-05                               | must adhere to allowed glob pattern grammar                                                                         |
+| `configuration/invalid-implicit-extension`                | `configuration`  | Implemented | FAF §6.3.1                         | must start with a dot and contain only lowercase letters                                                            |
+| `configuration/invalid-literal-path`                      | `configuration`  | Implemented | D-05                               | must be a POSIX relative path without empty or parent segments                                                      |
+| `configuration/invalid-origin`                            | `configuration`  | Implemented | D-06                               | must be a directory                                                                                                 |
+| `configuration/invalid-package-json`                      | `configuration`  | Implemented | D-09                               | is invalid or unreadable                                                                                            |
+| `configuration/invalid-public-root-node`                  | `configuration`  | Implemented | FAF §7.1                           | must identify an enumerated Root Node in publicRootNodes                                                            |
+| `configuration/invalid-root-dependency-from`              | `configuration`  | Implemented | FAF §6.2.2                         | must be an enumerated root node as a root dependency source                                                         |
+| `configuration/invalid-root-dependency-to`                | `configuration`  | Implemented | FAF §6.2.2                         | must be an enumerated root node as a root dependency target                                                         |
+| `configuration/invalid-type`                              | `configuration`  | Implemented | D-14                               | has an invalid type                                                                                                 |
+| `configuration/missing-config-file`                       | `configuration`  | Implemented | D-09                               | was not found                                                                                                       |
+| `configuration/missing-default-export`                    | `configuration`  | Implemented | D-09                               | must declare a default export                                                                                       |
+| `configuration/missing-origin`                            | `configuration`  | Implemented | D-06                               | must be an existing tree origin directory                                                                           |
+| `configuration/missing-property`                          | `configuration`  | Implemented | D-14                               | is required and missing                                                                                             |
+| `configuration/missing-roles`                             | `configuration`  | Implemented | FAF §6.3.1                         | must declare a roles catalog in local or common configuration                                                       |
+| `configuration/nested-root-fragment-not-direct-child`     | `configuration`  | Implemented | FAF §6.2.2                         | must be a direct child directory of the root fragment                                                               |
+| `configuration/non-existent-path`                         | `configuration`  | Implemented | D-14                               | does not exist                                                                                                      |
+| `configuration/null-forbidden`                            | `configuration`  | Implemented | D-14                               | cannot be null                                                                                                      |
+| `configuration/origin-contained-in-other-tree`            | `configuration`  | Implemented | D-06                               | cannot be contained within another tree                                                                             |
+| `configuration/origin-designated-foreign-domain`          | `configuration`  | Implemented | FAF §6.7                           | cannot be designated as a foreign domain                                                                            |
+| `configuration/overlapping-origins`                       | `configuration`  | Implemented | D-06                               | overlaps with another declared tree origin                                                                          |
+| `configuration/public-root-node-not-enumerated`           | `configuration`  | Implemented | FAF §7.1                           | must be an enumerated root node of its tree in publicRootNodes                                                      |
+| `configuration/public-root-nodes-in-root-layer-tree`      | `configuration`  | Implemented | FAF §7.1                           | cannot be declared as a public root node in a tree with only Root Layers                                            |
+| `configuration/reference-outside-local-scope`             | `configuration`  | Implemented | FAF §6                             | must belong to a tree within this local configuration                                                               |
+| `configuration/reference-outside-trees`                   | `configuration`  | Implemented | FAF §6                             | must be inside a Fractal Tree of this configuration                                                                 |
+| `configuration/role-name-conflict`                        | `configuration`  | Implemented | FAF §6.3.1                         | conflicts with a standard role name                                                                                 |
+| `configuration/root-dependency-different-tree`            | `configuration`  | Implemented | FAF §6.2.2                         | must belong to the same tree as the root dependency source                                                          |
+| `configuration/root-dependency-same-fragment`             | `configuration`  | Implemented | FAF §6.2.2                         | cannot belong to the same root fragment as its source                                                               |
+| `configuration/root-node-not-direct-child`                | `configuration`  | Implemented | FAF §6.2.2                         | must be a direct child root node of the root fragment                                                               |
+| `configuration/scope-mismatch`                            | `configuration`  | Implemented | D-14                               | cannot be declared in this configuration scope                                                                      |
+| `configuration/tree-dependency-from-outside-scope`        | `configuration`  | Implemented | FAF §7.2                           | must belong to this local configuration as a tree dependency source                                                 |
+| `configuration/tree-dependency-not-tree-origin`           | `configuration`  | Implemented | FAF §7.2                           | must identify a declared tree origin as a tree dependency                                                           |
+| `configuration/tree-dependency-self`                      | `configuration`  | Implemented | FAF §7.2                           | cannot declare a tree dependency on itself                                                                          |
+| `configuration/unclonable-config-value`                   | `configuration`  | Implemented | D-09                               | exports a default value that cannot be cloned                                                                       |
+| `configuration/undeclared-sub-root-fragment`              | `configuration`  | Implemented | FAF §6.2.2                         | must be declared in subRootFragments                                                                                |
+| `configuration/unenumerated-root-file`                    | `configuration`  | Implemented | FAF §6.2.2                         | must be either enumerated as a Root Node or designated as a Foreign Node                                            |
+| `configuration/unknown-property`                          | `configuration`  | Implemented | D-14                               | is not a recognized property                                                                                        |
+| `configuration/unresolvable-alias-base`                   | `configuration`  | Implemented | FAF §7.4                           | defines a path alias whose base path cannot be resolved                                                             |
+| `configuration/unresolved-relative-import`                | `configuration`  | Implemented | D-09                               | requires relative imports to include explicit file extensions                                                       |
+| `configuration/unsupported-typescript-syntax`             | `configuration`  | Implemented | D-09                               | contains unsupported non-strippable TypeScript syntax                                                               |
+| `dependency/access-node-sources`                          | `dependency`     | Future      | FAF §6.1.1                         | an Access Node imports only direct Fragment Nodes of its own Fragment                                               |
+| `dependency/external-dependencies`                        | `dependency`     | Future      | FAF §7.3                           | a local file outside all Fractal Trees is importable only with an externalDependencies authorization of this source |
+| `dependency/foreign-node-isolation`                       | `dependency`     | Future      | FAF §4, §6.7                       | a Foreign Node has no import relation with codebase files                                                           |
+| `dependency/fractal-branch-unidirectionality`             | `dependency`     | Future      | FAF §6.6.2                         | a Fractal Branch must not depend on the other subtrees of its parent                                                |
+| `dependency/fractal-branch-visibility`                    | `dependency`     | Future      | FAF §6.6.2                         | a Fractal Branch is importable only from the subtree of its parent, except the parent Access Node                   |
+| `dependency/fragment-encapsulation`                       | `dependency`     | Future      | FAF §6.1.1                         | a Fragment is importable from outside only through its index.ts                                                     |
+| `dependency/path-alias-anchoring`                         | `dependency`     | Future      | FAF §7.4                           | a Path Alias importing its own Fractal Tree must have a Fractal Branch of that Tree as base in every alternative    |
+| `dependency/peer-separation`                              | `dependency`     | Future      | FAF §5                             | sibling subtrees may depend on each other only downward along a Horizontal Hierarchy                                |
+| `dependency/private-category-unidirectionality`           | `dependency`     | Future      | FAF §6.3.3                         | a Private Category must not import the direct Logical Nodes of its parent                                           |
+| `dependency/private-category-visibility`                  | `dependency`     | Future      | FAF §6.3.3                         | a Private Category is importable from outside only by the enabled direct Logical Nodes of its parent                |
+| `dependency/re-entry-prohibition`                         | `dependency`     | Future      | FAF §7.3                           | a path through local files outside all Fractal Trees must not re-enter its Fractal Tree                             |
+| `dependency/root-node-discipline`                         | `dependency`     | Future      | FAF §6.2.2                         | a Root Node is importable only by Root Nodes authorized by rootNodes or dependencyEdges                             |
+| `dependency/sub-graph-node-isolation`                     | `dependency`     | Future      | FAF §4                             | a Sub-Graph Node is not importable                                                                                  |
+| `dependency/tree-authorization`                           | `dependency`     | Future      | FAF §7.2, §7.3                     | a dependency between Fractal Trees requires an oriented treeDependencies authorization                              |
+| `dependency/tree-opacity`                                 | `dependency`     | Future      | FAF §7.1                           | only the Public Surface of a Fractal Tree is importable from outside the Tree                                       |
+| `symbol/access-node-master-export`                        | `symbol`         | Future      | FAF §6.1.1                         | does not re-export the Symbol of its Master Node                                                                    |
+| `symbol/access-node-own-symbols`                          | `symbol`         | Future      | FAF §6.1.1                         | defines its own Symbols as Access Node                                                                              |
+| `symbol/master-symbol`                                    | `symbol`         | Future      | FAF §6.1.1                         | does not define and export exactly one Symbol as Master Node                                                        |
+| `symbol/re-export-prohibition`                            | `symbol`         | Future      | FAF §5                             | re-exports an imported Symbol                                                                                       |
+| `symbol/symbol-uniqueness`                                | `symbol`         | Future      | FAF §5                             | defines more than one Symbol in its root scope                                                                      |
+| `unverified/config-loading-timeout`                       | `unverified`     | Implemented | D-09                               | timed out during configuration loading                                                                              |
+| `unverified/cyclic-root-authorization`                    | `unverified`     | Future      | D-04                               | declares reciprocal root dependency authorizations without physical code cycle                                      |
+| `unverified/cyclic-tree-authorization`                    | `unverified`     | Future      | D-04                               | declares reciprocal tree dependencies without physical code cycle                                                   |
+| `unverified/non-literal-dynamic-import`                   | `unverified`     | Implemented | D-07                               | contains a non-literal dynamic import that cannot be resolved statically                                            |
+| `unverified/not-implemented`                              | `unverified`     | Implemented | D-03                               | is not implemented                                                                                                  |
+| `unverified/symbolic-link`                                | `unverified`     | Implemented | D-06                               | is a symbolic link within a tree                                                                                    |
+| `unverified/unreadable-entry`                             | `unverified`     | Implemented | D-06                               | could not be inspected                                                                                              |
+| `unverified/unreadable-external-file`                     | `unverified`     | Implemented | D-03                               | could not be read                                                                                                   |
+| `unverified/unreadable-origin`                            | `unverified`     | Implemented | D-06                               | could not be accessed                                                                                               |
+| `unverified/unresolved-import`                            | `unverified`     | Implemented | D-08                               | contains an import that could not be resolved                                                                       |
+| `unverified/unsupported-syntax`                           | `unverified`     | Implemented | D-07                               | contains unsupported syntax                                                                                         |

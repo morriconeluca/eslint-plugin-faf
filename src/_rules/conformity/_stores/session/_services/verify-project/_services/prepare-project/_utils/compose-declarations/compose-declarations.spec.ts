@@ -288,8 +288,8 @@ describe('composeDeclarations', () => {
       element: 'fafconfig.ts',
       family: 'configuration',
       message:
-        'Roles catalog is missing in both common and local configuration.',
-      normativeReference: 'CONFIG_5',
+        "'fafconfig.ts' must declare a roles catalog in local or common configuration",
+      normativeReference: 'FAF §6.3.1',
       propertyPath: 'faf.locals[0]',
     });
   });

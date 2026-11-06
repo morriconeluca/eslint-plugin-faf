@@ -121,9 +121,8 @@ describe('buildInventory', () => {
       constraint: 'unverified/symbolic-link',
       element: 'src/link.ts',
       family: 'unverified',
-      message:
-        "Symbolic link 'src/link.ts' within tree creates ambiguous physical identity (resolves to 'src/real.ts').",
-      normativeReference: '§6',
+      message: "'src/link.ts' is a symbolic link within a tree: src/real.ts",
+      normativeReference: 'D-06',
       reason: 'src/real.ts',
     });
 

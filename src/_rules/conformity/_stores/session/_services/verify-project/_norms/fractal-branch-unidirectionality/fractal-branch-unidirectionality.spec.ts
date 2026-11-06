@@ -10,9 +10,8 @@ describe('verifyFractalBranchUnidirectionality', () => {
         constraint: 'unverified/not-implemented',
         element: 'fractal-branch-unidirectionality',
         family: 'unverified',
-        message:
-          "Part 'fractal-branch-unidirectionality' is not implemented (§6.6.2).",
-        normativeReference: '§6.6.2',
+        message: "'fractal-branch-unidirectionality' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

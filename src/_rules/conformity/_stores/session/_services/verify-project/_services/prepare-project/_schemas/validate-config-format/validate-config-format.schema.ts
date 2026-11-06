@@ -4,6 +4,7 @@ import type {
   TResult,
 } from '../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
+import { createOutcome } from '../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { isPlainRecord } from '../../../../../../_session@shared/_utils/is-plain-record/index.js';
 import { configFormatSchema } from './_schemas/config-format-schema/index.js';
 import { validateAliases } from './_schemas/validate-aliases/index.js';
@@ -18,23 +19,13 @@ import { validateSubGraphRoles } from './_schemas/validate-sub-graph-roles/index
 import { checkCatalogInvariants } from './_utils/check-catalog-invariants/index.js';
 import { isFafConfig } from './_utils/is-faf-config/index.js';
 import { translateConfigIssues } from './_validate-config-format@shared/_schemas/translate-config-issues/index.js';
-import {
-  CONFIG_5,
-  CONSTRAINT_SCOPE_MISMATCH,
-} from './validate-config-format.constant.js';
+import { CONSTRAINT_SCOPE_MISMATCH } from './validate-config-format.constant.js';
 
 export const validateConfigFormat = (() => {
-  const scopeOutcome = (
-    propertyPath: string,
-    message: string
-  ): TConfigOutcome => ({
-    constraint: CONSTRAINT_SCOPE_MISMATCH,
-    element: propertyPath,
-    family: 'configuration',
-    message,
-    normativeReference: CONFIG_5,
-    propertyPath,
-  });
+  const scopeOutcome = (propertyPath: string): TConfigOutcome =>
+    createOutcome(CONSTRAINT_SCOPE_MISMATCH, {
+      propertyPath,
+    });
 
   const pushShared = (
     record: Record<string, unknown>,
@@ -60,12 +51,7 @@ export const validateConfigFormat = (() => {
     }
     for (const key of ['rootLayers', 'rootFragments']) {
       if (Object.hasOwn(common, key)) {
-        outcomes.push(
-          scopeOutcome(
-            `faf.common.${key}`,
-            `Property "${key}" cannot be declared in common; root origins must be declared in locals.`
-          )
-        );
+        outcomes.push(scopeOutcome(`faf.common.${key}`));
       }
     }
     if (common['aliases'] !== undefined) {
@@ -83,12 +69,7 @@ export const validateConfigFormat = (() => {
       return;
     }
     if ('aliases' in local) {
-      outcomes.push(
-        scopeOutcome(
-          `${localPath}.aliases`,
-          'Property "aliases" cannot be declared in locals; it must be declared exclusively in common.'
-        )
-      );
+      outcomes.push(scopeOutcome(`${localPath}.aliases`));
     }
     outcomes.push(
       ...validateRootLayers(local['rootLayers'], localPath),

@@ -24,7 +24,7 @@ describe('readFailureOutcome', () => {
       expect(outcome.constraint).toBe('unverified/unreadable-entry');
       expect(outcome.family).toBe('unverified');
       expect(outcome.element).toBe('src/file.ts');
-      expect(outcome.normativeReference).toBe('§6');
+      expect(outcome.normativeReference).toBe('D-06');
       expect(outcome.reason).toBe('detail');
       expect(outcome.message).toContain('src/file.ts');
     }
@@ -40,7 +40,7 @@ describe('readFailureOutcome', () => {
         relativePath: 'outside/file.ts',
       });
       expect(outcome.constraint).toBe('unverified/unreadable-external-file');
-      expect(outcome.normativeReference).toBe('§7.3');
+      expect(outcome.normativeReference).toBe('D-03');
       expect(outcome.element).toBe('outside/file.ts');
       expect(outcome.family).toBe('unverified');
       expect(outcome.reason).toBe('detail');
@@ -55,7 +55,7 @@ describe('readFailureOutcome', () => {
         reason: 'Path is a directory',
         relativePath: 'src/file.ts',
       }).message
-    ).toBe("File 'src/file.ts' is a directory.");
+    ).toBe("'src/file.ts' could not be inspected: Path is a directory");
     expect(
       readFailureOutcome({
         isTreeFile: true,
@@ -63,7 +63,7 @@ describe('readFailureOutcome', () => {
         reason: 'File is missing',
         relativePath: 'src/file.ts',
       }).message
-    ).toBe("File 'src/file.ts' is missing.");
+    ).toBe("'src/file.ts' could not be inspected: File is missing");
     expect(
       readFailureOutcome({
         isTreeFile: false,
@@ -71,7 +71,7 @@ describe('readFailureOutcome', () => {
         reason: 'Text is not valid UTF-8',
         relativePath: 'outside/file.ts',
       }).message
-    ).toBe("File 'outside/file.ts' is not valid UTF-8.");
+    ).toBe("'outside/file.ts' could not be read: Text is not valid UTF-8");
     expect(
       readFailureOutcome({
         isTreeFile: false,
@@ -79,6 +79,6 @@ describe('readFailureOutcome', () => {
         reason: 'EACCES',
         relativePath: 'outside/file.ts',
       }).message
-    ).toBe("File 'outside/file.ts' could not be read: EACCES");
+    ).toBe("'outside/file.ts' could not be read: EACCES");
   });
 });

@@ -8,6 +8,7 @@ import type {
   TEffectiveTree,
 } from '../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
+import { createOutcome } from '../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { composeCatalog } from './_utils/compose-catalog/index.js';
 import { composeRootFragments } from './_utils/compose-root-fragments/index.js';
 import { filterByTreeContainment } from './_utils/filter-by-tree-containment/index.js';
@@ -53,15 +54,12 @@ export const composeDeclarations = (
         (config.faf.common === undefined ||
           config.faf.common.roles === undefined)
       ) {
-        outcomes.push({
-          constraint: 'configuration/missing-roles',
-          element: 'fafconfig.ts',
-          family: 'configuration',
-          message:
-            'Roles catalog is missing in both common and local configuration.',
-          normativeReference: 'CONFIG_5',
-          propertyPath: `faf.locals[${localIndex}]`,
-        });
+        outcomes.push(
+          createOutcome('configuration/missing-roles', {
+            element: 'fafconfig.ts',
+            propertyPath: `faf.locals[${localIndex}]`,
+          })
+        );
       }
     }
     return outcomes;

@@ -1,10 +1,7 @@
 import type { TConfigOutcome } from '../../../../../../../../../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type { TReferenceContext } from '../../../../../../../../../../_validate-config-references@shared/_types/reference-context.type.js';
 
-import {
-  CONFIG_4,
-  CONSTRAINT_ROOT_NODE_NOT_DIRECT_CHILD,
-} from '../../../../../../../../../../_validate-config-references@shared/_constants/reference-constraints.constant.js';
+import { createOutcome } from '../../../../../../../../../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { rejectFileInScope } from '../../../../../../../../../../_validate-config-references@shared/_utils/reject-file-in-scope/index.js';
 import { isDirectChildDirectory } from '../../../../_validate-root-fragment-tree@shared/_utils/is-direct-child-directory/index.js';
 
@@ -19,7 +16,6 @@ export function rejectOneRootNode(
   const fileOutcomes = rejectFileInScope({
     context,
     label: 'Root node',
-    normativeReference: CONFIG_4,
     path: fullPath,
     propertyPath,
     scope: { kind: 'local', localIndex },
@@ -30,13 +26,9 @@ export function rejectOneRootNode(
 
   return [
     ...fileOutcomes,
-    {
-      constraint: CONSTRAINT_ROOT_NODE_NOT_DIRECT_CHILD,
+    createOutcome('configuration/root-node-not-direct-child', {
       element: fullPath,
-      family: 'configuration',
-      message: `Root node "${fullPath}" must be a direct child file of "${fragmentPath}".`,
-      normativeReference: CONFIG_4,
       propertyPath,
-    },
+    }),
   ];
 }

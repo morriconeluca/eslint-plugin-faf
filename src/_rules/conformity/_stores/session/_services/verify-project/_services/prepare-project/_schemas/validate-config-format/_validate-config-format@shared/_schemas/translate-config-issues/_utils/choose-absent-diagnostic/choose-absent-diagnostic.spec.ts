@@ -6,27 +6,19 @@ const diagnostic = {
   emptyList: {
     constraint: 'configuration/empty-list',
     kind: 'fixed',
-    message: 'empty',
-    normativeReference: 'CONFIG_5',
   },
   explicit: {
     constraint: 'configuration/explicit-undefined',
     kind: 'fixed',
-    message: 'explicit',
-    normativeReference: 'CONFIG_2',
   },
   invalid: {
     constraint: 'configuration/invalid-type',
     kind: 'fixed',
-    message: 'invalid',
-    normativeReference: 'CONFIG_2',
   },
   kind: 'absent',
   missing: {
     constraint: 'configuration/missing-property',
     kind: 'fixed',
-    message: 'missing',
-    normativeReference: 'CONFIG_2',
   },
 } as const;
 

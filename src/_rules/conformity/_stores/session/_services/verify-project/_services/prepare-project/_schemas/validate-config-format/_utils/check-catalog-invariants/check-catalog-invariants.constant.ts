@@ -1,5 +1,3 @@
-export const CONFIG_3 = 'CONFIG_3';
-
 export const CONSTRAINT_DUPLICATE_ROLE_NAME =
   'configuration/duplicate-role-name';
 export const CONSTRAINT_DUPLICATE_CATEGORY = 'configuration/duplicate-category';

@@ -21,8 +21,8 @@ describe('inspectOrigin', () => {
           constraint: 'configuration/missing-origin',
           element: 'missing',
           family: 'configuration',
-          message: "Tree origin directory 'missing' does not exist.",
-          normativeReference: '§6',
+          message: "'missing' must be an existing tree origin directory",
+          normativeReference: 'D-06',
           propertyPath: 'faf.locals',
         });
       }
@@ -48,8 +48,8 @@ describe('inspectOrigin', () => {
           constraint: 'configuration/invalid-origin',
           element: 'file.ts',
           family: 'configuration',
-          message: "Tree origin 'file.ts' must be a directory.",
-          normativeReference: '§6',
+          message: "'file.ts' must be a directory",
+          normativeReference: 'D-06',
           propertyPath: 'faf.locals',
         });
       }
@@ -100,8 +100,8 @@ describe('inspectOrigin', () => {
           constraint: 'configuration/invalid-origin',
           element: 'broken-origin',
           family: 'configuration',
-          message: "Tree origin 'broken-origin' must be a directory.",
-          normativeReference: '§6',
+          message: "'broken-origin' must be a directory",
+          normativeReference: 'D-06',
           propertyPath: 'faf.locals',
         });
       }
@@ -153,9 +153,9 @@ describe('inspectOrigin', () => {
       if (!result.ok) {
         expect(result.outcome.family).toBe('unverified');
         expect(result.outcome.constraint).toBe('unverified/unreadable-origin');
-        expect(result.outcome.normativeReference).toBe('§6');
+        expect(result.outcome.normativeReference).toBe('D-06');
         expect(result.outcome.message).toContain(
-          "Tree origin directory 'locked/child' could not be read:"
+          "'locked/child' could not be accessed:"
         );
       }
     } finally {

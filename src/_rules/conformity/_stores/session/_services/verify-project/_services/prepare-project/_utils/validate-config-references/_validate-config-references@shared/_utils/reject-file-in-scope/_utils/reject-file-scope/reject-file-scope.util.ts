@@ -2,26 +2,20 @@ import type { TConfigOutcome } from '../../../../../../../../../../../../../_con
 import type { TInventoryItem } from '../../../../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 import type { TFileReferenceCheck } from '../../../../_types/reference-context.type.js';
 
-import {
-  CONSTRAINT_REFERENCE_OUTSIDE_LOCAL_SCOPE,
-  CONSTRAINT_REFERENCE_OUTSIDE_TREES,
-} from '../../../../_constants/reference-constraints.constant.js';
+import { createOutcome } from '../../../../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 
 export function rejectFileScope(
   check: TFileReferenceCheck,
   item: TInventoryItem,
-  family: TConfigOutcome['family']
+  _family?: TConfigOutcome['family']
 ): readonly TConfigOutcome[] {
   if (item.treeOrigin === null) {
     return [
-      {
-        constraint: CONSTRAINT_REFERENCE_OUTSIDE_TREES,
+      createOutcome('configuration/reference-outside-trees', {
+        detail: `${check.label} "${check.path}" must be inside a Fractal Tree of this configuration.`,
         element: check.path,
-        family,
-        message: `${check.label} "${check.path}" must be inside a Fractal Tree of this configuration.`,
-        normativeReference: check.normativeReference,
         propertyPath: check.propertyPath,
-      },
+      }),
     ];
   }
 
@@ -31,14 +25,11 @@ export function rejectFileScope(
       return [];
     }
     return [
-      {
-        constraint: CONSTRAINT_REFERENCE_OUTSIDE_TREES,
+      createOutcome('configuration/reference-outside-trees', {
+        detail: `${check.label} "${check.path}" is outside the Fractal Trees of this configuration.`,
         element: check.path,
-        family,
-        message: `${check.label} "${check.path}" is outside the Fractal Trees of this configuration.`,
-        normativeReference: check.normativeReference,
         propertyPath: check.propertyPath,
-      },
+      }),
     ];
   }
 
@@ -47,13 +38,10 @@ export function rejectFileScope(
   }
 
   return [
-    {
-      constraint: CONSTRAINT_REFERENCE_OUTSIDE_LOCAL_SCOPE,
+    createOutcome('configuration/reference-outside-local-scope', {
+      detail: `${check.label} "${check.path}" belongs to tree "${item.treeOrigin}" outside this local configuration.`,
       element: check.path,
-      family,
-      message: `${check.label} "${check.path}" belongs to tree "${item.treeOrigin}" outside this local configuration.`,
-      normativeReference: check.normativeReference,
       propertyPath: check.propertyPath,
-    },
+    }),
   ];
 }

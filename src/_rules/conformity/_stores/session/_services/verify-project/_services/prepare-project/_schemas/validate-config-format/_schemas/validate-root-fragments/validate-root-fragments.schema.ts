@@ -10,16 +10,13 @@ export const validateRootFragments = (() => {
 
   const duplicates = (
     items: unknown,
-    pathAt: (index: number) => string,
-    message: (value: string) => string
+    pathAt: (index: number) => string
   ): readonly TConfigOutcome[] =>
     Array.isArray(items)
       ? collectStringDuplicates(
           items,
           new Set<string>(),
           pathAt,
-          message,
-          'CONFIG_4',
           'configuration/duplicate-element'
         )
       : [];
@@ -40,14 +37,9 @@ export const validateRootFragments = (() => {
       outcomes.push(
         ...duplicates(
           edge['from'],
-          (itemIndex) => `${edgePath}.from[${itemIndex}]`,
-          (value) => `Duplicate edge element "${value}".`
+          (itemIndex) => `${edgePath}.from[${itemIndex}]`
         ),
-        ...duplicates(
-          edge['to'],
-          (itemIndex) => `${edgePath}.to[${itemIndex}]`,
-          (value) => `Duplicate edge element "${value}".`
-        )
+        ...duplicates(edge['to'], (itemIndex) => `${edgePath}.to[${itemIndex}]`)
       );
     }
     return outcomes;
@@ -75,8 +67,6 @@ export const validateRootFragments = (() => {
             seen,
             (itemIndex) =>
               `${fragmentPath}.rootNodes[${tierIndex}][${itemIndex}]`,
-            (value) => `Duplicate root node "${value}".`,
-            'CONFIG_4',
             'configuration/duplicate-element'
           )
         );

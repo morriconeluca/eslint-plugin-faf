@@ -7,6 +7,8 @@ import type {
   TReadPackageJsonResult,
 } from './read-package-json.type.js';
 
+import { createOutcome } from '../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
+
 export function readPackageJson(
   input: TReadPackageJsonInput
 ): TReadPackageJsonResult {
@@ -25,20 +27,17 @@ export function readPackageJson(
     };
   }
 
-  const invalidConstraint = 'configuration/invalid-package-json';
+  const invalidPackageJson = 'configuration/invalid-package-json';
 
   if (!stats.isFile()) {
     return {
       ok: false,
       outcomes: [
-        {
-          constraint: invalidConstraint,
+        createOutcome(invalidPackageJson, {
+          detail: `package.json at ${packagePath} is not a regular file`,
           element: packagePath,
-          family: 'configuration',
-          message: `package.json at ${packagePath} is not a regular file`,
-          normativeReference: 'CONFIG_1',
           propertyPath: '',
-        },
+        }),
       ],
     };
   }
@@ -54,14 +53,11 @@ export function readPackageJson(
       return {
         ok: false,
         outcomes: [
-          {
-            constraint: invalidConstraint,
+          createOutcome(invalidPackageJson, {
+            detail: `package.json at ${packagePath} does not contain a JSON object`,
             element: packagePath,
-            family: 'configuration',
-            message: `package.json at ${packagePath} does not contain a JSON object`,
-            normativeReference: 'CONFIG_1',
             propertyPath: '',
-          },
+          }),
         ],
       };
     }
@@ -81,14 +77,11 @@ export function readPackageJson(
     return {
       ok: false,
       outcomes: [
-        {
-          constraint: invalidConstraint,
+        createOutcome(invalidPackageJson, {
+          detail: `Failed to parse package.json at ${packagePath}: ${errorMessage}`,
           element: packagePath,
-          family: 'configuration',
-          message: `Failed to parse package.json at ${packagePath}: ${errorMessage}`,
-          normativeReference: 'CONFIG_1',
           propertyPath: '',
-        },
+        }),
       ],
     };
   }

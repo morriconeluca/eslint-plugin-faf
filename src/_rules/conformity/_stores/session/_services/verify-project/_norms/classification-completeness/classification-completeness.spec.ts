@@ -109,17 +109,16 @@ describe('verifyClassificationCompleteness', () => {
         constraint: 'classification/unclassifiable-directory',
         element: 'src/blog',
         family: 'classification',
-        message:
-          "Directory 'src/blog' has no unique Logical Domain classification.",
-        normativeReference: '§6.9',
+        message: "'src/blog' has no unique Logical Domain classification",
+        normativeReference: 'FAF §6.9',
       },
       {
         constraint: 'classification/unclassifiable-file',
         element: 'src/blog/page.tsx',
         family: 'classification',
         message:
-          "File 'src/blog/page.tsx' is neither a uniquely classified Logical Node nor a Foreign Node.",
-        normativeReference: '§6.9',
+          "'src/blog/page.tsx' is neither a uniquely classified Logical Node nor a Foreign Node",
+        normativeReference: 'FAF §6.9',
       },
     ]);
   });

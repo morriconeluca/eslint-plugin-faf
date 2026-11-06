@@ -9,32 +9,6 @@ export const ABSENT_ROLE_KIND = 'absent' as const;
 
 export const ACCESS_NODE_FILE_NAME = 'index.ts';
 
-export const CONFIGURATION_FAMILY = 'configuration' as const;
-
-export const CONSTRAINT_CONTRADICTORY_ROOT_FOREIGN =
-  'configuration/contradictory-root-foreign' as const;
-
-export const CONSTRAINT_INCOMPATIBLE_FOREIGN_ORIGIN =
-  'configuration/incompatible-foreign-origin' as const;
-
-export const CONSTRAINT_INCOMPATIBLE_MIMETIC_DESIGNATION =
-  'configuration/incompatible-mimetic-designation' as const;
-
-export const CONSTRAINT_INCOMPATIBLE_ROOT_IN_FOREIGN =
-  'configuration/incompatible-root-in-foreign-domain' as const;
-
-export const CONSTRAINT_INVALID_EXTERNAL_DEPENDENCY_SOURCE =
-  'configuration/invalid-external-dependency-source' as const;
-
-export const CONSTRAINT_INVALID_PUBLIC_ROOT_NODE =
-  'configuration/invalid-public-root-node' as const;
-
-export const CONSTRAINT_UNDECLARED_SUB_ROOT_FRAGMENT =
-  'configuration/undeclared-sub-root-fragment' as const;
-
-export const CONSTRAINT_UNENUMERATED_ROOT_FILE =
-  'configuration/unenumerated-root-file' as const;
-
 export const DOMAIN_CATEGORY = 'category';
 
 export const DOMAIN_FRAGMENT = 'fragment';
@@ -56,19 +30,6 @@ export const DOT_PATH = '.';
 export const FORM_CATEGORY_NODES = 'category-nodes';
 
 export const FORM_FRAGMENTS = 'fragments';
-
-export const DUPLICATE_MIMETIC_CONSTRAINT =
-  'configuration/duplicate-mimetic-designation' as const;
-
-export const NORMATIVE_CONFIG_10 = 'CONFIG_10';
-
-export const NORMATIVE_CONFIG_8 = 'CONFIG_8';
-
-export const NORMATIVE_SECTION_6_2 = '§6.2';
-
-export const NORMATIVE_SECTION_6_3_5 = '§6.3.5';
-
-export const NORMATIVE_SECTION_6_7 = '§6.7';
 
 export const NODE_ACCESS = 'access-node';
 

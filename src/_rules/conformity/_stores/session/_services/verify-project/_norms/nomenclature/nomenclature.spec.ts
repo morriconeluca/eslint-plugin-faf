@@ -10,8 +10,8 @@ describe('verifyNomenclature', () => {
         constraint: 'unverified/not-implemented',
         element: 'nomenclature',
         family: 'unverified',
-        message: "Part 'nomenclature' is not implemented (§4, §6.6, §6.3.5).",
-        normativeReference: '§4, §6.6, §6.3.5',
+        message: "'nomenclature' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

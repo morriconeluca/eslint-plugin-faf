@@ -10,8 +10,8 @@ describe('verifySymbolUniqueness', () => {
         constraint: 'unverified/not-implemented',
         element: 'symbol-uniqueness',
         family: 'unverified',
-        message: "Part 'symbol-uniqueness' is not implemented (§5, §6.1.1).",
-        normativeReference: '§5, §6.1.1',
+        message: "'symbol-uniqueness' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

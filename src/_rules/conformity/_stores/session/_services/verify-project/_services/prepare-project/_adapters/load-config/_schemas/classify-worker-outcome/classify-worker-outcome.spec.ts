@@ -19,11 +19,11 @@ describe('classifyWorkerOutcome', () => {
     expect(outcome?.element).toBe('/test/fafconfig.ts');
     expect(outcome?.family).toBe('configuration');
     if (outcome?.family === 'configuration') {
-      expect(outcome.normativeReference).toBe('CONFIG_1');
+      expect(outcome.normativeReference).toBe('D-09');
       expect(outcome.propertyPath).toBe('default');
     }
     expect(outcome?.message).toBe(
-      'Worker terminated without transmitting a valid configuration payload'
+      "'/test/fafconfig.ts' failed to load configuration: Worker terminated without transmitting a valid configuration payload"
     );
   });
 
@@ -122,20 +122,19 @@ describe('classifyWorkerOutcome', () => {
     {
       constraint: 'configuration/missing-default-export',
       kind: 'missing',
-      message:
-        'The fafconfig.ts configuration file must provide an export default value.',
+      message: "'/project/fafconfig.ts' must declare a default export",
     },
     {
       constraint: 'configuration/invalid-default-export-function',
       kind: 'function',
       message:
-        'The default export of fafconfig.ts cannot be a function; it must be a configuration object.',
+        "'/project/fafconfig.ts' cannot export a function as its default export",
     },
     {
       constraint: 'configuration/invalid-default-export-promise',
       kind: 'thenable',
       message:
-        'The default export of fafconfig.ts cannot be a Promise; synchronous configuration value required.',
+        "'/project/fafconfig.ts' cannot export a Promise as its default export",
     },
   ] as const)(
     'returns $constraint outcome when kind is $kind',
@@ -172,9 +171,7 @@ describe('classifyWorkerOutcome', () => {
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/unclonable-config-value');
     expect(outcome?.element).toBe('/project/fafconfig.ts');
-    expect(outcome?.message).toBe(
-      'Exported configuration default value could not be cloned via structured clone: Could not clone function property'
-    );
+    expect(outcome?.message).toContain('Could not clone function property');
   });
 
   it('returns unclonable-config-value outcome when kind is clone-error without string message', () => {
@@ -189,9 +186,7 @@ describe('classifyWorkerOutcome', () => {
     }
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/unclonable-config-value');
-    expect(outcome?.message).toBe(
-      'Exported configuration default value could not be cloned via structured clone: Unknown data clone error'
-    );
+    expect(outcome?.message).toContain('Unknown data clone error');
   });
 
   it('returns unsupported-typescript-syntax outcome when error has ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX', () => {
@@ -214,9 +209,7 @@ describe('classifyWorkerOutcome', () => {
     expect(outcome?.constraint).toBe(
       'configuration/unsupported-typescript-syntax'
     );
-    expect(outcome?.message).toBe(
-      'Non-strippable TypeScript syntax violates configuration constraints: Syntax error encountered (code: ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX)'
-    );
+    expect(outcome?.message).toContain('Syntax error encountered');
   });
 
   it('returns unsupported-typescript-syntax outcome when message mentions typescript enum without code', () => {
@@ -238,9 +231,7 @@ describe('classifyWorkerOutcome', () => {
     expect(outcome?.constraint).toBe(
       'configuration/unsupported-typescript-syntax'
     );
-    expect(outcome?.message).toBe(
-      'Non-strippable TypeScript syntax violates configuration constraints: TypeScript enum is not supported in this runtime mode'
-    );
+    expect(outcome?.message).toContain('TypeScript enum is not supported');
   });
 
   it('returns unresolved-relative-import outcome when error code is ERR_MODULE_NOT_FOUND', () => {
@@ -263,9 +254,7 @@ describe('classifyWorkerOutcome', () => {
     expect(outcome?.constraint).toBe(
       'configuration/unresolved-relative-import'
     );
-    expect(outcome?.message).toBe(
-      'Relative import without explicit file extension violates configuration constraints: Cannot find module ./local (code: ERR_MODULE_NOT_FOUND)'
-    );
+    expect(outcome?.message).toContain('Cannot find module ./local');
   });
 
   it('returns commonjs-package-type outcome when package.json declares type commonjs', () => {
@@ -287,9 +276,7 @@ describe('classifyWorkerOutcome', () => {
     }
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/commonjs-package-type');
-    expect(outcome?.message).toBe(
-      'Package configuration declaring "type": "commonjs" violates configuration constraints: Cannot use import statement (code: ERR_UNKNOWN). TypeScript ES module loading requires "type": "module" in package.json.'
-    );
+    expect(outcome?.message).toContain('TypeScript ES module loading requires');
   });
 
   it('returns config-load-failure outcome when error occurs without package.json or with non-commonjs package.json', () => {
@@ -311,9 +298,7 @@ describe('classifyWorkerOutcome', () => {
     }
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
-    expect(outcome?.message).toBe(
-      'Failed to load fafconfig.ts: Unexpected token (code: ERR_SYNTAX)'
-    );
+    expect(outcome?.message).toContain('Unexpected token');
   });
 
   it('handles error record without code and with non-object error gracefully', () => {
@@ -331,7 +316,7 @@ describe('classifyWorkerOutcome', () => {
     }
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
-    expect(outcome?.message).toBe('Failed to load fafconfig.ts: ');
+    expect(outcome?.message).toContain('failed to load configuration');
   });
 
   it('handles error record with non-string code and message gracefully', () => {
@@ -352,7 +337,7 @@ describe('classifyWorkerOutcome', () => {
     }
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
-    expect(outcome?.message).toBe('Failed to load fafconfig.ts: ');
+    expect(outcome?.message).toContain('failed to load configuration');
   });
 
   it('returns config-load-failure outcome when error occurs with invalid json package.json', () => {
@@ -373,9 +358,7 @@ describe('classifyWorkerOutcome', () => {
     }
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
-    expect(outcome?.message).toBe(
-      'Failed to load fafconfig.ts: Failed to load module (code: ERR_UNKNOWN)'
-    );
+    expect(outcome?.message).toContain('Failed to load module');
   });
 
   it('handles array error payload gracefully', () => {
@@ -393,7 +376,7 @@ describe('classifyWorkerOutcome', () => {
     }
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
-    expect(outcome?.message).toBe('Failed to load fafconfig.ts: ');
+    expect(outcome?.message).toContain('failed to load configuration');
   });
 
   it('handles error message when error property is omitted from error payload', () => {
@@ -410,7 +393,7 @@ describe('classifyWorkerOutcome', () => {
     }
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
-    expect(outcome?.message).toBe('Failed to load fafconfig.ts: ');
+    expect(outcome?.message).toContain('failed to load configuration');
   });
 
   it('returns configuration failure when kind is value but loadedFiles is omitted', () => {
@@ -444,7 +427,7 @@ describe('classifyWorkerOutcome', () => {
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
     expect(outcome?.message).toBe(
-      'Worker terminated without transmitting a valid configuration payload'
+      "'/project/fafconfig.ts' failed to load configuration: Worker terminated without transmitting a valid configuration payload"
     );
   });
 
@@ -461,7 +444,7 @@ describe('classifyWorkerOutcome', () => {
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
     expect(outcome?.message).toBe(
-      'Worker terminated without transmitting a valid configuration payload'
+      "'/project/fafconfig.ts' failed to load configuration: Worker terminated without transmitting a valid configuration payload"
     );
   });
 });

@@ -8,8 +8,6 @@ describe('decodeConfigDiagnostic', () => {
     const diagnostic = {
       constraint: 'configuration/null-forbidden',
       kind: 'fixed',
-      message: 'Property "faf" cannot be null.',
-      normativeReference: 'CONFIG_2',
     };
     const encoded = `${DIAGNOSTIC_PREFIX}${JSON.stringify(diagnostic)}`;
 

@@ -1,15 +1,13 @@
 import type { TUnverifiedOutcome } from '../../../../../../../_conformity@shared/_types/outcome.type.js';
 
+import { createOutcome } from '../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
+
 export function notImplementedOutcome(
   element: string,
-  normativeReference: string
+  _normativeReference?: string
 ): TUnverifiedOutcome {
-  return {
-    constraint: 'unverified/not-implemented',
+  return createOutcome('unverified/not-implemented', {
     element,
-    family: 'unverified',
-    message: `Part '${element}' is not implemented (${normativeReference}).`,
-    normativeReference,
     reason: 'not-implemented',
-  };
+  });
 }

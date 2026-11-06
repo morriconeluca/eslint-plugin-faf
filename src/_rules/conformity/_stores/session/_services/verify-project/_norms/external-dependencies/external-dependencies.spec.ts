@@ -10,8 +10,8 @@ describe('verifyExternalDependencies', () => {
         constraint: 'unverified/not-implemented',
         element: 'external-dependencies',
         family: 'unverified',
-        message: "Part 'external-dependencies' is not implemented (§7.3).",
-        normativeReference: '§7.3',
+        message: "'external-dependencies' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

@@ -45,12 +45,12 @@ describe('plugin entrypoint', () => {
     expect(plugin.rules.conformity.meta?.type).toBe('problem');
     expect(plugin.rules.conformity.meta?.schema).toEqual([]);
     expect(plugin.rules.conformity.meta?.messages).toEqual({
-      acyclicity: '{{constraint}}: {{message}}',
-      classification: '{{constraint}}: {{message}}',
-      configuration: '{{constraint}}: {{message}}',
-      dependency: '{{constraint}}: {{message}}',
-      symbol: '{{constraint}}: {{message}}',
-      unverified: '{{constraint}}: {{message}}',
+      acyclicity: '{{constraint}}: {{message}} ({{reference}}).',
+      classification: '{{constraint}}: {{message}} ({{reference}}).',
+      configuration: '{{constraint}}: {{message}} ({{reference}}).',
+      dependency: '{{constraint}}: {{message}} ({{reference}}).',
+      symbol: '{{constraint}}: {{message}} ({{reference}}).',
+      unverified: '{{constraint}}: {{message}} ({{reference}}).',
     });
   });
 

@@ -31,7 +31,7 @@ const outcome: TScenarioMessage = {
   filePath: 'src/mystery/a.ts',
   line: 1,
   message:
-    "classification/unclassifiable-directory: Directory 'src/mystery' has no unique Logical Domain classification.",
+    "classification/unclassifiable-directory: 'src/mystery' has no unique Logical Domain classification (FAF §6.9).",
   messageId: 'classification',
   ruleId: 'faf/conformity',
   severity: 2,
@@ -43,7 +43,7 @@ const absent: TScenarioMessage = {
   element: 'peer-separation',
   filePath: 'fafconfig.ts',
   message:
-    "unverified/not-implemented: Part 'peer-separation' is not implemented (§5).",
+    "unverified/not-implemented: 'peer-separation' is not implemented (D-03).",
   messageId: 'unverified',
 };
 

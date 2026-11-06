@@ -51,10 +51,12 @@ describe('checkCatalogInvariants', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/duplicate-role-name');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_3');
+    expect(outcome?.normativeReference).toBe('FAF §6.3.1');
     expect(outcome?.propertyPath).toBe('faf.common.roles[1].name');
     expect(outcome?.element).toBe('faf.common.roles[1].name');
-    expect(outcome?.message).toBe('Duplicate role name "util".');
+    expect(outcome?.message).toBe(
+      '\'faf.common.roles[1].name\' is declared more than once in the role catalog: Duplicate role name "util"'
+    );
   });
 
   it('rejects duplicate category across roles', () => {
@@ -72,11 +74,11 @@ describe('checkCatalogInvariants', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/duplicate-category');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_3');
+    expect(outcome?.normativeReference).toBe('FAF §6.3.1');
     expect(outcome?.propertyPath).toBe('faf.common.roles[1].category');
     expect(outcome?.element).toBe('faf.common.roles[1].category');
     expect(outcome?.message).toBe(
-      'Category is already assigned to another role "_utils".'
+      '\'faf.common.roles[1].category\' is declared more than once in the role catalog: Category is already assigned to another role "_utils"'
     );
   });
 
@@ -92,10 +94,12 @@ describe('checkCatalogInvariants', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/duplicate-role-name');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_3');
+    expect(outcome?.normativeReference).toBe('FAF §6.3.1');
     expect(outcome?.propertyPath).toBe('faf.common.subGraphRoles[1].name');
     expect(outcome?.element).toBe('faf.common.subGraphRoles[1].name');
-    expect(outcome?.message).toBe('Duplicate sub-graph role name "spec".');
+    expect(outcome?.message).toBe(
+      '\'faf.common.subGraphRoles[1].name\' is declared more than once in the role catalog: Duplicate sub-graph role name "spec"'
+    );
   });
 
   it('rejects conflict between role name and sub-graph role name', () => {
@@ -112,11 +116,11 @@ describe('checkCatalogInvariants', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/role-name-conflict');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_3');
+    expect(outcome?.normativeReference).toBe('FAF §6.3.1');
     expect(outcome?.propertyPath).toBe('faf.common.subGraphRoles[0].name');
     expect(outcome?.element).toBe('faf.common.subGraphRoles[0].name');
     expect(outcome?.message).toBe(
-      'Sub-graph role "spec" conflicts with standard role name.'
+      '\'faf.common.subGraphRoles[0].name\' conflicts with a standard role name: Sub-graph role "spec" conflicts with standard role name'
     );
   });
 
@@ -148,7 +152,7 @@ describe('checkCatalogInvariants', () => {
       'configuration/duplicate-implicit-extension'
     );
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_3');
+    expect(outcome?.normativeReference).toBe('FAF §6.3.1');
     expect(outcome?.propertyPath).toBe(
       'faf.common.roles[1].implicitRoleExtensions[0]'
     );
@@ -156,7 +160,7 @@ describe('checkCatalogInvariants', () => {
       'faf.common.roles[1].implicitRoleExtensions[0]'
     );
     expect(outcome?.message).toBe(
-      'Implicit extension ".png" is already associated with role "image".'
+      '\'faf.common.roles[1].implicitRoleExtensions[0]\' is declared more than once across roles: Implicit extension ".png" is already associated with role "image"'
     );
   });
 
@@ -192,17 +196,17 @@ describe('checkCatalogInvariants', () => {
       'configuration/implicit-extension-role-name-prefix'
     );
     expect(outcomes[0]?.family).toBe('configuration');
-    expect(outcomes[0]?.normativeReference).toBe('CONFIG_3');
+    expect(outcomes[0]?.normativeReference).toBe('FAF §6.3.1');
     expect(outcomes[0]?.message).toBe(
-      'First segment "module" of implicit extension ".module.css" cannot match a role name.'
+      '\'faf.common.roles[1].implicitRoleExtensions[0]\' cannot start with a segment matching a role name: First segment "module" of implicit extension ".module.css" cannot match a role name'
     );
     expect(outcomes[1]?.constraint).toBe(
       'configuration/implicit-extension-role-name-prefix'
     );
     expect(outcomes[1]?.family).toBe('configuration');
-    expect(outcomes[1]?.normativeReference).toBe('CONFIG_3');
+    expect(outcomes[1]?.normativeReference).toBe('FAF §6.3.1');
     expect(outcomes[1]?.message).toBe(
-      'First segment "spec" of implicit extension ".spec.json" cannot match a role name.'
+      '\'faf.common.roles[2].implicitRoleExtensions[0]\' cannot start with a segment matching a role name: First segment "spec" of implicit extension ".spec.json" cannot match a role name'
     );
   });
 });

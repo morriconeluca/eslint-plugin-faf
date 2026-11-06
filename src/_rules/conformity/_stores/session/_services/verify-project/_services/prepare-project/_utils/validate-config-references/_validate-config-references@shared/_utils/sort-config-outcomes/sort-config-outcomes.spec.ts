@@ -14,7 +14,7 @@ function outcome(
     element,
     family: 'configuration',
     message: element,
-    normativeReference: 'CONFIG_4',
+    normativeReference: 'D-14',
     propertyPath,
   };
 }

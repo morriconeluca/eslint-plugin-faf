@@ -3,10 +3,9 @@ import type {
   TAcquirePathAliasesResult,
 } from './acquire-path-aliases.type.js';
 
+import { createOutcome } from '../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import {
   COMMON_ALIASES_PROPERTY_PATH,
-  CONFIG_9_REFERENCE,
-  DUPLICATE_ALIAS_SOURCE_CONSTRAINT,
   FAF_CONFIG_ELEMENT,
 } from './_acquire-path-aliases@shared/_constants/acquire-path-aliases.constant.js';
 import { parsePackageJsonImports } from './_schemas/parse-package-json-imports/index.js';
@@ -30,15 +29,10 @@ export function acquirePathAliases(
       return {
         ok: false,
         outcomes: [
-          {
-            constraint: DUPLICATE_ALIAS_SOURCE_CONSTRAINT,
+          createOutcome('configuration/duplicate-alias-source', {
             element: FAF_CONFIG_ELEMENT,
-            family: 'configuration',
-            message:
-              'Path aliases must not be declared in both fafconfig.ts common.aliases and package.json imports',
-            normativeReference: CONFIG_9_REFERENCE,
             propertyPath: COMMON_ALIASES_PROPERTY_PATH,
-          },
+          }),
         ],
       };
     }

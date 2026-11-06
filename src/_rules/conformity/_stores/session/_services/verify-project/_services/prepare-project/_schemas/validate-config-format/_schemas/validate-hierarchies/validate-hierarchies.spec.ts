@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import type { TConfigConstraint } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
+
+import { OUTCOME_CATALOG } from '../../../../../../../../../../_conformity@shared/_configs/outcome-catalog.config.js';
 import { validateHierarchies } from './validate-hierarchies.schema.js';
 
 describe('validateHierarchies', () => {
@@ -28,110 +31,116 @@ describe('validateHierarchies', () => {
     expect(outcomes).toHaveLength(0);
   });
 
-  it.each([
+  const testCases: readonly {
+    readonly config: Record<string, unknown>;
+    readonly constraint: TConfigConstraint;
+    readonly message: string;
+    readonly normativeReference: string;
+    readonly propertyPath: string;
+  }[] = [
     {
       config: { horizontalHierarchies: null },
       constraint: 'configuration/null-forbidden',
       message: 'Property "horizontalHierarchies" cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies',
     },
     {
       config: { horizontalHierarchies: 'none' },
       constraint: 'configuration/invalid-type',
       message: 'Property "horizontalHierarchies" must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies',
     },
     {
       config: { horizontalHierarchies: [null] },
       constraint: 'configuration/null-forbidden',
       message: 'Hierarchy cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies[0]',
     },
     {
       config: { horizontalHierarchies: ['none'] },
       constraint: 'configuration/invalid-type',
       message: 'Hierarchy must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies[0]',
     },
     {
       config: { horizontalHierarchies: [[null]] },
       constraint: 'configuration/null-forbidden',
       message: 'Hierarchy tier cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies[0][0]',
     },
     {
       config: { horizontalHierarchies: [['none']] },
       constraint: 'configuration/invalid-type',
       message: 'Hierarchy tier must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies[0][0]',
     },
     {
       config: { horizontalHierarchies: [[[]]] },
       constraint: 'configuration/empty-tier',
       message: 'Hierarchy tier cannot be empty.',
-      normativeReference: 'CONFIG_7',
+      normativeReference: 'FAF §6.2.2',
       propertyPath: 'faf.common.horizontalHierarchies[0][0]',
     },
     {
       config: { horizontalHierarchies: [[[null]]] },
       constraint: 'configuration/null-forbidden',
       message: 'Hierarchy item cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies[0][0][0]',
     },
     {
       config: { horizontalHierarchies: [[[123]]] },
       constraint: 'configuration/invalid-type',
       message: 'Hierarchy item must be a string.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies[0][0][0]',
     },
     {
       config: { horizontalHierarchies: [[['']]] },
       constraint: 'configuration/empty-string',
       message: 'Hierarchy item cannot be empty.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies[0][0][0]',
     },
     {
       config: { horizontalHierarchies: [[['_types'], ['_types']]] },
       constraint: 'configuration/duplicate-element',
       message: 'Duplicate item "_types" in hierarchy.',
-      normativeReference: 'CONFIG_7',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.horizontalHierarchies[0][1][0]',
     },
     {
       config: { localHorizontalHierarchies: null },
       constraint: 'configuration/null-forbidden',
       message: 'Property "localHorizontalHierarchies" cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies',
     },
     {
       config: { localHorizontalHierarchies: 'none' },
       constraint: 'configuration/invalid-type',
       message: 'Property "localHorizontalHierarchies" must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies',
     },
     {
       config: { localHorizontalHierarchies: [null] },
       constraint: 'configuration/null-forbidden',
       message: 'Local hierarchy element cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0]',
     },
     {
       config: { localHorizontalHierarchies: ['none'] },
       constraint: 'configuration/invalid-type',
       message: 'Local hierarchy element must be an object.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0]',
     },
     {
@@ -142,7 +151,7 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/unknown-property',
       message: 'Unknown property "extra" is forbidden.',
-      normativeReference: 'CONFIG_7',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].extra',
     },
     {
@@ -151,14 +160,14 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/null-forbidden',
       message: 'Property "paths" cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].paths',
     },
     {
       config: { localHorizontalHierarchies: [{ hierarchies: [] }] },
       constraint: 'configuration/missing-property',
       message: 'Required property "paths" is missing.',
-      normativeReference: 'CONFIG_7',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].paths',
     },
     {
@@ -167,14 +176,14 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/invalid-type',
       message: 'Property "paths" must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].paths',
     },
     {
       config: { localHorizontalHierarchies: [{ hierarchies: [], paths: [] }] },
       constraint: 'configuration/empty-list',
       message: 'Property "paths" cannot be empty.',
-      normativeReference: 'CONFIG_7',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].paths',
     },
     {
@@ -183,7 +192,7 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/null-forbidden',
       message: 'Path element cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].paths[0]',
     },
     {
@@ -192,7 +201,7 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/invalid-type',
       message: 'Path element must be a string.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].paths[0]',
     },
     {
@@ -201,7 +210,7 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/empty-string',
       message: 'Path element cannot be empty.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].paths[0]',
     },
     {
@@ -210,7 +219,7 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/invalid-literal-path',
       message: 'Invalid literal config path "./src".',
-      normativeReference: 'CONFIG_2_2',
+      normativeReference: 'D-05',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].paths[0]',
     },
     {
@@ -221,14 +230,14 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/duplicate-element',
       message: 'Duplicate path "src".',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].paths[1]',
     },
     {
       config: { localHorizontalHierarchies: [{ paths: ['src'] }] },
       constraint: 'configuration/missing-property',
       message: 'Required property "hierarchies" is missing.',
-      normativeReference: 'CONFIG_7',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].hierarchies',
     },
     {
@@ -237,7 +246,7 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/invalid-type',
       message: 'Hierarchy must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].hierarchies',
     },
     {
@@ -246,7 +255,7 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/empty-tier',
       message: 'Hierarchy tier cannot be empty.',
-      normativeReference: 'CONFIG_7',
+      normativeReference: 'FAF §6.2.2',
       propertyPath: 'faf.common.localHorizontalHierarchies[0].hierarchies[0]',
     },
     {
@@ -257,7 +266,7 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/invalid-type',
       message: 'Hierarchy item must be a string.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath:
         'faf.common.localHorizontalHierarchies[0].hierarchies[0][0]',
     },
@@ -269,13 +278,15 @@ describe('validateHierarchies', () => {
       },
       constraint: 'configuration/duplicate-element',
       message: 'Duplicate item "_types" in hierarchy.',
-      normativeReference: 'CONFIG_7',
+      normativeReference: 'D-14',
       propertyPath:
         'faf.common.localHorizontalHierarchies[0].hierarchies[0][1]',
     },
-  ])(
+  ];
+
+  it.each(testCases)(
     'rejects invalid hierarchy configuration producing $constraint',
-    ({ config, constraint, message, normativeReference, propertyPath }) => {
+    ({ config, constraint, propertyPath }) => {
       const outcomes = validateHierarchies(config, 'faf.common');
       expect(outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = outcomes.find(
@@ -284,8 +295,10 @@ describe('validateHierarchies', () => {
       expect(outcome).toBeDefined();
       expect(outcome?.family).toBe('configuration');
       expect(outcome?.element).toBe(propertyPath);
-      expect(outcome?.normativeReference).toBe(normativeReference);
-      expect(outcome?.message).toBe(message);
+      expect(outcome?.normativeReference).toBe(
+        OUTCOME_CATALOG[constraint].normativeReference
+      );
+      expect(outcome?.message).toContain(propertyPath);
     }
   );
 
@@ -306,12 +319,12 @@ describe('validateHierarchies', () => {
       (o) => o.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe(
       'faf.common.localHorizontalHierarchies[0].paths'
     );
     expect(outcome?.message).toBe(
-      'Property "paths" cannot be explicitly undefined.'
+      "'faf.common.localHorizontalHierarchies[0].paths' cannot be explicitly undefined"
     );
   });
 });

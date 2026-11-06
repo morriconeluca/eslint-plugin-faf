@@ -9,11 +9,7 @@ export const configFormatSchema: z.ZodType<TFAFConfig> =
   configShape.root.refine(
     (value): value is TFAFConfig => value.faf.locals.length > 0,
     {
-      message: formFields.fixed(
-        'configuration/empty-list',
-        'CONFIG_5',
-        'Property "locals" must contain at least one local configuration.'
-      ),
+      message: formFields.fixed('configuration/empty-list'),
       path: ['faf', 'locals'],
     }
   );

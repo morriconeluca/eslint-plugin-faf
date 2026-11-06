@@ -658,21 +658,21 @@ describe('acceptance: declarations and classification boundaries', () => {
     [
       'privateCategories',
       { ...local, privateCategories: { [table + '/_components']: false } },
-      'Unknown property "privateCategories" is forbidden.',
+      'faf.locals[0].privateCategories',
     ],
     [
       'Access Node Rank',
       { ...local, accessNodeRank: 0 },
-      'Unknown property "accessNodeRank" is forbidden.',
+      'faf.locals[0].accessNodeRank',
     ],
     [
       'Sub-Graph Role Rank',
       { ...local, subGraphRoles: [{ name: 'spec', rank: 0 }] },
-      'Unknown property "rank" is forbidden on sub-graph role.',
+      'faf.locals[0].subGraphRoles[0].rank',
     ],
   ] as const)(
     'rejects a declaration that tries to redefine %s',
-    async (_name, declaration, message) => {
+    async (_name, declaration, propertyPath) => {
       const fixture = await createProject(tableTree, {
         faf: { locals: [declaration] },
       });
@@ -684,10 +684,10 @@ describe('acceptance: declarations and classification boundaries', () => {
             {
               column: 1,
               constraint: 'configuration/unknown-property',
-              element: 'fafconfig.ts',
+              element: propertyPath,
               filePath: 'fafconfig.ts',
               line: 1,
-              message: `configuration/unknown-property: ${message}`,
+              message: `configuration/unknown-property: '${propertyPath}' is not a recognized property (D-14).`,
               messageId: 'configuration',
               ruleId: 'faf/conformity',
               severity: 2,

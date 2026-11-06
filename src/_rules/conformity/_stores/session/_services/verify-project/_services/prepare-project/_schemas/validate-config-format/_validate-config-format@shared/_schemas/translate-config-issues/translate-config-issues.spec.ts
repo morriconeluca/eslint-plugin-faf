@@ -15,8 +15,6 @@ describe('translateConfigIssues', () => {
           message: encode({
             constraint: 'configuration/invalid-literal-path',
             kind: 'fixed',
-            message: 'Invalid literal config path "./src".',
-            normativeReference: 'CONFIG_2_2',
           }),
           path: [0],
         },
@@ -30,8 +28,9 @@ describe('translateConfigIssues', () => {
         constraint: 'configuration/invalid-literal-path',
         element: 'faf.locals[0].rootLayers[0]',
         family: 'configuration',
-        message: 'Invalid literal config path "./src".',
-        normativeReference: 'CONFIG_2_2',
+        message:
+          "'faf.locals[0].rootLayers[0]' must be a POSIX relative path without empty or parent segments",
+        normativeReference: 'D-05',
         propertyPath: 'faf.locals[0].rootLayers[0]',
       },
     ]);
@@ -46,8 +45,6 @@ describe('translateConfigIssues', () => {
           message: encode({
             constraint: 'configuration/unknown-property',
             kind: 'keys',
-            messageStyle: 'root',
-            normativeReference: 'CONFIG_1',
           }),
           path: [],
         },
@@ -57,10 +54,8 @@ describe('translateConfigIssues', () => {
     );
 
     expect(outcomes[0]?.propertyPath).toBe('trees');
-    expect(outcomes[0]?.message).toBe(
-      'Unknown property "trees" is forbidden on root configuration object.'
-    );
-    expect(outcomes[0]?.normativeReference).toBe('CONFIG_1');
+    expect(outcomes[0]?.message).toBe("'trees' is not a recognized property");
+    expect(outcomes[0]?.normativeReference).toBe('D-14');
   });
 
   it('rejects a key diagnostic that is not an unrecognized-keys issue', () => {
@@ -72,8 +67,6 @@ describe('translateConfigIssues', () => {
             message: encode({
               constraint: 'configuration/unknown-property',
               kind: 'keys',
-              messageStyle: 'faf',
-              normativeReference: 'CONFIG_2',
             }),
             path: ['faf'],
           },
@@ -94,27 +87,19 @@ describe('translateConfigIssues', () => {
             emptyList: {
               constraint: 'configuration/empty-list',
               kind: 'fixed',
-              message: 'Property "{path}" cannot be empty.',
-              normativeReference: 'CONFIG_6',
             },
             explicit: {
               constraint: 'configuration/explicit-undefined',
               kind: 'fixed',
-              message: 'explicit',
-              normativeReference: 'CONFIG_2',
             },
             invalid: {
               constraint: 'configuration/invalid-type',
               kind: 'fixed',
-              message: 'invalid',
-              normativeReference: 'CONFIG_2',
             },
             kind: 'absent',
             missing: {
               constraint: 'configuration/missing-property',
               kind: 'fixed',
-              message: 'missing',
-              normativeReference: 'CONFIG_2',
             },
           }),
           path: ['paths', 0],
@@ -127,7 +112,7 @@ describe('translateConfigIssues', () => {
     expect(outcomes[0]?.constraint).toBe('configuration/empty-list');
     expect(outcomes[0]?.propertyPath).toBe('faf.common.foreignNodes[0].paths');
     expect(outcomes[0]?.message).toBe(
-      'Property "faf.common.foreignNodes[0].paths" cannot be empty.'
+      "'faf.common.foreignNodes[0].paths' cannot be an empty list"
     );
   });
 
@@ -141,27 +126,19 @@ describe('translateConfigIssues', () => {
             emptyList: {
               constraint: 'configuration/empty-list',
               kind: 'fixed',
-              message: 'empty',
-              normativeReference: 'CONFIG_5',
             },
             explicit: {
               constraint: 'configuration/explicit-undefined',
               kind: 'fixed',
-              message: 'explicit',
-              normativeReference: 'CONFIG_2',
             },
             invalid: {
               constraint: 'configuration/invalid-type',
               kind: 'fixed',
-              message: 'invalid',
-              normativeReference: 'CONFIG_2',
             },
             kind: 'absent',
             missing: {
               constraint: 'configuration/missing-property',
               kind: 'fixed',
-              message: 'missing',
-              normativeReference: 'CONFIG_2',
             },
           }),
           path: ['locals', 0, 'name'],
@@ -184,27 +161,19 @@ describe('translateConfigIssues', () => {
             emptyList: {
               constraint: 'configuration/empty-list',
               kind: 'fixed',
-              message: 'empty',
-              normativeReference: 'CONFIG_5',
             },
             explicit: {
               constraint: 'configuration/explicit-undefined',
               kind: 'fixed',
-              message: 'explicit',
-              normativeReference: 'CONFIG_2',
             },
             invalid: {
               constraint: 'configuration/invalid-type',
               kind: 'fixed',
-              message: 'invalid',
-              normativeReference: 'CONFIG_2',
             },
             kind: 'absent',
             missing: {
               constraint: 'configuration/missing-property',
               kind: 'fixed',
-              message: 'missing',
-              normativeReference: 'CONFIG_2',
             },
           }),
           path: [0],

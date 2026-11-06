@@ -10,8 +10,8 @@ describe('verifyReExportProhibition', () => {
         constraint: 'unverified/not-implemented',
         element: 're-export-prohibition',
         family: 'unverified',
-        message: "Part 're-export-prohibition' is not implemented (§5).",
-        normativeReference: '§5',
+        message: "'re-export-prohibition' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

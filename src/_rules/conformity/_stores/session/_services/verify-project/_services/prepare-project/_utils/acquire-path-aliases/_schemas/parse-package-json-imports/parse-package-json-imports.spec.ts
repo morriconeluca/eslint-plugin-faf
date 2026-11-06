@@ -22,8 +22,9 @@ describe('parsePackageJsonImports', () => {
       constraint: 'configuration/invalid-alias-source',
       element: 'package.json',
       family: 'configuration',
-      message: 'package.json imports must be a JSON object',
-      normativeReference: 'CONFIG_9',
+      message:
+        "'package.json' must declare valid imports with subpath keys: package.json imports must be a JSON object",
+      normativeReference: 'FAF §7.4',
       propertyPath: 'imports',
     });
   });
@@ -120,7 +121,7 @@ describe('parsePackageJsonImports', () => {
       expect(!result.ok && result.outcomes[0]?.element).toBe('package.json');
       expect(!result.ok && result.outcomes[0]?.family).toBe('configuration');
       expect(!result.ok && result.outcomes[0]?.normativeReference).toBe(
-        'CONFIG_9'
+        'FAF §7.4'
       );
     }
   );

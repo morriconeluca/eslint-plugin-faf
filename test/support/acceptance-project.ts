@@ -140,7 +140,7 @@ export const lintScenario = async (
       const part =
         normalized.constraint === 'unverified/not-implemented' &&
         message.messageId === 'unverified'
-          ? /^unverified\/not-implemented: Part '([^']+)' is not implemented/.exec(
+          ? /^unverified\/not-implemented: '([^']+)' is not implemented \(D-03\)\./.exec(
               message.message
             )?.[1]
           : undefined;
@@ -176,7 +176,7 @@ export const expectScenario = (
     }),
   ]);
   expect(absent[0]?.message).toContain(
-    `Part '${responsiblePart}' is not implemented`
+    `'${responsiblePart}' is not implemented (D-03).`
   );
   expect(result.messages).toEqual([]);
 };

@@ -4,10 +4,10 @@ import path from 'node:path';
 import type { TEntryKind } from '../../../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 import type { TProcessDirentResult } from './process-dirent.type.js';
 
+import { createOutcome } from '../../../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { toPosixPath } from '../../../../../../../../../../_session@shared/_utils/to-posix-path/index.js';
 import { assertInvariant } from '../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { toRelativeRealPath } from '../../_scan-tree-origin@shared/_utils/to-relative-real-path/index.js';
-import { UNREADABLE_ENTRY_CONSTRAINT } from './process-dirent.constant.js';
 
 export function processDirent(
   dirent: fs.Dirent,
@@ -32,14 +32,11 @@ export function processDirent(
     } catch (error: unknown) {
       assertInvariant(error instanceof Error, 'Expected file system error');
       return {
-        outcome: {
-          constraint: UNREADABLE_ENTRY_CONSTRAINT,
+        outcome: createOutcome('unverified/unreadable-entry', {
+          detail: error.message,
           element: itemRelative,
-          family: 'unverified',
-          message: `Entry '${itemRelative}' could not be inspected: ${error.message}`,
-          normativeReference: '§6',
           reason: error.message,
-        },
+        }),
       };
     }
   }

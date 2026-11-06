@@ -8,19 +8,19 @@ describe('notImplementedOutcome', () => {
       constraint: 'unverified/not-implemented',
       element: 'containment-matrix',
       family: 'unverified',
-      message: "Part 'containment-matrix' is not implemented (§6.8).",
-      normativeReference: '§6.8',
+      message: "'containment-matrix' is not implemented",
+      normativeReference: 'D-03',
       reason: 'not-implemented',
     });
   });
 
-  it('keeps the part name and the FAF section distinct', () => {
+  it('produces the catalog normative reference D-03 for not-implemented outcomes', () => {
     expect(notImplementedOutcome('acyclicity', '§5, §7.2')).toEqual({
       constraint: 'unverified/not-implemented',
       element: 'acyclicity',
       family: 'unverified',
-      message: "Part 'acyclicity' is not implemented (§5, §7.2).",
-      normativeReference: '§5, §7.2',
+      message: "'acyclicity' is not implemented",
+      normativeReference: 'D-03',
       reason: 'not-implemented',
     });
   });

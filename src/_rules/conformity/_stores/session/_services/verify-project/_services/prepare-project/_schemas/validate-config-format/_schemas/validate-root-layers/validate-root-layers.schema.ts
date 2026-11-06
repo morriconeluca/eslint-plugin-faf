@@ -1,5 +1,6 @@
 import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
+import { createOutcome } from '../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { translateConfigIssues } from '../../_validate-config-format@shared/_schemas/translate-config-issues/index.js';
 import { rootLayersSchema } from './_schemas/root-layers-schema/index.js';
 
@@ -28,14 +29,11 @@ export function validateRootLayers(
       continue;
     }
     if (seen.has(item)) {
-      duplicates.push({
-        constraint: 'configuration/duplicate-element',
-        element: `${basePath}.rootLayers[${index}]`,
-        family: 'configuration',
-        message: `Duplicate root layer "${item}".`,
-        normativeReference: 'CONFIG_2',
-        propertyPath: `${basePath}.rootLayers[${index}]`,
-      });
+      duplicates.push(
+        createOutcome('configuration/duplicate-element', {
+          propertyPath: `${basePath}.rootLayers[${index}]`,
+        })
+      );
     } else {
       seen.add(item);
     }

@@ -7,11 +7,12 @@ import type {
 } from './discover-config.type.js';
 
 import { CONFIG_FILE_NAME } from '../../../../_src@shared/_constants/faf.constant.js';
+import { createOutcome } from '../../_conformity@shared/_utils/create-outcome/index.js';
 
 export function discoverConfig(
   input: TDiscoverConfigInput
 ): TDiscoverConfigResult {
-  const missingConstraint = 'configuration/missing-config-file';
+  const missingConfigFile = 'configuration/missing-config-file';
   if (input.configFile !== undefined) {
     const configProperty = 'settings.faf.configFile';
     const candidatePath = nodePath.isAbsolute(input.configFile)
@@ -19,34 +20,14 @@ export function discoverConfig(
       : nodePath.resolve(input.workingDirectory, input.configFile);
 
     const stats = nodeFs.statSync(candidatePath, { throwIfNoEntry: false });
-    if (stats === undefined) {
+    if (stats === undefined || !stats.isFile()) {
       return {
         ok: false,
         outcomes: [
-          {
-            constraint: missingConstraint,
+          createOutcome(missingConfigFile, {
             element: candidatePath,
-            family: 'configuration',
-            message: `Explicit configuration file not found at path: ${candidatePath}`,
-            normativeReference: 'CONFIG_1',
             propertyPath: configProperty,
-          },
-        ],
-      };
-    }
-
-    if (!stats.isFile()) {
-      return {
-        ok: false,
-        outcomes: [
-          {
-            constraint: missingConstraint,
-            element: candidatePath,
-            family: 'configuration',
-            message: `Explicit configuration path is not a file: ${candidatePath}`,
-            normativeReference: 'CONFIG_1',
-            propertyPath: configProperty,
-          },
+          }),
         ],
       };
     }
@@ -90,14 +71,10 @@ export function discoverConfig(
   return {
     ok: false,
     outcomes: [
-      {
-        constraint: missingConstraint,
+      createOutcome(missingConfigFile, {
         element: resolvedWorkingDirectory,
-        family: 'configuration',
-        message: `No ${CONFIG_FILE_NAME} configuration file found in working directory or parent directories: ${resolvedWorkingDirectory}`,
-        normativeReference: 'CONFIG_1',
         propertyPath: 'faf',
-      },
+      }),
     ],
   };
 }

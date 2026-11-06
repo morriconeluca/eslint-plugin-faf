@@ -66,7 +66,7 @@ describe('analyzeModuleSource', () => {
       'unverified/unreadable-entry'
     );
     expect(analysis.outcomes[0]?.message).toBe(
-      "File 'src/file.ts' is missing."
+      "'src/file.ts' could not be inspected: File is missing"
     );
   });
 
@@ -106,7 +106,7 @@ describe('analyzeModuleSource', () => {
       'unverified/unreadable-entry'
     );
     expect(analysis.outcomes[0]?.message).toBe(
-      "File 'src/file.ts' is not valid UTF-8."
+      "'src/file.ts' could not be inspected: Text is not valid UTF-8"
     );
   });
 

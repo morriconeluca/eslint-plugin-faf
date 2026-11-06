@@ -220,9 +220,9 @@ describe('scanTreeOrigin', () => {
       expect(outcomes[0]?.family).toBe('unverified');
       expect(outcomes[0]?.constraint).toBe('unverified/unreadable-entry');
       expect(outcomes[0]?.element).toBe('src/locked');
-      expect(outcomes[0]?.normativeReference).toBe('§6');
+      expect(outcomes[0]?.normativeReference).toBe('D-06');
       expect(outcomes[0]?.message).toContain(
-        "Directory 'src/locked' could not be read:"
+        "'src/locked' could not be inspected:"
       );
     } finally {
       fs.chmodSync(path.join(fixture.path, 'src/locked'), 0o700);

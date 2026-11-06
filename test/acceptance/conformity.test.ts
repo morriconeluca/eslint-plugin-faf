@@ -77,7 +77,7 @@ describe('acceptance: faf/conformity', () => {
         expect(message.messageId).toBe('unverified');
         expect(message.line).toBe(1);
         expect(message.message).toContain('unverified/not-implemented');
-        const matched = /Part '([^']+)' is not implemented/.exec(
+        const matched = /'([^']+)' is not implemented \(D-03\)\./.exec(
           message.message
         );
         return matched?.[1];
@@ -184,12 +184,12 @@ describe('acceptance: faf/conformity', () => {
           (message) =>
             message.ruleId === 'faf/conformity' &&
             message.messageId === 'classification' &&
-            message.message.includes("Directory 'src/mystery'")
+            message.message.includes("'src/mystery'")
         )
       ).toBe(true);
       expect(
         laterMessages.some((message) =>
-          message.message.includes("Directory 'src/mystery'")
+          message.message.includes("'src/mystery'")
         )
       ).toBe(false);
     } finally {

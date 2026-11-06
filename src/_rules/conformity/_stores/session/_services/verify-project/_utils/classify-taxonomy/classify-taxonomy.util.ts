@@ -12,14 +12,10 @@ import type {
   TTaxonomyClassification,
 } from './_classify-taxonomy@shared/_types/classify-taxonomy.type.js';
 
+import { createOutcome } from '../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import {
   ABSENT_ROLE,
-  CONFIGURATION_FAMILY,
-  CONSTRAINT_CONTRADICTORY_ROOT_FOREIGN,
-  CONSTRAINT_UNDECLARED_SUB_ROOT_FRAGMENT,
-  CONSTRAINT_UNENUMERATED_ROOT_FILE,
   DOMAIN_FRAGMENT,
-  NORMATIVE_SECTION_6_2,
   UNDERSCORE,
 } from './_classify-taxonomy@shared/_constants/classification-constraints.constant.js';
 import { compareConfigOutcomes } from './_classify-taxonomy@shared/_utils/compare-config-outcomes/index.js';
@@ -89,22 +85,22 @@ export function classifyTaxonomy(
       if (classified.conflict !== null) {
         const isContradictory =
           classified.conflict === 'contradictory-root-foreign';
-        outcomes.push({
-          constraint: isContradictory
-            ? CONSTRAINT_CONTRADICTORY_ROOT_FOREIGN
-            : CONSTRAINT_UNENUMERATED_ROOT_FILE,
-          element: child.path,
-          family: CONFIGURATION_FAMILY,
-          message: isContradictory
-            ? `Root Node '${child.path}' is also designated as a Foreign Node.`
-            : `Direct file '${child.path}' of a Root Fragment is neither enumerated nor designated Foreign.`,
-          normativeReference: NORMATIVE_SECTION_6_2,
-          propertyPath: isContradictory
-            ? (treeBuild.rootNodePropertyPaths.get(child.path) ??
-              `trees[${treeIndex}].rootFragments`)
-            : (treeBuild.rootFragmentPropertyPaths.get(parent.path) ??
-              `trees[${treeIndex}].rootFragments`),
-        });
+        const propertyPath = isContradictory
+          ? (treeBuild.rootNodePropertyPaths.get(child.path) ??
+            `trees[${treeIndex}].rootFragments`)
+          : (treeBuild.rootFragmentPropertyPaths.get(parent.path) ??
+            `trees[${treeIndex}].rootFragments`);
+        outcomes.push(
+          createOutcome(
+            isContradictory
+              ? 'configuration/contradictory-root-foreign'
+              : 'configuration/unenumerated-root-file',
+            {
+              element: child.path,
+              propertyPath,
+            }
+          )
+        );
       }
       drafts.set(child.id, {
         ...classified.fields,
@@ -124,14 +120,12 @@ export function classifyTaxonomy(
       const fragmentBase =
         fragmentPropertyPath ?? `trees[${treeIndex}].rootFragments`;
       const propertyPath = `${fragmentBase}.subRootFragments`;
-      outcomes.push({
-        constraint: CONSTRAINT_UNDECLARED_SUB_ROOT_FRAGMENT,
-        element: child.path,
-        family: CONFIGURATION_FAMILY,
-        message: `Frontier directory '${child.path}' is not declared in subRootFragments.`,
-        normativeReference: NORMATIVE_SECTION_6_2,
-        propertyPath,
-      });
+      outcomes.push(
+        createOutcome('configuration/undeclared-sub-root-fragment', {
+          element: child.path,
+          propertyPath,
+        })
+      );
       drafts.set(child.id, {
         domainKind: null,
         entryKind: child.kind,

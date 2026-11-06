@@ -10,8 +10,8 @@ describe('verifyFragmentAnatomy', () => {
         constraint: 'unverified/not-implemented',
         element: 'fragment-anatomy',
         family: 'unverified',
-        message: "Part 'fragment-anatomy' is not implemented (§6.1.1).",
-        normativeReference: '§6.1.1',
+        message: "'fragment-anatomy' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

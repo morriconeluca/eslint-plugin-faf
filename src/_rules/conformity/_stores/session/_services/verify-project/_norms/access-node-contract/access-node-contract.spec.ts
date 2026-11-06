@@ -10,8 +10,8 @@ describe('verifyAccessNodeContract', () => {
         constraint: 'unverified/not-implemented',
         element: 'access-node-contract',
         family: 'unverified',
-        message: "Part 'access-node-contract' is not implemented (§6.1.1).",
-        normativeReference: '§6.1.1',
+        message: "'access-node-contract' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

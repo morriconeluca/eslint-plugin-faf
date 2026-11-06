@@ -77,7 +77,7 @@ const configOutcome = (element: string): TOutcome => ({
   element,
   family: 'configuration',
   message: 'Unknown property.',
-  normativeReference: 'CONFIG_1',
+  normativeReference: 'D-14',
   propertyPath: 'extra',
 });
 
@@ -86,7 +86,7 @@ const classificationOutcome = (element: string): TOutcome => ({
   element,
   family: 'classification',
   message: `Directory '${element}' has no unique Logical Domain classification.`,
-  normativeReference: '§6.9',
+  normativeReference: 'FAF §6.9',
 });
 
 describe('selectAnchorPath', () => {

@@ -1,10 +1,3 @@
-export const CONFIG_4 = 'CONFIG_4' as const;
-export const CONFIG_5 = 'CONFIG_5' as const;
-export const CONFIG_6 = 'CONFIG_6' as const;
-export const CONFIG_7 = 'CONFIG_7' as const;
-export const CONFIG_8 = 'CONFIG_8' as const;
-export const CONFIG_10 = 'CONFIG_10' as const;
-
 export const UNASSIGNED_LOCAL_INDEX = -1;
 
 export const CONSTRAINT_NON_EXISTENT_PATH =

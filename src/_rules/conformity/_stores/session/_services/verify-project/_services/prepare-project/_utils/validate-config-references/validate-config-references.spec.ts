@@ -31,7 +31,9 @@ function constraintsOf(
   const outcomes = validateConfigReferences(config, declarations, inventory);
   for (const outcome of outcomes) {
     expect(outcome.message).toContain(outcome.element);
-    expect(outcome.message).toContain(phraseFor(outcome.propertyPath));
+    expect(outcome.message.toLowerCase()).toContain(
+      phraseFor(outcome.propertyPath).toLowerCase()
+    );
     expect(outcome.message.length).toBeGreaterThan(outcome.element.length);
     expect(outcome.family).toBe('configuration');
     expect(outcome.normativeReference.length).toBeGreaterThan(0);
@@ -117,13 +119,13 @@ function outcomeFallbackPhrase(propertyPath: string): string {
     return 'Root node';
   }
   if (propertyPath.includes('publicRootNodes')) {
-    return 'Public root node';
+    return 'public';
   }
   if (propertyPath.includes('treeDependencies')) {
     return 'Tree dependency';
   }
   if (propertyPath.includes('externalDependencies')) {
-    return 'External dependency target';
+    return 'External dependency';
   }
   if (propertyPath.includes('dependencyEdges')) {
     return 'Root dependency';
@@ -361,7 +363,7 @@ describe('validateConfigReferences', () => {
         inventory
       );
       expect(outcome?.message).toContain('C:/project');
-      expect(outcome?.normativeReference).toBe('CONFIG_5');
+      expect(outcome?.normativeReference).toBe('D-14');
     });
   });
 

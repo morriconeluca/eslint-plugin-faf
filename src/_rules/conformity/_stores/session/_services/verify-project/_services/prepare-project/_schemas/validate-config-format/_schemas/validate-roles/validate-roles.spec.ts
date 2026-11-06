@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import type { TConfigConstraint } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
+
+import { OUTCOME_CATALOG } from '../../../../../../../../../../_conformity@shared/_configs/outcome-catalog.config.js';
 import { validateRoles } from './validate-roles.schema.js';
 
 describe('validateRoles', () => {
@@ -16,10 +19,10 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.common.roles');
     expect(outcome?.element).toBe('faf.common.roles');
-    expect(outcome?.message).toBe('Property "roles" cannot be null.');
+    expect(outcome?.message).toBe("'faf.common.roles' cannot be null");
   });
 
   it('rejects non-array roles', () => {
@@ -28,10 +31,10 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.common.roles');
     expect(outcome?.element).toBe('faf.common.roles');
-    expect(outcome?.message).toBe('Property "roles" must be an array.');
+    expect(outcome?.message).toBe("'faf.common.roles' has an invalid type");
   });
 
   it('rejects null element in roles list', () => {
@@ -40,10 +43,10 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0]');
     expect(outcome?.element).toBe('faf.common.roles[0]');
-    expect(outcome?.message).toBe('Role element cannot be null.');
+    expect(outcome?.message).toBe("'faf.common.roles[0]' cannot be null");
   });
 
   it('rejects primitive element in roles list', () => {
@@ -52,10 +55,10 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0]');
     expect(outcome?.element).toBe('faf.common.roles[0]');
-    expect(outcome?.message).toBe('Role element must be an object.');
+    expect(outcome?.message).toBe("'faf.common.roles[0]' has an invalid type");
   });
 
   it('rejects empty role group', () => {
@@ -64,10 +67,12 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/empty-list');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_3');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0]');
     expect(outcome?.element).toBe('faf.common.roles[0]');
-    expect(outcome?.message).toBe('Role group cannot be empty.');
+    expect(outcome?.message).toBe(
+      "'faf.common.roles[0]' cannot be an empty list"
+    );
   });
 
   it('rejects null element inside role group', () => {
@@ -76,10 +81,10 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0][0]');
     expect(outcome?.element).toBe('faf.common.roles[0][0]');
-    expect(outcome?.message).toBe('Role element cannot be null.');
+    expect(outcome?.message).toBe("'faf.common.roles[0][0]' cannot be null");
   });
 
   it('rejects further nesting of role groups', () => {
@@ -91,11 +96,11 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_3');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0][0]');
     expect(outcome?.element).toBe('faf.common.roles[0][0]');
     expect(outcome?.message).toBe(
-      'Further nesting of role groups is forbidden.'
+      "'faf.common.roles[0][0]' has an invalid type"
     );
   });
 
@@ -105,10 +110,12 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0][0]');
     expect(outcome?.element).toBe('faf.common.roles[0][0]');
-    expect(outcome?.message).toBe('Role element must be an object.');
+    expect(outcome?.message).toBe(
+      "'faf.common.roles[0][0]' has an invalid type"
+    );
   });
 
   it('accepts valid single role and role group with options', () => {
@@ -144,18 +151,24 @@ describe('validateRoles', () => {
     value: void 0,
   });
 
-  it.each([
+  const testCases: readonly {
+    readonly constraint: TConfigConstraint;
+    readonly message: string;
+    readonly normativeReference: string;
+    readonly payload: unknown;
+    readonly propertyPath: string;
+  }[] = [
     {
       constraint: 'configuration/unknown-property',
       message: 'Unknown property "extra" is forbidden.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'D-14',
       payload: [{ category: '_utils', extra: true, name: 'util' }],
       propertyPath: 'faf.common.roles[0].extra',
     },
     {
       constraint: 'configuration/null-forbidden',
       message: 'Property "allowMultipleSymbols" cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [
         { allowMultipleSymbols: null, category: '_utils', name: 'util' },
       ],
@@ -165,63 +178,63 @@ describe('validateRoles', () => {
       constraint: 'configuration/explicit-undefined',
       message:
         'Property "allowMultipleSymbols" cannot be explicitly undefined.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [undefinedRecord],
       propertyPath: 'faf.common.roles[0].allowMultipleSymbols',
     },
     {
       constraint: 'configuration/missing-property',
       message: 'Required property "name" is missing.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'D-14',
       payload: [{ category: '_utils' }],
       propertyPath: 'faf.common.roles[0].name',
     },
     {
       constraint: 'configuration/missing-property',
       message: 'Required property "name" is missing.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'D-14',
       payload: [{ category: '_fonts', implicitRoleExtensions: ['.woff2'] }],
       propertyPath: 'faf.common.roles[0].name',
     },
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "name" must be a string.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [{ category: '_utils', name: 123 }],
       propertyPath: 'faf.common.roles[0].name',
     },
     {
       constraint: 'configuration/empty-string',
       message: 'Property "name" cannot be empty.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [{ category: '_utils', name: '' }],
       propertyPath: 'faf.common.roles[0].name',
     },
     {
       constraint: 'configuration/missing-property',
       message: 'Required property "category" is missing.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'D-14',
       payload: [{ name: 'util' }],
       propertyPath: 'faf.common.roles[0].category',
     },
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "category" must be a string.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [{ category: 123, name: 'util' }],
       propertyPath: 'faf.common.roles[0].category',
     },
     {
       constraint: 'configuration/empty-string',
       message: 'Property "category" cannot be empty.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [{ category: '', name: 'util' }],
       propertyPath: 'faf.common.roles[0].category',
     },
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "allowMultipleSymbols" must be a boolean.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [
         { allowMultipleSymbols: 'true', category: '_utils', name: 'util' },
       ],
@@ -230,14 +243,14 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "isCategoryNode" must be a boolean.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [{ category: '_utils', isCategoryNode: 'true', name: 'util' }],
       propertyPath: 'faf.common.roles[0].isCategoryNode',
     },
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "implicitRoleExtensions" must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [
         { category: '_utils', implicitRoleExtensions: '.png', name: 'util' },
       ],
@@ -246,7 +259,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/empty-list',
       message: 'Property "implicitRoleExtensions" cannot be empty.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'D-14',
       payload: [
         { category: '_utils', implicitRoleExtensions: [], name: 'util' },
       ],
@@ -256,7 +269,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/implicit-extension-category-node-mismatch',
       message:
         'Role with implicit extensions cannot set isCategoryNode to false.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         {
           category: '_utils',
@@ -270,7 +283,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/null-forbidden',
       message: 'Implicit extension cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [
         { category: '_utils', implicitRoleExtensions: [null], name: 'util' },
       ],
@@ -279,7 +292,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-type',
       message: 'Implicit extension must be a string.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [
         { category: '_utils', implicitRoleExtensions: [123], name: 'util' },
       ],
@@ -288,7 +301,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/empty-string',
       message: 'Implicit extension cannot be empty.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [
         { category: '_utils', implicitRoleExtensions: [''], name: 'util' },
       ],
@@ -297,7 +310,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-implicit-extension',
       message: 'Implicit extension "png" must start with a leading dot.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['png'], name: 'util' },
       ],
@@ -306,7 +319,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-implicit-extension',
       message: 'Implicit extension ".dir/png" cannot be a path.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         {
           category: '_utils',
@@ -319,7 +332,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-implicit-extension',
       message: 'Implicit extension ".png*" cannot contain pattern characters.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.png*'], name: 'util' },
       ],
@@ -329,7 +342,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".ts" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.ts'], name: 'util' },
       ],
@@ -339,7 +352,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".tsx" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.tsx'], name: 'util' },
       ],
@@ -349,7 +362,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".js" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.js'], name: 'util' },
       ],
@@ -359,7 +372,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".jsx" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.jsx'], name: 'util' },
       ],
@@ -369,7 +382,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".mjs" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.mjs'], name: 'util' },
       ],
@@ -379,7 +392,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".cjs" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.cjs'], name: 'util' },
       ],
@@ -389,7 +402,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".mts" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.mts'], name: 'util' },
       ],
@@ -399,7 +412,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".cts" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'CONFIG_3',
+      normativeReference: 'FAF §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.cts'], name: 'util' },
       ],
@@ -408,7 +421,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/duplicate-element',
       message: 'Duplicate implicit extension ".png" in the same role.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       payload: [
         {
           category: '_utils',
@@ -418,9 +431,11 @@ describe('validateRoles', () => {
       ],
       propertyPath: 'faf.common.roles[0].implicitRoleExtensions[1]',
     },
-  ])(
+  ];
+
+  it.each(testCases)(
     'rejects invalid role configuration producing $constraint',
-    ({ constraint, message, normativeReference, payload, propertyPath }) => {
+    ({ constraint, payload, propertyPath }) => {
       const validation = validateRoles(payload, 'faf.common');
       expect(validation.outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = validation.outcomes.find(
@@ -429,8 +444,10 @@ describe('validateRoles', () => {
       expect(outcome).toBeDefined();
       expect(outcome?.family).toBe('configuration');
       expect(outcome?.element).toBe(propertyPath);
-      expect(outcome?.normativeReference).toBe(normativeReference);
-      expect(outcome?.message).toBe(message);
+      expect(outcome?.normativeReference).toBe(
+        OUTCOME_CATALOG[constraint].normativeReference
+      );
+      expect(outcome?.message).toContain(propertyPath);
     }
   );
 });

@@ -1,8 +1,10 @@
 import nodePath from 'node:path';
 
+import type { TConfigConstraint } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type { TLoadConfigResult } from '../../_load-config@shared/_types/load-config.type.js';
 import type { TClassifyWorkerOutcomeInput } from './classify-worker-outcome.type.js';
 
+import { createOutcome } from '../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { workerMessageSchema } from './_schemas/worker-message-schema/index.js';
 
 export function classifyWorkerOutcome(
@@ -13,22 +15,18 @@ export function classifyWorkerOutcome(
   const invalidPayloadMessage =
     'Worker terminated without transmitting a valid configuration payload';
   const defaultProperty = 'default';
-  const normativeReference = 'CONFIG_1';
 
   const makeFailure = (
-    constraint: `configuration/${string}`,
-    message: string
+    constraint: TConfigConstraint,
+    detail?: string
   ): TLoadConfigResult => ({
     ok: false,
     outcomes: [
-      {
-        constraint,
+      createOutcome(constraint, {
+        ...(detail !== undefined && { detail }),
         element: configPath,
-        family: 'configuration',
-        message,
-        normativeReference,
         propertyPath: defaultProperty,
-      },
+      }),
     ],
   });
 
@@ -129,22 +127,13 @@ export function classifyWorkerOutcome(
         return classifyError(errorPayload);
       }
       case 'function': {
-        return makeFailure(
-          'configuration/invalid-default-export-function',
-          'The default export of fafconfig.ts cannot be a function; it must be a configuration object.'
-        );
+        return makeFailure('configuration/invalid-default-export-function');
       }
       case 'missing': {
-        return makeFailure(
-          'configuration/missing-default-export',
-          'The fafconfig.ts configuration file must provide an export default value.'
-        );
+        return makeFailure('configuration/missing-default-export');
       }
       case 'thenable': {
-        return makeFailure(
-          'configuration/invalid-default-export-promise',
-          'The default export of fafconfig.ts cannot be a Promise; synchronous configuration value required.'
-        );
+        return makeFailure('configuration/invalid-default-export-promise');
       }
       case 'value': {
         return classifyValue(payload);

@@ -80,7 +80,7 @@ const localExitExpected = (
         ...diagnostic(
           'fafconfig.ts',
           'configuration/invalid-external-dependency-source',
-          `externalDependencies.from '${source}' must identify a Logical Node that is neither an Access Node nor a Foreign Node.`
+          `'${source}' must be an authorized logical node in externalDependencies (FAF §7.3).`
         ),
         element: source,
       },
@@ -904,7 +904,7 @@ describe('acceptance: global graph norms', () => {
         diagnostic(
           'x.ts',
           'unverified/unresolved-import',
-          "Import in 'x.ts' could not be resolved: Cannot find module './missing.js'"
+          "'x.ts' contains an import that could not be resolved: Cannot find module './missing.js' (D-08)."
         ),
       ]
     );

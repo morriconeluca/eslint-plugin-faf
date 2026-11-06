@@ -2,6 +2,7 @@ import fs from 'node:fs';
 
 import type { TInspectOriginResult } from './inspect-origin.type.js';
 
+import { createOutcome } from '../../../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { assertInvariant } from '../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { toRelativeRealPath } from '../../_scan-tree-origin@shared/_utils/to-relative-real-path/index.js';
 
@@ -20,27 +21,20 @@ export function inspectOrigin(
     if (isEnoent) {
       return {
         ok: false,
-        outcome: {
-          constraint: 'configuration/missing-origin',
+        outcome: createOutcome('configuration/missing-origin', {
           element: normalizedOrigin,
-          family: 'configuration',
-          message: `Tree origin directory '${normalizedOrigin}' does not exist.`,
-          normativeReference: '§6',
           propertyPath: 'faf.locals',
-        },
+        }),
       };
     }
 
     return {
       ok: false,
-      outcome: {
-        constraint: 'unverified/unreadable-origin',
+      outcome: createOutcome('unverified/unreadable-origin', {
+        detail: error.message,
         element: normalizedOrigin,
-        family: 'unverified',
-        message: `Tree origin directory '${normalizedOrigin}' could not be read: ${error.message}`,
-        normativeReference: '§6',
         reason: error.message,
-      },
+      }),
     };
   }
 
@@ -58,14 +52,10 @@ export function inspectOrigin(
   if (!isDirectory) {
     return {
       ok: false,
-      outcome: {
-        constraint: 'configuration/invalid-origin',
+      outcome: createOutcome('configuration/invalid-origin', {
         element: normalizedOrigin,
-        family: 'configuration',
-        message: `Tree origin '${normalizedOrigin}' must be a directory.`,
-        normativeReference: '§6',
         propertyPath: 'faf.locals',
-      },
+      }),
     };
   }
 

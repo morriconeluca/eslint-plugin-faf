@@ -4,9 +4,8 @@ import type {
 } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type { TEffectivePathAlias } from '../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
+import { createOutcome } from '../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import {
-  CONFIG_9_REFERENCE,
-  INVALID_ALIAS_SOURCE_CONSTRAINT,
   PACKAGE_JSON_ELEMENT,
   PACKAGE_JSON_IMPORTS_PROPERTY_PATH,
 } from '../../_acquire-path-aliases@shared/_constants/acquire-path-aliases.constant.js';
@@ -22,14 +21,11 @@ export function parsePackageJsonImports(
     return {
       ok: false,
       outcomes: [
-        {
-          constraint: INVALID_ALIAS_SOURCE_CONSTRAINT,
+        createOutcome('configuration/invalid-alias-source', {
+          detail: 'package.json imports must be a JSON object',
           element: PACKAGE_JSON_ELEMENT,
-          family: 'configuration',
-          message: 'package.json imports must be a JSON object',
-          normativeReference: CONFIG_9_REFERENCE,
           propertyPath: PACKAGE_JSON_IMPORTS_PROPERTY_PATH,
-        },
+        }),
       ],
     };
   }

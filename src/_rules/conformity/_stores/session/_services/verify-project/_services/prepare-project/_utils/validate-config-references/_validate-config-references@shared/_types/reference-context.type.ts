@@ -16,11 +16,6 @@ export type TDirectoryReferenceCheck = {
   readonly label: string;
 
   /**
-   * Format section tag that defines the property being checked.
-   */
-  readonly normativeReference: string;
-
-  /**
    * Configured path, relative to the directory of `fafconfig.ts`.
    */
   readonly path: string;
@@ -66,11 +61,6 @@ export type TFileReferenceCheck = {
   readonly label: string;
 
   /**
-   * Format section tag that defines the property being checked.
-   */
-  readonly normativeReference: string;
-
-  /**
    * Configured path, relative to the directory of `fafconfig.ts`.
    */
   readonly path: string;
@@ -99,11 +89,6 @@ export type TOriginDirectoryCheck = {
    * English noun used in the diagnostic to name the origin.
    */
   readonly label: string;
-
-  /**
-   * Format section tag that defines the origin property.
-   */
-  readonly normativeReference: string;
 
   /**
    * Declared origin path relative to the directory of `fafconfig.ts`.
@@ -146,32 +131,39 @@ export type TReferenceContext = {
   readonly baseDirectory: string;
 
   /**
-   * Enumerated Root Node files keyed by their path relative to `fafconfig.ts`.
+   * Enumerated root nodes available to root dependency edges.
    */
   readonly enumeratedRootNodes: ReadonlyMap<string, TEnumeratedRootNode>;
 
   /**
-   * Inventory whose paths are already relative to the configuration directory.
+   * In-memory inventory of directories, files, and symlinks under the repository.
    */
   readonly inventory: TInventory;
 
   /**
-   * Origins of the Fractal Trees composed for this configuration.
+   * Map from tree origin path to ownership metadata.
    */
   readonly ownedOrigins: ReadonlyMap<string, TOwnedOrigin>;
 };
 
 /**
- * Whether a reference is inherited from `common` or written on one `locals` element.
+ * Scope selector used to restrict directory and file references.
  */
-export type TScopeBinding = {
-  /**
-   * Scope name: `common` for shared references, `local` for one `locals` element.
-   */
-  readonly kind: string;
+export type TScopeBinding =
+  | {
+      /**
+       * Common scope permits references into any tree of this configuration.
+       */
+      readonly kind: 'common';
+    }
+  | {
+      /**
+       * Discriminant for the local element scope.
+       */
+      readonly kind: 'local';
 
-  /**
-   * Index of the owning `locals` element. Absent for common references.
-   */
-  readonly localIndex?: number;
-};
+      /**
+       * Index of the local configuration element whose trees are allowed.
+       */
+      readonly localIndex: number;
+    };

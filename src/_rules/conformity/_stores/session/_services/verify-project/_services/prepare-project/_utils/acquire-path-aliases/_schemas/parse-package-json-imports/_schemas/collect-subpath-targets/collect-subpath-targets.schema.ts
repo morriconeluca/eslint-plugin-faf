@@ -1,9 +1,8 @@
 import type { TConfigOutcome } from '../../../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type { TCollectSubpathTargetsResult } from './collect-subpath-targets.type.js';
 
+import { createOutcome } from '../../../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import {
-  CONFIG_9_REFERENCE,
-  INVALID_ALIAS_SOURCE_CONSTRAINT,
   PACKAGE_JSON_ELEMENT,
   PACKAGE_JSON_IMPORTS_PROPERTY_PATH,
 } from '../../../../_acquire-path-aliases@shared/_constants/acquire-path-aliases.constant.js';
@@ -17,14 +16,12 @@ export function collectSubpathTargets(
 ): TCollectSubpathTargetsResult {
   const targets: string[] = [];
 
-  const invalidType = (value: unknown): TConfigOutcome => ({
-    constraint: INVALID_ALIAS_SOURCE_CONSTRAINT,
-    element: PACKAGE_JSON_ELEMENT,
-    family: 'configuration',
-    message: `Invalid package.json imports target type: ${typeof value}`,
-    normativeReference: CONFIG_9_REFERENCE,
-    propertyPath: `${PACKAGE_JSON_IMPORTS_PROPERTY_PATH}.${subpathKey}`,
-  });
+  const invalidType = (value: unknown): TConfigOutcome =>
+    createOutcome('configuration/invalid-alias-source', {
+      detail: `Invalid package.json imports target type: ${typeof value}`,
+      element: PACKAGE_JSON_ELEMENT,
+      propertyPath: `${PACKAGE_JSON_IMPORTS_PROPERTY_PATH}.${subpathKey}`,
+    });
 
   const traverse = (currentValue: unknown): null | TConfigOutcome => {
     const parsed = importTargetNodeSchema.safeParse(currentValue);

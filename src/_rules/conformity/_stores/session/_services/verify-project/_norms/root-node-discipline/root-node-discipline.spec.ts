@@ -10,8 +10,8 @@ describe('verifyRootNodeDiscipline', () => {
         constraint: 'unverified/not-implemented',
         element: 'root-node-discipline',
         family: 'unverified',
-        message: "Part 'root-node-discipline' is not implemented (§6.2.2).",
-        normativeReference: '§6.2.2',
+        message: "'root-node-discipline' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

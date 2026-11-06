@@ -10,8 +10,8 @@ describe('verifySubGraphNodeIsolation', () => {
         constraint: 'unverified/not-implemented',
         element: 'sub-graph-node-isolation',
         family: 'unverified',
-        message: "Part 'sub-graph-node-isolation' is not implemented (§4).",
-        normativeReference: '§4',
+        message: "'sub-graph-node-isolation' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

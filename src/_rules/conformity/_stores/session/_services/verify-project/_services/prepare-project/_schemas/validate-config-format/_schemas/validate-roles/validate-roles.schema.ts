@@ -1,15 +1,17 @@
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
+import type {
+  TConfigConstraint,
+  TConfigOutcome,
+} from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type {
   TExtensionEntry,
   TRoleEntry,
   TRolesValidationResult,
 } from '../../_validate-config-format@shared/_types/validate-config-format.type.js';
 
+import { createOutcome } from '../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { translateConfigIssues } from '../../_validate-config-format@shared/_schemas/translate-config-issues/index.js';
 import { rolesSchema } from './_schemas/roles-schema/index.js';
 import {
-  CONFIG_2,
-  CONFIG_3,
   CONSTRAINT_CATEGORY_NODE_MISMATCH,
   CONSTRAINT_DUPLICATE_ELEMENT,
   CONSTRAINT_INVALID_IMPLICIT_EXT,
@@ -23,17 +25,11 @@ export const validateRoles = (() => {
 
   const extensionOutcome = (
     propertyPath: string,
-    constraint: `configuration/${string}`,
-    normativeReference: string,
-    message: string
-  ): TConfigOutcome => ({
-    constraint,
-    element: propertyPath,
-    family: 'configuration',
-    message,
-    normativeReference,
-    propertyPath,
-  });
+    constraint: TConfigConstraint
+  ): TConfigOutcome =>
+    createOutcome(constraint, {
+      propertyPath,
+    });
 
   const extensionFormatOutcomes = (
     extension: string,
@@ -42,42 +38,22 @@ export const validateRoles = (() => {
     const outcomes: TConfigOutcome[] = [];
     if (!extension.startsWith('.')) {
       outcomes.push(
-        extensionOutcome(
-          extensionPath,
-          CONSTRAINT_INVALID_IMPLICIT_EXT,
-          CONFIG_3,
-          `Implicit extension "${extension}" must start with a leading dot.`
-        )
+        extensionOutcome(extensionPath, CONSTRAINT_INVALID_IMPLICIT_EXT)
       );
     }
     if (extension.includes('/')) {
       outcomes.push(
-        extensionOutcome(
-          extensionPath,
-          CONSTRAINT_INVALID_IMPLICIT_EXT,
-          CONFIG_3,
-          `Implicit extension "${extension}" cannot be a path.`
-        )
+        extensionOutcome(extensionPath, CONSTRAINT_INVALID_IMPLICIT_EXT)
       );
     }
     if (GLOB_PATTERN_CHARACTERS.test(extension)) {
       outcomes.push(
-        extensionOutcome(
-          extensionPath,
-          CONSTRAINT_INVALID_IMPLICIT_EXT,
-          CONFIG_3,
-          `Implicit extension "${extension}" cannot contain pattern characters.`
-        )
+        extensionOutcome(extensionPath, CONSTRAINT_INVALID_IMPLICIT_EXT)
       );
     }
     if (FORBIDDEN_CODE_EXTENSIONS.has(extension)) {
       outcomes.push(
-        extensionOutcome(
-          extensionPath,
-          CONSTRAINT_INVALID_IMPLICIT_EXT,
-          CONFIG_3,
-          `Implicit extension "${extension}" cannot be a TypeScript or JavaScript code extension.`
-        )
+        extensionOutcome(extensionPath, CONSTRAINT_INVALID_IMPLICIT_EXT)
       );
     }
     return outcomes;
@@ -105,12 +81,7 @@ export const validateRoles = (() => {
     }
     if (seen.has(extension)) {
       outcomes.push(
-        extensionOutcome(
-          extensionPath,
-          CONSTRAINT_DUPLICATE_ELEMENT,
-          CONFIG_2,
-          `Duplicate implicit extension "${extension}" in the same role.`
-        )
+        extensionOutcome(extensionPath, CONSTRAINT_DUPLICATE_ELEMENT)
       );
       return;
     }
@@ -145,9 +116,7 @@ export const validateRoles = (() => {
       outcomes.push(
         extensionOutcome(
           `${rolePath}.isCategoryNode`,
-          CONSTRAINT_CATEGORY_NODE_MISMATCH,
-          CONFIG_3,
-          'Role with implicit extensions cannot set isCategoryNode to false.'
+          CONSTRAINT_CATEGORY_NODE_MISMATCH
         )
       );
     }

@@ -91,7 +91,7 @@ describe('readPackageJson', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/invalid-package-json');
-          expect(outcome.normativeReference).toBe('CONFIG_1');
+          expect(outcome.normativeReference).toBe('D-09');
           expect(outcome.propertyPath).toBe('');
           expect(outcome.message).toContain('Failed to parse package.json');
         }
@@ -118,7 +118,7 @@ describe('readPackageJson', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/invalid-package-json');
-          expect(outcome.normativeReference).toBe('CONFIG_1');
+          expect(outcome.normativeReference).toBe('D-09');
           expect(outcome.propertyPath).toBe('');
           expect(outcome.message).toContain('does not contain a JSON object');
         }
@@ -145,7 +145,7 @@ describe('readPackageJson', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/invalid-package-json');
-          expect(outcome.normativeReference).toBe('CONFIG_1');
+          expect(outcome.normativeReference).toBe('D-09');
           expect(outcome.propertyPath).toBe('');
           expect(outcome.message).toContain('does not contain a JSON object');
         }
@@ -172,7 +172,7 @@ describe('readPackageJson', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/invalid-package-json');
-          expect(outcome.normativeReference).toBe('CONFIG_1');
+          expect(outcome.normativeReference).toBe('D-09');
           expect(outcome.propertyPath).toBe('');
           expect(outcome.message).toContain('is not a regular file');
         }

@@ -80,9 +80,8 @@ describe('verifyMimeticPaths', () => {
         constraint: 'configuration/incompatible-mimetic-designation',
         element: 'src/_types',
         family: 'configuration',
-        message:
-          "Mimetic path 'src/_types' does not identify a Category of Fragments.",
-        normativeReference: '§6.3.5',
+        message: "'src/_types' must identify a Category of Fragments",
+        normativeReference: 'FAF §6.3.5',
         propertyPath: 'trees[0].mimeticPathStructures[0].paths[0]',
       },
     ]);

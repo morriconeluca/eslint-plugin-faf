@@ -167,7 +167,7 @@ All code must strictly adhere to the following conventions:
 ### 3.4 Functional Paradigm and Immutability
 
 - **Functional composition over inheritance**: No `class` declarations, no `this`, and no `extends`. The use of external dependency classes (such as `oxc-resolver`) is confined strictly to `*.adapter.ts` files.
-- **Expected failures are data**: No exceptions for expected failures. Errors are returned as typed outcome data (`TOutcome`, discriminated unions).
+- **Expected failures are data**: No exceptions for expected failures. Errors are returned as typed outcome data (`TOutcome`, discriminated unions). Every diagnostic outcome is produced exclusively through `createOutcome`, backed by the closed outcome catalog in `_conformity@shared`.
 - **No `throw` statements**: The `throw` keyword is forbidden throughout the repository, with a single authorized exception: the `assertInvariant(condition, message): asserts condition` function. Invariant assertions throw a plain `Error` to immediately halt execution when an internal defect or broken assumption occurs.
 - **External exception handling**: Exceptions thrown by Node.js or third-party libraries (`fs`, `import()`, `JSON.parse`) are caught inside adapters and translated into structured outcome records.
 - **Boundary immutability**: All interface and type contracts use `readonly` modifiers on properties and collections. Function arguments must not be mutated.

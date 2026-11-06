@@ -10,8 +10,8 @@ describe('verifyFragmentEncapsulation', () => {
         constraint: 'unverified/not-implemented',
         element: 'fragment-encapsulation',
         family: 'unverified',
-        message: "Part 'fragment-encapsulation' is not implemented (§6.1.1).",
-        normativeReference: '§6.1.1',
+        message: "'fragment-encapsulation' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

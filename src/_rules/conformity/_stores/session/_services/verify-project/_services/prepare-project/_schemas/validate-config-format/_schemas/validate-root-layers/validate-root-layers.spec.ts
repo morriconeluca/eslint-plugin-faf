@@ -14,10 +14,10 @@ describe('validateRootLayers', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.locals[0].rootLayers');
     expect(outcome?.element).toBe('faf.locals[0].rootLayers');
-    expect(outcome?.message).toBe('Property "rootLayers" cannot be null.');
+    expect(outcome?.message).toBe("'faf.locals[0].rootLayers' cannot be null");
   });
 
   it('rejects non-array rootLayers', () => {
@@ -26,10 +26,12 @@ describe('validateRootLayers', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.locals[0].rootLayers');
     expect(outcome?.element).toBe('faf.locals[0].rootLayers');
-    expect(outcome?.message).toBe('Property "rootLayers" must be an array.');
+    expect(outcome?.message).toBe(
+      "'faf.locals[0].rootLayers' has an invalid type"
+    );
   });
 
   it('accepts valid rootLayers array', () => {
@@ -43,36 +45,37 @@ describe('validateRootLayers', () => {
   it.each([
     {
       constraint: 'configuration/null-forbidden',
-      message: 'Root layer element cannot be null.',
-      normativeReference: 'CONFIG_2',
+      message: "'faf.locals[0].rootLayers[0]' cannot be null",
+      normativeReference: 'D-14',
       payload: [null],
       propertyPath: 'faf.locals[0].rootLayers[0]',
     },
     {
       constraint: 'configuration/invalid-type',
-      message: 'Root layer element must be a string.',
-      normativeReference: 'CONFIG_2',
+      message: "'faf.locals[0].rootLayers[0]' has an invalid type",
+      normativeReference: 'D-14',
       payload: [123],
       propertyPath: 'faf.locals[0].rootLayers[0]',
     },
     {
       constraint: 'configuration/empty-string',
-      message: 'Root layer element cannot be empty.',
-      normativeReference: 'CONFIG_2',
+      message: "'faf.locals[0].rootLayers[0]' cannot be an empty string",
+      normativeReference: 'D-14',
       payload: [''],
       propertyPath: 'faf.locals[0].rootLayers[0]',
     },
     {
       constraint: 'configuration/invalid-literal-path',
-      message: 'Invalid literal config path "./src".',
-      normativeReference: 'CONFIG_2_2',
+      message:
+        "'faf.locals[0].rootLayers[0]' must be a POSIX relative path without empty or parent segments",
+      normativeReference: 'D-05',
       payload: ['./src'],
       propertyPath: 'faf.locals[0].rootLayers[0]',
     },
     {
       constraint: 'configuration/duplicate-element',
-      message: 'Duplicate root layer "src".',
-      normativeReference: 'CONFIG_2',
+      message: "'faf.locals[0].rootLayers[1]' is a duplicate element",
+      normativeReference: 'D-14',
       payload: ['src', 'src'],
       propertyPath: 'faf.locals[0].rootLayers[1]',
     },

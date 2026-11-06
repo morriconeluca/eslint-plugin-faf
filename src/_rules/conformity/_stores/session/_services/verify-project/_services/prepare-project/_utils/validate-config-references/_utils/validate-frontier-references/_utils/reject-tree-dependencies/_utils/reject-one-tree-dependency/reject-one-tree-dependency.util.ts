@@ -5,10 +5,7 @@ import type {
   TScopeBinding,
 } from '../../../../../../_validate-config-references@shared/_types/reference-context.type.js';
 
-import {
-  CONFIG_10,
-  CONSTRAINT_TREE_DEPENDENCY_SELF,
-} from '../../../../../../_validate-config-references@shared/_constants/reference-constraints.constant.js';
+import { createOutcome } from '../../../../../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { rejectTreeDependencyEnd } from './_utils/reject-tree-dependency-end/index.js';
 
 export function rejectOneTreeDependency(
@@ -38,14 +35,12 @@ export function rejectOneTreeDependency(
   const selfOutcomes: TConfigOutcome[] = [];
   for (const [index, path] of dependency.to.entries()) {
     if (dependency.from.includes(path)) {
-      selfOutcomes.push({
-        constraint: CONSTRAINT_TREE_DEPENDENCY_SELF,
-        element: path,
-        family: 'configuration',
-        message: `Tree dependency cannot target the same tree origin "${path}".`,
-        normativeReference: CONFIG_10,
-        propertyPath: `${prefix}.to[${index}]`,
-      });
+      selfOutcomes.push(
+        createOutcome('configuration/tree-dependency-self', {
+          element: path,
+          propertyPath: `${prefix}.to[${index}]`,
+        })
+      );
     }
   }
   return [...fromOutcomes, ...toOutcomes, ...selfOutcomes];

@@ -9,7 +9,7 @@ describe('isConfigDiagnostic', () => {
         constraint: 'configuration/null-forbidden',
         kind: 'fixed',
         message: 'Property "faf" cannot be null.',
-        normativeReference: 'CONFIG_2',
+        normativeReference: 'D-14',
       })
     ).toBe(true);
     expect(isConfigDiagnostic('fixed')).toBe(false);

@@ -1,6 +1,3 @@
-export const CONFIG_2 = 'CONFIG_2';
-export const CONFIG_3 = 'CONFIG_3';
-
 export const CONSTRAINT_CATEGORY_NODE_MISMATCH =
   'configuration/implicit-extension-category-node-mismatch';
 export const CONSTRAINT_DUPLICATE_ELEMENT = 'configuration/duplicate-element';

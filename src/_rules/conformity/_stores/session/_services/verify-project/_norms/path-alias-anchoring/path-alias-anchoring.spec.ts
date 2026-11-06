@@ -10,8 +10,8 @@ describe('verifyPathAliasAnchoring', () => {
         constraint: 'unverified/not-implemented',
         element: 'path-alias-anchoring',
         family: 'unverified',
-        message: "Part 'path-alias-anchoring' is not implemented (§7.4).",
-        normativeReference: '§7.4',
+        message: "'path-alias-anchoring' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

@@ -10,8 +10,8 @@ describe('verifyPublicSurface', () => {
         constraint: 'unverified/not-implemented',
         element: 'public-surface',
         family: 'unverified',
-        message: "Part 'public-surface' is not implemented (§7.1).",
-        normativeReference: '§7.1',
+        message: "'public-surface' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

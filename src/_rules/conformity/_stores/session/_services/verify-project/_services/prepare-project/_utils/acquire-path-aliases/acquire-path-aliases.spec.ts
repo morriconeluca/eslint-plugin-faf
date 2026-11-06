@@ -82,8 +82,8 @@ describe('acquirePathAliases', () => {
       element: 'fafconfig.ts',
       family: 'configuration',
       message:
-        'Path aliases must not be declared in both fafconfig.ts common.aliases and package.json imports',
-      normativeReference: 'CONFIG_9',
+        "'fafconfig.ts' cannot declare path aliases when package.json imports are present",
+      normativeReference: 'FAF §7.4',
       propertyPath: 'faf.common.aliases',
     });
   });
@@ -104,8 +104,8 @@ describe('acquirePathAliases', () => {
       element: 'fafconfig.ts',
       family: 'configuration',
       message:
-        'Path aliases must not be declared in both fafconfig.ts common.aliases and package.json imports',
-      normativeReference: 'CONFIG_9',
+        "'fafconfig.ts' cannot declare path aliases when package.json imports are present",
+      normativeReference: 'FAF §7.4',
       propertyPath: 'faf.common.aliases',
     });
   });
@@ -122,8 +122,9 @@ describe('acquirePathAliases', () => {
       constraint: 'configuration/invalid-alias-source',
       element: 'package.json',
       family: 'configuration',
-      message: 'package.json imports must be a JSON object',
-      normativeReference: 'CONFIG_9',
+      message:
+        "'package.json' must declare valid imports with subpath keys: package.json imports must be a JSON object",
+      normativeReference: 'FAF §7.4',
       propertyPath: 'imports',
     });
   });
@@ -143,8 +144,9 @@ describe('acquirePathAliases', () => {
       constraint: 'configuration/invalid-alias-source',
       element: 'package.json',
       family: 'configuration',
-      message: 'package.json imports must be a JSON object',
-      normativeReference: 'CONFIG_9',
+      message:
+        "'package.json' must declare valid imports with subpath keys: package.json imports must be a JSON object",
+      normativeReference: 'FAF §7.4',
       propertyPath: 'imports',
     });
   });
@@ -164,8 +166,8 @@ describe('acquirePathAliases', () => {
       element: 'package.json',
       family: 'configuration',
       message:
-        'Local import target must contain a single terminal wildcard matching key: ./src/*/unresolvable',
-      normativeReference: 'CONFIG_9',
+        "'package.json' defines a path alias whose base path cannot be resolved: Local import target must contain a single terminal wildcard matching key: ./src/*/unresolvable",
+      normativeReference: 'FAF §7.4',
       propertyPath: 'imports.#shared/*',
     });
   });

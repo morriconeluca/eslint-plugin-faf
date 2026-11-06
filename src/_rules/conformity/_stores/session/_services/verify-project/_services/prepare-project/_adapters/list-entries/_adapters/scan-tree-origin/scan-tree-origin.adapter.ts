@@ -5,6 +5,7 @@ import type { TOutcome } from '../../../../../../../../../../_conformity@shared/
 import type { TRawInventoryEntry } from '../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 import type { TScanTreeOriginResult } from './scan-tree-origin.type.js';
 
+import { createOutcome } from '../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { toPosixPath } from '../../../../../../../../_session@shared/_utils/to-posix-path/index.js';
 import { assertInvariant } from '../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { compareOrdinal } from '../../../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
@@ -68,14 +69,11 @@ export function scanTreeOrigin(
         directoriesToVisit: [],
         entries: [],
         outcomes: [
-          {
-            constraint: 'unverified/unreadable-entry',
+          createOutcome('unverified/unreadable-entry', {
+            detail: error.message,
             element: relativeDirectory,
-            family: 'unverified',
-            message: `Directory '${relativeDirectory}' could not be read: ${error.message}`,
-            normativeReference: '§6',
             reason: error.message,
-          },
+          }),
         ],
       };
     }

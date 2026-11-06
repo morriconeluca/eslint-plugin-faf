@@ -786,7 +786,7 @@ const scenarios: readonly TScenario[] = [
       : [
           expect.objectContaining({
             constraint: 'configuration/public-root-node-not-enumerated',
-            element: 'fafconfig.ts',
+            element: node,
             filePath: 'fafconfig.ts',
             line: 1,
             messageId: 'configuration',

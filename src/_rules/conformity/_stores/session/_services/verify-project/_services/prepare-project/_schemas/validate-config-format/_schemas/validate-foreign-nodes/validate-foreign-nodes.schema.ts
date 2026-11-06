@@ -29,16 +29,13 @@ export const validateForeignNodes = (() => {
 
   const pathDuplicates = (
     paths: unknown,
-    pathsPath: string,
-    message: (value: string) => string
+    pathsPath: string
   ): readonly TConfigOutcome[] =>
     Array.isArray(paths)
       ? collectStringDuplicates(
           paths,
           new Set<string>(),
           (index) => `${pathsPath}[${index}]`,
-          message,
-          'CONFIG_2',
           'configuration/duplicate-element'
         )
       : [];
@@ -52,8 +49,6 @@ export const validateForeignNodes = (() => {
           patterns,
           new Set<string>(),
           (index) => `${patternsPath}[${index}]`,
-          (value) => `Duplicate pattern "${value}".`,
-          'CONFIG_2',
           'configuration/duplicate-element'
         )
       : [];
@@ -73,11 +68,7 @@ export const validateForeignNodes = (() => {
 
       const itemPath = `${nodesPath}[${index}]`;
       outcomes.push(
-        ...pathDuplicates(
-          item['paths'],
-          `${itemPath}.paths`,
-          (value) => `Duplicate path "${value}".`
-        ),
+        ...pathDuplicates(item['paths'], `${itemPath}.paths`),
         ...patternDuplicates(item['patterns'], `${itemPath}.patterns`)
       );
     }
@@ -97,11 +88,7 @@ export const validateForeignNodes = (() => {
           config['foreignDomains'],
           domainsPath
         ),
-        ...pathDuplicates(
-          config['foreignDomains'],
-          domainsPath,
-          (value) => `Duplicate path "${value}".`
-        )
+        ...pathDuplicates(config['foreignDomains'], domainsPath)
       );
     }
     if (config['foreignNodes'] !== undefined) {
@@ -109,11 +96,7 @@ export const validateForeignNodes = (() => {
       const nodes = config['foreignNodes'];
       outcomes.push(
         ...parseProperty(foreignNodesSchema.nodes, nodes, nodesPath),
-        ...pathDuplicates(
-          nodes,
-          nodesPath,
-          (value) => `Duplicate foreign node path "${value}".`
-        ),
+        ...pathDuplicates(nodes, nodesPath),
         ...familyDuplicates(nodes, nodesPath)
       );
     }

@@ -39,8 +39,6 @@ export const validateHierarchies = (() => {
           tier,
           seen,
           (index) => `${hierarchyPath}[${tierIndex}][${index}]`,
-          (item) => `Duplicate item "${item}" in hierarchy.`,
-          'CONFIG_7',
           'configuration/duplicate-element'
         )
       );
@@ -57,8 +55,6 @@ export const validateHierarchies = (() => {
           paths,
           new Set<string>(),
           (index) => `${pathsPath}[${index}]`,
-          (item) => `Duplicate path "${item}".`,
-          'CONFIG_2',
           'configuration/duplicate-element'
         )
       : [];

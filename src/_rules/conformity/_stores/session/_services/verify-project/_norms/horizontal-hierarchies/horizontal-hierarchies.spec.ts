@@ -10,9 +10,8 @@ describe('verifyHorizontalHierarchies', () => {
         constraint: 'unverified/not-implemented',
         element: 'horizontal-hierarchies',
         family: 'unverified',
-        message:
-          "Part 'horizontal-hierarchies' is not implemented (§4, §6.3.4, §6.9).",
-        normativeReference: '§4, §6.3.4, §6.9',
+        message: "'horizontal-hierarchies' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

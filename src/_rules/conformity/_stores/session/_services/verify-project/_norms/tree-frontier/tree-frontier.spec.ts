@@ -10,8 +10,8 @@ describe('verifyTreeFrontier', () => {
         constraint: 'unverified/not-implemented',
         element: 'tree-frontier',
         family: 'unverified',
-        message: "Part 'tree-frontier' is not implemented (§7.1, §7.2).",
-        normativeReference: '§7.1, §7.2',
+        message: "'tree-frontier' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);

@@ -66,7 +66,7 @@ const unclassifiable = (path: string): TScenarioMessage =>
     'classification/unclassifiable-file',
     path,
     path,
-    `File '${path}' is neither a uniquely classified Logical Node nor a Foreign Node.`
+    `'${path}' is neither a uniquely classified Logical Node nor a Foreign Node (FAF §6.9).`
   );
 
 const unclassifiableDomain = (path: string, anchor: string): TScenarioMessage =>
@@ -74,7 +74,7 @@ const unclassifiableDomain = (path: string, anchor: string): TScenarioMessage =>
     'classification/unclassifiable-directory',
     path,
     anchor,
-    `Directory '${path}' has no unique Logical Domain classification.`
+    `'${path}' has no unique Logical Domain classification (FAF §6.9).`
   );
 
 const violation = (
@@ -985,7 +985,7 @@ describe('acceptance: structural norms', () => {
           'configuration/overlapping-origins',
           'src/internal',
           'fafconfig.ts',
-          "Origin 'src/internal' is contained within origin 'src'.",
+          "'src/internal' overlaps with another declared tree origin: Origin 'src/internal' is contained within origin 'src' (D-06).",
           'configuration'
         ),
       ],
@@ -1000,7 +1000,7 @@ describe('acceptance: structural norms', () => {
           'configuration/overlapping-origins',
           'src/app',
           'fafconfig.ts',
-          "Origin 'src/app' is contained within origin 'src'.",
+          "'src/app' overlaps with another declared tree origin: Origin 'src/app' is contained within origin 'src' (D-06).",
           'configuration'
         ),
       ],

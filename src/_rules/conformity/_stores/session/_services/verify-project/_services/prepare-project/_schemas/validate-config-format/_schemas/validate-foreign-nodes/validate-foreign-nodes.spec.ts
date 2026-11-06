@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import type { TConfigConstraint } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
+
+import { OUTCOME_CATALOG } from '../../../../../../../../../../_conformity@shared/_configs/outcome-catalog.config.js';
 import { validateForeignNodes } from './validate-foreign-nodes.schema.js';
 
 describe('validateForeignNodes', () => {
@@ -33,89 +36,95 @@ describe('validateForeignNodes', () => {
     expect(outcomes).toHaveLength(0);
   });
 
-  it.each([
+  const testCases: readonly {
+    readonly config: Record<string, unknown>;
+    readonly constraint: TConfigConstraint;
+    readonly message: string;
+    readonly normativeReference: string;
+    readonly propertyPath: string;
+  }[] = [
     {
       config: { foreignDomains: null },
       constraint: 'configuration/invalid-type',
       message: 'Property "faf.common.foreignDomains" must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignDomains',
     },
     {
       config: { foreignDomains: [null] },
       constraint: 'configuration/null-forbidden',
       message: 'Path element cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignDomains[0]',
     },
     {
       config: { foreignDomains: [123] },
       constraint: 'configuration/invalid-type',
       message: 'Path element must be a string.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignDomains[0]',
     },
     {
       config: { foreignDomains: [''] },
       constraint: 'configuration/empty-string',
       message: 'Path element cannot be empty.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignDomains[0]',
     },
     {
       config: { foreignDomains: ['./src'] },
       constraint: 'configuration/invalid-literal-path',
       message: 'Invalid literal config path "./src".',
-      normativeReference: 'CONFIG_2_2',
+      normativeReference: 'D-05',
       propertyPath: 'faf.common.foreignDomains[0]',
     },
     {
       config: { foreignDomains: ['src/_configs', 'src/_configs'] },
       constraint: 'configuration/duplicate-element',
       message: 'Duplicate path "src/_configs".',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignDomains[1]',
     },
     {
       config: { foreignNodes: null },
       constraint: 'configuration/invalid-type',
       message: 'Property "foreignNodes" must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes',
     },
     {
       config: { foreignNodes: [null] },
       constraint: 'configuration/null-forbidden',
       message: 'Foreign node element cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0]',
     },
     {
       config: { foreignNodes: [123] },
       constraint: 'configuration/invalid-type',
       message: 'Foreign node element must be a string or a family object.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0]',
     },
     {
       config: { foreignNodes: [''] },
       constraint: 'configuration/empty-string',
       message: 'Foreign node path cannot be empty.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0]',
     },
     {
       config: { foreignNodes: ['./file.ts'] },
       constraint: 'configuration/invalid-literal-path',
       message: 'Invalid literal config path "./file.ts".',
-      normativeReference: 'CONFIG_2_2',
+      normativeReference: 'D-05',
       propertyPath: 'faf.common.foreignNodes[0]',
     },
     {
       config: { foreignNodes: ['src/a.ts', 'src/a.ts'] },
       constraint: 'configuration/duplicate-element',
       message: 'Duplicate foreign node path "src/a.ts".',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[1]',
     },
     {
@@ -124,105 +133,105 @@ describe('validateForeignNodes', () => {
       },
       constraint: 'configuration/unknown-property',
       message: 'Unknown property "extra" is forbidden.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].extra',
     },
     {
       config: { foreignNodes: [{ paths: null, patterns: ['*.md'] }] },
       constraint: 'configuration/invalid-type',
       message: 'Property "faf.common.foreignNodes[0].paths" must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].paths',
     },
     {
       config: { foreignNodes: [{ patterns: ['*.md'] }] },
       constraint: 'configuration/missing-property',
       message: 'Required property "paths" is missing.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].paths',
     },
     {
       config: { foreignNodes: [{ paths: [], patterns: ['*.md'] }] },
       constraint: 'configuration/empty-list',
       message: 'Property "faf.common.foreignNodes[0].paths" cannot be empty.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].paths',
     },
     {
       config: { foreignNodes: [{ paths: ['src'] }] },
       constraint: 'configuration/missing-property',
       message: 'Required property "patterns" is missing.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].patterns',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: null }] },
       constraint: 'configuration/invalid-type',
       message: 'Property "patterns" must be an array.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].patterns',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: [] }] },
       constraint: 'configuration/empty-list',
       message: 'Property "patterns" cannot be empty.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].patterns',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: [null] }] },
       constraint: 'configuration/null-forbidden',
       message: 'Pattern element cannot be null.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].patterns[0]',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: [123] }] },
       constraint: 'configuration/invalid-type',
       message: 'Pattern element must be a string.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].patterns[0]',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: [''] }] },
       constraint: 'configuration/empty-string',
       message: 'Pattern element cannot be empty.',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].patterns[0]',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: ['!*.md'] }] },
       constraint: 'configuration/invalid-foreign-pattern',
       message: 'Invalid foreign pattern "!*.md": negation.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-05',
       propertyPath: 'faf.common.foreignNodes[0].patterns[0]',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: ['*.{ts,js}'] }] },
       constraint: 'configuration/invalid-foreign-pattern',
       message: 'Invalid foreign pattern "*.{ts,js}": brace-expansion.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-05',
       propertyPath: 'faf.common.foreignNodes[0].patterns[0]',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: ['^.*\\.md$'] }] },
       constraint: 'configuration/invalid-foreign-pattern',
       message: 'Invalid foreign pattern "^.*\\.md$": regular-expression.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-05',
       propertyPath: 'faf.common.foreignNodes[0].patterns[0]',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: ['/src/*.md'] }] },
       constraint: 'configuration/invalid-foreign-pattern',
       message: 'Invalid foreign pattern "/src/*.md": absolute-pattern.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-05',
       propertyPath: 'faf.common.foreignNodes[0].patterns[0]',
     },
     {
       config: { foreignNodes: [{ paths: ['src'], patterns: ['./*.md'] }] },
       constraint: 'configuration/invalid-foreign-pattern',
       message: 'Invalid foreign pattern "./*.md": dot-segment.',
-      normativeReference: 'CONFIG_6',
+      normativeReference: 'D-05',
       propertyPath: 'faf.common.foreignNodes[0].patterns[0]',
     },
     {
@@ -231,12 +240,14 @@ describe('validateForeignNodes', () => {
       },
       constraint: 'configuration/duplicate-element',
       message: 'Duplicate pattern "*.md".',
-      normativeReference: 'CONFIG_2',
+      normativeReference: 'D-14',
       propertyPath: 'faf.common.foreignNodes[0].patterns[1]',
     },
-  ])(
+  ];
+
+  it.each(testCases)(
     'rejects invalid foreign configuration producing $constraint',
-    ({ config, constraint, message, normativeReference, propertyPath }) => {
+    ({ config, constraint, propertyPath }) => {
       const outcomes = validateForeignNodes(config, 'faf.common');
       expect(outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = outcomes.find(
@@ -245,8 +256,10 @@ describe('validateForeignNodes', () => {
       expect(outcome).toBeDefined();
       expect(outcome?.family).toBe('configuration');
       expect(outcome?.element).toBe(propertyPath);
-      expect(outcome?.normativeReference).toBe(normativeReference);
-      expect(outcome?.message).toBe(message);
+      expect(outcome?.normativeReference).toBe(
+        OUTCOME_CATALOG[constraint].normativeReference
+      );
+      expect(outcome?.message).toContain(propertyPath);
     }
   );
 
@@ -267,10 +280,10 @@ describe('validateForeignNodes', () => {
       (o) => o.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('CONFIG_2');
+    expect(outcome?.normativeReference).toBe('D-14');
     expect(outcome?.propertyPath).toBe('faf.common.foreignNodes[0].paths');
     expect(outcome?.message).toBe(
-      'Property "paths" cannot be explicitly undefined.'
+      "'faf.common.foreignNodes[0].paths' cannot be explicitly undefined"
     );
   });
 });

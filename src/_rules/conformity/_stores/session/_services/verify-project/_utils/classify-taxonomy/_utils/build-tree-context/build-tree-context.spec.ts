@@ -50,8 +50,8 @@ describe('buildTreeContext', () => {
         constraint: 'configuration/incompatible-foreign-origin',
         element: 'src',
         family: 'configuration',
-        message: "Origin 'src' is also designated as a Foreign Domain.",
-        normativeReference: '§6.7',
+        message: "'src' cannot be designated as a foreign domain",
+        normativeReference: 'FAF §6.7',
         propertyPath: 'trees[0].foreignDomains',
       },
     ]);
@@ -98,9 +98,8 @@ describe('buildTreeContext', () => {
         constraint: 'configuration/incompatible-root-in-foreign-domain',
         element: 'src/blog',
         family: 'configuration',
-        message:
-          "Root Fragment 'src/blog' is designated inside a Foreign Domain.",
-        normativeReference: '§6.2',
+        message: "'src/blog' cannot be designated inside a foreign domain",
+        normativeReference: 'FAF §6.7',
         propertyPath: 'trees[1].rootFragments[0].subRootFragments[0]',
       },
     ]);
@@ -126,11 +125,11 @@ describe('buildTreeContext', () => {
     );
     expect(result.outcomes).toEqual([
       {
-        constraint: 'configuration/duplicate-mimetic-designation',
+        constraint: 'configuration/duplicate-mimetic-path',
         element: 'src/_pages',
         family: 'configuration',
-        message: "Mimetic path 'src/_pages' is designated more than once.",
-        normativeReference: 'CONFIG_8',
+        message: "'src/_pages' is designated more than once as a mimetic path",
+        normativeReference: 'FAF §6.3.5',
         propertyPath: 'trees[0].mimeticPathStructures[1].paths[0]',
       },
     ]);

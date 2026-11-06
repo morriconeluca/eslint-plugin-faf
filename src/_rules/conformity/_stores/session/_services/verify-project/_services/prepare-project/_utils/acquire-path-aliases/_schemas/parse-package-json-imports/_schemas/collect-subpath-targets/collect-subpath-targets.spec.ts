@@ -66,8 +66,9 @@ describe('collectSubpathTargets', () => {
       constraint: 'configuration/invalid-alias-source',
       element: 'package.json',
       family: 'configuration',
-      message: 'Invalid package.json imports target type: number',
-      normativeReference: 'CONFIG_9',
+      message:
+        "'package.json' must declare valid imports with subpath keys: Invalid package.json imports target type: number",
+      normativeReference: 'FAF §7.4',
       propertyPath: 'imports.#invalid-type',
     });
   });

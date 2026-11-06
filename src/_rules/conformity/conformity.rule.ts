@@ -5,7 +5,7 @@ import { readConfigFileSetting } from './_schemas/read-config-file-setting/index
 import { session } from './_stores/session/index.js';
 
 export function createConformity(packageVersion: string): Rule.RuleModule {
-  const message = '{{constraint}}: {{message}}';
+  const message = '{{constraint}}: {{message}} ({{reference}}).';
   const fileStart = { column: 0, line: 1 };
   return {
     create(context) {
@@ -21,6 +21,7 @@ export function createConformity(packageVersion: string): Rule.RuleModule {
                 data: {
                   constraint: outcome.constraint,
                   message: outcome.message,
+                  reference: outcome.normativeReference,
                 },
                 loc: { end: fileStart, start: fileStart },
                 messageId: outcome.family,
@@ -44,6 +45,7 @@ export function createConformity(packageVersion: string): Rule.RuleModule {
               data: {
                 constraint: item.outcome.constraint,
                 message: item.outcome.message,
+                reference: item.outcome.normativeReference,
               },
               loc: { end: start, start },
               messageId: item.outcome.family,

@@ -36,8 +36,6 @@ export const validateDependencies = (() => {
           paths,
           new Set<string>(),
           (index) => `${pathsPath}[${index}]`,
-          (value) => `Duplicate path "${value}".`,
-          'CONFIG_2',
           'configuration/duplicate-element'
         )
       : [];

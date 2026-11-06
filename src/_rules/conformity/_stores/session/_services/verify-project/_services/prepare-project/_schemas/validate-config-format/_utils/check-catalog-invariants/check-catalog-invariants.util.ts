@@ -1,4 +1,7 @@
-import type { TConfigOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
+import type {
+  TConfigConstraint,
+  TConfigOutcome,
+} from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type {
   TExtensionEntry,
   TRoleEntry,
@@ -6,8 +9,8 @@ import type {
   TSubGraphRoleEntry,
 } from '../../_validate-config-format@shared/_types/validate-config-format.type.js';
 
+import { createOutcome } from '../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import {
-  CONFIG_3,
   CONSTRAINT_DUPLICATE_CATEGORY,
   CONSTRAINT_DUPLICATE_IMPLICIT_EXT,
   CONSTRAINT_DUPLICATE_ROLE_NAME,
@@ -22,22 +25,20 @@ export function checkCatalogInvariants(
   const outcomes: TConfigOutcome[] = [];
   const addOutcome = (
     propertyPath: string,
-    constraint: `configuration/${string}`,
-    message: string
+    constraint: TConfigConstraint,
+    detail: string
   ): void => {
-    outcomes.push({
-      constraint,
-      element: propertyPath,
-      family: 'configuration',
-      message,
-      normativeReference: CONFIG_3,
-      propertyPath,
-    });
+    outcomes.push(
+      createOutcome(constraint, {
+        detail,
+        propertyPath,
+      })
+    );
   };
 
   const checkDuplicatesInMap = (
     entries: readonly { readonly name: string; readonly path: string }[],
-    constraint: `configuration/${string}`,
+    constraint: TConfigConstraint,
     messagePrefix: string
   ): Map<string, string[]> => {
     const map = new Map<string, string[]>();

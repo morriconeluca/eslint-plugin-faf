@@ -10,8 +10,8 @@ describe('verifyCategoryRole', () => {
         constraint: 'unverified/not-implemented',
         element: 'category-role',
         family: 'unverified',
-        message: "Part 'category-role' is not implemented (§6.3.1).",
-        normativeReference: '§6.3.1',
+        message: "'category-role' is not implemented",
+        normativeReference: 'D-03',
         reason: 'not-implemented',
       },
     ]);
