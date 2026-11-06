@@ -415,6 +415,52 @@ const accessNodeMasterExportOutcome = (file: string): TScenarioMessage => ({
   severity: 2,
 });
 
+const treeAuthorizationOutcome = (
+  from: string,
+  to: string,
+  spec: string
+): TScenarioMessage => ({
+  column: 1,
+  constraint: 'dependency/tree-authorization',
+  element: from,
+  filePath: from,
+  line: 1,
+  message: formatEdgeMessage(
+    'dependency/tree-authorization',
+    from,
+    to,
+    spec,
+    'a dependency between Fractal Trees requires an oriented treeDependencies authorization',
+    'FAF §7.2, §7.3'
+  ),
+  messageId: 'dependency',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
+
+const treeOpacityOutcome = (
+  from: string,
+  to: string,
+  spec: string
+): TScenarioMessage => ({
+  column: 1,
+  constraint: 'dependency/tree-opacity',
+  element: from,
+  filePath: from,
+  line: 1,
+  message: formatEdgeMessage(
+    'dependency/tree-opacity',
+    from,
+    to,
+    spec,
+    'only the Public Surface of a Fractal Tree is importable from outside the Tree',
+    'FAF §7.1'
+  ),
+  messageId: 'dependency',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
+
 const unknownPropertyOutcome = (propertyPath: string): TScenarioMessage => ({
   column: 1,
   constraint: 'configuration/unknown-property',
@@ -1490,6 +1536,8 @@ describe('acceptance: p7a', () => {
         'outside/outside.ts',
         (source: string, destination: string, spec: string) => [
           fractalBranchVisibilityOutcome(source, destination, spec),
+          treeAuthorizationOutcome(source, destination, spec),
+          treeOpacityOutcome(source, destination, spec),
         ],
       ],
     ] as const)(
@@ -2396,6 +2444,18 @@ describe('acceptance: p7a', () => {
         const operation = reExport
           ? `export { value } from '${spec}';\n`
           : `import '${spec}';\n`;
+        const expected = [
+          foreignNodeIsolationOutcome(source, destination, spec),
+        ];
+        if (source === 'src/foreign.ts' && destination === 'other/main.ts') {
+          expected.push(
+            treeAuthorizationOutcome(source, destination, spec),
+            treeOpacityOutcome(source, destination, spec)
+          );
+        }
+        if (source === 'external.ts' && destination === 'src/foreign.ts') {
+          expected.push(treeOpacityOutcome(source, destination, spec));
+        }
         await runScenario(
           {
             ...foreignTree,
@@ -2404,7 +2464,7 @@ describe('acceptance: p7a', () => {
           },
           { faf: { locals: [foreignLocal] } },
           'foreign-node-isolation',
-          [foreignNodeIsolationOutcome(source, destination, spec)]
+          expected
         );
       }
     );

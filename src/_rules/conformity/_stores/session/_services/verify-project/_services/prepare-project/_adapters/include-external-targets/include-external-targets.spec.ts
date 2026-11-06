@@ -63,6 +63,17 @@ describe('includeExternalTargets', () => {
         fixture.path
       );
       expect(missing.items).toHaveLength(0);
+
+      const nonexistent = includeExternalTargets(
+        emptyInventory,
+        {
+          faf: {
+            locals: [{ rootLayers: ['src'] }],
+          },
+        },
+        '/nonexistent/directory'
+      );
+      expect(nonexistent.items).toHaveLength(0);
     } finally {
       await fixture.rm();
     }

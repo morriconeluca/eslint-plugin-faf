@@ -7,6 +7,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
+import { LINTABLE_EXTENSIONS } from '../../../../../../../../../../_src@shared/_constants/faf.constant.js';
 import { toPosixPath } from '../../../../../../_session@shared/_utils/to-posix-path/index.js';
 
 export function includeExternalTargets(
@@ -21,26 +22,38 @@ export function includeExternalTargets(
     config.faf.common?.externalDependencies,
     ...config.faf.locals.map((local) => local.externalDependencies),
   ];
-  const targets: string[] = [];
-  for (const section of sections) {
-    if (section !== undefined) {
-      for (const edge of section) {
-        targets.push(...edge.to);
-      }
+  const targets = sections
+    .flatMap((section) => section ?? [])
+    .flatMap((edge) => edge.to);
+
+  const dirents = nodeFs.existsSync(baseDirectory)
+    ? nodeFs.readdirSync(baseDirectory, { withFileTypes: true })
+    : [];
+
+  for (const dirent of dirents) {
+    const isRootCandidate =
+      dirent.isFile() &&
+      dirent.name !== 'fafconfig.ts' &&
+      LINTABLE_EXTENSIONS.some((extension) => dirent.name.endsWith(extension));
+    if (isRootCandidate) {
+      targets.push(dirent.name);
     }
   }
+
   for (const target of targets) {
     const normalized = toPosixPath(target);
     const absolute = nodePath.resolve(baseDirectory, normalized);
     const stats = nodeFs.statSync(absolute, { throwIfNoEntry: false });
-    if (stats === undefined || !stats.isFile() || pathToId.has(normalized)) {
+    const isRegularFile = stats?.isFile() === true;
+    if (!isRegularFile || pathToId.has(normalized)) {
       continue;
     }
     const id = items.length;
+    const isSymlink = nodeFs.lstatSync(absolute).isSymbolicLink();
     const item: TInventoryItem = {
       depth: 0,
       id,
-      isSymlink: nodeFs.lstatSync(absolute).isSymbolicLink(),
+      isSymlink,
       kind: 'file',
       parentId: null,
       path: normalized,
@@ -53,5 +66,6 @@ export function includeExternalTargets(
     pathToId.set(item.path, id);
     realPathToId.set(item.realPath, id);
   }
+
   return { items, pathToId, realPathToId };
 }

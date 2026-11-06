@@ -330,6 +330,20 @@ const privateCategoryVisibilityViolation = (
     'FAF §6.3.3'
   );
 
+const fractalBranchVisibilityViolation = (
+  source: string,
+  destination: string,
+  specifier: string
+): TScenarioMessage =>
+  edgeMessage(
+    source,
+    destination,
+    specifier,
+    'dependency/fractal-branch-visibility',
+    'a Fractal Branch is importable only from the subtree of its parent, except the parent Access Node',
+    'FAF §6.6.2'
+  );
+
 const fragmentEncapsulationViolation = (
   source: string,
   destination: string,
@@ -458,13 +472,34 @@ const surfaceProbe = async (
   target: string,
   isExposed: boolean
 ) => {
+  const expected = isExposed
+    ? []
+    : [
+        ...(target === 'src/Design.Notes.MD'
+          ? [
+              foreignNodeIsolationViolation(
+                'consumer.ts',
+                target,
+                `./${target}`
+              ),
+            ]
+          : []),
+        ...(target.includes('@shared')
+          ? [
+              fractalBranchVisibilityViolation(
+                'consumer.ts',
+                target,
+                `./${target}`
+              ),
+            ]
+          : []),
+        treeOpacityViolation('consumer.ts', target, `./${target}`),
+      ];
   await scenario(
     { ...tree, 'consumer.ts': `import './${target}';\n` },
     config,
     'tree-frontier',
-    isExposed
-      ? []
-      : [treeOpacityViolation('consumer.ts', target, `./${target}`)]
+    expected
   );
 };
 

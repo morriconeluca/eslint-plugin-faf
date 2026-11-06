@@ -188,6 +188,19 @@ const branchUnidirectionalityViolation = (
     'dependency'
   );
 
+const fractalBranchVisibilityViolation = (
+  source: string,
+  target: string,
+  specifier: string
+): TScenarioMessage =>
+  diagnostic(
+    'dependency/fractal-branch-visibility',
+    source,
+    source,
+    `'${source}' imports '${target}' through '${specifier}': a Fractal Branch is importable only from the subtree of its parent, except the parent Access Node (FAF §6.6.2).`,
+    'dependency'
+  );
+
 const treeOpacityViolation = (
   source: string,
   target: string,
@@ -1293,6 +1306,11 @@ describe('acceptance: structural norms', () => {
           'export type TShared = number;\n',
       },
       [
+        fractalBranchVisibilityViolation(
+          'consumer.ts',
+          'src/_src@shared/_types/shared.type.ts',
+          './src/_src@shared/_types/shared.type.js'
+        ),
         treeOpacityViolation(
           'consumer.ts',
           'src/_src@shared/_types/shared.type.ts',

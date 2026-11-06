@@ -31,7 +31,6 @@ const unimplementedParts = [
   'acyclicity',
   'fractal-branch-unidirectionality',
   're-entry-prohibition',
-  'tree-frontier',
 ];
 
 const compareText = (left: string, right: string): number => {

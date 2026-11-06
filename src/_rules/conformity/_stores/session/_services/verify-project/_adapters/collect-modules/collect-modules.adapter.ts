@@ -5,6 +5,7 @@ import type { TImportResolution } from '../../_verify-project@shared/_types/_com
 import type { TCollectModulesInput } from './collect-modules.type.js';
 
 import { moduleRecordStore } from '../../../../_session@shared/_stores/module-record-store/index.js';
+import { toPosixPath } from '../../../../_session@shared/_utils/to-posix-path/index.js';
 import { assertInvariant } from '../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { analyzeQueuedModule } from './_adapters/analyze-queued-module/index.js';
 import { resolveSpecifiers } from './_adapters/resolve-specifiers/index.js';
@@ -22,6 +23,18 @@ export function collectModules(input: TCollectModulesInput): TModuleCollection {
   const resolver = resolveSpecifiers(baseDirectory, input.aliases);
   const queue = [...selectTreeFilePaths(input.inventory)];
   const visited = new Set<string>(queue);
+  for (const item of input.inventory.items) {
+    const posix = toPosixPath(item.path);
+    if (
+      item.kind !== 'file' ||
+      item.treeOrigin !== null ||
+      visited.has(posix)
+    ) {
+      continue;
+    }
+    visited.add(posix);
+    queue.push(posix);
+  }
   const records = new Map<string, TModuleRecord>();
   const resolutions = new Map<string, readonly TImportResolution[]>();
   const unverifiedOutcomes: TUnverifiedOutcome[] = [];

@@ -333,6 +333,91 @@ describe('collectModules', () => {
     }
   });
 
+  it('queues external entry files present in the inventory', async () => {
+    const fixture = await createFixture({
+      'consumer.ts': 'export const c = 1;\n',
+    });
+    try {
+      const inventory: TInventory = {
+        items: [
+          {
+            depth: 0,
+            id: 0,
+            isSymlink: false,
+            kind: 'file',
+            parentId: null,
+            path: 'consumer.ts',
+            preorderEnd: 0,
+            preorderStart: 0,
+            realPath: nodePath.join(fixture.path, 'consumer.ts'),
+            treeOrigin: null,
+          },
+        ],
+        pathToId: new Map([['consumer.ts', 0]]),
+        realPathToId: new Map(),
+      };
+      const collection = collectModules({
+        aliases: [],
+        baseDirectory: fixture.path,
+        inventory,
+        textOverrides: new Map(),
+      });
+      expect(collection.records.has('consumer.ts')).toBe(true);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('skips external directories and duplicate external files from queueing', async () => {
+    const fixture = await createFixture({
+      'src/app.ts': 'export const app = 1;\n',
+    });
+    try {
+      const inventory: TInventory = {
+        items: [
+          {
+            depth: 0,
+            id: 0,
+            isSymlink: false,
+            kind: 'directory',
+            parentId: null,
+            path: 'outside-dir',
+            preorderEnd: 0,
+            preorderStart: 0,
+            realPath: nodePath.join(fixture.path, 'outside-dir'),
+            treeOrigin: null,
+          },
+          {
+            depth: 0,
+            id: 1,
+            isSymlink: false,
+            kind: 'file',
+            parentId: null,
+            path: 'src/app.ts',
+            preorderEnd: 1,
+            preorderStart: 1,
+            realPath: nodePath.join(fixture.path, 'src/app.ts'),
+            treeOrigin: null,
+          },
+        ],
+        pathToId: new Map([
+          ['outside-dir', 0],
+          ['src/app.ts', 1],
+        ]),
+        realPathToId: new Map(),
+      };
+      const collection = collectModules({
+        aliases: [],
+        baseDirectory: fixture.path,
+        inventory,
+        textOverrides: new Map(),
+      });
+      expect(collection.records.has('outside-dir')).toBe(false);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
   it('emits non-literal dynamic import and unsupported syntax outcomes', async () => {
     const fixture = await createFixture({
       'src/dynamic.ts':

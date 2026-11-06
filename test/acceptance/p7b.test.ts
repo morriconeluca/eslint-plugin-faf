@@ -393,12 +393,12 @@ const build294Expected = (
   }
   if (item.isHidden) {
     return [
-      dependency('treeOpacity', {
+      dependency('fractalBranchVisibility', {
         from: 'src/high.ts',
         specifier,
         to: target,
       }),
-      dependency('fractalBranchVisibility', {
+      dependency('treeOpacity', {
         from: 'src/high.ts',
         specifier,
         to: target,
@@ -512,34 +512,25 @@ const build297Expected = (item: T297Case): readonly TScenarioMessage[] => {
     return [];
   }
   const messages: TScenarioMessage[] = [];
-  switch (item.owner) {
-    case 'access-node-contract': {
-      messages.push(
-        dependency('accessNodeSources', {
-          from: item.source,
-          specifier: item.specifier,
-          to: item.target,
-        })
-      );
-      break;
-    }
-    case 'tree-frontier': {
-      messages.push(
-        dependency('treeOpacity', {
-          from: item.source,
-          specifier: item.specifier,
-          to: item.target,
-        })
-      );
-      break;
-    }
-    default: {
-      break;
-    }
-  }
-  if (item.source !== 'outside.ts') {
+  if (item.owner === 'access-node-contract') {
     messages.push(
-      dependency('fractalBranchVisibility', {
+      dependency('accessNodeSources', {
+        from: item.source,
+        specifier: item.specifier,
+        to: item.target,
+      })
+    );
+  }
+  messages.push(
+    dependency('fractalBranchVisibility', {
+      from: item.source,
+      specifier: item.specifier,
+      to: item.target,
+    })
+  );
+  if (item.owner === 'tree-frontier') {
+    messages.push(
+      dependency('treeOpacity', {
         from: item.source,
         specifier: item.specifier,
         to: item.target,
