@@ -43,7 +43,6 @@ const unimplementedParts = [
   're-export-prohibition',
   'root-node-discipline',
   'sub-graph-node-isolation',
-  'symbol-uniqueness',
   'tree-frontier',
 ];
 

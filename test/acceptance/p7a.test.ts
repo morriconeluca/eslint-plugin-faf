@@ -825,7 +825,7 @@ describe('acceptance: p7a', () => {
               "export { value } from './unit.component.js';\n",
             [`${directory}/unit.component.ts`]: value,
             [destination]: value,
-            [source]: `import '${specifier(source, destination)}';\n`,
+            [source]: `${value}import '${specifier(source, destination)}';\n`,
           },
           {
             faf: {
