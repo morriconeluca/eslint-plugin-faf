@@ -156,6 +156,57 @@ export const lintScenario = async (
   return { messages, unimplementedParts };
 };
 
+const ACCESS_NODE_CONTRACT = 'access-node-contract';
+const ACYCLICITY = 'acyclicity';
+const FRAGMENT_ANATOMY = 'fragment-anatomy';
+const PRIVATE_CATEGORY_VISIBILITY = 'private-category-visibility';
+const SYMBOL_UNIQUENESS = 'symbol-uniqueness';
+const TREE_FRONTIER = 'tree-frontier';
+
+const normOwnerByConstraint = new Map<null | string, string>([
+  ['acyclicity/dependency-cycle', ACYCLICITY],
+  ['acyclicity/inter-tree-cycle', ACYCLICITY],
+  ['classification/category-role', 'category-role'],
+  ['classification/containment-matrix', 'containment-matrix'],
+  ['classification/duplicate-fragment-role', FRAGMENT_ANATOMY],
+  ['classification/exclusive-forms', 'exclusive-forms'],
+  ['classification/fragment-node-anatomy', FRAGMENT_ANATOMY],
+  ['classification/fragment-node-rank', FRAGMENT_ANATOMY],
+  ['classification/horizontal-hierarchy-members', 'horizontal-hierarchies'],
+  ['classification/horizontal-hierarchy-overlap', 'horizontal-hierarchies'],
+  ['classification/missing-access-node', FRAGMENT_ANATOMY],
+  ['classification/missing-master-node', FRAGMENT_ANATOMY],
+  ['classification/nomenclature', 'nomenclature'],
+  ['dependency/access-node-sources', ACCESS_NODE_CONTRACT],
+  ['dependency/external-dependencies', 'external-dependencies'],
+  ['dependency/foreign-node-isolation', 'foreign-node-isolation'],
+  [
+    'dependency/fractal-branch-unidirectionality',
+    'fractal-branch-unidirectionality',
+  ],
+  ['dependency/fractal-branch-visibility', 'fractal-branch-visibility'],
+  ['dependency/fragment-encapsulation', 'fragment-encapsulation'],
+  ['dependency/path-alias-anchoring', 'path-alias-anchoring'],
+  ['dependency/peer-separation', 'peer-separation'],
+  [
+    'dependency/private-category-unidirectionality',
+    PRIVATE_CATEGORY_VISIBILITY,
+  ],
+  ['dependency/private-category-visibility', PRIVATE_CATEGORY_VISIBILITY],
+  ['dependency/re-entry-prohibition', 're-entry-prohibition'],
+  ['dependency/root-node-discipline', 'root-node-discipline'],
+  ['dependency/sub-graph-node-isolation', 'sub-graph-node-isolation'],
+  ['dependency/tree-authorization', TREE_FRONTIER],
+  ['dependency/tree-opacity', TREE_FRONTIER],
+  ['symbol/access-node-master-export', ACCESS_NODE_CONTRACT],
+  ['symbol/access-node-own-symbols', ACCESS_NODE_CONTRACT],
+  ['symbol/master-symbol', SYMBOL_UNIQUENESS],
+  ['symbol/re-export-prohibition', 're-export-prohibition'],
+  ['symbol/symbol-uniqueness', SYMBOL_UNIQUENESS],
+  ['unverified/cyclic-root-authorization', ACYCLICITY],
+  ['unverified/cyclic-tree-authorization', ACYCLICITY],
+]);
+
 export const expectScenario = (
   result: Awaited<ReturnType<typeof lintScenario>>,
   responsiblePart: string,
@@ -163,7 +214,11 @@ export const expectScenario = (
 ): void => {
   const absent = result.unimplementedParts.get(responsiblePart);
   if (absent === undefined) {
-    expect(result.messages).toEqual(expected);
+    const realized = expected.filter((item) => {
+      const owner = normOwnerByConstraint.get(item.constraint);
+      return owner === undefined || !result.unimplementedParts.has(owner);
+    });
+    expect(result.messages).toEqual(realized);
     return;
   }
   expect(absent).toEqual([
@@ -178,7 +233,15 @@ export const expectScenario = (
   expect(absent[0]?.message).toContain(
     `'${responsiblePart}' is not implemented (D-03).`
   );
-  expect(result.messages).toEqual([]);
+  const realizedConjunctive = expected.filter((item) => {
+    const owner = normOwnerByConstraint.get(item.constraint);
+    return (
+      owner !== undefined &&
+      owner !== responsiblePart &&
+      !result.unimplementedParts.has(owner)
+    );
+  });
+  expect(result.messages).toEqual(realizedConjunctive);
 };
 
 export const warmupESLint = async (): Promise<void> => {
