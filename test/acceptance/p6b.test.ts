@@ -302,6 +302,20 @@ const peerSeparationViolation = (
     'FAF §5'
   );
 
+const privateCategoryUnidirectionalityViolation = (
+  source: string,
+  destination: string,
+  specifier: string
+): TScenarioMessage =>
+  edgeMessage(
+    source,
+    destination,
+    specifier,
+    'dependency/private-category-unidirectionality',
+    'a Private Category must not import the direct Logical Nodes of its parent',
+    'FAF §6.3.3'
+  );
+
 const privateCategoryVisibilityViolation = (
   source: string,
   destination: string,
@@ -312,7 +326,7 @@ const privateCategoryVisibilityViolation = (
     destination,
     specifier,
     'dependency/private-category-visibility',
-    'is inside a Private Category and not accessible from outside the parent',
+    'a Private Category is importable from outside only by the enabled direct Logical Nodes of its parent',
     'FAF §6.3.3'
   );
 
@@ -794,6 +808,11 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
       },
       'root-node-discipline',
       [
+        privateCategoryUnidirectionalityViolation(
+          'src/_utils/widget/widget.util.ts',
+          'src/AppEntry.ts',
+          '../../AppEntry.js'
+        ),
         rootNodeDisciplineViolation(
           'src/_utils/widget/widget.util.ts',
           'src/AppEntry.ts',

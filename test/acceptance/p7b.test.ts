@@ -72,6 +72,12 @@ const PREDICATES = {
       'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
     reference: 'FAF §5',
   },
+  privateCategoryUnidirectionality: {
+    constraint: 'dependency/private-category-unidirectionality',
+    predicate:
+      'a Private Category must not import the direct Logical Nodes of its parent',
+    reference: 'FAF §6.3.3',
+  },
   rootNodeDiscipline: {
     constraint: 'dependency/root-node-discipline',
     predicate:
@@ -769,6 +775,11 @@ const scenarios: readonly TScenario[] = [
         },
       },
       expected: [
+        dependency('privateCategoryUnidirectionality', {
+          from: file,
+          specifier,
+          to: 'src/high.ts',
+        }),
         dependency('rootNodeDiscipline', {
           from: file,
           specifier,
@@ -1124,6 +1135,11 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: [
+      dependency('privateCategoryUnidirectionality', {
+        from: 'src/_utils/widget/widget.util.ts',
+        specifier: '../../high.js',
+        to: 'src/high.ts',
+      }),
       dependency('rootNodeDiscipline', {
         from: 'src/_utils/widget/widget.util.ts',
         specifier: '../../high.js',

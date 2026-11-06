@@ -109,6 +109,11 @@ const otherDependencyViolations = {
       'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
     reference: 'FAF §5',
   },
+  'private-category-unidirectionality': {
+    predicate:
+      'a Private Category must not import the direct Logical Nodes of its parent',
+    reference: 'FAF §6.3.3',
+  },
   'private-category-visibility': {
     predicate:
       'a Private Category is importable from outside only by the enabled direct Logical Nodes of its parent',
@@ -483,7 +488,12 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
       `${fragment}/example.spec.ts`,
       ['peer-separation', 'sub-graph-node-isolation'],
     ],
-    ['Root Node', '../../main', 'src/main.ts', ['root-node-discipline']],
+    [
+      'Root Node',
+      '../../main',
+      'src/main.ts',
+      ['private-category-unidirectionality', 'root-node-discipline'],
+    ],
     [
       'private Sub-Fragment',
       './_hooks/child/index',

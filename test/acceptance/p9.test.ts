@@ -239,6 +239,21 @@ const subGraphIsolationOutcome = (
     to,
   });
 
+const privateCategoryVisibilityOutcome = (
+  from: string,
+  to: string,
+  specifier: string
+): TScenarioMessage =>
+  directEdgeOutcome({
+    constraint: 'dependency/private-category-visibility',
+    from,
+    predicate:
+      'a Private Category is importable from outside only by the enabled direct Logical Nodes of its parent',
+    reference: 'FAF §6.3.3',
+    specifier,
+    to,
+  });
+
 const foreignNodeIsolationOutcome = (
   from: string,
   to: string,
@@ -337,28 +352,32 @@ describe('acceptance: global graph norms', () => {
       'src/_utils/unit/index.ts',
       "import '../../_utils/unit/index.js';\n",
       '../../_utils/unit/index.js',
+      true,
     ],
     [
       'sibling Category Node',
       'src/_types/other.type.ts',
       "import '../../_types/other.type.js';\n",
       '../../_types/other.type.js',
+      true,
     ],
     [
       'child Root Node',
       'src/child/entry.ts',
       "import '../../child/entry.js';\n",
       '../../child/entry.js',
+      false,
     ],
     [
       'nested sibling Branch node',
       'src/_utils/unit/_unit@shared/_types/deep.type.ts',
       "import '../../_utils/unit/_unit@shared/_types/deep.type.js';\n",
       '../../_utils/unit/_unit@shared/_types/deep.type.js',
+      true,
     ],
   ])(
     'rejects a Branch return to a %s',
-    async (name, target, source, specifier) => {
+    async (name, target, source, specifier, isPrivateCategory = false) => {
       const isRootDestination =
         target === 'src/main.ts' || target === 'src/child/entry.ts';
       const isPeerViolation =
@@ -375,6 +394,9 @@ describe('acceptance: global graph norms', () => {
             : []),
           ...(isPeerViolation
             ? [peerSeparationOutcome(branchSource, target, specifier)]
+            : []),
+          ...(isPrivateCategory
+            ? [privateCategoryVisibilityOutcome(branchSource, target, specifier)]
             : []),
           ...(isRootDestination
             ? [rootNodeDisciplineOutcome(branchSource, target, specifier)]
@@ -402,6 +424,11 @@ describe('acceptance: global graph norms', () => {
           '../../_types/other.type.js'
         ),
         peerSeparationOutcome(
+          'src/_src@shared/_types/last.type.ts',
+          'src/_types/other.type.ts',
+          '../../_types/other.type.js'
+        ),
+        privateCategoryVisibilityOutcome(
           'src/_src@shared/_types/last.type.ts',
           'src/_types/other.type.ts',
           '../../_types/other.type.js'

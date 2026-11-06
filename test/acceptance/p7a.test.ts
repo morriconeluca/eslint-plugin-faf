@@ -1115,6 +1115,7 @@ describe('acceptance: p7a', () => {
         'Root Node',
         'src/main.ts',
         (source: string, destination: string, spec: string) => [
+          privateCategoryVisibilityOutcome(source, destination, spec),
           subGraphNodeIsolationOutcome(source, destination, spec),
         ],
       ],
