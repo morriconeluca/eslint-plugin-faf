@@ -30,7 +30,6 @@ const conformingTree = {
 const unimplementedParts = [
   'acyclicity',
   'fractal-branch-unidirectionality',
-  're-entry-prohibition',
 ];
 
 describe('acceptance: faf/conformity', () => {

@@ -30,7 +30,6 @@ const conformingFiles = {
 const unimplementedParts = [
   'acyclicity',
   'fractal-branch-unidirectionality',
-  're-entry-prohibition',
 ];
 
 const compareText = (left: string, right: string): number => {
