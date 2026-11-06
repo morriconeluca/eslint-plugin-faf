@@ -6,10 +6,16 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      base:
+        default: 'origin/main'
+        description: 'Base ref for diff comparison'
+        required: false
+        type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   ci:
@@ -17,15 +23,39 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
           cache: 'npm'
+          node-version: '24'
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Determine diff base
+        id: diff-base
+        env:
+          EVENT_BEFORE: ${{ github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_BASE: ${{ inputs.base }}
+          PR_BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "base=origin/$PR_BASE_REF" >> "$GITHUB_OUTPUT"
+          elif [ "$EVENT_NAME" = "push" ]; then
+            if [ -z "$EVENT_BEFORE" ] || [ "$EVENT_BEFORE" = "0000000000000000000000000000000000000000" ]; then
+              echo "base=origin/main" >> "$GITHUB_OUTPUT"
+            else
+              echo "base=$EVENT_BEFORE" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "base=${INPUT_BASE:-origin/main}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run CI
+        env:
+          FAF_DIFF_BASE: ${{ steps.diff-base.outputs.base }}
         run: npm run ci

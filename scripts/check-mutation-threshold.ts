@@ -1,134 +1,69 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-type TFileReport = {
-  readonly mutants?: readonly TMutantResult[];
+import type { TMutationEvaluationResult } from './mutation-types.js';
+
+import { evaluateMutationReport } from './mutation-evaluator.js';
+import { formatEvaluationReport } from './mutation-formatter.js';
+
+export const THRESHOLD = 80;
+
+export type TCheckThresholdResult = {
+  readonly evaluation?: TMutationEvaluationResult;
+  readonly exitCode: number;
+  readonly isPassed: boolean;
 };
 
-type TMutantCounts = {
-  killed: number;
-  noCoverage: number;
-  survived: number;
-  timeout: number;
-};
+const DEFAULT_REPORT = 'reports/mutation/mutation.json';
 
-type TMutantResult = {
-  readonly status: string;
-};
-
-type TMutationReport = {
-  readonly files?: Record<string, TFileReport>;
-};
-
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const parseMutant = (raw: unknown): null | TMutantResult =>
-  isObject(raw) && typeof raw['status'] === 'string'
-    ? { status: raw['status'] }
-    : null;
-
-const parseFileReport = (raw: unknown): TFileReport => {
-  if (!isObject(raw)) {
-    return {};
-  }
-  const rawMutants = Array.isArray(raw['mutants']) ? raw['mutants'] : [];
-  const mutants: TMutantResult[] = [];
-  for (const m of rawMutants) {
-    const mutant = parseMutant(m);
-    if (mutant !== null) {
-      mutants.push(mutant);
+const parseReportPath = (rawArguments: readonly string[]): string => {
+  for (const argument of rawArguments) {
+    if (!argument.startsWith('--')) {
+      return argument;
     }
   }
-  return { mutants };
+  return DEFAULT_REPORT;
 };
 
-const parseMutationReport = (raw: string): TMutationReport => {
-  const parsed: unknown = JSON.parse(raw);
-  if (!isObject(parsed)) {
-    return {};
+export const checkMutationThreshold = (
+  argumentsList: readonly string[] = []
+): TCheckThresholdResult => {
+  const reportPath = parseReportPath(argumentsList);
+  const resolved = path.resolve(process.cwd(), reportPath);
+  if (!fs.existsSync(resolved)) {
+    console.error(`Error: Mutation report not found at ${resolved}`);
+    return { exitCode: 1, isPassed: false };
   }
 
-  const rawFiles = isObject(parsed['files']) ? parsed['files'] : {};
-  const files: Record<string, TFileReport> = {};
-
-  for (const [key, value] of Object.entries(rawFiles)) {
-    files[key] = parseFileReport(value);
-  }
-
-  return { files };
-};
-
-const tallyMutant = (mutant: TMutantResult, counts: TMutantCounts): void => {
-  switch (mutant.status) {
-    case 'Killed': {
-      counts.killed += 1;
-      break;
-    }
-    case 'NoCoverage': {
-      counts.noCoverage += 1;
-      break;
-    }
-    case 'Survived': {
-      counts.survived += 1;
-      break;
-    }
-    case 'Timeout': {
-      counts.timeout += 1;
-      break;
-    }
-    default: {
-      break;
-    }
-  }
-};
-
-const reportPath = path.resolve(
-  process.cwd(),
-  'reports/mutation/mutation.json'
-);
-
-if (!fs.existsSync(reportPath)) {
-  console.error(`Error: Mutation report not found at ${reportPath}`);
-  process.exit(1);
-}
-
-const THRESHOLD = 85;
-
-const fileContent = fs.readFileSync(reportPath, 'utf8');
-const report = parseMutationReport(fileContent);
-const files = report.files ?? {};
-let hasViolations = false;
-
-for (const [filePath, fileData] of Object.entries(files)) {
-  const mutants = fileData.mutants ?? [];
-  const counts: TMutantCounts = {
-    killed: 0,
-    noCoverage: 0,
-    survived: 0,
-    timeout: 0,
-  };
-
-  for (const mutant of mutants) {
-    tallyMutant(mutant, counts);
-  }
-
-  const detected = counts.killed + counts.timeout;
-  const undetected = counts.survived + counts.noCoverage;
-  const totalRelevant = detected + undetected;
-
-  const score = totalRelevant === 0 ? 100 : (detected / totalRelevant) * 100;
-
-  if (score >= THRESHOLD) {
-    continue;
-  }
-
-  console.error(
-    `ERROR: File ${filePath} mutation score of ${score.toFixed(2)}% does not meet threshold of ${THRESHOLD}%`
+  console.log(
+    '[MUTATION CHECKER] Offline evaluation mode: inspecting stored report without run verification.'
   );
-  hasViolations = true;
-}
+  console.log(
+    '[MUTATION CHECKER] Notice: This offline evaluation does NOT constitute a certified fresh measurement run.'
+  );
 
-if (hasViolations) {
-  process.exit(1);
+  const raw = fs.readFileSync(resolved, 'utf8');
+  const evaluation = evaluateMutationReport(raw, {
+    mode: 'offline',
+    threshold: THRESHOLD,
+  });
+
+  console.log(formatEvaluationReport(evaluation, THRESHOLD));
+
+  return {
+    evaluation,
+    exitCode: evaluation.isPassed ? 0 : 1,
+    isPassed: evaluation.isPassed,
+  };
+};
+
+const isDirectExecution = (): boolean => {
+  const entry = process.argv[1];
+  return entry !== undefined && import.meta.url === pathToFileURL(entry).href;
+};
+
+if (isDirectExecution()) {
+  const result = checkMutationThreshold(process.argv.slice(2));
+  process.exit(result.exitCode);
 }

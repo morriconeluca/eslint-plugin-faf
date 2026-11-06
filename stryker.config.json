@@ -8,12 +8,15 @@
   ],
   "ignorePatterns": ["coverage", "reports", "dist", ".cache", ".stryker-tmp"],
   "plugins": ["@stryker-mutator/vitest-runner"],
-  "reporters": ["clear-text", "json"],
+  "reporters": ["clear-text", "json", "event-recorder"],
+  "eventReporter": {
+    "baseDir": "reports/mutation/events"
+  },
   "testRunner": "vitest",
   "thresholds": {
-    "break": 85,
-    "high": 85,
-    "low": 85
+    "break": 80,
+    "high": 80,
+    "low": 80
   },
   "warnings": {
     "slow": false

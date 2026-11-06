@@ -12,12 +12,8 @@ export const normalizePath = (filePath: string): string =>
   filePath.replaceAll('\\', '/').replace(/^\.\//u, '');
 
 export const comparePaths = (left: string, right: string): number => {
-  if (left < right) {
-    return -1;
-  }
-  if (left > right) {
-    return 1;
-  }
+  if (left < right) return -1;
+  if (left > right) return 1;
   return 0;
 };
 
@@ -40,17 +36,28 @@ export const selectPresentChangedFiles = (
   return unique;
 };
 
-const resolveGit = (): string => {
-  const found = GIT_CANDIDATES.find((candidate) => fs.existsSync(candidate));
-  if (found === undefined) {
-    console.error('git executable was not found');
-    process.exit(1);
+const resolveGit = (): string =>
+  GIT_CANDIDATES.find((candidate) => fs.existsSync(candidate)) ?? 'git';
+
+export const isValidGitBase = (base: string, cwd = process.cwd()): boolean => {
+  if (base.startsWith('--') || base.length === 0) {
+    return false;
   }
-  return found;
+  const commitRevision = base.concat('^{commit}');
+  const result = spawnSync(
+    resolveGit(),
+    ['rev-parse', '--verify', '--end-of-options', commitRevision],
+    { cwd, encoding: 'utf8' }
+  );
+  return result.status === 0;
 };
 
-const readGitLines = (gitArguments: readonly string[]): readonly string[] => {
+const readGitLines = (
+  gitArguments: readonly string[],
+  cwd = process.cwd()
+): readonly string[] => {
   const result = spawnSync(resolveGit(), [...gitArguments], {
+    cwd,
     encoding: 'utf8',
   });
   if (result.status !== 0) {
@@ -64,14 +71,23 @@ const readGitLines = (gitArguments: readonly string[]): readonly string[] => {
     .filter((line) => line.length > 0);
 };
 
-export const readRepositoryChanges = (base: string): TRepositoryChanges => {
-  const changedTracked = readGitLines(['diff', '--name-only', base]);
-  const untracked = readGitLines([
-    'ls-files',
-    '--others',
-    '--exclude-standard',
-  ]);
-  const trackedPresent = readGitLines(['ls-files']);
+export const readRepositoryChanges = (
+  base: string,
+  cwd = process.cwd()
+): TRepositoryChanges => {
+  if (!isValidGitBase(base, cwd)) {
+    console.error(`Invalid git base reference: "${base}"`);
+    process.exit(1);
+  }
+  const changedTracked = readGitLines(
+    ['diff', '--name-only', '--end-of-options', base, '--'],
+    cwd
+  );
+  const untracked = readGitLines(
+    ['ls-files', '--others', '--exclude-standard'],
+    cwd
+  );
+  const trackedPresent = readGitLines(['ls-files'], cwd);
   return {
     changedPaths: [...changedTracked, ...untracked],
     presentFiles: [...trackedPresent, ...untracked],

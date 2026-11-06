@@ -265,20 +265,27 @@ The codebase enforces five sequential quality gates. All gates must pass in loca
      - **Encapsulation**: from outside a Fragment, only that Fragment's `index.ts` is importable. Category Nodes and Sub-Category chains declared by the Horizontal Hierarchies are not Fragments.
      - **Climb**: an import that climbs to an ancestor and descends again must reach a Fractal Branch, or a sibling domain of strictly lower rank in the same Horizontal Hierarchy. That hierarchy orders catalog Categories only when they are non-private siblings (children of a Layer, a Root Layer, or a Fractal Branch). Every edge between Private Category siblings is forbidden, including edges from their subtrees. Ordered Sub-Categories (`_primitives` < `_compounds` < …) remain ordered even inside a Private Category.
      - **Tree exit**: a relative import that resolves outside every Fractal Tree origin is allowed only when the source/target pair is authorized by `externalDependencies`.
-4. **`gate:4`** (`npm run gate:4`):
-   - Mutation Testing: Runs Stryker Mutator followed by per-file threshold evaluation (`scripts/check-mutation-threshold.ts`).
-   - Strict per-file threshold: **≥ 85% mutation score**.
+4. **`gate:4:diff`** (`npm run gate:4:diff`):
+   - Mutation Testing (Diff): Runs Stryker Mutator on source files in touched `src/` directories with `--incremental --force` and its own cache `.cache/stryker/diff.json`, followed by threshold evaluation (`scripts/check-mutation-threshold.ts`).
+   - Strict per-file threshold: **≥ 80% mutation score**.
+   - Base comparison precedence:
+     1. Explicit CLI positional argument (`npm run gate:4:diff -- <base>`).
+     2. CI base environment variable (`FAF_DIFF_BASE`).
+     3. Local fallback (`main`).
+   - If the base reference is invalid, the command fails immediately without falling back to `HEAD`. An empty diff is an explicit success outcome without reading legacy mutation reports. The git index is never modified.
    - `src/**/*.mock.ts` is excluded from coverage and mutation because those files are test data, not production code. `*.constant.ts` and `*.config.ts` remain covered and mutated. No other exclusions are allowed.
-5. **`gate:4:diff`** (`npm run gate:4:diff`):
-   - Use it while developing and when verifying every change. It mutates the source files in each touched `src/` directory (not recursively), excluding `*.spec.ts`, `*.type.ts`, `*.mock.ts`, and `index.ts`, so a Fragment whose only changed file is a spec is still mutated.
-   - Changed files are tracked differences from the comparison base (`main` by default, overridable by argument; CI uses `origin/main`) plus untracked non-ignored files. The script does not modify the git index. Deleted files and files outside `src/` are ignored. Stryker runs with `--incremental --force` and its own incremental file `.cache/stryker/diff.json`, then `scripts/check-mutation-threshold.ts` checks the report. No files to mutate is a successful outcome with an explicit message.
-   - The full forced mutation run remains `npm run gate:4` and is the periodic check on `main`.
-6. **`gate:5`** (`npm run gate:5`):
+5. **`gate:4:incremental`** (`npm run gate:4:incremental`):
+   - Centralized Incremental Mutation: Runs Stryker on the entire configured perimeter on `main` with persistent cache `.cache/stryker/incremental.json` without `--force`. Executed by the orchestrator after integration.
+   - Strict per-file threshold: **≥ 80% mutation score**.
+6. **`gate:4:force`** (`npm run gate:4:force`):
+   - Full Forced Mutation: Runs full mutation with `--force` on the entire configured perimeter. Executed manually only upon explicit user request.
+   - Strict per-file threshold: **≥ 80% mutation score**.
+7. **`gate:5`** (`npm run gate:5`):
    - Packaging & Types: Bundles the package with `tsup`, executes package export validation via `publint --strict`, and validates TypeScript declaration exports via `@arethetypeswrong/cli` (`attw -q --pack .`).
 
 ### The Binding Principle
 
-No quality gate constraint may be weakened or bypassed. All five gates (`npm run gate:all`) must pass green prior to integration.
+No quality gate constraint may be weakened or bypassed. All gates must pass green prior to integration (`npm run ci`).
 
 ---
 
@@ -286,16 +293,28 @@ No quality gate constraint may be weakened or bypassed. All five gates (`npm run
 
 ### 6.1 Common Commands
 
-- **Run all quality gates**:
+- **Run standard continuous integration gates**:
   ```bash
-  npm run gate:all
+  npm run ci
   ```
-- **Mutate the current diff** (development and verification of each change; base defaults to `main`):
+- **Mutate the current diff** (development, worktrees, and CI; base defaults to `main`):
   ```bash
   npm run gate:4:diff
   npm run gate:4:diff -- origin/main
   ```
-- **Check types, lint, fitness, and related tests** after each Fragment. This does not replace `gate:all`. The base defaults to `main`:
+- **Run incremental mutation on main** (centralized post-merge):
+  ```bash
+  npm run gate:4:incremental
+  ```
+- **Run full forced mutation** (manual request only):
+  ```bash
+  npm run gate:4:force
+  ```
+- **Run all gates with full forced mutation** (manual request only):
+  ```bash
+  npm run gate:all:force
+  ```
+- **Check types, lint, fitness, and related tests** after each Fragment. This does not replace `ci`. The base defaults to `main`:
 
   ```bash
   npm run check

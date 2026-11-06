@@ -1,6 +1,10 @@
+import { createFixture } from 'fs-fixture';
 import { describe, expect, it } from 'vitest';
 
-import { selectMutationTargets } from '../../scripts/mutate-diff.js';
+import {
+  listAllMutableSources,
+  selectMutationTargets,
+} from '../../scripts/mutate-diff.js';
 
 describe('selectMutationTargets', () => {
   it('mutates directory sources when only the spec changed', () => {
@@ -83,5 +87,27 @@ describe('selectMutationTargets', () => {
         ]
       )
     ).toEqual([]);
+  });
+
+  it('includes index.ts in listAllMutableSources for full runs while diff excludes index.ts', async () => {
+    const fixture = await createFixture({
+      'src/foo/bar.mock.ts': 'export const mock = 1;\n',
+      'src/foo/bar.spec.ts': 'export const spec = 1;\n',
+      'src/foo/bar.type.ts': 'export type T = number;\n',
+      'src/foo/bar.util.ts': 'export const bar = () => 1;\n',
+      'src/foo/index.ts': 'export * from "./bar.util.js";\n',
+      'src/index.ts': 'export * from "./foo/index.js";\n',
+    });
+    try {
+      const fullSources = listAllMutableSources(fixture.path);
+      expect(fullSources).toContain('src/index.ts');
+      expect(fullSources).toContain('src/foo/index.ts');
+      expect(fullSources).toContain('src/foo/bar.util.ts');
+      expect(fullSources).not.toContain('src/foo/bar.mock.ts');
+      expect(fullSources).not.toContain('src/foo/bar.spec.ts');
+      expect(fullSources).not.toContain('src/foo/bar.type.ts');
+    } finally {
+      await fixture.rm();
+    }
   });
 });

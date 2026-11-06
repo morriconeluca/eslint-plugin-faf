@@ -1,125 +1,109 @@
-import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
-import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import {
-  comparePaths,
-  normalizePath,
-  readRepositoryChanges,
-} from './changed-files.js';
+import type { TMutationRunMode } from './mutation-runner-types.js';
 
-const SOURCE_EXTENSION = '.ts';
-const EXCLUDED_SUFFIXES = ['.mock.ts', '.spec.ts', '.type.ts'] as const;
+import { runMutationMeasure } from './mutation-runner.js';
 
-const directoryOf = (filePath: string): string => {
-  const normalized = normalizePath(filePath);
-  const slash = normalized.lastIndexOf('/');
-  return slash === -1 ? '' : normalized.slice(0, slash);
+export {
+  isMutableSource,
+  listAllMutableSources,
+  selectMutationTargets,
+} from './mutation-targets.js';
+
+export const resolveDiffBase = (
+  explicitArgument?: string,
+  ciBase?: string
+): string => {
+  if (explicitArgument !== undefined && explicitArgument.length > 0) {
+    return explicitArgument;
+  }
+  if (ciBase !== undefined && ciBase.length > 0) {
+    return ciBase;
+  }
+  return 'main';
 };
 
-const isUnderSrc = (filePath: string): boolean => {
-  const normalized = normalizePath(filePath);
-  return normalized === 'src' || normalized.startsWith('src/');
-};
-
-const isExcludedSource = (filePath: string): boolean => {
-  const normalized = normalizePath(filePath);
-  const baseName = normalized.slice(normalized.lastIndexOf('/') + 1);
-  const isIndex = baseName === 'index.ts';
-  const hasExcludedSuffix = EXCLUDED_SUFFIXES.some((suffix) =>
-    normalized.endsWith(suffix)
-  );
-  return isIndex || hasExcludedSuffix;
-};
-
-const isMutableSource = (filePath: string): boolean => {
-  const normalized = normalizePath(filePath);
-  return (
-    normalized.endsWith(SOURCE_EXTENSION) &&
-    isUnderSrc(normalized) &&
-    !isExcludedSource(normalized)
-  );
-};
-
-export const selectMutationTargets = (
-  changedPaths: readonly string[],
-  presentFiles: readonly string[]
-): readonly string[] => {
-  const present = new Set(
-    presentFiles.map((filePath) => normalizePath(filePath))
-  );
-  const touchedDirectories = new Set<string>();
-
-  for (const changedPath of changedPaths) {
-    const normalized = normalizePath(changedPath);
-    if (isUnderSrc(normalized) && present.has(normalized)) {
-      touchedDirectories.add(directoryOf(normalized));
+const parseMode = (value: string): null | TMutationRunMode => {
+  switch (value) {
+    case 'diff':
+    case 'force':
+    case 'incremental': {
+      return value;
+    }
+    default: {
+      return null;
     }
   }
-
-  const targets: string[] = [];
-  for (const filePath of present) {
-    if (
-      touchedDirectories.has(directoryOf(filePath)) &&
-      isMutableSource(filePath)
-    ) {
-      targets.push(filePath);
-    }
-  }
-
-  const uniqueTargets = [...new Set(targets)];
-  uniqueTargets.sort(comparePaths);
-  return uniqueTargets;
 };
 
-const INCREMENTAL_FILE = '.cache/stryker/diff.json';
-const STRYKER_BIN = './node_modules/.bin/stryker';
-const THRESHOLD_SCRIPT = 'scripts/check-mutation-threshold.ts';
+export type TRunParameters = {
+  readonly base?: string;
+  readonly error?: string;
+  readonly mode: TMutationRunMode;
+};
 
-const runChecked = (
-  executable: string,
-  executableArguments: readonly string[]
-): void => {
-  const result = spawnSync(executable, [...executableArguments], {
-    stdio: 'inherit',
-  });
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+type TParseState = {
+  error?: string;
+  explicitBase?: string;
+  mode?: TMutationRunMode;
+};
+
+const handleModeFlag = (argument: string, state: TParseState): void => {
+  if (state.mode !== undefined) {
+    state.error ??= `Cannot specify multiple --mode flags: received "${argument}" after mode was already set to "${state.mode}"`;
+    return;
+  }
+  const parsed = parseMode(argument.slice(7));
+  if (parsed === null) {
+    state.error ??= `Invalid --mode value: "${argument.slice(7)}"`;
+  } else {
+    state.mode = parsed;
   }
 };
 
-const runMutation = (targets: readonly string[]): void => {
-  fs.mkdirSync(path.dirname(INCREMENTAL_FILE), { recursive: true });
-  runChecked(STRYKER_BIN, [
-    'run',
-    '--mutate',
-    targets.join(','),
-    '--incremental',
-    '--force',
-    '--incrementalFile',
-    INCREMENTAL_FILE,
-  ]);
-  runChecked(process.execPath, [THRESHOLD_SCRIPT]);
+const handleArgument = (argument: string, state: TParseState): void => {
+  if (argument.startsWith('--mode=')) {
+    handleModeFlag(argument, state);
+  } else if (argument.startsWith('--')) {
+    state.error ??= `Unknown option: "${argument}". Options starting with "--" are not supported as git references.`;
+  } else if (state.explicitBase === undefined) {
+    state.explicitBase = argument;
+  } else {
+    state.error ??= `Unexpected extra positional argument: "${argument}". Only one base reference is supported.`;
+  }
+};
+
+export const resolveRunParameters = (
+  rawArguments: readonly string[],
+  ciBase = process.env['FAF_DIFF_BASE']
+): TRunParameters => {
+  const state: TParseState = {};
+  for (const argument of rawArguments) {
+    handleArgument(argument, state);
+  }
+
+  const effectiveMode = state.mode ?? 'diff';
+  if (effectiveMode !== 'diff' && state.explicitBase !== undefined) {
+    state.error ??= `Positional base reference "${state.explicitBase}" is not supported in ${effectiveMode} mode.`;
+  }
+
+  if (state.error !== undefined) {
+    return { error: state.error, mode: effectiveMode };
+  }
+
+  return effectiveMode === 'diff'
+    ? { base: resolveDiffBase(state.explicitBase, ciBase), mode: 'diff' }
+    : { mode: effectiveMode };
 };
 
 const main = (): void => {
-  const base = process.argv[2] ?? 'main';
-  const changes = readRepositoryChanges(base);
-  const targets = selectMutationTargets(
-    changes.changedPaths,
-    changes.presentFiles
-  );
-
-  if (targets.length === 0) {
-    console.log(
-      'No source files to mutate for the current diff. Mutation diff gate passed.'
-    );
-    return;
+  const parameters = resolveRunParameters(process.argv.slice(2));
+  if (parameters.error !== undefined) {
+    console.error(parameters.error);
+    process.exit(1);
   }
-
-  console.log(`Mutating ${String(targets.length)} file(s) against ${base}.`);
-  runMutation(targets);
+  const result = runMutationMeasure(parameters);
+  process.exit(result.exitCode);
 };
 
 const isDirectExecution = (): boolean => {
