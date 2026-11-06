@@ -397,11 +397,15 @@ const linkedFragments = (
   source: string,
   target: string,
   specifier: string
-): FileTree => ({
-  ...fragment(source),
-  ...fragment(target),
-  [`${source}/${source.split('/').at(-1) ?? ''}.util.ts`]: `import { value } from '${specifier}';\nexport const linked = value;\n`,
-});
+): FileTree => {
+  const sourceName = source.split('/').at(-1) ?? '';
+  return {
+    ...fragment(source),
+    ...fragment(target),
+    [`${source}/${sourceName}.util.ts`]: `import { value } from '${specifier}';\nexport const linked = value;\n`,
+    [`${source}/index.ts`]: `export { linked } from './${sourceName}.util.js';\n`,
+  };
+};
 
 const publicTree: FileTree = {
   ...fragment('src/_utils/widget'),
@@ -772,6 +776,8 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
     await scenario(
       {
         ...fragment('src/_utils/widget'),
+        'src/_utils/widget/index.ts':
+          "export { widget } from './widget.util.js';\n",
         'src/_utils/widget/widget.util.ts':
           "import { entry } from '../../AppEntry.js';\nexport const widget = entry;\n",
         'src/AppEntry.ts': 'export const entry = 1;\n',
@@ -1112,6 +1118,8 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
       {
         ...fragment('src/_network/_apis/fetch', 'api'),
         ...fragment('src/_ui/_components/view', 'component'),
+        'src/_ui/_components/view/index.ts':
+          "export { view } from './view.component.js';\n",
         'src/_ui/_components/view/view.component.ts':
           "import { value } from '../../../_network/_apis/fetch/index.js';\nexport const view = value;\n",
       },
@@ -1601,6 +1609,8 @@ describe('acceptance: Mimetic Path Structures', () => {
         ...fragment('src/_apis/_todos/get-todos', 'api'),
         ...fragment('src/_apis/_todos/_[todo-id]/get-todo', 'api'),
         'src/_apis/_todos/get-todos/get-todos.api.ts': `import { value } from '${specifier}';\nexport const all = value;\n`,
+        'src/_apis/_todos/get-todos/index.ts':
+          "export { all } from './get-todos.api.js';\n",
       },
       mimetic(['get']),
       'peer-separation',
@@ -1745,11 +1755,19 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
     await scenario(
       {
         ...tree,
-        'src/_components/button/index.ts': `export { value } from '${internalSpecifier}';\n`,
+        'src/_components/button/index.ts': `import '${internalSpecifier}';\nexport { value } from './button.component.js';\n`,
       },
       rootLayer(),
       'private-category-visibility',
       [
+        edgeMessage(
+          'src/_components/button/index.ts',
+          'src/_components/button/_utils/normalize/index.ts',
+          internalSpecifier,
+          'dependency/access-node-sources',
+          'an Access Node imports only direct Fragment Nodes of its own Fragment',
+          'FAF §6.1.1'
+        ),
         privateCategoryVisibilityViolation(
           'src/_components/button/index.ts',
           'src/_components/button/_utils/normalize/index.ts',
@@ -1768,6 +1786,8 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
         ...fragment('src/_components/button', 'component'),
         ...fragment('src/_components/button/_button@shared/_utils/helper'),
         'src/_components/button/button.component.ts': `import { value } from '${branchIndexSpecifier}';\nexport const button = value;\n`,
+        'src/_components/button/index.ts':
+          "export { button } from './button.component.js';\n",
       },
       rootLayer(),
       'fractal-branch-visibility'
@@ -1777,6 +1797,8 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
         ...fragment('src/_components/button', 'component'),
         ...fragment('src/_components/button/_button@shared/_utils/helper'),
         'src/_components/button/button.component.ts': `import { value } from '${branchInternalSpecifier}';\nexport const button = value;\n`,
+        'src/_components/button/index.ts':
+          "export { button } from './button.component.js';\n",
       },
       rootLayer(),
       'fragment-encapsulation',

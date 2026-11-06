@@ -13,7 +13,7 @@ const configSource = `export default { faf: { locals: [{ roles: [{ name: "util",
 const conformingTree = {
   'fafconfig.ts': configSource,
   'package.json': JSON.stringify({ type: 'module' }),
-  'src/_utils/widget/index.ts': 'export const widget = 1;\n',
+  'src/_utils/widget/index.ts': "export { widget } from './widget.util.js';\n",
   'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
 };
 
@@ -94,7 +94,7 @@ describe('session', () => {
         configPath,
         filename,
         packageVersion: '0.5.0',
-        sourceText: 'export const widget = 1;\n',
+        sourceText: "export { widget } from './widget.util.js';\n",
         workingDirectory: fixture.path,
       };
       const first = session.outcomesFor(query);
@@ -106,7 +106,7 @@ describe('session', () => {
       const changed = session.outcomesFor({
         ...query,
         sourceText:
-          "import { missing } from './missing.js';\nexport const widget = 1;\n",
+          "import { missing } from './missing.js';\nexport { widget } from './widget.util.js';\n",
       });
       expect(
         changed.some(
@@ -140,7 +140,7 @@ describe('session', () => {
             workingDirectory: fixture.path,
           });
           if (file === 'fafconfig.ts') {
-            expect(outcomes).toHaveLength(8);
+            expect(outcomes).toHaveLength(7);
             expect(
               outcomes.every(
                 (item) =>
@@ -177,7 +177,7 @@ describe('session', () => {
         configPath,
         filename,
         packageVersion: '0.5.0',
-        sourceText: 'export const widget = 1;\n',
+        sourceText: "export { widget } from './widget.util.js';\n",
         workingDirectory: fixture.path,
       };
       expect(session.outcomesFor(query)).toEqual([]);
@@ -222,7 +222,7 @@ describe('session', () => {
         configPath,
         filename,
         packageVersion: '0.5.0',
-        sourceText: 'export const widget = 1;\n',
+        sourceText: "export { widget } from './widget.util.js';\n",
         workingDirectory: fixture.path,
       };
       session.outcomesFor(query);
@@ -251,7 +251,7 @@ describe('session', () => {
         configPath: nodePath.join(directory, 'fafconfig.ts'),
         filename: nodePath.join(directory, 'src/_utils/widget/index.ts'),
         packageVersion: '0.5.0',
-        sourceText: 'export const widget = 1;\n',
+        sourceText: "export { widget } from './widget.util.js';\n",
         workingDirectory: directory,
       });
       session.outcomesFor(queryFor(first.path));

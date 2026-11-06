@@ -763,7 +763,7 @@ const scenarios: readonly TScenario[] = [
       tree: {
         ...rootTree,
         ...layerTree,
-        [file]: `import '${specifier}';\nexport const value = 1;\n`,
+        [file]: `import '${specifier}';\n${file.endsWith('widget.util.ts') ? 'export const widget = 1;\n' : 'export const value = 1;\n'}`,
       },
     };
   }),
@@ -1250,41 +1250,52 @@ const scenarios: readonly TScenario[] = [
       rootSource: false,
       specifier: '../../../b/main.js',
     },
-  ].map(({ access, label, node, rootSource, specifier }) => ({
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            publicRootNodes: ['b/main.ts'],
-            rootFragments: [
-              { path: 'b', rootNodes: [['main.ts']] },
-              ...(rootSource ? [root] : []),
-            ],
-            rootLayers: rootSource ? [] : ['src'],
-            treeDependencies: [{ from: ['src'], to: ['b'] }],
-          },
-        ],
+  ].map(({ access, label, node, rootSource, specifier }) => {
+    let nodeTail: string;
+    if (node.endsWith('widget.util.ts')) {
+      nodeTail = 'export const widget = 1;\n';
+    } else if (access) {
+      nodeTail = "export { widget } from './widget.util.js';\n";
+    } else {
+      nodeTail = 'export const value = 1;\n';
+    }
+
+    return {
+      config: {
+        faf: {
+          common,
+          locals: [
+            {
+              publicRootNodes: ['b/main.ts'],
+              rootFragments: [
+                { path: 'b', rootNodes: [['main.ts']] },
+                ...(rootSource ? [root] : []),
+              ],
+              rootLayers: rootSource ? [] : ['src'],
+              treeDependencies: [{ from: ['src'], to: ['b'] }],
+            },
+          ],
+        },
       },
-    },
-    expected: access
-      ? [
-          dependency('accessNodeSources', {
-            from: node,
-            specifier,
-            to: 'b/main.ts',
-          }),
-        ]
-      : [],
-    name: `27.2 inter-Tree source: ${label}`,
-    responsiblePart: access ? 'access-node-contract' : 'tree-frontier',
-    tree: {
-      ...layerTree,
-      ...(rootSource && rootTree),
-      'b/main.ts': 'export const main = 1;\n',
-      [node]: `import '${specifier}';\n${access ? "export { widget } from './widget.util.js';" : 'export const value = 1;'}\n`,
-    },
-  })),
+      expected: access
+        ? [
+            dependency('accessNodeSources', {
+              from: node,
+              specifier,
+              to: 'b/main.ts',
+            }),
+          ]
+        : [],
+      name: `27.2 inter-Tree source: ${label}`,
+      responsiblePart: access ? 'access-node-contract' : 'tree-frontier',
+      tree: {
+        ...layerTree,
+        ...(rootSource && rootTree),
+        'b/main.ts': 'export const main = 1;\n',
+        [node]: `import '${specifier}';\n${nodeTail}`,
+      },
+    };
+  }),
   {
     config: {
       faf: {
@@ -1405,7 +1416,7 @@ const scenarios: readonly TScenario[] = [
             ...layerTree,
             'outside.ts': 'export const outside = 1;\n',
             'src/_utils/widget/index.ts':
-              "import '../../../outside.js';\nexport { widget } from './widget.util.js';\n",
+              "export { widget } from './widget.util.js';\n",
           }
         : {
             ...rootTree,

@@ -587,7 +587,9 @@ describe('acceptance: global graph norms', () => {
           'src/_low/_utils/unit/index.ts':
             "export { unit } from './unit.util.js';\n",
           'src/_low/_utils/unit/unit.util.ts': 'export const unit = 1;\n',
-          [target]: 'export const target = 1;\n',
+          [target]: target.endsWith('unit.util.ts')
+            ? 'export const unit = 1;\n'
+            : 'export const target = 1;\n',
         },
         {
           foreignNodes: target.endsWith('/data.ts') ? [target] : [],

@@ -403,6 +403,18 @@ const accessNodeSourcesOutcome = (
   severity: 2,
 });
 
+const accessNodeMasterExportOutcome = (file: string): TScenarioMessage => ({
+  column: 1,
+  constraint: 'symbol/access-node-master-export',
+  element: file,
+  filePath: file,
+  line: 1,
+  message: `symbol/access-node-master-export: '${file}' does not re-export the Symbol of its Master Node (FAF §6.1.1).`,
+  messageId: 'symbol',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
+
 const unknownPropertyOutcome = (propertyPath: string): TScenarioMessage => ({
   column: 1,
   constraint: 'configuration/unknown-property',
@@ -995,7 +1007,7 @@ describe('acceptance: p7a', () => {
           'src/_components/beta/beta.component.ts': value,
           'src/_components/beta/beta.type.ts': value,
           'src/_components/beta/index.ts':
-            "export { value } from './beta.type.js';\n",
+            "export { value } from './beta.component.js';\nexport { value as typeValue } from './beta.type.js';\n",
         },
         { faf: { locals: [{ roles, rootLayers: ['src'] }] } },
         'peer-separation',
@@ -2246,6 +2258,7 @@ describe('acceptance: p7a', () => {
         '_components/table-body/index.ts',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
+          accessNodeMasterExportOutcome(s),
           privateCategoryVisibilityOutcome(s, d, spec),
         ],
       ],
@@ -2253,6 +2266,7 @@ describe('acceptance: p7a', () => {
         '_components/table-cell/index.ts',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
+          accessNodeMasterExportOutcome(s),
           privateCategoryVisibilityOutcome(s, d, spec),
         ],
       ],
@@ -2260,6 +2274,7 @@ describe('acceptance: p7a', () => {
         '_components/table-head/index.ts',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
+          accessNodeMasterExportOutcome(s),
           privateCategoryVisibilityOutcome(s, d, spec),
         ],
       ],
@@ -2267,6 +2282,7 @@ describe('acceptance: p7a', () => {
         '_components/table-header-cell/index.ts',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
+          accessNodeMasterExportOutcome(s),
           privateCategoryVisibilityOutcome(s, d, spec),
         ],
       ],
@@ -2274,6 +2290,7 @@ describe('acceptance: p7a', () => {
         '_components/table-row/index.ts',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
+          accessNodeMasterExportOutcome(s),
           privateCategoryVisibilityOutcome(s, d, spec),
         ],
       ],
@@ -2281,6 +2298,7 @@ describe('acceptance: p7a', () => {
         '_components/_components@shared/_hooks/use-table-context/index.ts',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
+          accessNodeMasterExportOutcome(s),
           fractalBranchVisibilityOutcome(s, d, spec),
           privateCategoryVisibilityOutcome(s, d, spec),
         ],
@@ -2289,6 +2307,7 @@ describe('acceptance: p7a', () => {
         '_table@shared/_contexts/table-context/index.ts',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
+          accessNodeMasterExportOutcome(s),
           fractalBranchVisibilityOutcome(s, d, spec),
         ],
       ],
