@@ -912,14 +912,14 @@ describe('acceptance: p7a', () => {
     });
 
     it('composes collaborating capabilities using distinct Fragments without applying same-rank peer restrictions', async () => {
-      const source = 'src/_components/consumer/consumer.component.ts';
+      const source = `${table}/_components/consumer/consumer.component.ts`;
       const destination = `${context}/index.ts`;
       await runScenario(
         {
           ...tableTree,
-          [source]: `import '${specifier(source, destination)}';\n${value}`,
-          'src/_components/consumer/index.ts':
+          [`${table}/_components/consumer/index.ts`]:
             "export { value } from './consumer.component.js';\n",
+          [source]: `import '${specifier(source, destination)}';\n${value}`,
         },
         { faf: { locals: [local] } },
         'peer-separation',
@@ -2021,7 +2021,6 @@ describe('acceptance: p7a', () => {
         'access-node-contract',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
-          fractalBranchVisibilityOutcome(s, d, spec),
         ],
       ],
       [

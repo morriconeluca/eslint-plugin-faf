@@ -216,9 +216,9 @@ const buildAliasTree = (item: TAliasBaseCase): FileTree => {
   const branchTree: FileTree = isBranchLayerTest
     ? { 'src/_src@shared/_ui/_types/a.type.ts': 'export type A = string;\n' }
     : {
-        'src/_src@shared/_types/_types@shared/_types/a.type.ts':
-          'export type A = string;\n',
         'src/_src@shared/_types/a.type.ts': 'export type A = string;\n',
+        'src/_utils/_utils@shared/_types/a.type.ts':
+          'export type A = string;\n',
       };
 
   return {
@@ -392,6 +392,11 @@ const build294Expected = (
         specifier,
         to: target,
       }),
+      dependency('fractalBranchVisibility', {
+        from: 'src/high.ts',
+        specifier,
+        to: target,
+      }),
     ];
   }
   return [
@@ -500,31 +505,42 @@ const build297Expected = (item: T297Case): readonly TScenarioMessage[] => {
   if (item.allowed) {
     return [];
   }
-  if (item.owner === 'fractal-branch-visibility') {
-    return [
+  const messages: TScenarioMessage[] = [];
+  switch (item.owner) {
+    case 'access-node-contract': {
+      messages.push(
+        dependency('accessNodeSources', {
+          from: item.source,
+          specifier: item.specifier,
+          to: item.target,
+        })
+      );
+      break;
+    }
+    case 'tree-frontier': {
+      messages.push(
+        dependency('treeOpacity', {
+          from: item.source,
+          specifier: item.specifier,
+          to: item.target,
+        })
+      );
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+  if (item.source !== 'outside.ts') {
+    messages.push(
       dependency('fractalBranchVisibility', {
         from: item.source,
         specifier: item.specifier,
         to: item.target,
-      }),
-    ];
+      })
+    );
   }
-  if (item.owner === 'access-node-contract') {
-    return [
-      dependency('accessNodeSources', {
-        from: item.source,
-        specifier: item.specifier,
-        to: item.target,
-      }),
-    ];
-  }
-  return [
-    dependency('treeOpacity', {
-      from: item.source,
-      specifier: item.specifier,
-      to: item.target,
-    }),
-  ];
+  return messages;
 };
 
 const scenarios: readonly TScenario[] = [
@@ -1506,8 +1522,9 @@ const scenarios: readonly TScenario[] = [
     },
     {
       allowed: true,
-      base: 'src/_src@shared/_types/_types@shared',
+      base: 'src/_utils/_utils@shared',
       label: 'nested Fractal Branch',
+      layer: true,
       suffix: '/_types/a.type.ts',
     },
     {

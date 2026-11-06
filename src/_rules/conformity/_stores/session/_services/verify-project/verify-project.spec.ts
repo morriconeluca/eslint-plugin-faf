@@ -30,7 +30,6 @@ const conformingFiles = {
 const unimplementedParts = [
   'acyclicity',
   'fractal-branch-unidirectionality',
-  'fractal-branch-visibility',
   'private-category-visibility',
   're-entry-prohibition',
   'tree-frontier',

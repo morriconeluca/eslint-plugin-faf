@@ -140,6 +140,21 @@ const rootNodeDisciplineOutcome = (
     to,
   });
 
+const branchVisibilityOutcome = (
+  from: string,
+  to: string,
+  specifier: string
+): TScenarioMessage =>
+  directEdgeOutcome({
+    constraint: 'dependency/fractal-branch-visibility',
+    from,
+    predicate:
+      'a Fractal Branch is importable only from the subtree of its parent, except the parent Access Node',
+    reference: 'FAF §6.6.2',
+    specifier,
+    to,
+  });
+
 const branchPathOutcome = (chain: readonly string[]): TScenarioMessage => {
   const from = chain[0] ?? '';
   const to = chain.at(-1) ?? '';
@@ -348,12 +363,16 @@ describe('acceptance: global graph norms', () => {
         target === 'src/main.ts' || target === 'src/child/entry.ts';
       const isPeerViolation =
         name !== 'direct parent node' && name !== 'child Root Node';
+      const isBranchDestination = target.includes('@shared');
       await runScenario(
         { ...branchTree, [branchSource]: source },
         branchConfig,
         'fractal-branch-unidirectionality',
         [
           branchDirectEdgeOutcome(branchSource, target, specifier),
+          ...(isBranchDestination
+            ? [branchVisibilityOutcome(branchSource, target, specifier)]
+            : []),
           ...(isPeerViolation
             ? [peerSeparationOutcome(branchSource, target, specifier)]
             : []),
