@@ -37,7 +37,7 @@ const declarations = {
 const diagnostic = (
   filePath: string,
   constraint: string,
-  message: string,
+  detail: string,
   line = 1
 ): TScenarioMessage => ({
   column: 1,
@@ -45,32 +45,99 @@ const diagnostic = (
   element: filePath,
   filePath,
   line,
-  message: `${constraint}: ${message}`,
+  message: `${constraint}: ${detail}`,
   messageId: constraint.split('/', 1)[0] ?? null,
   ruleId: 'faf/conformity',
   severity: 2,
 });
 
-const cardinality = (file: string, count: number): TScenarioMessage =>
+const cardinality = (file: string): TScenarioMessage =>
   diagnostic(
     file,
     'symbol/symbol-uniqueness',
-    `Node '${file}' defines ${count.toString()} Symbols; at most one is allowed.`
+    `'${file}' defines more than one Symbol in its root scope (FAF §5).`
   );
 
-const masterCardinality = (count: number, exported: number): TScenarioMessage =>
+const masterCardinality = (): TScenarioMessage =>
   diagnostic(
     master,
     'symbol/master-symbol',
-    `Master Node '${master}' must define and export exactly one Symbol; found ${count.toString()} defined and ${exported.toString()} exported.`
+    `'${master}' does not define and export exactly one Symbol as Master Node (FAF §6.1.1).`
   );
 
 const missingMaster = (): TScenarioMessage =>
   diagnostic(
     access,
-    'symbol/access-master-export',
-    `Access Node '${access}' does not re-export the Symbol of its Master Node.`
+    'symbol/access-node-master-export',
+    `'${access}' does not re-export the Symbol of its Master Node (FAF §6.1.1).`
   );
+
+const ownSymbols = (): TScenarioMessage =>
+  diagnostic(
+    access,
+    'symbol/access-node-own-symbols',
+    `'${access}' defines its own Symbols as Access Node (FAF §6.1.1).`
+  );
+
+const reExport = (file: string, line = 1): TScenarioMessage =>
+  diagnostic(
+    file,
+    'symbol/re-export-prohibition',
+    `'${file}' re-exports an imported Symbol (FAF §5).`,
+    line
+  );
+
+const accessNodeSource = (
+  specifier: string,
+  target: string
+): TScenarioMessage =>
+  diagnostic(
+    access,
+    'dependency/access-node-sources',
+    `'${access}' imports '${target}' through '${specifier}': an Access Node imports only direct Fragment Nodes of its own Fragment (FAF §6.1.1).`,
+    2
+  );
+
+const otherDependencyViolations = {
+  'fractal-branch-visibility': {
+    predicate:
+      'a Fractal Branch is importable only from the subtree of its parent, except the parent Access Node',
+    reference: 'FAF §6.6.2',
+  },
+  'peer-separation': {
+    predicate:
+      'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
+    reference: 'FAF §5',
+  },
+  'private-category-visibility': {
+    predicate:
+      'a Private Category is importable from outside only by the enabled direct Logical Nodes of its parent',
+    reference: 'FAF §6.3.3',
+  },
+  'root-node-discipline': {
+    predicate:
+      'a Root Node is importable only by Root Nodes authorized by rootNodes or dependencyEdges',
+    reference: 'FAF §6.2.2',
+  },
+  'sub-graph-node-isolation': {
+    predicate: 'a Sub-Graph Node is not importable',
+    reference: 'FAF §4',
+  },
+} as const;
+
+const otherDependency = (
+  constraint: keyof typeof otherDependencyViolations,
+  specifier: string,
+  target: string
+): TScenarioMessage => {
+  const meta = otherDependencyViolations[constraint];
+  return diagnostic(
+    access,
+    `dependency/${constraint}`,
+    `'${access}' imports '${target}' through '${specifier}': ${meta.predicate} (${meta.reference}).`,
+    2
+  );
+};
 
 const checkScenario = async (
   files: FileTree,
@@ -146,7 +213,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
         [detail]: content,
       },
       'symbol-uniqueness',
-      count > 1 ? [cardinality(detail, count)] : []
+      count > 1 ? [cardinality(detail)] : []
     );
     await checkScenario(
       {
@@ -155,7 +222,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
         [detail]: `${content}\nconst sentinel = 0;`,
       },
       'symbol-uniqueness',
-      count === 0 ? [] : [cardinality(detail, count + 1)]
+      count === 0 ? [] : [cardinality(detail)]
     );
   });
 
@@ -192,7 +259,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
     await checkScenario(
       { ...tree, [detail]: content },
       'symbol-uniqueness',
-      count > 1 ? [cardinality(detail, count)] : []
+      count > 1 ? [cardinality(detail)] : []
     );
   });
 
@@ -208,9 +275,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
       await checkScenario(
         { ...tree, [master]: content },
         'symbol-uniqueness',
-        count === 1 && exported === 1
-          ? []
-          : [masterCardinality(count, exported)]
+        count === 1 && exported === 1 ? [] : [masterCardinality()]
       );
     }
   );
@@ -219,7 +284,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
     await checkScenario(
       { ...tree, [master]: 'const hidden = 1; export function Example() {}' },
       'symbol-uniqueness',
-      [masterCardinality(2, 1)],
+      [masterCardinality()],
       {
         ...declarations,
         roles: roles.map((role) => ({ ...role, allowMultipleSymbols: true })),
@@ -234,7 +299,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
       await checkScenario(
         { ...tree, [file]: 'export const first = 1; export const second = 2;' },
         'symbol-uniqueness',
-        [cardinality(file, 2)]
+        [cardinality(file)]
       );
     }
   );
@@ -265,13 +330,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
           'export type ExampleProps = string;',
       },
       're-export-prohibition',
-      [
-        diagnostic(
-          file,
-          'symbol/re-export-prohibition',
-          `Node '${file}' re-exports an imported Symbol.`
-        ),
-      ],
+      [reExport(file)],
       {
         ...declarations,
         roles: roles.map((role) => ({ ...role, allowMultipleSymbols: true })),
@@ -329,14 +388,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
         [detail]: content,
       },
       're-export-prohibition',
-      [
-        diagnostic(
-          detail,
-          'symbol/re-export-prohibition',
-          `Node '${detail}' re-exports an imported Symbol.`,
-          content.includes('\n') ? 2 : 1
-        ),
-      ],
+      [reExport(detail, content.includes('\n') ? 2 : 1)],
       {
         ...declarations,
         roles: roles.map((role) =>
@@ -420,13 +472,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
     await checkScenario(
       { ...tree, [access]: `${content}\n${masterExport}` },
       'access-node-contract',
-      [
-        diagnostic(
-          access,
-          'symbol/access-own-symbol',
-          `Access Node '${access}' defines its own Symbols.`
-        ),
-      ]
+      [ownSymbols()]
     );
   });
 
@@ -497,19 +543,9 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
         },
         'access-node-contract',
         [
-          diagnostic(
-            access,
-            'dependency/access-node-contract',
-            `Access Node '${access}' imports '${target}' through '${specifier}', which is not a Fragment Node of the same Fragment.`,
-            2
-          ),
+          accessNodeSource(specifier, target),
           ...otherConstraints.map((constraint) =>
-            diagnostic(
-              access,
-              `dependency/${constraint}`,
-              `Dependency from '${access}' to '${target}' through '${specifier}' violates ${constraint}.`,
-              2
-            )
+            otherDependency(constraint, specifier, target)
           ),
         ],
         {
