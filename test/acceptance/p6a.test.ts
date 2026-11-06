@@ -77,16 +77,128 @@ const unclassifiableDomain = (path: string, anchor: string): TScenarioMessage =>
     `'${path}' has no unique Logical Domain classification (FAF §6.9).`
   );
 
-const violation = (
-  constraint: string,
+const containmentViolation = (
   element: string,
   filePath = element
 ): TScenarioMessage =>
   diagnostic(
-    constraint,
+    'classification/containment-matrix',
     element,
     filePath,
-    `Element '${element}' violates ${constraint}.`
+    `'${element}' is a child type that its parent Logical Domain does not admit (FAF §6.8).`
+  );
+
+const exclusiveFormsViolation = (
+  element: string,
+  filePath = 'fafconfig.ts'
+): TScenarioMessage =>
+  diagnostic(
+    'classification/exclusive-forms',
+    element,
+    filePath,
+    `'${element}' mixes mutually exclusive forms among its direct children (FAF §6.3.2, §6.4.1, §6.5.1, §6.6.1).`
+  );
+
+const categoryRoleViolation = (element: string): TScenarioMessage =>
+  diagnostic(
+    'classification/category-role',
+    element,
+    element,
+    `'${element}' does not have the form or the Role imposed by its Category (FAF §6.3.1).`
+  );
+
+const missingMasterViolation = (
+  element: string,
+  filePath: string
+): TScenarioMessage =>
+  diagnostic(
+    'classification/missing-master-node',
+    element,
+    filePath,
+    `'${element}' has no direct Fragment Node with the Role imposed by its Category (FAF §6.1.1).`
+  );
+
+const missingAccessViolation = (filePath: string): TScenarioMessage =>
+  diagnostic(
+    'classification/missing-access-node',
+    'src/_components/button',
+    filePath,
+    "'src/_components/button' has no index.ts Access Node (FAF §6.1.1)."
+  );
+
+const duplicateRoleViolation = (filePath: string): TScenarioMessage =>
+  diagnostic(
+    'classification/duplicate-fragment-role',
+    'src/_components/button',
+    filePath,
+    "'src/_components/button' has more than one direct Logical Node with the same explicit Role (FAF §6.1.1)."
+  );
+
+const fragmentRankViolation = (element: string): TScenarioMessage =>
+  diagnostic(
+    'classification/fragment-node-rank',
+    element,
+    element,
+    `'${element}' has a Rank not strictly lower than the Master Node of its Fragment (FAF §6.1.3).`
+  );
+
+const fragmentAnatomyViolation = (
+  element: string,
+  filePath = element
+): TScenarioMessage =>
+  diagnostic(
+    'classification/fragment-node-anatomy',
+    element,
+    filePath,
+    `'${element}' is not a Fragment Node, Access Node or Sub-Graph Node named after its Fragment (FAF §6.1.1).`
+  );
+
+const masterNotExportedViolation = (accessNode: string): TScenarioMessage =>
+  diagnostic(
+    'symbol/access-node-master-export',
+    accessNode,
+    accessNode,
+    `'${accessNode}' does not re-export the Symbol of its Master Node (FAF §6.1.1).`,
+    'symbol'
+  );
+
+const peerSeparationViolation = (
+  source: string,
+  target: string,
+  specifier: string
+): TScenarioMessage =>
+  diagnostic(
+    'dependency/peer-separation',
+    source,
+    source,
+    `'${source}' imports '${target}' through '${specifier}': sibling subtrees may depend on each other only downward along a Horizontal Hierarchy (FAF §5).`,
+    'dependency'
+  );
+
+const branchUnidirectionalityViolation = (
+  source: string,
+  target: string,
+  specifier: string
+): TScenarioMessage =>
+  diagnostic(
+    'dependency/fractal-branch-unidirectionality',
+    source,
+    source,
+    `'${source}' imports '${target}' through '${specifier}': a Fractal Branch must not depend on the other subtrees of its parent (FAF §6.6.2).`,
+    'dependency'
+  );
+
+const treeOpacityViolation = (
+  source: string,
+  target: string,
+  specifier: string
+): TScenarioMessage =>
+  diagnostic(
+    'dependency/tree-opacity',
+    source,
+    source,
+    `'${source}' imports '${target}' through '${specifier}': only the Public Surface of a Fractal Tree is importable from outside the Tree (FAF §7.1).`,
+    'dependency'
   );
 
 const scenario = (
@@ -176,13 +288,16 @@ describe('acceptance: structural norms', () => {
       { ...local, foreignNodes: ['src/_components/button/README.md'] }
     );
 
-    for (const [name, tree, constraint, element, anchor] of [
+    for (const [name, tree, expected] of [
       [
         'missing Master',
         { 'src/_components/button/index.ts': 'export {};\n' },
-        'classification/missing-master-node',
-        'src/_components/button',
-        'src/_components/button/index.ts',
+        [
+          missingMasterViolation(
+            'src/_components/button',
+            'src/_components/button/index.ts'
+          ),
+        ],
       ],
       [
         'duplicate Master Role',
@@ -191,9 +306,7 @@ describe('acceptance: structural norms', () => {
           'src/_components/button/button.component.ts':
             'export const another = 2;\n',
         },
-        'classification/duplicate-fragment-role',
-        'src/_components/button',
-        'src/_components/button/button.component.ts',
+        [duplicateRoleViolation('src/_components/button/button.component.ts')],
       ],
       [
         'Sub-Graph is not a Master',
@@ -201,16 +314,22 @@ describe('acceptance: structural norms', () => {
           'src/_components/button/button.spec.tsx': '',
           'src/_components/button/index.ts': 'export {};\n',
         },
-        'classification/missing-master-node',
-        'src/_components/button',
-        'src/_components/button/button.spec.tsx',
+        [
+          missingMasterViolation(
+            'src/_components/button',
+            'src/_components/button/button.spec.tsx'
+          ),
+        ],
       ],
       [
         'Access Node is not a Master',
         { 'src/_components/button/index.ts': 'export {};\n' },
-        'classification/missing-master-node',
-        'src/_components/button',
-        'src/_components/button/index.ts',
+        [
+          missingMasterViolation(
+            'src/_components/button',
+            'src/_components/button/index.ts'
+          ),
+        ],
       ],
       [
         'descendant Master is not direct',
@@ -221,9 +340,12 @@ describe('acceptance: structural norms', () => {
             "export { icon } from './icon.component.js';\n",
           'src/_components/button/index.ts': 'export {};\n',
         },
-        'classification/missing-master-node',
-        'src/_components/button',
-        'src/_components/button/index.ts',
+        [
+          missingMasterViolation(
+            'src/_components/button',
+            'src/_components/button/index.ts'
+          ),
+        ],
       ],
       [
         'missing Access Node',
@@ -231,9 +353,7 @@ describe('acceptance: structural norms', () => {
           'src/_components/button/button.component.tsx':
             'export const button = 1;\n',
         },
-        'classification/missing-access-node',
-        'src/_components/button',
-        'src/_components/button/button.component.tsx',
+        [missingAccessViolation('src/_components/button/button.component.tsx')],
       ],
       [
         'duplicate internal Role',
@@ -242,9 +362,7 @@ describe('acceptance: structural norms', () => {
           'src/_components/button/button.hook.ts': '',
           'src/_components/button/button.hook.tsx': '',
         },
-        'classification/duplicate-fragment-role',
-        'src/_components/button',
-        'src/_components/button/button.component.tsx',
+        [duplicateRoleViolation('src/_components/button/button.component.tsx')],
       ],
       [
         'duplicate Sub-Graph Role',
@@ -253,9 +371,7 @@ describe('acceptance: structural norms', () => {
           'src/_components/button/button.spec.ts': '',
           'src/_components/button/button.spec.tsx': '',
         },
-        'classification/duplicate-fragment-role',
-        'src/_components/button',
-        'src/_components/button/button.component.tsx',
+        [duplicateRoleViolation('src/_components/button/button.component.tsx')],
       ],
       [
         'equal Rank is forbidden',
@@ -264,14 +380,10 @@ describe('acceptance: structural norms', () => {
           'src/_components/button/button.context.ts':
             'export const context = 1;\n',
         },
-        'classification/fragment-node-rank',
-        'src/_components/button/button.context.ts',
-        'src/_components/button/button.context.ts',
+        [fragmentRankViolation('src/_components/button/button.context.ts')],
       ],
     ] as const) {
-      scenario(`rejects ${name}`, 'fragment-anatomy', tree, [
-        violation(constraint, element, anchor),
-      ]);
+      scenario(`rejects ${name}`, 'fragment-anatomy', tree, expected);
     }
 
     for (const file of [
@@ -288,12 +400,7 @@ describe('acceptance: structural norms', () => {
           ...button,
           [`src/_components/button/${file}`]: 'export {};\n',
         },
-        [
-          violation(
-            'classification/fragment-node-anatomy',
-            `src/_components/button/${file}`
-          ),
-        ]
+        [fragmentAnatomyViolation(`src/_components/button/${file}`)]
       );
     }
 
@@ -301,13 +408,7 @@ describe('acceptance: structural norms', () => {
       'a Foreign index is not a logical Access Node',
       'fragment-anatomy',
       { ...button, 'src/_components/button/index.ts': '' },
-      [
-        violation(
-          'classification/missing-access-node',
-          'src/_components/button',
-          'src/_components/button/button.component.tsx'
-        ),
-      ],
+      [missingAccessViolation('src/_components/button/button.component.tsx')],
       { ...local, foreignNodes: ['src/_components/button/index.ts'] }
     );
 
@@ -334,13 +435,7 @@ describe('acceptance: structural norms', () => {
         'src/_components/button/button.type.tsx':
           'export type TOther = number;\n',
       },
-      [
-        violation(
-          'classification/duplicate-fragment-role',
-          'src/_components/button',
-          'src/_components/button/button.component.tsx'
-        ),
-      ]
+      [duplicateRoleViolation('src/_components/button/button.component.tsx')]
     );
 
     for (const [role, accepted] of [
@@ -360,7 +455,7 @@ describe('acceptance: structural norms', () => {
           'src/_utils/normalize/normalize.util.ts':
             'export const normalize = 1;\n',
         },
-        accepted ? [] : [violation('classification/fragment-node-rank', path)]
+        accepted ? [] : [fragmentRankViolation(path)]
       );
     }
 
@@ -373,15 +468,7 @@ describe('acceptance: structural norms', () => {
         'src/_components/button/index.ts':
           "export { hook } from './button.hook.js';\n",
       },
-      [
-        diagnostic(
-          'symbol/master-not-exported',
-          'src/_components/button/index.ts',
-          'src/_components/button/index.ts',
-          "Element 'src/_components/button/index.ts' violates symbol/master-not-exported.",
-          'symbol'
-        ),
-      ]
+      [masterNotExportedViolation('src/_components/button/index.ts')]
     );
 
     scenario(
@@ -415,13 +502,7 @@ describe('acceptance: structural norms', () => {
         'src/_types/user/index.ts': 'export {};\n',
         'src/_types/user/user.schema.ts': 'export const user = 1;\n',
       },
-      [
-        violation(
-          'classification/missing-master-node',
-          'src/_types/user',
-          'src/_types/user/index.ts'
-        ),
-      ],
+      [missingMasterViolation('src/_types/user', 'src/_types/user/index.ts')],
       {
         ...local,
         roles: [
@@ -443,7 +524,7 @@ describe('acceptance: structural norms', () => {
         {
           [`src/_types/${file}`]: 'export {};\n',
         },
-        [violation('classification/category-role', `src/_types/${file}`)],
+        [categoryRoleViolation(`src/_types/${file}`)],
         {
           ...local,
           roles: [
@@ -476,12 +557,7 @@ describe('acceptance: structural norms', () => {
         ...button,
         'src/_components/other.component.ts': 'export const other = 1;\n',
       },
-      [
-        violation(
-          'classification/category-role',
-          'src/_components/other.component.ts'
-        ),
-      ]
+      [categoryRoleViolation('src/_components/other.component.ts')]
     );
 
     scenario(
@@ -512,12 +588,7 @@ describe('acceptance: structural norms', () => {
           [`src/_types/user.${role}.ts`]: 'export {};\n',
           'src/_types/user.type.ts': 'export type TUser = number;\n',
         },
-        [
-          violation(
-            'classification/category-role',
-            `src/_types/user.${role}.ts`
-          ),
-        ]
+        [categoryRoleViolation(`src/_types/user.${role}.ts`)]
       );
     }
 
@@ -620,7 +691,7 @@ describe('acceptance: structural norms', () => {
         `rejects branching with direct ${unit} in ${container}`,
         'exclusive-forms',
         tree,
-        [violation('classification/exclusive-forms', container, anchor)]
+        [exclusiveFormsViolation(container, anchor)]
       );
     }
 
@@ -634,7 +705,7 @@ describe('acceptance: structural norms', () => {
           [`${container}/other.type.ts`]: 'export type TOther = number;\n',
           [`${container}/user.type.ts`]: 'export type TUser = number;\n',
         },
-        [violation('classification/category-role', `${container}/index.ts`)]
+        [categoryRoleViolation(`${container}/index.ts`)]
       );
     }
     scenario('a Category Branch resets the imposed Role', 'category-role', {
@@ -666,13 +737,7 @@ describe('acceptance: structural norms', () => {
         'src/_domain/_types/value.type.ts': 'export type TValue = number;\n',
         'src/_domain/_ui': {},
       },
-      [
-        violation(
-          'classification/exclusive-forms',
-          'src/_domain',
-          'fafconfig.ts'
-        ),
-      ]
+      [exclusiveFormsViolation('src/_domain', 'fafconfig.ts')]
     );
     scenario(
       'an accessory Branch does not change the Layer form',
@@ -698,7 +763,7 @@ describe('acceptance: structural norms', () => {
       {
         'src/main.ts': 'export const main = 1;\n',
       },
-      [violation('classification/containment-matrix', 'src/main.ts')]
+      [containmentViolation('src/main.ts')]
     );
 
     for (const [name, tree, valid] of [
@@ -720,15 +785,7 @@ describe('acceptance: structural norms', () => {
         `Root Layer form: ${name}`,
         'exclusive-forms',
         tree,
-        valid
-          ? []
-          : [
-              violation(
-                'classification/exclusive-forms',
-                'src',
-                'fafconfig.ts'
-              ),
-            ],
+        valid ? [] : [exclusiveFormsViolation('src', 'fafconfig.ts')],
         {
           ...local,
           foreignDomains: name.includes('Foreign Domain')
@@ -743,7 +800,7 @@ describe('acceptance: structural norms', () => {
         `Root Layer rejects direct ${file}`,
         'containment-matrix',
         { [`src/${file}`]: 'export {};\n' },
-        [violation('classification/containment-matrix', `src/${file}`)]
+        [containmentViolation(`src/${file}`)]
       );
     }
   });
@@ -1020,8 +1077,7 @@ describe('acceptance: structural norms', () => {
         'src/_src@shared/_src@shared@shared': {},
       },
       [
-        violation(
-          'classification/containment-matrix',
+        containmentViolation(
           'src/_src@shared/_src@shared@shared',
           'fafconfig.ts'
         ),
@@ -1169,12 +1225,10 @@ describe('acceptance: structural norms', () => {
           "import { button } from '../../_components/button/index.js';\nexport const hook = button;\n",
       },
       [
-        diagnostic(
-          'dependency/peer-separation',
+        peerSeparationViolation(
           'src/_hooks/use-value/use-value.hook.ts',
-          'src/_hooks/use-value/use-value.hook.ts',
-          "Element 'src/_hooks/use-value/use-value.hook.ts' violates dependency/peer-separation.",
-          'dependency'
+          'src/_components/button/index.ts',
+          '../../_components/button/index.js'
         ),
       ],
       { ...local, horizontalHierarchies: [[['_hooks'], ['_components']]] }
@@ -1184,25 +1238,16 @@ describe('acceptance: structural norms', () => {
       ['_domain', '_ui', false],
     ] as const) {
       const path = `src/${source}/_types/value.type.ts`;
+      const targetPath = `src/${target}/_types/value.type.ts`;
+      const specifier = `../../${target}/_types/value.type.js`;
       scenario(
         `Root Layer Layers require ${source} to ${target} direction`,
         'peer-separation',
         {
-          [`src/${target}/_types/value.type.ts`]:
-            'export type TValue = number;\n',
-          [path]: `import type { TValue } from '../../${target}/_types/value.type.js';\nexport type TSource = TValue;\n`,
+          [path]: `import type { TValue } from '${specifier}';\nexport type TSource = TValue;\n`,
+          [targetPath]: 'export type TValue = number;\n',
         },
-        accepted
-          ? []
-          : [
-              diagnostic(
-                'dependency/peer-separation',
-                path,
-                path,
-                `Element '${path}' violates dependency/peer-separation.`,
-                'dependency'
-              ),
-            ],
+        accepted ? [] : [peerSeparationViolation(path, targetPath, specifier)],
         { ...local, horizontalHierarchies: [[['_domain'], ['_ui']]] }
       );
     }
@@ -1225,12 +1270,10 @@ describe('acceptance: structural norms', () => {
         'src/_types/value.type.ts': 'export type TValue = number;\n',
       },
       [
-        diagnostic(
-          'acyclicity/fractal-branch-unidirectionality',
+        branchUnidirectionalityViolation(
           'src/_src@shared/_types/shared.type.ts',
-          'src/_src@shared/_types/shared.type.ts',
-          "Element 'src/_src@shared/_types/shared.type.ts' violates acyclicity/fractal-branch-unidirectionality.",
-          'acyclicity'
+          'src/_types/value.type.ts',
+          '../../_types/value.type.js'
         ),
       ]
     );
@@ -1244,12 +1287,10 @@ describe('acceptance: structural norms', () => {
           'export type TShared = number;\n',
       },
       [
-        diagnostic(
-          'dependency/tree-frontier',
+        treeOpacityViolation(
           'consumer.ts',
-          'consumer.ts',
-          "Element 'consumer.ts' violates dependency/tree-frontier.",
-          'dependency'
+          'src/_src@shared/_types/shared.type.ts',
+          './src/_src@shared/_types/shared.type.js'
         ),
       ]
     );
@@ -1297,13 +1338,7 @@ describe('acceptance: structural norms', () => {
         tree,
         valid
           ? []
-          : [
-              violation(
-                'classification/exclusive-forms',
-                'src/_src@shared',
-                'fafconfig.ts'
-              ),
-            ],
+          : [exclusiveFormsViolation('src/_src@shared', 'fafconfig.ts')],
         {
           ...local,
           foreignDomains: name.includes('Foreign')
@@ -1325,7 +1360,7 @@ describe('acceptance: structural norms', () => {
     ]) {
       scenario(
         `does not require descendants in empty ${path}`,
-        'exclusive-forms',
+        'containment-matrix',
         { [path]: {} }
       );
     }
@@ -1334,16 +1369,8 @@ describe('acceptance: structural norms', () => {
       'fragment-anatomy',
       { 'src/_components/button': {} },
       [
-        violation(
-          'classification/missing-access-node',
-          'src/_components/button',
-          'fafconfig.ts'
-        ),
-        violation(
-          'classification/missing-master-node',
-          'src/_components/button',
-          'fafconfig.ts'
-        ),
+        missingAccessViolation('fafconfig.ts'),
+        missingMasterViolation('src/_components/button', 'fafconfig.ts'),
       ]
     );
     scenario(
