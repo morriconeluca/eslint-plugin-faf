@@ -40,7 +40,6 @@ const unimplementedParts = [
   'peer-separation',
   'private-category-visibility',
   're-entry-prohibition',
-  're-export-prohibition',
   'root-node-discipline',
   'sub-graph-node-isolation',
   'tree-frontier',

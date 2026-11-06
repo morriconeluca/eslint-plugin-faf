@@ -140,7 +140,7 @@ describe('session', () => {
             workingDirectory: fixture.path,
           });
           if (file === 'fafconfig.ts') {
-            expect(outcomes).toHaveLength(16);
+            expect(outcomes).toHaveLength(15);
             expect(
               outcomes.every(
                 (item) =>
