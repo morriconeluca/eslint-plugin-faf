@@ -31,7 +31,6 @@ const unimplementedParts = [
   'access-node-contract',
   'acyclicity',
   'containment-matrix',
-  'exclusive-forms',
   'external-dependencies',
   'foreign-node-isolation',
   'fractal-branch-unidirectionality',

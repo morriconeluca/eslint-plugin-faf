@@ -196,9 +196,12 @@ const containmentViolation = (
     'FAF §6.8'
   );
 
-const exclusiveFormsViolation = (element: string): TScenarioMessage =>
+const exclusiveFormsViolation = (
+  element: string,
+  filePath = 'fafconfig.ts'
+): TScenarioMessage =>
   elementMessage(
-    'fafconfig.ts',
+    filePath,
     element,
     'classification/exclusive-forms',
     'mixes mutually exclusive forms among its direct children',
@@ -870,7 +873,10 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         ],
       }),
       'horizontal-hierarchies',
-      [invalidHierarchyMembers('src/_types/value.type.ts', 'src/_types')]
+      [
+        exclusiveFormsViolation('src/_types', 'src/_types/value.type.ts'),
+        invalidHierarchyMembers('src/_types/value.type.ts', 'src/_types'),
+      ]
     );
   });
 

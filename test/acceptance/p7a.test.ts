@@ -530,7 +530,7 @@ const childPairs = children.flatMap((from) =>
   children.filter((to) => from !== to).map((to) => [from, to] as const)
 );
 
-const orderedTree: Readonly<Record<string, string>> = {
+const moleculesTree: Readonly<Record<string, string>> = {
   'src/_components/_atoms/unit/index.ts':
     "export { value } from './unit.component.js';\n",
   'src/_components/_atoms/unit/unit.component.ts': value,
@@ -539,6 +539,9 @@ const orderedTree: Readonly<Record<string, string>> = {
   'src/_components/_molecules/consumer/consumer.type.ts': value,
   'src/_components/_molecules/consumer/index.ts':
     "export { value } from './consumer.component.js';\n",
+};
+
+const layersTree: Readonly<Record<string, string>> = {
   'src/_high/_types/consumer.type.ts': value,
   'src/_low/_components/unit/index.ts':
     "export { value } from './unit.component.js';\n",
@@ -635,7 +638,13 @@ describe('acceptance: p7a', () => {
         const isMolecules = consumer.includes('_molecules');
         const isHighLayer = consumer.includes('_high');
 
-        const baseTree = isMolecules || isHighLayer ? orderedTree : tableTree;
+        let baseTree = tableTree;
+        if (isMolecules) {
+          baseTree = moleculesTree;
+        }
+        if (isHighLayer) {
+          baseTree = layersTree;
+        }
         const extraTree: Record<string, string> = {
           ...baseTree,
           [consumer]: `import '${specifier(consumer, access)}';\nimport '${specifier(consumer, master)}';\nimport '${specifier(consumer, type)}';\n${value}`,
@@ -1569,13 +1578,27 @@ describe('acceptance: p7a', () => {
       async (target) => {
         const prefix = 'src/_src@shared';
         const destination = `${prefix}/${target}`;
-        await runScenario(
-          {
+        const isNested = target.includes('_nested');
+        const isPages = target.includes('_pages');
+        let domainTree: FileTree = {
+          [`${prefix}/_domain/_types/_primitives/public.type.ts`]: value,
+        };
+        if (isNested) {
+          domainTree = {
             [`${prefix}/_domain/_nested/_types/public.type.ts`]: value,
+          };
+        }
+        if (isPages) {
+          domainTree = {
             [`${prefix}/_domain/_pages/get-user/get-user.page.ts`]: value,
             [`${prefix}/_domain/_pages/get-user/index.ts`]:
               "export { value } from './get-user.page.js';\n",
-            [`${prefix}/_domain/_types/_primitives/public.type.ts`]: value,
+          };
+        }
+
+        await runScenario(
+          {
+            ...domainTree,
             [`${prefix}/_ui/_types/public.type.ts`]: value,
             'src/main.ts': `import '${specifier('src/main.ts', destination)}';\n`,
           },
@@ -1584,9 +1607,14 @@ describe('acceptance: p7a', () => {
               locals: [
                 {
                   horizontalHierarchies: [[['_domain'], ['_ui']]],
-                  mimeticPathStructures: [
-                    { actions: ['get'], paths: [`${prefix}/_domain/_pages`] },
-                  ],
+                  mimeticPathStructures: isPages
+                    ? [
+                        {
+                          actions: ['get'],
+                          paths: [`${prefix}/_domain/_pages`],
+                        },
+                      ]
+                    : [],
                   roles,
                   rootFragments: [{ path: 'src', rootNodes: [['main.ts']] }],
                 },
@@ -1670,32 +1698,58 @@ describe('acceptance: p7a', () => {
         const source = 'src/main.ts';
         const spec = specifier(source, destination);
 
+        const isDomain = target.startsWith('_domain/');
+        const isNested = target.includes('_nested');
+        const isPages = target.includes('_pages');
+
+        let targetTree: FileTree = {
+          [`${prefix}/_components/unit/_unit@shared/_types/shared.type.ts`]:
+            value,
+          [`${prefix}/_components/unit/_utils/detail/detail.util.ts`]: value,
+          [`${prefix}/_components/unit/_utils/detail/index.ts`]:
+            "export { value } from './detail.util.js';\n",
+          [`${prefix}/_components/unit/index.ts`]:
+            "export { value } from './unit.component.js';\n",
+          [`${prefix}/_components/unit/unit.component.ts`]: value,
+          [`${prefix}/_components/unit/unit.spec.ts`]: value,
+          [`${prefix}/_types/public.type.ts`]: value,
+        };
+
+        if (isDomain) {
+          targetTree = {
+            [`${prefix}/_domain/_types/_primitives/public.type.ts`]: value,
+          };
+          if (isNested) {
+            targetTree = {
+              [`${prefix}/_domain/_nested/_types/public.type.ts`]: value,
+            };
+          }
+          if (isPages) {
+            targetTree = {
+              [`${prefix}/_domain/_pages/get-user/get-user.page.ts`]: value,
+              [`${prefix}/_domain/_pages/get-user/index.ts`]:
+                "export { value } from './get-user.page.js';\n",
+            };
+          }
+        }
+
         await runScenario(
           {
-            [`${prefix}/_components/unit/_unit@shared/_types/shared.type.ts`]:
-              value,
-            [`${prefix}/_components/unit/_utils/detail/detail.util.ts`]: value,
-            [`${prefix}/_components/unit/_utils/detail/index.ts`]:
-              "export { value } from './detail.util.js';\n",
-            [`${prefix}/_components/unit/index.ts`]:
-              "export { value } from './unit.component.js';\n",
-            [`${prefix}/_components/unit/unit.component.ts`]: value,
-            [`${prefix}/_components/unit/unit.spec.ts`]: value,
-            [`${prefix}/_domain/_nested/_types/public.type.ts`]: value,
-            [`${prefix}/_domain/_pages/get-user/get-user.page.ts`]: value,
-            [`${prefix}/_domain/_pages/get-user/index.ts`]:
-              "export { value } from './get-user.page.js';\n",
-            [`${prefix}/_domain/_types/_primitives/public.type.ts`]: value,
-            [`${prefix}/_types/public.type.ts`]: value,
+            ...targetTree,
             'src/main.ts': `import '${spec}';\n`,
           },
           {
             faf: {
               locals: [
                 {
-                  mimeticPathStructures: [
-                    { actions: ['get'], paths: [`${prefix}/_domain/_pages`] },
-                  ],
+                  mimeticPathStructures: isPages
+                    ? [
+                        {
+                          actions: ['get'],
+                          paths: [`${prefix}/_domain/_pages`],
+                        },
+                      ]
+                    : [],
                   roles,
                   rootFragments: [{ path: 'src', rootNodes: [['main.ts']] }],
                   subGraphRoles: [{ name: 'spec' }],

@@ -522,37 +522,37 @@ describe('acceptance: global graph norms', () => {
       expected: [
         fragmentEncapsulationOutcome(
           'src/_high/_utils/source/source.util.ts',
-          'src/_utils/unit/unit.util.ts',
-          '../../../_utils/unit/unit.util.js'
+          'src/_low/_utils/unit/unit.util.ts',
+          '../../../_low/_utils/unit/unit.util.js'
         ),
       ],
       kind: 'Fragment Node',
       responsiblePart: 'fragment-encapsulation',
-      target: 'src/_utils/unit/unit.util.ts',
+      target: 'src/_low/_utils/unit/unit.util.ts',
     },
     {
       expected: [
         subGraphIsolationOutcome(
           'src/_high/_utils/source/source.util.ts',
-          'src/_utils/unit/unit.spec.ts',
-          '../../../_utils/unit/unit.spec.js'
+          'src/_low/_utils/unit/unit.spec.ts',
+          '../../../_low/_utils/unit/unit.spec.js'
         ),
       ],
       kind: 'Sub-Graph Node',
       responsiblePart: 'sub-graph-node-isolation',
-      target: 'src/_utils/unit/unit.spec.ts',
+      target: 'src/_low/_utils/unit/unit.spec.ts',
     },
     {
       expected: [
         foreignNodeIsolationOutcome(
           'src/_high/_utils/source/source.util.ts',
-          'src/_utils/unit/data.ts',
-          '../../../_utils/unit/data.js'
+          'src/_low/_utils/unit/data.ts',
+          '../../../_low/_utils/unit/data.js'
         ),
       ],
       kind: 'Foreign Node',
       responsiblePart: 'foreign-node-isolation',
-      target: 'src/_utils/unit/data.ts',
+      target: 'src/_low/_utils/unit/data.ts',
     },
   ])(
     'keeps the target prohibition for a descending import to a $kind',
@@ -562,14 +562,14 @@ describe('acceptance: global graph norms', () => {
           'src/_high/_utils/source/index.ts':
             "export { source } from './source.util.js';\n",
           'src/_high/_utils/source/source.util.ts': `import '../../..${target.slice(3, -3)}.js';\nexport const source = 1;\n`,
-          'src/_utils/unit/index.ts':
+          'src/_low/_utils/unit/index.ts':
             "export { unit } from './unit.util.js';\n",
-          'src/_utils/unit/unit.util.ts': 'export const unit = 1;\n',
+          'src/_low/_utils/unit/unit.util.ts': 'export const unit = 1;\n',
           [target]: 'export const target = 1;\n',
         },
         {
           foreignNodes: target.endsWith('/data.ts') ? [target] : [],
-          horizontalHierarchies: [[['_utils'], ['_high']]],
+          horizontalHierarchies: [[['_low'], ['_high']]],
           rootLayers: ['src'],
         },
         responsiblePart,

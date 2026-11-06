@@ -202,18 +202,35 @@ const buildAliasTree = (item: TAliasBaseCase): FileTree => {
     item.layer === true ? 'src/_utils/source/source.util.ts' : 'src/high.ts';
   const sourceContent = `import '#base${item.suffix}';\n${item.layer === true ? 'export const source = 1;' : ''}\n`;
 
+  const isSubCategoryTest = item.base === 'src/_types/_base';
+  const isBranchLayerTest = item.base === 'src/_src@shared/_ui';
+
+  const typesTree: FileTree = isSubCategoryTest
+    ? { 'src/_types/_base/a.type.ts': 'export type A = string;\n' }
+    : {
+        'src/_types/a.type.ts': 'export type A = string;\n',
+        'src/_types/b.type.ts': 'export type B = string;\n',
+      };
+
+  const branchTree: FileTree = isBranchLayerTest
+    ? { 'src/_src@shared/_ui/_types/a.type.ts': 'export type A = string;\n' }
+    : {
+        'src/_src@shared/_types/_types@shared/_types/a.type.ts':
+          'export type A = string;\n',
+        'src/_src@shared/_types/a.type.ts': 'export type A = string;\n',
+      };
+
   return {
-    ...layerTree,
+    ...typesTree,
+    ...branchTree,
+    'src/_utils/widget/index.ts':
+      "export { widget } from './widget.util.js';\n",
+    'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
     ...(item.layer !== true && rootTree),
     'package.json': JSON.stringify({
       imports: { [importTarget]: targetPath },
       type: 'module',
     }),
-    'src/_src@shared/_types/_types@shared/_types/a.type.ts':
-      'export type A = string;\n',
-    'src/_src@shared/_types/a.type.ts': 'export type A = string;\n',
-    'src/_src@shared/_ui/_types/a.type.ts': 'export type A = string;\n',
-    'src/_types/_base/a.type.ts': 'export type A = string;\n',
     'src/_utils/_users/get-user/get-user.util.ts':
       'export const getUser = 1;\n',
     'src/_utils/_users/get-user/index.ts':

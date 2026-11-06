@@ -244,7 +244,8 @@ describe('acceptance: structural norms', () => {
         `derives the Master from ${container} for ${role}`,
         'fragment-anatomy',
         {
-          ...button,
+          ...(container?.startsWith('src/_components/_atoms') !== true &&
+            button),
           [`${path}/${name}.${role}.tsx`]: 'export const value = 1;\n',
           [`${path}/index.ts`]: `export { value } from './${name}.${role}.js';\n`,
           'src/_apis': {},
