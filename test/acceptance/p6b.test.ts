@@ -681,12 +681,13 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
           return [];
         }
         if (kind === 'Fragment') {
+          const widgetUtil = 'src/_utils/widget/widget.util.ts';
           return [
-            categoryRoleViolation(path, path),
-            fragmentAnatomyViolation(path, 'src/_utils/widget/widget.util.ts'),
+            categoryRoleViolation(widgetUtil, path),
+            fragmentAnatomyViolation(path, widgetUtil),
           ];
         }
-        return [categoryRoleViolation(path, path)];
+        return [categoryRoleViolation('fafconfig.ts', path)];
       };
       await scenario(
         { ...fragment('src/_utils/widget'), [path]: 'body {}\n' },
@@ -1315,13 +1316,13 @@ describe('acceptance: Mimetic Path Structures', () => {
       mimetic(['patch']),
       'category-role',
       [
-        categoryRoleViolation(
-          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/patch-todo-status.util.ts',
-          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/patch-todo-status.util.ts'
-        ),
         missingMasterNode(
           'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/index.ts',
           'src/_apis/_todos/_[todo-id]/_status/patch-todo-status'
+        ),
+        categoryRoleViolation(
+          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/patch-todo-status.util.ts',
+          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/patch-todo-status.util.ts'
         ),
       ]
     );
