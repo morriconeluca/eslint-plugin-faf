@@ -1481,7 +1481,7 @@ describe('acceptance: p7a', () => {
       ],
       [
         'Fragment Node in deeper Sub-Fragment',
-        `${body}/table-body.component.ts`,
+        'src/app/_utils/helper/helper.util.ts',
         () => [],
       ],
       [
@@ -1494,7 +1494,7 @@ describe('acceptance: p7a', () => {
     ] as const)(
       'verifies who can enter the Branch of the Root Fragment src: %s',
       async (_label, source, buildExpected) => {
-        const destination = `${table}/_components/table-head/index.ts`;
+        const destination = `${table}/index.ts`;
         const spec = specifier(source, destination);
         await runScenario(
           {

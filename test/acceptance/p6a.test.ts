@@ -1276,6 +1276,11 @@ describe('acceptance: structural norms', () => {
           'src/_types/value.type.ts',
           '../../_types/value.type.js'
         ),
+        peerSeparationViolation(
+          'src/_src@shared/_types/shared.type.ts',
+          'src/_types/value.type.ts',
+          '../../_types/value.type.js'
+        ),
       ]
     );
     scenario(

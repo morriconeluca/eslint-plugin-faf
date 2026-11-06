@@ -98,6 +98,7 @@ const dependency = (
   kind: TDependencyKind,
   input: {
     readonly column?: number;
+    readonly filePath?: string;
     readonly from: string;
     readonly line?: number;
     readonly specifier: string;
@@ -109,7 +110,7 @@ const dependency = (
     column: input.column ?? 1,
     constraint: meta.constraint,
     element: input.from,
-    filePath: input.from,
+    filePath: input.filePath ?? input.from,
     line: input.line ?? 1,
     message: `${meta.constraint}: '${input.from}' imports '${input.to}' through '${input.specifier}': ${meta.predicate} (${meta.reference}).`,
     messageId: 'dependency',
@@ -947,6 +948,7 @@ const scenarios: readonly TScenario[] = [
     config: { faf: { common, locals: [{ rootLayers: ['src'] }] } },
     expected: [
       dependency('peerSeparation', {
+        filePath: 'fafconfig.ts',
         from: 'src/_styles/a.css',
         specifier: './b.css',
         to: 'src/_styles/b.css',

@@ -40,10 +40,10 @@ const outcome: TScenarioMessage = {
 const absent: TScenarioMessage = {
   ...outcome,
   constraint: 'unverified/not-implemented',
-  element: 'peer-separation',
+  element: 'acyclicity',
   filePath: 'fafconfig.ts',
   message:
-    "unverified/not-implemented: 'peer-separation' is not implemented (D-03).",
+    "unverified/not-implemented: 'acyclicity' is not implemented (D-03).",
   messageId: 'unverified',
 };
 
@@ -64,10 +64,8 @@ describe('acceptance project support', () => {
       ).toBe('export const widget = 1;\n');
       const result = await lintScenario(fixture.path);
       expect(result.messages).toEqual([]);
-      expect(result.unimplementedParts.get('peer-separation')).toEqual([
-        absent,
-      ]);
-      expectScenario(result, 'peer-separation', [outcome]);
+      expect(result.unimplementedParts.get('acyclicity')).toEqual([absent]);
+      expectScenario(result, 'acyclicity', [outcome]);
       expect(await lintProject(fixture.path)).toHaveLength(3);
     } finally {
       await fixture.rm();
@@ -233,14 +231,14 @@ describe('acceptance project support', () => {
       ]);
       expect(
         result.unimplementedParts
-          .get('peer-separation')
+          .get('acyclicity')
           ?.map((message) => [message.line, message.column])
       ).toEqual([
         [2, 2],
         [10, 1],
       ]);
       expect(() => {
-        expectScenario(result, 'peer-separation', []);
+        expectScenario(result, 'acyclicity', []);
       }).toThrow();
     } finally {
       lint.mockRestore();
@@ -266,11 +264,11 @@ describe('acceptance project support', () => {
   });
 
   it('rejects absent-part markers with extra, duplicate, or mismatched evidence', () => {
-    const unimplementedParts = new Map([['peer-separation', [absent]]]);
+    const unimplementedParts = new Map([['acyclicity', [absent]]]);
     expect(() => {
       expectScenario(
         { messages: [outcome], unimplementedParts },
-        'peer-separation',
+        'acyclicity',
         [outcome]
       );
     }).toThrow();
@@ -278,9 +276,9 @@ describe('acceptance project support', () => {
       expectScenario(
         {
           messages: [],
-          unimplementedParts: new Map([['peer-separation', [absent, absent]]]),
+          unimplementedParts: new Map([['acyclicity', [absent, absent]]]),
         },
-        'peer-separation',
+        'acyclicity',
         []
       );
     }).toThrow();
@@ -289,10 +287,10 @@ describe('acceptance project support', () => {
         {
           messages: [],
           unimplementedParts: new Map([
-            ['peer-separation', [{ ...absent, element: 'acyclicity' }]],
+            ['acyclicity', [{ ...absent, element: 'tree-frontier' }]],
           ]),
         },
-        'peer-separation',
+        'acyclicity',
         []
       );
     }).toThrow();

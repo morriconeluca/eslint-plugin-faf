@@ -16,6 +16,22 @@ const roles = [
   { category: '_utils', name: 'util' },
 ];
 
+const peerSeparationOutcome = (
+  from: string,
+  to: string,
+  specifier: string
+): TScenarioMessage => ({
+  column: 1,
+  constraint: 'dependency/peer-separation',
+  element: from,
+  filePath: from,
+  line: 1,
+  message: `dependency/peer-separation: '${from}' imports '${to}' through '${specifier}': sibling subtrees may depend on each other only downward along a Horizontal Hierarchy (FAF §5).`,
+  messageId: 'dependency',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
+
 const cycleOutcome = (
   filePath: string,
   constraint: 'acyclicity/dependency-cycle' | 'acyclicity/inter-tree-cycle',
@@ -327,15 +343,20 @@ describe('acceptance: global graph norms', () => {
     ],
   ])(
     'rejects a Branch return to a %s',
-    async (_name, target, source, specifier) => {
+    async (name, target, source, specifier) => {
       const isRootDestination =
         target === 'src/main.ts' || target === 'src/child/entry.ts';
+      const isPeerViolation =
+        name !== 'direct parent node' && name !== 'child Root Node';
       await runScenario(
         { ...branchTree, [branchSource]: source },
         branchConfig,
         'fractal-branch-unidirectionality',
         [
           branchDirectEdgeOutcome(branchSource, target, specifier),
+          ...(isPeerViolation
+            ? [peerSeparationOutcome(branchSource, target, specifier)]
+            : []),
           ...(isRootDestination
             ? [rootNodeDisciplineOutcome(branchSource, target, specifier)]
             : []),
@@ -360,6 +381,21 @@ describe('acceptance: global graph norms', () => {
           'src/_src@shared/_types/last.type.ts',
           'src/_types/other.type.ts',
           '../../_types/other.type.js'
+        ),
+        peerSeparationOutcome(
+          'src/_src@shared/_types/last.type.ts',
+          'src/_types/other.type.ts',
+          '../../_types/other.type.js'
+        ),
+        peerSeparationOutcome(
+          'src/_src@shared/_types/middle.type.ts',
+          'src/_src@shared/_types/last.type.ts',
+          './last.type.js'
+        ),
+        peerSeparationOutcome(
+          branchSource,
+          'src/_src@shared/_types/middle.type.ts',
+          './middle.type.js'
         ),
         branchPathOutcome([
           'src/_src@shared/_types/middle.type.ts',
@@ -505,6 +541,11 @@ describe('acceptance: global graph norms', () => {
       { rootFragments: [root('src', ['main.ts'])] },
       'acyclicity',
       [
+        peerSeparationOutcome(
+          'src/_types/a.type.ts',
+          'src/_types/b.type.ts',
+          './b.type.js'
+        ),
         cycleOutcome('src/_types/a.type.ts', 'acyclicity/dependency-cycle', [
           [
             'src/_types/a.type.ts',
@@ -512,6 +553,11 @@ describe('acceptance: global graph norms', () => {
             'src/_types/a.type.ts',
           ],
         ]),
+        peerSeparationOutcome(
+          'src/_types/b.type.ts',
+          'src/_types/a.type.ts',
+          './a.type.js'
+        ),
       ]
     );
   });
@@ -528,6 +574,11 @@ describe('acceptance: global graph norms', () => {
       { rootFragments: [root('src', ['main.ts'])] },
       'acyclicity',
       [
+        peerSeparationOutcome(
+          'src/_types/a.type.ts',
+          'src/_types/b.type.ts',
+          './b.type.js'
+        ),
         cycleOutcome('src/_types/a.type.ts', 'acyclicity/dependency-cycle', [
           [
             'src/_types/a.type.ts',
@@ -535,6 +586,11 @@ describe('acceptance: global graph norms', () => {
             'src/_types/a.type.ts',
           ],
         ]),
+        peerSeparationOutcome(
+          'src/_types/b.type.ts',
+          'src/_types/a.type.ts',
+          './a.type.js'
+        ),
       ]
     );
   });
