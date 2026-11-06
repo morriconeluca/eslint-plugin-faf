@@ -109,6 +109,21 @@ const branchDirectEdgeOutcome = (
     to,
   });
 
+const rootNodeDisciplineOutcome = (
+  from: string,
+  to: string,
+  specifier: string
+): TScenarioMessage =>
+  directEdgeOutcome({
+    constraint: 'dependency/root-node-discipline',
+    from,
+    predicate:
+      'a Root Node is importable only by Root Nodes authorized by rootNodes or dependencyEdges',
+    reference: 'FAF §6.2.2',
+    specifier,
+    to,
+  });
+
 const branchPathOutcome = (chain: readonly string[]): TScenarioMessage => {
   const from = chain[0] ?? '';
   const to = chain.at(-1) ?? '';
@@ -313,11 +328,18 @@ describe('acceptance: global graph norms', () => {
   ])(
     'rejects a Branch return to a %s',
     async (_name, target, source, specifier) => {
+      const isRootDestination =
+        target === 'src/main.ts' || target === 'src/child/entry.ts';
       await runScenario(
         { ...branchTree, [branchSource]: source },
         branchConfig,
         'fractal-branch-unidirectionality',
-        [branchDirectEdgeOutcome(branchSource, target, specifier)]
+        [
+          branchDirectEdgeOutcome(branchSource, target, specifier),
+          ...(isRootDestination
+            ? [rootNodeDisciplineOutcome(branchSource, target, specifier)]
+            : []),
+        ]
       );
     }
   );

@@ -36,7 +36,6 @@ const unimplementedParts = [
   'peer-separation',
   'private-category-visibility',
   're-entry-prohibition',
-  'root-node-discipline',
   'tree-frontier',
 ];
 
@@ -72,6 +71,7 @@ describe('verifyProject', () => {
         expect(item.anchorPath).toBe(configPath);
         expect(item.outcome.constraint).toBe('unverified/not-implemented');
         expect(item.outcome.family).toBe('unverified');
+        expect(item.outcome.normativeReference.length).toBeGreaterThan(0);
         expect(item.position).toEqual({ column: 1, line: 1 });
       }
       expect(result.collectedModules).toBe(true);

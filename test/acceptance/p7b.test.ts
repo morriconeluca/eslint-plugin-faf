@@ -643,10 +643,18 @@ const scenarios: readonly TScenario[] = [
       name: `12.2 ${label}: ${allowed ? 'direct authorization' : 'no authorization'}`,
       responsiblePart: 'root-node-discipline',
       tree: {
-        [from]: `import '${specifier}';\nexport const value = 1;\n`,
-        'src/a/main.ts': 'export const a = 1;\n',
-        'src/b/main.ts': 'export const b = 1;\n',
-        'src/main.ts': 'export const main = 1;\n',
+        'src/a/main.ts':
+          from === 'src/a/main.ts'
+            ? `import '${specifier}';\nexport const value = 1;\n`
+            : 'export const a = 1;\n',
+        'src/b/main.ts':
+          from === 'src/b/main.ts'
+            ? `import '${specifier}';\nexport const value = 1;\n`
+            : 'export const b = 1;\n',
+        'src/main.ts':
+          from === 'src/main.ts'
+            ? `import '${specifier}';\nexport const value = 1;\n`
+            : 'export const main = 1;\n',
       },
     }))
   ),

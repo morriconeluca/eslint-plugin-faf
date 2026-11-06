@@ -288,6 +288,29 @@ const privateCategoryUnidirectionalityOutcome = (
   severity: 2,
 });
 
+const rootNodeDisciplineOutcome = (
+  from: string,
+  to: string,
+  spec: string
+): TScenarioMessage => ({
+  column: 1,
+  constraint: 'dependency/root-node-discipline',
+  element: from,
+  filePath: from,
+  line: 1,
+  message: formatEdgeMessage(
+    'dependency/root-node-discipline',
+    from,
+    to,
+    spec,
+    'a Root Node is importable only by Root Nodes authorized by rootNodes or dependencyEdges',
+    'FAF §6.2.2'
+  ),
+  messageId: 'dependency',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
+
 const fractalBranchVisibilityOutcome = (
   from: string,
   to: string,
@@ -1387,6 +1410,9 @@ describe('acceptance: p7a', () => {
           violations.push(
             subGraphNodeIsolationOutcome(source, destination, spec)
           );
+        }
+        if (destination === 'src/app/app.ts') {
+          violations.push(rootNodeDisciplineOutcome(source, destination, spec));
         }
         await runScenario(
           {
