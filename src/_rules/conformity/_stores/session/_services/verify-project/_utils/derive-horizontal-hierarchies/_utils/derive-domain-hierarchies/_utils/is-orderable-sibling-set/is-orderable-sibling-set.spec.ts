@@ -92,6 +92,9 @@ describe('isOrderableSiblingSet', () => {
       false
     );
     expect(isOrderableSiblingSet(parent, [undefined])).toBe(false);
+    expect(isOrderableSiblingSet(taxonomy.byItemId.get(1), [undefined])).toBe(
+      false
+    );
     expect(isOrderableSiblingSet(undefined, [])).toBe(false);
   });
 

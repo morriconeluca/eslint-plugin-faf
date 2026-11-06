@@ -8,20 +8,17 @@ export function isOrderableSiblingSet(
     parent?.domainKind === 'category' ||
     parent?.domainKind === 'sub-category'
   ) {
-    return (
-      !parent.relationalQualifications.isParentCategory &&
-      children.every((child) => child?.domainKind === 'sub-category')
-    );
+    return children.length > 0
+      ? children.every((child) => child?.domainKind === 'sub-category')
+      : !parent.relationalQualifications.isParentCategory;
   }
-  if (
-    parent?.domainKind !== 'layer' &&
-    parent?.domainKind !== 'root-layer' &&
-    parent?.domainKind !== 'fractal-branch'
-  ) {
-    return false;
-  }
+  const isStratified =
+    parent?.domainKind === 'layer' ||
+    parent?.domainKind === 'root-layer' ||
+    parent?.domainKind === 'fractal-branch';
   return (
-    children.every((child) => child?.domainKind === 'layer') ||
-    children.every((child) => child?.domainKind === 'category')
+    isStratified &&
+    (children.every((child) => child?.domainKind === 'layer') ||
+      children.every((child) => child?.domainKind === 'category'))
   );
 }

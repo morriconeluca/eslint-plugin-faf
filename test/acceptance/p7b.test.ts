@@ -254,7 +254,8 @@ const buildAliasConfig = (
     locals: [
       {
         foreignDomains: ['src/static'],
-        horizontalHierarchies: [[['_types'], ['_utils']]],
+        horizontalHierarchies:
+          item.layer === true ? [[['_types'], ['_utils']]] : [],
         mimeticPathStructures: [{ actions: ['get'], paths: ['src/_utils'] }],
         publicRootNodes: item.published === true ? ['src/low.ts'] : [],
         rootFragments:

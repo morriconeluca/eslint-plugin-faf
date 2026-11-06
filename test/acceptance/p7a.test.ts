@@ -1428,13 +1428,13 @@ describe('acceptance: p7a', () => {
               {
                 horizontalHierarchies: [[['_components'], ['_hooks']]],
                 roles,
-                rootLayers: ['src'],
+                rootFragments: [{ path: 'src', rootNodes: [] }],
               },
             ],
           },
         },
         'horizontal-hierarchies',
-        [horizontalHierarchyMembersOutcome('src/_components')]
+        [horizontalHierarchyMembersOutcome('src')]
       );
     });
   });
