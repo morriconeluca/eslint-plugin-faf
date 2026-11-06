@@ -25,7 +25,6 @@ import { verifyNomenclature } from './_norms/nomenclature/index.js';
 import { verifyPathAliasAnchoring } from './_norms/path-alias-anchoring/index.js';
 import { verifyPeerSeparation } from './_norms/peer-separation/index.js';
 import { verifyPrivateCategoryVisibility } from './_norms/private-category-visibility/index.js';
-import { verifyPublicSurface } from './_norms/public-surface/index.js';
 import { verifyReEntryProhibition } from './_norms/re-entry-prohibition/index.js';
 import { verifyReExportProhibition } from './_norms/re-export-prohibition/index.js';
 import { verifyRootNodeDiscipline } from './_norms/root-node-discipline/index.js';
@@ -113,7 +112,6 @@ export function verifyProject(
       ...verifyCategoryRole(model),
       ...verifyNomenclature(model),
       ...verifyHorizontalHierarchies(model),
-      ...verifyPublicSurface(model),
       ...verifyPeerSeparation(model),
       ...verifyFragmentEncapsulation(model),
       ...verifyPrivateCategoryVisibility(model),

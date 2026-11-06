@@ -974,7 +974,7 @@ describe('acceptance: Public Surface designation and structural determination', 
           ],
         },
       },
-      valid ? 'public-surface' : 'classify-taxonomy',
+      'classify-taxonomy',
       valid
         ? []
         : [
@@ -1055,13 +1055,13 @@ describe('acceptance: Public Surface designation and structural determination', 
             ],
           },
         },
-        'public-surface'
+        'classify-taxonomy'
       );
     }
   );
 
   it('changes Root Layer exposure after adding and relocating an entire unit', async () => {
-    await scenario({ src: {} }, rootLayer(), 'public-surface');
+    await scenario({ src: {} }, rootLayer(), 'classify-taxonomy');
     await surfaceProbe(
       fragment('src/_utils/widget'),
       rootLayer(),

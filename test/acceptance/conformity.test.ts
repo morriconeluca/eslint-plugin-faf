@@ -44,7 +44,6 @@ const unimplementedParts = [
   'path-alias-anchoring',
   'peer-separation',
   'private-category-visibility',
-  'public-surface',
   're-entry-prohibition',
   're-export-prohibition',
   'root-node-discipline',

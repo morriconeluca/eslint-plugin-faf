@@ -101,7 +101,7 @@ const create262Scenario = ({
     },
     expected,
     name: `26.2 Root Layer structural surface: ${label}`,
-    responsiblePart: 'public-surface',
+    responsiblePart: 'tree-frontier',
     tree: {
       ...layerTree,
       'consumer.ts': `import './${node}';\n`,
@@ -795,7 +795,7 @@ const scenarios: readonly TScenario[] = [
           }),
         ],
     name: `26.1 Root Fragment publication: ${label}`,
-    responsiblePart: 'public-surface',
+    responsiblePart: 'classify-taxonomy',
     tree: {
       ...rootTree,
       ...layerTree,
@@ -872,7 +872,7 @@ const scenarios: readonly TScenario[] = [
     },
     expected: [],
     name: `26.3 ${count.toString()} published Root Nodes require no barrel`,
-    responsiblePart: 'public-surface',
+    responsiblePart: 'classify-taxonomy',
     tree: {
       'src/a.ts': 'export const a = 1;\n',
       'src/b.ts': 'export const b = 1;\n',
@@ -892,7 +892,7 @@ const scenarios: readonly TScenario[] = [
       ? []
       : [dependency('consumer.ts', 'dependency/tree-opacity')],
     name: `26.4 surface follows structure: ${label}`,
-    responsiblePart: 'public-surface',
+    responsiblePart: 'tree-frontier',
     tree: {
       'consumer.ts': `import './${node}';\n`,
       [node]: 'export type New = string;\n',
