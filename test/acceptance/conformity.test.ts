@@ -27,10 +27,7 @@ const conformingTree = {
     "export function widget() {\n  return 'ok';\n}\n",
 };
 
-const unimplementedParts = [
-  'acyclicity',
-  'fractal-branch-unidirectionality',
-];
+const unimplementedParts = ['acyclicity'];
 
 describe('acceptance: faf/conformity', () => {
   const WARMUP_TIMEOUT_MS = 120_000;

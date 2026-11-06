@@ -27,10 +27,7 @@ const conformingFiles = {
     "export function widget() {\n  return 'ok';\n}\n",
 };
 
-const unimplementedParts = [
-  'acyclicity',
-  'fractal-branch-unidirectionality',
-];
+const unimplementedParts = ['acyclicity'];
 
 const compareText = (left: string, right: string): number => {
   if (left < right) {

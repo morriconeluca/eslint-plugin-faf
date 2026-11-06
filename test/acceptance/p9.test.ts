@@ -396,7 +396,13 @@ describe('acceptance: global graph norms', () => {
             ? [peerSeparationOutcome(branchSource, target, specifier)]
             : []),
           ...(isPrivateCategory
-            ? [privateCategoryVisibilityOutcome(branchSource, target, specifier)]
+            ? [
+                privateCategoryVisibilityOutcome(
+                  branchSource,
+                  target,
+                  specifier
+                ),
+              ]
             : []),
           ...(isRootDestination
             ? [rootNodeDisciplineOutcome(branchSource, target, specifier)]
@@ -433,27 +439,27 @@ describe('acceptance: global graph norms', () => {
           'src/_types/other.type.ts',
           '../../_types/other.type.js'
         ),
+        branchPathOutcome([
+          'src/_src@shared/_types/middle.type.ts',
+          'src/_src@shared/_types/last.type.ts',
+          'src/_types/other.type.ts',
+        ]),
         peerSeparationOutcome(
           'src/_src@shared/_types/middle.type.ts',
           'src/_src@shared/_types/last.type.ts',
           './last.type.js'
         ),
+        branchPathOutcome([
+          branchSource,
+          'src/_src@shared/_types/middle.type.ts',
+          'src/_src@shared/_types/last.type.ts',
+          'src/_types/other.type.ts',
+        ]),
         peerSeparationOutcome(
           branchSource,
           'src/_src@shared/_types/middle.type.ts',
           './middle.type.js'
         ),
-        branchPathOutcome([
-          'src/_src@shared/_types/middle.type.ts',
-          'src/_src@shared/_types/last.type.ts',
-          'src/_types/other.type.ts',
-        ]),
-        branchPathOutcome([
-          branchSource,
-          'src/_src@shared/_types/middle.type.ts',
-          'src/_src@shared/_types/last.type.ts',
-          'src/_types/other.type.ts',
-        ]),
       ]
     );
   });
