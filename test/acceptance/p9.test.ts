@@ -2,6 +2,8 @@ import type { FileTree } from 'fs-fixture';
 
 import { beforeAll, describe, it } from 'vitest';
 
+import type { TScenarioMessage } from '../support/acceptance-project.js';
+
 import {
   createProject,
   expectScenario,
@@ -14,50 +16,217 @@ const roles = [
   { category: '_utils', name: 'util' },
 ];
 
-const diagnostic = (filePath: string, constraint: string, detail: string) => ({
+const cycleOutcome = (
+  filePath: string,
+  constraint: 'acyclicity/dependency-cycle' | 'acyclicity/inter-tree-cycle',
+  segments: readonly (readonly string[])[]
+): TScenarioMessage => {
+  const isInterTree = constraint === 'acyclicity/inter-tree-cycle';
+  const predicate = isInterTree
+    ? 'is part of a dependency cycle between Fractal Trees'
+    : 'is part of a dependency cycle';
+  const reference = isInterTree ? 'FAF §7.2' : 'FAF §5';
+  const segmentsText = segments
+    .map((segment) => segment.join(' -> '))
+    .join('; ');
+  return {
+    column: 1,
+    constraint,
+    element: filePath,
+    filePath,
+    line: 1,
+    message: `${constraint}: '${filePath}' ${predicate}: ${segmentsText} (${reference}).`,
+    messageId: 'acyclicity',
+    ruleId: 'faf/conformity',
+    severity: 2,
+  };
+};
+
+const directEdgeOutcome = ({
+  constraint,
+  from,
+  predicate,
+  reference,
+  specifier,
+  to,
+}: {
+  readonly constraint: string;
+  readonly from: string;
+  readonly predicate: string;
+  readonly reference: string;
+  readonly specifier: string;
+  readonly to: string;
+}): TScenarioMessage => ({
   column: 1,
   constraint,
-  element: filePath,
-  filePath,
+  element: from,
+  filePath: from,
   line: 1,
-  message: `${constraint}: ${detail}`,
-  messageId: constraint.split('/', 1)[0] ?? null,
+  message: `${constraint}: '${from}' imports '${to}' through '${specifier}': ${predicate} (${reference}).`,
+  messageId: 'dependency',
   ruleId: 'faf/conformity',
   severity: 2,
 });
 
-const cycle = (constraint: string, paths: readonly string[]) => {
-  const source = paths[0] ?? '';
-  return diagnostic(
-    source,
-    constraint,
-    `Dependency cycle from '${source}': ${paths.join(' -> ')}.`
-  );
+const pathOutcome = ({
+  chain,
+  constraint,
+  from,
+  predicate,
+  reference,
+  to,
+}: {
+  readonly chain: readonly string[];
+  readonly constraint: string;
+  readonly from: string;
+  readonly predicate: string;
+  readonly reference: string;
+  readonly to: string;
+}): TScenarioMessage => ({
+  column: 1,
+  constraint,
+  element: from,
+  filePath: from,
+  line: 1,
+  message: `${constraint}: '${from}' reaches '${to}' through ${chain.join(' -> ')}: ${predicate} (${reference}).`,
+  messageId: 'dependency',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
+
+const branchDirectEdgeOutcome = (
+  from: string,
+  to: string,
+  specifier: string
+): TScenarioMessage =>
+  directEdgeOutcome({
+    constraint: 'dependency/fractal-branch-unidirectionality',
+    from,
+    predicate:
+      'a Fractal Branch must not depend on the other subtrees of its parent',
+    reference: 'FAF §6.6.2',
+    specifier,
+    to,
+  });
+
+const branchPathOutcome = (chain: readonly string[]): TScenarioMessage => {
+  const from = chain[0] ?? '';
+  const to = chain.at(-1) ?? '';
+  return pathOutcome({
+    chain,
+    constraint: 'dependency/fractal-branch-unidirectionality',
+    from,
+    predicate:
+      'a Fractal Branch must not depend on the other subtrees of its parent',
+    reference: 'FAF §6.6.2',
+    to,
+  });
 };
 
-const treeCycle = (segments: readonly (readonly string[])[]) => {
-  const source = segments[0]?.[0] ?? '';
-  return diagnostic(
-    source,
-    'acyclicity/inter-tree-cycle',
-    `Tree dependency cycle from '${source}': ${segments.map((segment) => segment.join(' -> ')).join('; ')}.`
-  );
+const reEntryOutcome = (chain: readonly string[]): TScenarioMessage => {
+  const from = chain[0] ?? '';
+  const to = chain.at(-1) ?? '';
+  return pathOutcome({
+    chain,
+    constraint: 'dependency/re-entry-prohibition',
+    from,
+    predicate:
+      'a path through local files outside all Fractal Trees must not re-enter its Fractal Tree',
+    reference: 'FAF §7.3',
+    to,
+  });
 };
 
-const dependency = (constraint: string, paths: readonly string[]) => {
-  const source = paths[0] ?? '';
-  return diagnostic(
-    source,
-    constraint,
-    `Forbidden dependency from '${source}': ${paths.join(' -> ')}.`
-  );
+const inducedTreeAuthorizationOutcome = (
+  chain: readonly string[]
+): TScenarioMessage => {
+  const from = chain[0] ?? '';
+  const to = chain.at(-1) ?? '';
+  return pathOutcome({
+    chain,
+    constraint: 'dependency/tree-authorization',
+    from,
+    predicate:
+      'a dependency between Fractal Trees requires an oriented treeDependencies authorization',
+    reference: 'FAF §7.2, §7.3',
+    to,
+  });
 };
+
+const treeOpacityOutcome = (specifier: string): TScenarioMessage =>
+  directEdgeOutcome({
+    constraint: 'dependency/tree-opacity',
+    from: 'x.ts',
+    predicate:
+      'only the Public Surface of a Fractal Tree is importable from outside the Tree',
+    reference: 'FAF §7.1',
+    specifier,
+    to: 'b/end.ts',
+  });
+
+const fragmentEncapsulationOutcome = (
+  from: string,
+  to: string,
+  specifier: string
+): TScenarioMessage =>
+  directEdgeOutcome({
+    constraint: 'dependency/fragment-encapsulation',
+    from,
+    predicate:
+      'a Fragment is importable from outside only through its index.ts',
+    reference: 'FAF §6.1.1',
+    specifier,
+    to,
+  });
+
+const subGraphIsolationOutcome = (
+  from: string,
+  to: string,
+  specifier: string
+): TScenarioMessage =>
+  directEdgeOutcome({
+    constraint: 'dependency/sub-graph-node-isolation',
+    from,
+    predicate: 'a Sub-Graph Node is not importable',
+    reference: 'FAF §4',
+    specifier,
+    to,
+  });
+
+const foreignNodeIsolationOutcome = (
+  from: string,
+  to: string,
+  specifier: string
+): TScenarioMessage =>
+  directEdgeOutcome({
+    constraint: 'dependency/foreign-node-isolation',
+    from,
+    predicate: 'a Foreign Node has no import relation with codebase files',
+    reference: 'FAF §4, §6.7',
+    specifier,
+    to,
+  });
+
+const unresolvedImportOutcome = (
+  filePath: string,
+  detail: string
+): TScenarioMessage => ({
+  column: 1,
+  constraint: 'unverified/unresolved-import',
+  element: filePath,
+  filePath,
+  line: 1,
+  message: `unverified/unresolved-import: '${filePath}' contains an import that could not be resolved: ${detail} (D-08).`,
+  messageId: 'unverified',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
 
 const runScenario = async (
   tree: FileTree,
   local: Readonly<Record<string, unknown>>,
   responsiblePart: string,
-  expected: readonly ReturnType<typeof diagnostic>[]
+  expected: readonly TScenarioMessage[]
 ): Promise<void> => {
   const fixture = await createProject(tree, {
     faf: { locals: [{ roles, subGraphRoles: [{ name: 'spec' }], ...local }] },
@@ -67,33 +236,6 @@ const runScenario = async (
   } finally {
     await fixture.rm();
   }
-};
-
-const localExitExpected = (
-  permission: string,
-  isAllowed: boolean,
-  source: string
-) => {
-  if (permission === 'access')
-    return [
-      {
-        ...diagnostic(
-          'fafconfig.ts',
-          'configuration/invalid-external-dependency-source',
-          `'${source}' must be an authorized logical node in externalDependencies (FAF §7.3).`
-        ),
-        element: source,
-      },
-    ];
-  return isAllowed
-    ? []
-    : [dependency('dependency/external-dependencies', [source, 'x.ts'])];
-};
-
-const inducedAuthorizations = (relation: string) => {
-  if (relation === 'none') return [];
-  if (relation === 'reverse') return [{ from: ['b'], to: ['a'] }];
-  return [{ from: ['a'], to: ['b'] }];
 };
 
 const root = (path: string, names: readonly string[]) => ({
@@ -138,40 +280,47 @@ describe('acceptance: global graph norms', () => {
   beforeAll(warmupESLint, 120_000);
 
   it.each([
-    ['direct parent node', 'src/main.ts', "import '../../main.js';\n"],
+    [
+      'direct parent node',
+      'src/main.ts',
+      "import '../../main.js';\n",
+      '../../main.js',
+    ],
     [
       'private Access Node',
       'src/_utils/unit/index.ts',
       "import '../../_utils/unit/index.js';\n",
+      '../../_utils/unit/index.js',
     ],
     [
       'sibling Category Node',
       'src/_types/other.type.ts',
       "import '../../_types/other.type.js';\n",
+      '../../_types/other.type.js',
     ],
     [
       'child Root Node',
       'src/child/entry.ts',
       "import '../../child/entry.js';\n",
+      '../../child/entry.js',
     ],
     [
       'nested sibling Branch node',
       'src/_utils/unit/_unit@shared/_types/deep.type.ts',
       "import '../../_utils/unit/_unit@shared/_types/deep.type.js';\n",
+      '../../_utils/unit/_unit@shared/_types/deep.type.js',
     ],
-  ])('rejects a Branch return to a %s', async (_name, target, source) => {
-    await runScenario(
-      { ...branchTree, [branchSource]: source },
-      branchConfig,
-      'fractal-branch-unidirectionality',
-      [
-        dependency('dependency/fractal-branch-unidirectionality', [
-          branchSource,
-          target,
-        ]),
-      ]
-    );
-  });
+  ])(
+    'rejects a Branch return to a %s',
+    async (_name, target, source, specifier) => {
+      await runScenario(
+        { ...branchTree, [branchSource]: source },
+        branchConfig,
+        'fractal-branch-unidirectionality',
+        [branchDirectEdgeOutcome(branchSource, target, specifier)]
+      );
+    }
+  );
 
   it('finds a Branch return beyond the first outgoing edge', async () => {
     await runScenario(
@@ -185,16 +334,17 @@ describe('acceptance: global graph norms', () => {
       branchConfig,
       'fractal-branch-unidirectionality',
       [
-        dependency('dependency/fractal-branch-unidirectionality', [
+        branchDirectEdgeOutcome(
           'src/_src@shared/_types/last.type.ts',
           'src/_types/other.type.ts',
-        ]),
-        dependency('dependency/fractal-branch-unidirectionality', [
+          '../../_types/other.type.js'
+        ),
+        branchPathOutcome([
           'src/_src@shared/_types/middle.type.ts',
           'src/_src@shared/_types/last.type.ts',
           'src/_types/other.type.ts',
         ]),
-        dependency('dependency/fractal-branch-unidirectionality', [
+        branchPathOutcome([
           branchSource,
           'src/_src@shared/_types/middle.type.ts',
           'src/_src@shared/_types/last.type.ts',
@@ -283,12 +433,7 @@ describe('acceptance: global graph norms', () => {
       },
       'acyclicity',
       forbidden
-        ? [
-            cycle('acyclicity/dependency-cycle', paths),
-            ...(name === 'self loop'
-              ? []
-              : [cycle('acyclicity/root-dependency-cycle', paths)]),
-          ]
+        ? [cycleOutcome(paths[0] ?? '', 'acyclicity/dependency-cycle', [paths])]
         : []
     );
   });
@@ -318,51 +463,100 @@ describe('acceptance: global graph norms', () => {
         ],
       },
       'acyclicity',
-      ['acyclicity/dependency-cycle', 'acyclicity/root-dependency-cycle'].map(
-        (constraint) =>
-          cycle(constraint, ['src/a/main.ts', 'src/b/main.ts', 'src/a/main.ts'])
-      )
+      [
+        cycleOutcome('src/a/main.ts', 'acyclicity/dependency-cycle', [
+          ['src/a/main.ts', 'src/b/main.ts', 'src/a/main.ts'],
+        ]),
+      ]
     );
   });
 
-  it.each(['unreachable modules', 'type-only imports'])(
-    'checks cycles among %s',
-    async (kind) => {
-      const isTypeOnly = kind === 'type-only imports';
-      await runScenario(
-        {
-          'src/_types/a.type.ts': isTypeOnly
-            ? "import type { B } from './b.type.js';\nexport type A = B;\n"
-            : "import './b.type.js';\nexport type A = string;\n",
-          'src/_types/b.type.ts': isTypeOnly
-            ? "import type { A } from './a.type.js';\nexport type B = A;\n"
-            : "import './a.type.js';\nexport type B = string;\n",
-          'src/main.ts': 'export const main = 1;\n',
-        },
-        { rootFragments: [root('src', ['main.ts'])] },
-        'acyclicity',
-        [
-          cycle('acyclicity/dependency-cycle', [
+  it('checks cycles among unreachable modules', async () => {
+    await runScenario(
+      {
+        'src/_types/a.type.ts':
+          "import './b.type.js';\nexport type A = string;\n",
+        'src/_types/b.type.ts':
+          "import './a.type.js';\nexport type B = string;\n",
+        'src/main.ts': 'export const main = 1;\n',
+      },
+      { rootFragments: [root('src', ['main.ts'])] },
+      'acyclicity',
+      [
+        cycleOutcome('src/_types/a.type.ts', 'acyclicity/dependency-cycle', [
+          [
             'src/_types/a.type.ts',
             'src/_types/b.type.ts',
             'src/_types/a.type.ts',
-          ]),
-        ]
-      );
-    }
-  );
+          ],
+        ]),
+      ]
+    );
+  });
+
+  it('checks cycles formed only by type imports', async () => {
+    await runScenario(
+      {
+        'src/_types/a.type.ts':
+          "import type { B } from './b.type.js';\nexport type A = B;\n",
+        'src/_types/b.type.ts':
+          "import type { A } from './a.type.js';\nexport type B = A;\n",
+        'src/main.ts': 'export const main = 1;\n',
+      },
+      { rootFragments: [root('src', ['main.ts'])] },
+      'acyclicity',
+      [
+        cycleOutcome('src/_types/a.type.ts', 'acyclicity/dependency-cycle', [
+          [
+            'src/_types/a.type.ts',
+            'src/_types/b.type.ts',
+            'src/_types/a.type.ts',
+          ],
+        ]),
+      ]
+    );
+  });
 
   it.each([
-    ['Fragment Node', 'fragment-encapsulation', 'src/_utils/unit/unit.util.ts'],
-    [
-      'Sub-Graph Node',
-      'sub-graph-node-isolation',
-      'src/_utils/unit/unit.spec.ts',
-    ],
-    ['Foreign Node', 'foreign-node-isolation', 'src/_utils/unit/data.ts'],
+    {
+      expected: [
+        fragmentEncapsulationOutcome(
+          'src/_high/_utils/source/source.util.ts',
+          'src/_utils/unit/unit.util.ts',
+          '../../../_utils/unit/unit.util.js'
+        ),
+      ],
+      kind: 'Fragment Node',
+      responsiblePart: 'fragment-encapsulation',
+      target: 'src/_utils/unit/unit.util.ts',
+    },
+    {
+      expected: [
+        subGraphIsolationOutcome(
+          'src/_high/_utils/source/source.util.ts',
+          'src/_utils/unit/unit.spec.ts',
+          '../../../_utils/unit/unit.spec.js'
+        ),
+      ],
+      kind: 'Sub-Graph Node',
+      responsiblePart: 'sub-graph-node-isolation',
+      target: 'src/_utils/unit/unit.spec.ts',
+    },
+    {
+      expected: [
+        foreignNodeIsolationOutcome(
+          'src/_high/_utils/source/source.util.ts',
+          'src/_utils/unit/data.ts',
+          '../../../_utils/unit/data.js'
+        ),
+      ],
+      kind: 'Foreign Node',
+      responsiblePart: 'foreign-node-isolation',
+      target: 'src/_utils/unit/data.ts',
+    },
   ])(
-    'keeps the target prohibition for a descending import to a %s',
-    async (_name, part, target) => {
+    'keeps the target prohibition for a descending import to a $kind',
+    async ({ expected, responsiblePart, target }) => {
       await runScenario(
         {
           'src/_high/_utils/source/index.ts':
@@ -378,55 +572,61 @@ describe('acceptance: global graph norms', () => {
           horizontalHierarchies: [[['_utils'], ['_high']]],
           rootLayers: ['src'],
         },
-        part,
-        [
-          dependency(`dependency/${part}`, [
-            'src/_high/_utils/source/source.util.ts',
-            target,
-          ]),
-        ]
+        responsiblePart,
+        expected
       );
     }
   );
 
   it.each([
-    [
-      'chain',
-      [
+    {
+      description: 'chain',
+      edges: [
         ['a', 'b'],
         ['b', 'c'],
       ],
-      false,
-    ],
-    [
-      'diamond',
-      [
+      expected: [],
+    },
+    {
+      description: 'diamond',
+      edges: [
         ['a', 'b'],
         ['a', 'c'],
         ['b', 'c'],
       ],
-      false,
-    ],
-    [
-      'two Trees',
-      [
+      expected: [],
+    },
+    {
+      description: 'two Trees',
+      edges: [
         ['a', 'b'],
         ['b', 'a'],
       ],
-      true,
-    ],
-    [
-      'three Trees',
-      [
+      expected: [
+        cycleOutcome('a/source.ts', 'acyclicity/inter-tree-cycle', [
+          ['a/source.ts', 'b/target.ts'],
+          ['b/source.ts', 'a/target.ts'],
+        ]),
+      ],
+    },
+    {
+      description: 'three Trees',
+      edges: [
         ['a', 'b'],
         ['b', 'c'],
         ['c', 'a'],
       ],
-      true,
-    ],
-  ] as const)(
-    'checks the Tree DAG independently of module cycles: %s',
-    async (_name, edges, forbidden) => {
+      expected: [
+        cycleOutcome('a/source.ts', 'acyclicity/inter-tree-cycle', [
+          ['a/source.ts', 'b/target.ts'],
+          ['b/source.ts', 'c/target.ts'],
+          ['c/source.ts', 'a/target.ts'],
+        ]),
+      ],
+    },
+  ])(
+    'checks the Tree DAG independently of module cycles: $description',
+    async ({ edges, expected }) => {
       const tree: Record<string, string> = {};
       for (const origin of ['a', 'b', 'c']) {
         tree[`${origin}/target.ts`] = 'export const target = 1;\n';
@@ -450,65 +650,61 @@ describe('acceptance: global graph norms', () => {
           })),
         },
         'acyclicity',
-        forbidden
-          ? [
-              treeCycle(
-                edges.map(([from, to]) => [
-                  `${from}/source.ts`,
-                  `${to}/target.ts`,
-                ])
-              ),
-            ]
-          : []
+        expected
       );
     }
   );
 
   it.each([
-    [
-      'one external file',
-      "import './a/end.js';\n",
-      '',
-      ['a/start.ts', 'x.ts', 'a/end.ts'],
-    ],
-    [
-      'two external files',
-      "import './y.js';\n",
-      "import './a/end.js';\n",
-      ['a/start.ts', 'x.ts', 'y.ts', 'a/end.ts'],
-    ],
-    [
-      'another Tree',
-      "import './b/end.js';\n",
-      "import './a/end.js';\n",
-      ['a/start.ts', 'x.ts', 'b/end.ts', 'y.ts', 'a/end.ts'],
-    ],
-  ])('rejects an authorized re-entry through %s', async (name, x, y, paths) => {
-    await runScenario(
-      {
-        ...externalBase,
-        'b/end.ts':
-          name === 'another Tree'
-            ? "import '../y.js';\n"
-            : externalBase['b/end.ts'],
-        'x.ts': x,
-        'y.ts': y,
-      },
-      {
-        ...externalConfig,
-        externalDependencies: [
-          ...externalConfig.externalDependencies,
-          { from: ['b/end.ts'], to: ['y.ts'] },
-        ],
-        treeDependencies: [
-          { from: ['a'], to: ['b'] },
-          { from: ['b'], to: ['a'] },
-        ],
-      },
-      're-entry-prohibition',
-      [dependency('dependency/re-entry-prohibition', paths)]
-    );
-  });
+    {
+      description: 'one external file',
+      expected: [reEntryOutcome(['a/start.ts', 'x.ts', 'a/end.ts'])],
+      x: "import './a/end.js';\n",
+      y: '',
+    },
+    {
+      description: 'two external files',
+      expected: [reEntryOutcome(['a/start.ts', 'x.ts', 'y.ts', 'a/end.ts'])],
+      x: "import './y.js';\n",
+      y: "import './a/end.js';\n",
+    },
+    {
+      description: 'another Tree',
+      expected: [
+        reEntryOutcome(['a/start.ts', 'x.ts', 'b/end.ts', 'y.ts', 'a/end.ts']),
+      ],
+      x: "import './b/end.js';\n",
+      y: "import './a/end.js';\n",
+    },
+  ])(
+    'rejects an authorized re-entry through $description',
+    async ({ description, expected, x, y }) => {
+      await runScenario(
+        {
+          ...externalBase,
+          'b/end.ts':
+            description === 'another Tree'
+              ? "import '../y.js';\n"
+              : externalBase['b/end.ts'],
+          'x.ts': x,
+          'y.ts': y,
+        },
+        {
+          ...externalConfig,
+          externalDependencies: [
+            ...externalConfig.externalDependencies,
+            { from: ['b/end.ts'], to: ['y.ts'] },
+          ],
+          treeDependencies: [
+            { from: ['a'], to: ['b'] },
+            { from: ['b'], to: ['a'] },
+          ],
+        },
+        're-entry-prohibition',
+        expected
+      );
+    }
+  );
 
   it('allows an authorized external chain without re-entry or FAF taxonomy', async () => {
     await runScenario(
@@ -519,327 +715,115 @@ describe('acceptance: global graph norms', () => {
     );
   });
 
-  it.each([
-    ['direct authorized', false, 'forward', true],
-    ['long authorized', true, 'forward', true],
-    ['missing authorization', false, 'none', false],
-    ['reverse authorization', false, 'reverse', false],
-    ['unpublished destination', false, 'private', false],
-  ] as const)(
-    'checks an induced Tree dependency: %s',
-    async (_name, long, relation, allowed) => {
-      const paths = [
-        'a/start.ts',
-        'x.ts',
-        ...(long ? ['y.ts'] : []),
-        'b/end.ts',
-      ];
-      await runScenario(
-        {
-          ...externalBase,
-          'x.ts': long ? "import './y.js';\n" : "import './b/end.js';\n",
-          'y.ts': long ? "import './b/end.js';\n" : externalBase['y.ts'],
-        },
-        {
-          ...externalConfig,
-          publicRootNodes:
-            relation === 'private'
-              ? ['a/end.ts']
-              : externalConfig.publicRootNodes,
-          rootFragments: [
-            root('a', ['start.ts', 'end.ts']),
-            root('b', ['end.ts']),
-          ],
-          treeDependencies: inducedAuthorizations(relation),
-        },
-        're-entry-prohibition',
-        allowed
-          ? []
-          : [
-              dependency(
-                relation === 'private'
-                  ? 'dependency/tree-frontier'
-                  : 'dependency/induced-tree-dependency',
-                paths
-              ),
-            ]
-      );
-    }
-  );
+  type TInducedTreeScenario = {
+    readonly description: string;
+    readonly expected: readonly TScenarioMessage[];
+    readonly files: FileTree;
+    readonly publicRootNodes: readonly string[];
+    readonly responsiblePart: string;
+    readonly rootFragments?: readonly ReturnType<typeof root>[];
+    readonly treeDependencies: readonly {
+      readonly from: readonly string[];
+      readonly to: readonly string[];
+    }[];
+  };
 
-  it('rejects exercised induced reciprocal relations without a module cycle', async () => {
-    await runScenario(
-      {
-        ...externalBase,
-        'b/back.ts': "import '../a/end.js';\n",
-        'x.ts': "import './b/end.js';\n",
+  const inducedTreeScenarios: readonly TInducedTreeScenario[] = [
+    {
+      description: 'direct authorized',
+      expected: [],
+      files: { 'x.ts': "import './b/end.js';\n" },
+      publicRootNodes: ['a/end.ts', 'b/end.ts'],
+      responsiblePart: 'tree-frontier',
+      treeDependencies: [{ from: ['a'], to: ['b'] }],
+    },
+    {
+      description: 'long authorized',
+      expected: [],
+      files: {
+        'x.ts': "import './y.js';\n",
+        'y.ts': "import './b/end.js';\n",
       },
-      {
-        ...externalConfig,
-        rootFragments: [
-          root('a', ['start.ts', 'end.ts']),
-          root('b', ['end.ts', 'back.ts']),
-        ],
-        treeDependencies: [
-          { from: ['a'], to: ['b'] },
-          { from: ['b'], to: ['a'] },
-        ],
-      },
-      'acyclicity',
-      [
-        treeCycle([
+      publicRootNodes: ['a/end.ts', 'b/end.ts'],
+      responsiblePart: 'tree-frontier',
+      treeDependencies: [{ from: ['a'], to: ['b'] }],
+    },
+    {
+      description: 'missing authorization',
+      expected: [
+        inducedTreeAuthorizationOutcome(['a/start.ts', 'x.ts', 'b/end.ts']),
+      ],
+      files: { 'x.ts': "import './b/end.js';\n" },
+      publicRootNodes: ['a/end.ts', 'b/end.ts'],
+      responsiblePart: 'tree-frontier',
+      treeDependencies: [],
+    },
+    {
+      description: 'reverse authorization',
+      expected: [
+        inducedTreeAuthorizationOutcome(['a/start.ts', 'x.ts', 'b/end.ts']),
+      ],
+      files: { 'x.ts': "import './b/end.js';\n" },
+      publicRootNodes: ['a/end.ts', 'b/end.ts'],
+      responsiblePart: 'tree-frontier',
+      treeDependencies: [{ from: ['b'], to: ['a'] }],
+    },
+    {
+      description: 'unpublished destination',
+      expected: [treeOpacityOutcome('./b/end.js')],
+      files: { 'x.ts': "import './b/end.js';\n" },
+      publicRootNodes: ['a/end.ts'],
+      responsiblePart: 'tree-frontier',
+      treeDependencies: [{ from: ['a'], to: ['b'] }],
+    },
+    {
+      description: 'reciprocal exercised relations without module cycle',
+      expected: [
+        cycleOutcome('a/start.ts', 'acyclicity/inter-tree-cycle', [
           ['a/start.ts', 'x.ts', 'b/end.ts'],
           ['b/back.ts', 'a/end.ts'],
         ]),
-      ]
-    );
-  });
-
-  it.each([
-    ['no authorization', [], true, false],
-    ['forward authorization', [{ from: ['a'], to: ['b'] }], true, true],
-    ['reverse authorization', [{ from: ['b'], to: ['a'] }], true, false],
-    [
-      'transitive authorization',
-      [
-        { from: ['a'], to: ['c'] },
-        { from: ['c'], to: ['b'] },
       ],
-      true,
-      false,
-    ],
-    ['unpublished target', [{ from: ['a'], to: ['b'] }], false, false],
-  ] as const)(
-    'requires both Tree authorization and publication: %s',
-    async (_name, pairs, published, allowed) => {
+      files: {
+        'b/back.ts': "import '../a/end.js';\n",
+        'x.ts': "import './b/end.js';\n",
+      },
+      publicRootNodes: ['a/end.ts', 'b/end.ts'],
+      responsiblePart: 'acyclicity',
+      rootFragments: [
+        root('a', ['start.ts', 'end.ts']),
+        root('b', ['end.ts', 'back.ts']),
+      ],
+      treeDependencies: [
+        { from: ['a'], to: ['b'] },
+        { from: ['b'], to: ['a'] },
+      ],
+    },
+  ];
+
+  it.each(inducedTreeScenarios)(
+    'checks an induced Tree dependency: $description',
+    async ({
+      expected,
+      files,
+      publicRootNodes,
+      responsiblePart,
+      rootFragments,
+      treeDependencies,
+    }) => {
       await runScenario(
+        { ...externalBase, ...files },
         {
-          'a/main.ts': "import '../b/main.js';\n",
-          'b/main.ts': 'export const main = 1;\n',
-          'c/main.ts': 'export const main = 1;\n',
+          ...externalConfig,
+          publicRootNodes,
+          rootFragments: rootFragments ?? externalConfig.rootFragments,
+          treeDependencies,
         },
-        {
-          publicRootNodes: published ? ['b/main.ts'] : [],
-          rootFragments: ['a', 'b', 'c'].map((origin) =>
-            root(origin, ['main.ts'])
-          ),
-          treeDependencies: pairs,
-        },
-        'tree-frontier',
-        allowed
-          ? []
-          : [dependency('dependency/tree-frontier', ['a/main.ts', 'b/main.ts'])]
+        responsiblePart,
+        expected
       );
     }
   );
-
-  it.each([
-    ['Root Node', 'a/main.ts', false],
-    ['Fragment Node', 'a/_utils/unit/unit.util.ts', false],
-    ['Sub-Graph Node', 'a/_utils/unit/unit.spec.ts', false],
-    ['Category Node', 'a/_types/local.type.ts', false],
-    [
-      'private Fragment Node',
-      'a/_utils/unit/_utils/helper/helper.util.ts',
-      false,
-    ],
-    ['Branch Category Node', 'a/_a@shared/_types/local.type.ts', false],
-    ['Access Node', 'a/_utils/unit/index.ts', true],
-  ] as const)(
-    'checks an authorized inter-Tree import from a %s',
-    async (_name, source, forbidden) => {
-      await runScenario(
-        {
-          'a/_utils/unit/_utils/helper/helper.util.ts':
-            'export const helper = 1;\n',
-          'a/_utils/unit/_utils/helper/index.ts':
-            "export { helper } from './helper.util.js';\n",
-          'a/_utils/unit/index.ts': "export { unit } from './unit.util.js';\n",
-          'a/_utils/unit/unit.util.ts': 'export const unit = 1;\n',
-          'a/main.ts': 'export const main = 1;\n',
-          'b/main.ts': 'export const main = 1;\n',
-          [source]: `import '${'../'.repeat(source.split('/').length - 1)}b/main.js';\n`,
-        },
-        {
-          publicRootNodes: ['b/main.ts'],
-          rootFragments: [root('a', ['main.ts']), root('b', ['main.ts'])],
-          treeDependencies: [{ from: ['a'], to: ['b'] }],
-        },
-        forbidden ? 'access-node-contract' : 'tree-frontier',
-        forbidden
-          ? [
-              dependency('dependency/access-node-contract', [
-                source,
-                'b/main.ts',
-              ]),
-            ]
-          : []
-      );
-    }
-  );
-
-  it('allows a Root Node to import and re-export across an authorized Tree boundary without file-pair authorization', async () => {
-    await runScenario(
-      {
-        'a/main.ts': "export { main } from '../b/main.js';\n",
-        'b/main.ts': 'export const main = 1;\n',
-      },
-      {
-        publicRootNodes: ['b/main.ts'],
-        rootFragments: [root('a', ['main.ts']), root('b', ['main.ts'])],
-        treeDependencies: [{ from: ['a'], to: ['b'] }],
-      },
-      'tree-frontier',
-      []
-    );
-  });
-
-  it('does not let Tree authorization permit an explicit-Role re-export', async () => {
-    const source = 'a/_types/local.type.ts';
-    await runScenario(
-      {
-        'b/main.ts': 'export const main = 1;\n',
-        [source]: "export { main } from '../../b/main.js';\n",
-      },
-      {
-        publicRootNodes: ['b/main.ts'],
-        rootFragments: [root('a', []), root('b', ['main.ts'])],
-        treeDependencies: [{ from: ['a'], to: ['b'] }],
-      },
-      're-export-prohibition',
-      [
-        diagnostic(
-          source,
-          'symbol/re-export-prohibition',
-          `Explicit-Role node '${source}' must not re-export imported Symbols.`
-        ),
-      ]
-    );
-  });
-
-  it.each([
-    ['published Root Node', 'a/main.ts', true],
-    ['structural Category Node', 'layer/_types/public.type.ts', true],
-    ['unpublished Root Node', 'a/private.ts', false],
-  ] as const)(
-    'checks external ingress to a %s without assigning taxonomy to the caller',
-    async (_name, target, allowed) => {
-      await runScenario(
-        {
-          'a/main.ts': 'export const main = 1;\n',
-          'a/private.ts': 'export const hidden = 1;\n',
-          'layer/_types/public.type.ts': 'export type Public = string;\n',
-          'outside.ts': `import './${target.slice(0, -3)}.js';\n`,
-        },
-        {
-          publicRootNodes: ['a/main.ts'],
-          rootFragments: [root('a', ['main.ts', 'private.ts'])],
-          rootLayers: ['layer'],
-        },
-        'tree-frontier',
-        allowed
-          ? []
-          : [dependency('dependency/tree-frontier', ['outside.ts', target])]
-      );
-    }
-  );
-
-  it.each([
-    ['missing permission', 'none', false],
-    ['exact permission', 'exact', true],
-    ['different consumer', 'consumer', false],
-    ['different destination', 'destination', false],
-    ['Access Node', 'access', false],
-  ] as const)(
-    'checks a local exit with %s',
-    async (_name, permission, allowed) => {
-      const source =
-        permission === 'access' ? 'a/_utils/unit/index.ts' : 'a/main.ts';
-      const specifier = permission === 'access' ? '../../../x.js' : '../x.js';
-      await runScenario(
-        {
-          'a/_utils/unit/index.ts': "export { unit } from './unit.util.js';\n",
-          'a/_utils/unit/unit.util.ts': 'export const unit = 1;\n',
-          'a/main.ts': 'export const main = 1;\n',
-          'a/other.ts': 'export const other = 1;\n',
-          [source]: `import '${specifier}';\n`,
-          'x.ts': 'export const x = 1;\n',
-          'y.ts': 'export const y = 1;\n',
-        },
-        {
-          externalDependencies:
-            permission === 'none'
-              ? []
-              : [
-                  {
-                    from: [permission === 'consumer' ? 'a/other.ts' : source],
-                    to: [permission === 'destination' ? 'y.ts' : 'x.ts'],
-                  },
-                ],
-          rootFragments: [root('a', ['main.ts', 'other.ts'])],
-        },
-        permission === 'access' ? 'classify-taxonomy' : 'external-dependencies',
-        localExitExpected(permission, allowed, source)
-      );
-    }
-  );
-
-  it.each(['Fragment', 'Category Node'])(
-    'checks the static adapter contract for a %s without claiming semantic qualification',
-    async (form) => {
-      const source =
-        form === 'Fragment'
-          ? 'a/_utils/adapter/adapter.util.ts'
-          : 'a/_types/adapter.type.ts';
-      const entry = form === 'Fragment' ? 'a/_utils/adapter/index.ts' : source;
-      await runScenario(
-        {
-          'a/_utils/adapter/adapter.util.ts': 'export const adapter = 1;\n',
-          'a/_utils/adapter/index.ts':
-            "export { adapter } from './adapter.util.js';\n",
-          'a/main.ts': `import './${entry.slice(2, -3)}.js';\nimport '../x.js';\n`,
-          [source]: `import '${'../'.repeat(source.split('/').length - 1)}x.js';\nexport const adapter = 1;\n`,
-          'x.ts': 'export const x = 1;\n',
-        },
-        {
-          externalDependencies: [{ from: [source], to: ['x.ts'] }],
-          rootFragments: [root('a', ['main.ts'])],
-        },
-        'external-dependencies',
-        [
-          {
-            ...dependency('dependency/external-dependencies', [
-              'a/main.ts',
-              'x.ts',
-            ]),
-            line: 2,
-          },
-        ]
-      );
-    }
-  );
-
-  it('requires permission for a local workspace package but not a library sink', async () => {
-    await runScenario(
-      {
-        'a/main.ts': "import 'workspace-local';\nimport 'node:path';\n",
-        'package.json': JSON.stringify({
-          exports: './workspace/main.ts',
-          name: 'workspace-local',
-          type: 'module',
-        }),
-        'workspace/main.ts': 'export const main = 1;\n',
-      },
-      { rootFragments: [root('a', ['main.ts'])] },
-      'external-dependencies',
-      [
-        dependency('dependency/external-dependencies', [
-          'a/main.ts',
-          'workspace/main.ts',
-        ]),
-      ]
-    );
-  });
 
   it('does not report a wholly external cycle or classify its files', async () => {
     await runScenario(
@@ -863,19 +847,12 @@ describe('acceptance: global graph norms', () => {
       },
       externalConfig,
       're-entry-prohibition',
-      [
-        dependency('dependency/re-entry-prohibition', [
-          'a/start.ts',
-          'x.ts',
-          'y.ts',
-          'a/end.ts',
-        ]),
-      ]
+      [reEntryOutcome(['a/start.ts', 'x.ts', 'y.ts', 'a/end.ts'])]
     );
   });
 
   it('rejects a Branch return through external code despite publication', async () => {
-    const paths = [branchSource, 'x.ts', 'src/main.ts'];
+    const chain = [branchSource, 'x.ts', 'src/main.ts'];
     await runScenario(
       {
         ...branchTree,
@@ -888,10 +865,7 @@ describe('acceptance: global graph norms', () => {
         publicRootNodes: ['src/main.ts'],
       },
       're-entry-prohibition',
-      [
-        dependency('dependency/fractal-branch-unidirectionality', paths),
-        dependency('dependency/re-entry-prohibition', paths),
-      ]
+      [branchPathOutcome(chain), reEntryOutcome(chain)]
     );
   });
 
@@ -900,13 +874,7 @@ describe('acceptance: global graph norms', () => {
       { ...externalBase, 'x.ts': "import './missing.js';\n" },
       externalConfig,
       'collect-modules',
-      [
-        diagnostic(
-          'x.ts',
-          'unverified/unresolved-import',
-          "'x.ts' contains an import that could not be resolved: Cannot find module './missing.js' (D-08)."
-        ),
-      ]
+      [unresolvedImportOutcome('x.ts', "Cannot find module './missing.js'")]
     );
   });
 });
