@@ -1,6 +1,8 @@
 import type { FileTree } from 'fs-fixture';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, it } from 'vitest';
+
+import type { TScenarioMessage } from '../support/acceptance-project.js';
 
 import {
   createProject,
@@ -27,124 +29,148 @@ const layerTree = {
   'src/_utils/widget/index.ts': "export { widget } from './widget.util.js';\n",
   'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
 };
+
+const PREDICATES = {
+  accessNodeSources: {
+    constraint: 'dependency/access-node-sources',
+    predicate:
+      'an Access Node imports only direct Fragment Nodes of its own Fragment',
+    reference: 'FAF §6.1.1',
+  },
+  externalDependencies: {
+    constraint: 'dependency/external-dependencies',
+    predicate:
+      'a local file outside all Fractal Trees is importable only with an externalDependencies authorization of this source',
+    reference: 'FAF §7.3',
+  },
+  foreignNodeIsolation: {
+    constraint: 'dependency/foreign-node-isolation',
+    predicate: 'a Foreign Node has no import relation with codebase files',
+    reference: 'FAF §4, §6.7',
+  },
+  fractalBranchVisibility: {
+    constraint: 'dependency/fractal-branch-visibility',
+    predicate:
+      'a Fractal Branch is importable only from the subtree of its parent, except the parent Access Node',
+    reference: 'FAF §6.6.2',
+  },
+  fragmentEncapsulation: {
+    constraint: 'dependency/fragment-encapsulation',
+    predicate:
+      'a Fragment is importable from outside only through its index.ts',
+    reference: 'FAF §6.1.1',
+  },
+  pathAliasAnchoring: {
+    constraint: 'dependency/path-alias-anchoring',
+    predicate:
+      'a Path Alias importing its own Fractal Tree must have a Fractal Branch of that Tree as base in every alternative',
+    reference: 'FAF §7.4',
+  },
+  peerSeparation: {
+    constraint: 'dependency/peer-separation',
+    predicate:
+      'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
+    reference: 'FAF §5',
+  },
+  rootNodeDiscipline: {
+    constraint: 'dependency/root-node-discipline',
+    predicate:
+      'a Root Node is importable only by Root Nodes authorized by rootNodes or dependencyEdges',
+    reference: 'FAF §6.2.2',
+  },
+  treeAuthorization: {
+    constraint: 'dependency/tree-authorization',
+    predicate:
+      'a dependency between Fractal Trees requires an oriented treeDependencies authorization',
+    reference: 'FAF §7.2, §7.3',
+  },
+  treeOpacity: {
+    constraint: 'dependency/tree-opacity',
+    predicate:
+      'only the Public Surface of a Fractal Tree is importable from outside the Tree',
+    reference: 'FAF §7.1',
+  },
+} as const;
+
+type TDependencyKind = keyof typeof PREDICATES;
+
 const dependency = (
-  filePath: string,
-  constraint: string,
-  line = 1,
-  column = 1
-): ReturnType<typeof expect.objectContaining> =>
-  expect.objectContaining({
-    column,
-    constraint,
-    element: filePath,
-    filePath,
-    line,
-    messageId: constraint.split('/', 1)[0],
+  kind: TDependencyKind,
+  input: {
+    readonly column?: number;
+    readonly from: string;
+    readonly line?: number;
+    readonly specifier: string;
+    readonly to: string;
+  }
+): TScenarioMessage => {
+  const meta = PREDICATES[kind];
+  return {
+    column: input.column ?? 1,
+    constraint: meta.constraint,
+    element: input.from,
+    filePath: input.from,
+    line: input.line ?? 1,
+    message: `${meta.constraint}: '${input.from}' imports '${input.to}' through '${input.specifier}': ${meta.predicate} (${meta.reference}).`,
+    messageId: 'dependency',
     ruleId: 'faf/conformity',
     severity: 2,
-  });
-
-type TScenario = {
-  readonly config: Readonly<Record<string, unknown>>;
-  readonly expected: Parameters<typeof expectScenario>[2];
-  readonly files?: readonly string[];
-  readonly name: string;
-  readonly responsiblePart: string;
-  readonly tree: FileTree;
-};
-
-const create262Scenario = ({
-  exposed,
-  label,
-  node,
-}: {
-  readonly exposed: boolean;
-  readonly label: string;
-  readonly node: string;
-}): TScenario => {
-  const expected: ReturnType<typeof expect.objectContaining>[] = [];
-  if (!exposed) {
-    expected.push(dependency('consumer.ts', 'dependency/tree-opacity'));
-    switch (label) {
-      case 'Foreign Node': {
-        expected.push(
-          dependency('consumer.ts', 'dependency/foreign-node-isolation')
-        );
-        break;
-      }
-      case 'Sub-Graph Node': {
-        expected.push(
-          dependency('consumer.ts', 'dependency/sub-graph-node-isolation')
-        );
-        break;
-      }
-      default: {
-        break;
-      }
-    }
-  }
-
-  return {
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            foreignNodes: ['src/readme.md'],
-            mimeticPathStructures: [
-              { actions: ['get'], paths: ['src/_ui/_web/_utils'] },
-            ],
-            rootLayers: ['src'],
-          },
-        ],
-      },
-    },
-    expected,
-    name: `26.2 Root Layer structural surface: ${label}`,
-    responsiblePart: 'tree-frontier',
-    tree: {
-      ...layerTree,
-      'consumer.ts': `import './${node}';\n`,
-      'src/_src@shared/_types/a.type.ts': 'export type A = string;\n',
-      'src/_types/_types@shared/_types/a.type.ts': 'export type A = string;\n',
-      'src/_ui/_types/_base/a.type.ts': 'export type A = string;\n',
-      'src/_ui/_web/_utils/get-user/get-user.util.ts':
-        'export const getUser = 1;\n',
-      'src/_ui/_web/_utils/get-user/index.ts':
-        "export { getUser } from './get-user.util.js';\n",
-      'src/_utils/widget/_utils/helper/helper.util.ts':
-        'export const helper = 1;\n',
-      'src/_utils/widget/_utils/helper/index.ts':
-        "export { helper } from './helper.util.js';\n",
-      'src/_utils/widget/widget.spec.ts': 'export const test = 1;\n',
-      'src/readme.md': 'readme',
-    },
   };
 };
 
-const resolveInducedConstraint = (
-  isReciprocal = false,
-  isPrivateTarget = false
-): string => {
-  if (isReciprocal) {
-    return 'acyclicity/inter-tree-cycle';
-  }
-  if (isPrivateTarget) {
-    return 'dependency/tree-opacity';
-  }
-  return 'dependency/induced-tree-authorization';
-};
+const reExportProhibition = (filePath: string): TScenarioMessage => ({
+  column: 1,
+  constraint: 'symbol/re-export-prohibition',
+  element: filePath,
+  filePath,
+  line: 1,
+  message: `symbol/re-export-prohibition: '${filePath}' re-exports an imported Symbol (FAF §5).`,
+  messageId: 'symbol',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
 
-const resolveOutsideImport = (
-  isViaY: boolean,
-  isPrivateTarget: boolean
-): string => {
-  if (isViaY) {
-    return "import './other.js';\n";
-  }
-  const subpath = isPrivateTarget ? 'private' : 'main';
-  return `import './b/${subpath}.js';\n`;
-};
+const invalidExternalDependencySource = (source: string): TScenarioMessage => ({
+  column: 1,
+  constraint: 'configuration/invalid-external-dependency-source',
+  element: source,
+  filePath: 'fafconfig.ts',
+  line: 1,
+  message: `configuration/invalid-external-dependency-source: '${source}' must be an authorized logical node in externalDependencies (FAF §7.3).`,
+  messageId: 'configuration',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
+
+const unresolvedImport = (
+  filePath: string,
+  specifier: string
+): TScenarioMessage => ({
+  column: 1,
+  constraint: 'unverified/unresolved-import',
+  element: filePath,
+  filePath,
+  line: 1,
+  message: `unverified/unresolved-import: '${filePath}' contains an import that could not be resolved: Cannot find module '${specifier}' (D-08).`,
+  messageId: 'unverified',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
+
+const nonLiteralDynamicImport = (
+  filePath: string,
+  line: number
+): TScenarioMessage => ({
+  column: 1,
+  constraint: 'unverified/non-literal-dynamic-import',
+  element: filePath,
+  filePath,
+  line,
+  message: `unverified/non-literal-dynamic-import: '${filePath}' contains a non-literal dynamic import that cannot be resolved statically (D-07).`,
+  messageId: 'unverified',
+  ruleId: 'faf/conformity',
+  severity: 2,
+});
 
 type TAliasBaseCase = {
   readonly allowed: boolean;
@@ -155,6 +181,15 @@ type TAliasBaseCase = {
   readonly layer?: boolean;
   readonly published?: boolean;
   readonly suffix: string;
+};
+
+type TScenario = {
+  readonly config: Readonly<Record<string, unknown>>;
+  readonly expected: readonly TScenarioMessage[];
+  readonly files?: readonly string[];
+  readonly name: string;
+  readonly responsiblePart: string;
+  readonly tree: FileTree;
 };
 
 const isRootBase = (base: string, isLayer = false): boolean =>
@@ -222,36 +257,74 @@ const buildAliasConfig = (
   },
 });
 
-const create291Scenario = (item: TAliasBaseCase): TScenario => {
-  const expected: ReturnType<typeof expect.objectContaining>[] = [];
-  if (!item.allowed && item.foreign !== true) {
-    const targetFile =
-      item.layer === true ? 'src/_utils/source/source.util.ts' : 'src/high.ts';
-    expected.push(dependency(targetFile, 'dependency/path-alias-anchoring'));
-  }
+const build291Expected = (
+  item: TAliasBaseCase,
+  targetFile: string,
+  resolvedTarget: string,
+  importSpecifier: string
+): readonly TScenarioMessage[] => {
+  const expected: TScenarioMessage[] = [];
+
   if (item.foreign === true) {
     expected.push(
-      dependency('src/high.ts', 'dependency/foreign-node-isolation')
-    );
-  }
-  if (isRootBase(item.base, item.layer)) {
-    expected.push(dependency('src/high.ts', 'dependency/root-node-discipline'));
-  }
-  if (item.layer === true && item.base.includes('widget')) {
-    expected.push(
-      dependency(
-        'src/_utils/source/source.util.ts',
-        'dependency/peer-separation'
-      )
+      dependency('foreignNodeIsolation', {
+        from: 'src/high.ts',
+        specifier: '#base/document.ts',
+        to: 'src/static/document.ts',
+      })
     );
   }
 
+  if (!item.allowed) {
+    expected.push(
+      dependency('pathAliasAnchoring', {
+        from: targetFile,
+        specifier: importSpecifier,
+        to: resolvedTarget,
+      })
+    );
+  }
+
+  if (item.layer === true && item.base.includes('widget')) {
+    expected.push(
+      dependency('peerSeparation', {
+        from: 'src/_utils/source/source.util.ts',
+        specifier: '#base',
+        to: 'src/_utils/widget/index.ts',
+      })
+    );
+  }
+
+  if (isRootBase(item.base, item.layer)) {
+    expected.push(
+      dependency('rootNodeDiscipline', {
+        from: 'src/high.ts',
+        specifier: importSpecifier,
+        to: resolvedTarget,
+      })
+    );
+  }
+
+  return expected;
+};
+
+const create291Scenario = (item: TAliasBaseCase): TScenario => {
+  const targetFile =
+    item.layer === true ? 'src/_utils/source/source.util.ts' : 'src/high.ts';
+  const importSpecifier = item.file === true ? '#base' : `#base${item.suffix}`;
+  const resolvedTarget =
+    item.file === true ? item.base : `${item.base}${item.suffix}`;
+
   return {
     config: buildAliasConfig(item),
-    expected,
+    expected: build291Expected(
+      item,
+      targetFile,
+      resolvedTarget,
+      importSpecifier
+    ),
     name: `29.1 alias base classification: ${item.label}`,
-    responsiblePart:
-      item.foreign === true ? 'foreign-node-isolation' : 'path-alias-anchoring',
+    responsiblePart: 'path-alias-anchoring',
     tree: buildAliasTree(item),
   };
 };
@@ -261,19 +334,6 @@ type T294Case = {
   readonly isExternal: boolean;
   readonly isHidden: boolean;
   readonly label: string;
-};
-
-const resolve294Constraint = (
-  isExternal: boolean,
-  isHidden: boolean
-): string => {
-  if (isExternal) {
-    return 'dependency/external-dependencies';
-  }
-  if (isHidden) {
-    return 'dependency/tree-opacity';
-  }
-  return 'dependency/tree-authorization';
 };
 
 const resolve294TargetSpecifier = (
@@ -289,16 +349,54 @@ const resolve294TargetSpecifier = (
   return '#target/_types/a.type.ts';
 };
 
-const create294Scenario = (item: T294Case): TScenario => {
-  const expected: ReturnType<typeof expect.objectContaining>[] = [];
-  if (!item.allowed || item.isHidden) {
-    expected.push(
-      dependency(
-        'src/high.ts',
-        resolve294Constraint(item.isExternal, item.isHidden)
-      )
-    );
+const build294Expected = (
+  item: T294Case,
+  target: string,
+  specifier: string
+): readonly TScenarioMessage[] => {
+  if (item.allowed && !item.isHidden) {
+    return [];
   }
+  if (item.isExternal) {
+    return [
+      dependency('externalDependencies', {
+        from: 'src/high.ts',
+        specifier,
+        to: target,
+      }),
+    ];
+  }
+  if (item.isHidden) {
+    return [
+      dependency('treeOpacity', {
+        from: 'src/high.ts',
+        specifier,
+        to: target,
+      }),
+    ];
+  }
+  return [
+    dependency('treeAuthorization', {
+      from: 'src/high.ts',
+      specifier,
+      to: target,
+    }),
+  ];
+};
+
+const resolve294Target = (item: T294Case): string => {
+  if (item.isExternal) {
+    return 'legacy/outside.ts';
+  }
+  if (item.isHidden) {
+    return 'b/_b@shared/_types/a.type.ts';
+  }
+  return 'b/_types/a.type.ts';
+};
+
+const create294Scenario = (item: T294Case): TScenario => {
+  const specifier = resolve294TargetSpecifier(item.isExternal, item.isHidden);
+  const target = resolve294Target(item);
 
   return {
     config: {
@@ -323,7 +421,7 @@ const create294Scenario = (item: T294Case): TScenario => {
         ],
       },
     },
-    expected,
+    expected: build294Expected(item, target, specifier),
     name: `29.4 aliases outside the source Tree need only destination authorization: ${item.label}`,
     responsiblePart: item.isExternal
       ? 'external-dependencies'
@@ -333,7 +431,7 @@ const create294Scenario = (item: T294Case): TScenario => {
       'b/_b@shared/_types/a.type.ts': 'export type A = string;\n',
       'b/_types/a.type.ts': 'export type A = string;\n',
       'legacy/outside.ts': 'export const outside = 1;\n',
-      'src/high.ts': `import '${resolve294TargetSpecifier(item.isExternal, item.isHidden)}';\n`,
+      'src/high.ts': `import '${specifier}';\n`,
       'tsconfig.json': JSON.stringify({
         compilerOptions: {
           baseUrl: '.',
@@ -344,6 +442,70 @@ const create294Scenario = (item: T294Case): TScenario => {
       }),
     },
   };
+};
+
+type T282Case = {
+  readonly allowed: boolean;
+  readonly from: readonly string[];
+  readonly isAccessNode?: boolean;
+  readonly label: string;
+  readonly to: readonly string[];
+};
+
+const build282Expected = (item: T282Case): readonly TScenarioMessage[] => {
+  if (item.allowed) {
+    return [];
+  }
+  if (item.isAccessNode === true) {
+    return [invalidExternalDependencySource('src/_utils/widget/index.ts')];
+  }
+  return [
+    dependency('externalDependencies', {
+      from: 'src/high.ts',
+      specifier: '../outside.js',
+      to: 'outside.ts',
+    }),
+  ];
+};
+
+type T297Case = {
+  readonly allowed: boolean;
+  readonly label: string;
+  readonly owner: string;
+  readonly source: string;
+  readonly specifier: string;
+  readonly target: string;
+};
+
+const build297Expected = (item: T297Case): readonly TScenarioMessage[] => {
+  if (item.allowed) {
+    return [];
+  }
+  if (item.owner === 'fractal-branch-visibility') {
+    return [
+      dependency('fractalBranchVisibility', {
+        from: item.source,
+        specifier: item.specifier,
+        to: item.target,
+      }),
+    ];
+  }
+  if (item.owner === 'access-node-contract') {
+    return [
+      dependency('accessNodeSources', {
+        from: item.source,
+        specifier: item.specifier,
+        to: item.target,
+      }),
+    ];
+  }
+  return [
+    dependency('treeOpacity', {
+      from: item.source,
+      specifier: item.specifier,
+      to: item.target,
+    }),
+  ];
 };
 
 const scenarios: readonly TScenario[] = [
@@ -389,7 +551,13 @@ const scenarios: readonly TScenario[] = [
     },
     expected: allowed
       ? []
-      : [dependency('src/high.ts', 'dependency/root-node-discipline')],
+      : [
+          dependency('rootNodeDiscipline', {
+            from: 'src/high.ts',
+            specifier: './low.js',
+            to: 'src/low.ts',
+          }),
+        ],
     name: `12.2 same Root Fragment: ${label}`,
     responsiblePart: 'root-node-discipline',
     tree: {
@@ -447,7 +615,13 @@ const scenarios: readonly TScenario[] = [
       },
       expected: allowed
         ? []
-        : [dependency(from, 'dependency/root-node-discipline')],
+        : [
+            dependency('rootNodeDiscipline', {
+              from,
+              specifier,
+              to,
+            }),
+          ],
       name: `12.2 ${label}: ${allowed ? 'direct authorization' : 'no authorization'}`,
       responsiblePart: 'root-node-discipline',
       tree: {
@@ -471,7 +645,13 @@ const scenarios: readonly TScenario[] = [
         ],
       },
     },
-    expected: [dependency('src/main.tsx', 'dependency/root-node-discipline')],
+    expected: [
+      dependency('rootNodeDiscipline', {
+        from: 'src/main.tsx',
+        specifier: './main.css',
+        to: 'src/main.css',
+      }),
+    ],
     name: '12.3 Root Asset needs authorization',
     responsiblePart: 'root-node-discipline',
     tree: {
@@ -513,8 +693,16 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: [
-      dependency('src/a/main.ts', 'dependency/root-node-discipline'),
-      dependency('src/b/main.ts', 'dependency/root-node-discipline'),
+      dependency('rootNodeDiscipline', {
+        from: 'src/a/main.ts',
+        specifier: '../c/main.js',
+        to: 'src/c/main.ts',
+      }),
+      dependency('rootNodeDiscipline', {
+        from: 'src/b/main.ts',
+        specifier: '../a/main.js',
+        to: 'src/a/main.ts',
+      }),
     ],
     name: '12.4 authorization grants neither inverse nor transitive shortcut',
     responsiblePart: 'root-node-discipline',
@@ -528,25 +716,40 @@ const scenarios: readonly TScenario[] = [
     { file: 'src/_utils/widget/widget.util.ts', label: 'Fragment Node' },
     { file: 'src/_utils/widget/widget.spec.ts', label: 'Sub-Graph Node' },
     { file: 'src/_types/a.type.ts', label: 'Category Node' },
-  ].map(({ file, label }) => ({
-    config: {
-      faf: {
-        common,
-        locals: [{ publicRootNodes: ['src/high.ts'], rootFragments: [root] }],
+  ].map(({ file, label }) => {
+    const specifier = file.includes('_utils') ? '../../high.js' : '../high.js';
+    return {
+      config: {
+        faf: {
+          common,
+          locals: [{ publicRootNodes: ['src/high.ts'], rootFragments: [root] }],
+        },
       },
-    },
-    expected: [dependency(file, 'dependency/root-node-discipline')],
-    name: `12.5 ${label} cannot import a Root Node even when exposed`,
-    responsiblePart: 'root-node-discipline',
-    tree: {
-      ...rootTree,
-      ...layerTree,
-      [file]: `import '${file.includes('_utils') ? '../../high.js' : '../high.js'}';\nexport const value = 1;\n`,
-    },
-  })),
+      expected: [
+        dependency('rootNodeDiscipline', {
+          from: file,
+          specifier,
+          to: 'src/high.ts',
+        }),
+      ],
+      name: `12.5 ${label} cannot import a Root Node even when exposed`,
+      responsiblePart: 'root-node-discipline',
+      tree: {
+        ...rootTree,
+        ...layerTree,
+        [file]: `import '${specifier}';\nexport const value = 1;\n`,
+      },
+    };
+  }),
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
-    expected: [dependency('src/high.ts', 'dependency/fragment-encapsulation')],
+    expected: [
+      dependency('fragmentEncapsulation', {
+        from: 'src/high.ts',
+        specifier: './_utils/widget/widget.util.js',
+        to: 'src/_utils/widget/widget.util.ts',
+      }),
+    ],
     name: '12.6 permitted Root re-export does not bypass Fragment encapsulation',
     responsiblePart: 'fragment-encapsulation',
     tree: {
@@ -589,35 +792,46 @@ const scenarios: readonly TScenario[] = [
       code: "import './low.css';",
       label: 'recognized Asset import',
     },
-  ].map(({ asset, code, column = 1, label }) => ({
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            rootFragments: [
-              {
-                path: 'src',
-                rootNodes: [['high.ts', asset === true ? 'low.css' : 'low.ts']],
-              },
-            ],
-          },
-        ],
+  ].map(({ asset, code, column = 1, label }) => {
+    const target = asset === true ? 'src/low.css' : 'src/low.ts';
+    const specifier = asset === true ? './low.css' : './low.js';
+    return {
+      config: {
+        faf: {
+          common,
+          locals: [
+            {
+              rootFragments: [
+                {
+                  path: 'src',
+                  rootNodes: [
+                    ['high.ts', asset === true ? 'low.css' : 'low.ts'],
+                  ],
+                },
+              ],
+            },
+          ],
+        },
       },
-    },
-    expected: [
-      dependency('src/high.ts', 'dependency/root-node-discipline', 1, column),
-    ],
-    name: `25.1 resolved forbidden dependency: ${label}`,
-    responsiblePart: 'root-node-discipline',
-    tree: {
-      [asset === true ? 'src/low.css' : 'src/low.ts']:
-        asset === true
-          ? 'body {}\n'
-          : 'export const low = 1;\nexport type Low = string;\nexport default low;\n',
-      'src/high.ts': `${code}\n`,
-    },
-  })),
+      expected: [
+        dependency('rootNodeDiscipline', {
+          column,
+          from: 'src/high.ts',
+          specifier,
+          to: target,
+        }),
+      ],
+      name: `25.1 resolved forbidden dependency: ${label}`,
+      responsiblePart: 'root-node-discipline',
+      tree: {
+        'src/high.ts': `${code}\n`,
+        [target]:
+          asset === true
+            ? 'body {}\n'
+            : 'export const low = 1;\nexport type Low = string;\nexport default low;\n',
+      },
+    };
+  }),
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
     expected: [],
@@ -651,7 +865,13 @@ const scenarios: readonly TScenario[] = [
     { label: 'configured package redirect', specifier: '#redirect' },
   ].map(({ label, specifier }) => ({
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
-    expected: [dependency('consumer.ts', 'dependency/tree-opacity')],
+    expected: [
+      dependency('treeOpacity', {
+        from: 'consumer.ts',
+        specifier,
+        to: 'src/_utils/widget/index.ts',
+      }),
+    ],
     name: `25.3 equivalent resolved target: ${label}`,
     responsiblePart: 'tree-frontier',
     tree: {
@@ -679,7 +899,13 @@ const scenarios: readonly TScenario[] = [
         ],
       },
     },
-    expected: [dependency('src/high.ts', 'dependency/fragment-encapsulation')],
+    expected: [
+      dependency('fragmentEncapsulation', {
+        from: 'src/high.ts',
+        specifier: './_utils/widget',
+        to: 'src/_utils/widget/widget.util.ts',
+      }),
+    ],
     name: '25.4 directory resolving to Master is not an Access Node',
     responsiblePart: 'fragment-encapsulation',
     tree: {
@@ -693,7 +919,13 @@ const scenarios: readonly TScenario[] = [
   },
   {
     config: { faf: { common, locals: [{ rootLayers: ['src'] }] } },
-    expected: [dependency('src/_styles/a.css', 'dependency/peer-separation')],
+    expected: [
+      dependency('peerSeparation', {
+        from: 'src/_styles/a.css',
+        specifier: './b.css',
+        to: 'src/_styles/b.css',
+      }),
+    ],
     name: '25.5 CSS sibling import is forbidden while a shared font is visible',
     responsiblePart: 'peer-separation',
     tree: {
@@ -705,16 +937,14 @@ const scenarios: readonly TScenario[] = [
   },
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
-    expected: [dependency('src/high.ts', 'unverified/unresolved-import')],
+    expected: [unresolvedImport('src/high.ts', './missing.js')],
     name: '25.6 unresolved imports remain explicitly unverified',
     responsiblePart: 'collect-modules',
     tree: { ...rootTree, 'src/high.ts': "import './missing.js';\n" },
   },
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
-    expected: [
-      dependency('src/high.ts', 'unverified/non-literal-dynamic-import', 2),
-    ],
+    expected: [nonLiteralDynamicImport('src/high.ts', 2)],
     name: '25.7 runtime dynamic imports remain explicitly unverified',
     responsiblePart: 'collect-modules',
     tree: {
@@ -731,173 +961,18 @@ const scenarios: readonly TScenario[] = [
         ],
       },
     },
-    expected: [dependency('src/high.ts', 'dependency/root-node-discipline')],
+    expected: [
+      dependency('rootNodeDiscipline', {
+        from: 'src/high.ts',
+        specifier: './low.js',
+        to: 'src/low.ts',
+      }),
+    ],
     files: ['fafconfig.ts', 'src/high.ts'],
     name: '25.8 dependency is checked even when ESLint does not visit the target',
     responsiblePart: 'root-node-discipline',
     tree: { ...rootTree, 'src/high.ts': "import './low.js';\n" },
   },
-  ...[
-    { exposed: true, label: 'direct Root Node', node: 'src/high.ts' },
-    { exposed: true, label: 'nested Root Node', node: 'src/child/main.ts' },
-    {
-      exposed: false,
-      label: 'private Access Node',
-      node: 'src/_utils/widget/index.ts',
-    },
-    {
-      exposed: false,
-      label: 'apical Branch Category Node',
-      node: 'src/_src@shared/_types/a.type.ts',
-    },
-    {
-      exposed: false,
-      label: 'Fragment Node',
-      node: 'src/_utils/widget/widget.util.ts',
-    },
-    {
-      exposed: false,
-      label: 'Sub-Graph Node',
-      node: 'src/_utils/widget/widget.spec.ts',
-    },
-    { exposed: false, label: 'Foreign Node', node: 'src/readme.md' },
-  ].map(({ exposed, label, node }) => ({
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            foreignNodes: ['src/readme.md'],
-            publicRootNodes: [node],
-            rootFragments: [
-              {
-                ...root,
-                subRootFragments: [
-                  { path: 'src/child', rootNodes: [['main.ts']] },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    },
-    expected: exposed
-      ? []
-      : [
-          expect.objectContaining({
-            constraint: 'configuration/public-root-node-not-enumerated',
-            element: node,
-            filePath: 'fafconfig.ts',
-            line: 1,
-            messageId: 'configuration',
-            ruleId: 'faf/conformity',
-            severity: 2,
-          }),
-        ],
-    name: `26.1 Root Fragment publication: ${label}`,
-    responsiblePart: 'classify-taxonomy',
-    tree: {
-      ...rootTree,
-      ...layerTree,
-      'src/_src@shared/_types/a.type.ts': 'export type A = string;\n',
-      'src/_utils/widget/widget.spec.ts': 'export const test = 1;\n',
-      'src/child/main.ts': 'export const main = 1;\n',
-      'src/readme.md': 'readme',
-    },
-  })),
-  ...[
-    {
-      exposed: true,
-      label: 'direct Category Fragment Access Node',
-      node: 'src/_utils/widget/index.ts',
-    },
-    {
-      exposed: true,
-      label: 'direct Category Node',
-      node: 'src/_types/a.type.ts',
-    },
-    {
-      exposed: true,
-      label: 'Sub-Category Node in a Layer',
-      node: 'src/_ui/_types/_base/a.type.ts',
-    },
-    {
-      exposed: true,
-      label: 'Path Fragment in a Sub-Layer',
-      node: 'src/_ui/_web/_utils/get-user/index.ts',
-    },
-    {
-      exposed: false,
-      label: 'Fragment Node',
-      node: 'src/_utils/widget/widget.util.ts',
-    },
-    {
-      exposed: false,
-      label: 'Sub-Graph Node',
-      node: 'src/_utils/widget/widget.spec.ts',
-    },
-    {
-      exposed: false,
-      label: 'Private Category Access Node',
-      node: 'src/_utils/widget/_utils/helper/index.ts',
-    },
-    {
-      exposed: false,
-      label: 'apical Branch Category Node',
-      node: 'src/_src@shared/_types/a.type.ts',
-    },
-    {
-      exposed: false,
-      label: 'deeper Branch Category Node',
-      node: 'src/_types/_types@shared/_types/a.type.ts',
-    },
-    { exposed: false, label: 'Foreign Node', node: 'src/readme.md' },
-  ].map((entry) => create262Scenario(entry)),
-  ...[0, 1, 3].map((count) => ({
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            publicRootNodes: ['src/a.ts', 'src/b.ts', 'src/c.ts'].slice(
-              0,
-              count
-            ),
-            rootFragments: [
-              { path: 'src', rootNodes: [['a.ts', 'b.ts', 'c.ts']] },
-            ],
-          },
-        ],
-      },
-    },
-    expected: [],
-    name: `26.3 ${count.toString()} published Root Nodes require no barrel`,
-    responsiblePart: 'classify-taxonomy',
-    tree: {
-      'src/a.ts': 'export const a = 1;\n',
-      'src/b.ts': 'export const b = 1;\n',
-      'src/c.ts': 'export const c = 1;\n',
-    },
-  })),
-  ...[
-    { exposed: true, label: 'new public unit', node: 'src/_types/new.type.ts' },
-    {
-      exposed: false,
-      label: 'unit relocated into Branch',
-      node: 'src/_src@shared/_types/new.type.ts',
-    },
-  ].map(({ exposed, label, node }) => ({
-    config: { faf: { common, locals: [{ rootLayers: ['src'] }] } },
-    expected: exposed
-      ? []
-      : [dependency('consumer.ts', 'dependency/tree-opacity')],
-    name: `26.4 surface follows structure: ${label}`,
-    responsiblePart: 'tree-frontier',
-    tree: {
-      'consumer.ts': `import './${node}';\n`,
-      [node]: 'export type New = string;\n',
-    },
-  })),
   ...[
     {
       exposed: true,
@@ -957,7 +1032,13 @@ const scenarios: readonly TScenario[] = [
     },
     expected: exposed
       ? []
-      : [dependency('consumer.ts', 'dependency/tree-opacity')],
+      : [
+          dependency('treeOpacity', {
+            from: 'consumer.ts',
+            specifier: `./${node}`,
+            to: node,
+          }),
+        ],
     name: `26.5 external opacity: ${label}`,
     responsiblePart: 'tree-frontier',
     tree: {
@@ -973,7 +1054,14 @@ const scenarios: readonly TScenario[] = [
         locals: [{ publicRootNodes: ['src/high.ts'], rootFragments: [root] }],
       },
     },
-    expected: [dependency('consumer.ts', 'dependency/tree-opacity', 2)],
+    expected: [
+      dependency('treeOpacity', {
+        from: 'consumer.ts',
+        line: 2,
+        specifier: './src/_utils/widget/index.js',
+        to: 'src/_utils/widget/index.ts',
+      }),
+    ],
     name: '26.6 public Root re-export does not transitively publish its private implementation',
     responsiblePart: 'tree-frontier',
     tree: {
@@ -992,10 +1080,11 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: [
-      dependency(
-        'src/_utils/widget/widget.util.ts',
-        'dependency/root-node-discipline'
-      ),
+      dependency('rootNodeDiscipline', {
+        from: 'src/_utils/widget/widget.util.ts',
+        specifier: '../../high.js',
+        to: 'src/high.ts',
+      }),
     ],
     name: '26.7 publication does not permit internal non-Root consumers',
     responsiblePart: 'root-node-discipline',
@@ -1009,7 +1098,11 @@ const scenarios: readonly TScenario[] = [
   {
     config: { faf: { common, locals: [{ rootLayers: ['src'] }] } },
     expected: [
-      dependency('src/_types/a.type.ts', 'dependency/peer-separation'),
+      dependency('peerSeparation', {
+        from: 'src/_types/a.type.ts',
+        specifier: './b.type.js',
+        to: 'src/_types/b.type.ts',
+      }),
     ],
     name: '26.8 public Category Nodes retain internal peer separation',
     responsiblePart: 'peer-separation',
@@ -1067,12 +1160,11 @@ const scenarios: readonly TScenario[] = [
     expected: allowed
       ? []
       : [
-          dependency(
-            'a/main.ts',
-            published
-              ? 'dependency/tree-authorization'
-              : 'dependency/tree-opacity'
-          ),
+          dependency(published ? 'treeAuthorization' : 'treeOpacity', {
+            from: 'a/main.ts',
+            specifier: '../b/main.js',
+            to: 'b/main.ts',
+          }),
         ],
     name: `27.1 conjunctive authorization and publication: ${label}`,
     responsiblePart: 'tree-frontier',
@@ -1150,7 +1242,13 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: access
-      ? [dependency(node, 'dependency/access-node-contract')]
+      ? [
+          dependency('accessNodeSources', {
+            from: node,
+            specifier,
+            to: 'b/main.ts',
+          }),
+        ]
       : [],
     name: `27.2 inter-Tree source: ${label}`,
     responsiblePart: access ? 'access-node-contract' : 'tree-frontier',
@@ -1197,9 +1295,7 @@ const scenarios: readonly TScenario[] = [
         ],
       },
     },
-    expected: [
-      dependency('src/_types/a.type.ts', 'symbol/re-export-prohibition'),
-    ],
+    expected: [reExportProhibition('src/_types/a.type.ts')],
     name: '27.4 inter-Tree authorization does not permit explicit Role re-exports',
     responsiblePart: 're-export-prohibition',
     tree: {
@@ -1208,80 +1304,6 @@ const scenarios: readonly TScenario[] = [
       'src/_types/a.type.ts': "export type { Main } from '../../b/main.js';\n",
     },
   },
-  ...[
-    {
-      cycle: false,
-      edges: [
-        ['a', 'b'],
-        ['b', 'c'],
-      ],
-      label: 'chain',
-    },
-    {
-      cycle: false,
-      edges: [
-        ['a', 'b'],
-        ['a', 'c'],
-        ['b', 'c'],
-      ],
-      label: 'diamond',
-    },
-    {
-      cycle: true,
-      edges: [
-        ['a', 'b'],
-        ['b', 'a'],
-      ],
-      label: 'two-Tree cycle with distinct modules',
-    },
-    {
-      cycle: true,
-      edges: [
-        ['a', 'b'],
-        ['b', 'c'],
-        ['c', 'a'],
-      ],
-      label: 'three-Tree cycle with distinct modules',
-    },
-  ].map(({ cycle, edges, label }) => ({
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            publicRootNodes: ['a/in.ts', 'b/in.ts', 'c/in.ts'],
-            rootFragments: ['a', 'b', 'c'].map((path) => ({
-              path,
-              rootNodes: [['in.ts', 'out.ts']],
-            })),
-            treeDependencies: edges.map(([from, to]) => ({
-              from: [from],
-              to: [to],
-            })),
-          },
-        ],
-      },
-    },
-    expected: cycle
-      ? [dependency('fafconfig.ts', 'acyclicity/inter-tree-cycle')]
-      : [],
-    name: `27.5 induced Tree DAG: ${label}`,
-    responsiblePart: 'acyclicity',
-    tree: {
-      'a/in.ts': 'export const a = 1;\n',
-      'a/out.ts': "import '../b/in.js';\n",
-      'b/in.ts': 'export const b = 1;\n',
-      'b/out.ts': edges
-        .filter(([from]) => from === 'b')
-        .map(([, to = '']) => `import '../${to}/in.js';`)
-        .join('\n'),
-      'c/in.ts': 'export const c = 1;\n',
-      'c/out.ts':
-        cycle && edges.length === 3
-          ? "import '../a/in.js';\n"
-          : 'export const c = 1;\n',
-    },
-  })),
   {
     config: {
       faf: {
@@ -1289,7 +1311,14 @@ const scenarios: readonly TScenario[] = [
         locals: [{ publicRootNodes: ['src/high.ts'], rootFragments: [root] }],
       },
     },
-    expected: [dependency('outside.ts', 'dependency/tree-opacity', 2)],
+    expected: [
+      dependency('treeOpacity', {
+        from: 'outside.ts',
+        line: 2,
+        specifier: './src/low.js',
+        to: 'src/low.ts',
+      }),
+    ],
     name: '28.1 local external consumers enter only through Public Surface without Tree authorization',
     responsiblePart: 'tree-frontier',
     tree: {
@@ -1317,62 +1346,59 @@ const scenarios: readonly TScenario[] = [
       label: 'different destination only',
       to: ['other.ts'],
     },
-  ].map(({ allowed, from, label, to }) => ({
+    {
+      allowed: false,
+      from: ['src/_utils/widget/index.ts'],
+      isAccessNode: true,
+      label: 'Access Node configured in externalDependencies',
+      to: ['outside.ts'],
+    },
+  ].map((item) => ({
     config: {
       faf: {
         common,
         locals: [
           {
-            externalDependencies: from.length === 0 ? [] : [{ from, to }],
-            rootFragments: [root],
+            externalDependencies:
+              item.from.length === 0 ? [] : [{ from: item.from, to: item.to }],
+            rootFragments: item.isAccessNode === true ? [] : [root],
+            rootLayers: item.isAccessNode === true ? ['src'] : [],
           },
         ],
       },
     },
-    expected: allowed
-      ? []
-      : [dependency('src/high.ts', 'dependency/external-dependencies')],
-    name: `28.2 local exit: ${label}`,
-    responsiblePart: 'external-dependencies',
-    tree: {
-      ...rootTree,
-      'other.ts': 'export const other = 1;\n',
-      'outside.ts': 'export const outside = 1;\n',
-      'src/high.ts': "import '../outside.js';\n",
-    },
+    expected: build282Expected(item),
+    name: `28.2 local exit: ${item.label}`,
+    responsiblePart:
+      item.isAccessNode === true
+        ? 'classify-taxonomy'
+        : 'external-dependencies',
+    tree:
+      item.isAccessNode === true
+        ? {
+            ...layerTree,
+            'outside.ts': 'export const outside = 1;\n',
+            'src/_utils/widget/index.ts':
+              "import '../../../outside.js';\nexport { widget } from './widget.util.js';\n",
+          }
+        : {
+            ...rootTree,
+            'other.ts': 'export const other = 1;\n',
+            'outside.ts': 'export const outside = 1;\n',
+            'src/high.ts': "import '../outside.js';\n",
+          },
   })),
-  {
-    config: { faf: { common, locals: [{ rootLayers: ['src'] }] } },
-    expected: [
-      dependency(
-        'src/_utils/widget/index.ts',
-        'dependency/access-node-contract'
-      ),
-      dependency(
-        'src/_utils/widget/index.ts',
-        'dependency/external-dependencies'
-      ),
-    ],
-    name: '28.2 Access Nodes cannot exit to local external files',
-    responsiblePart: 'external-dependencies',
-    tree: {
-      ...layerTree,
-      'outside.ts': 'export const outside = 1;\n',
-      'src/_utils/widget/index.ts':
-        "import '../../../outside.js';\nexport { widget } from './widget.util.js';\n",
-    },
-  },
   ...[
     {
-      contract: 'src/_utils/widget/index.ts',
+      contract: './_utils/widget/index.js',
       label: 'Fragment',
       node: 'src/_utils/widget/widget.util.ts',
       specifier: '../../../outside.js',
     },
     {
-      contract: 'src/_types/a.type.ts',
+      contract: './_types/adapter.type.js',
       label: 'Category Node',
-      node: 'src/_types/a.type.ts',
+      node: 'src/_types/adapter.type.ts',
       specifier: '../../outside.js',
     },
   ].map(({ contract, label, node, specifier }) => ({
@@ -1382,29 +1408,44 @@ const scenarios: readonly TScenario[] = [
         locals: [
           {
             externalDependencies: [{ from: [node], to: ['outside.ts'] }],
-            rootLayers: ['src'],
+            rootFragments: [{ path: 'src', rootNodes: [['main.ts']] }],
           },
         ],
       },
     },
     expected: [
-      dependency('consumer.ts', 'dependency/tree-opacity'),
-      dependency('src/_types/b.type.ts', 'dependency/external-dependencies'),
-    ].filter((_message, index) => index !== 0 || contract.includes('_utils')),
+      dependency('externalDependencies', {
+        from: 'src/main.ts',
+        line: 2,
+        specifier: '../outside.js',
+        to: 'outside.ts',
+      }),
+    ],
     name: `28.3 qualified adapter static contract: ${label}`,
     responsiblePart: 'external-dependencies',
     tree: {
-      ...layerTree,
-      'consumer.ts': `import './${contract}';\n`,
-      [node]: `import '${specifier}';\n${label === 'Fragment' ? 'export const widget = 1;' : 'export type A = string;'}\n`,
       'outside.ts': 'export const outside = 1;\n',
-      'src/_types/b.type.ts':
-        "import '../../outside.js';\nexport type B = string;\n",
+      'src/main.ts': `import '${contract}';\nimport '../outside.js';\nexport const main = 1;\n`,
+      ...(label === 'Fragment'
+        ? {
+            'src/_utils/widget/index.ts':
+              "export { widget } from './widget.util.js';\n",
+            'src/_utils/widget/widget.util.ts': `import '${specifier}';\nexport const widget = 1;\n`,
+          }
+        : {
+            'src/_types/adapter.type.ts': `import '${specifier}';\nexport type Adapter = string;\n`,
+          }),
     },
   })),
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
-    expected: [dependency('src/high.ts', 'dependency/external-dependencies')],
+    expected: [
+      dependency('externalDependencies', {
+        from: 'src/high.ts',
+        specifier: '#workspace',
+        to: 'outside.ts',
+      }),
+    ],
     name: '28.4 package names distinguish workspace local files from external library sinks',
     responsiblePart: 'external-dependencies',
     tree: {
@@ -1415,248 +1456,6 @@ const scenarios: readonly TScenario[] = [
         type: 'module',
       }),
       'src/high.ts': "import '#workspace';\nimport 'node:path';\n",
-    },
-  },
-  ...[
-    { chain: ['outside.ts', 'src/low.ts'], label: 'direct same-Tree return' },
-    {
-      chain: ['outside.ts', 'other.ts', 'src/low.ts'],
-      label: 'two-external-file same-Tree return',
-    },
-    {
-      chain: ['outside.ts', 'b/main.ts', 'other.ts', 'src/low.ts'],
-      label: 'return through another Tree',
-    },
-  ].map(({ chain, label }) => ({
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            externalDependencies: [
-              { from: ['src/high.ts'], to: ['outside.ts'] },
-              { from: ['b/main.ts'], to: ['other.ts'] },
-            ],
-            publicRootNodes: ['src/low.ts', 'b/main.ts'],
-            rootFragments: [root, { path: 'b', rootNodes: [['main.ts']] }],
-            treeDependencies: [
-              { from: ['src'], to: ['b'] },
-              { from: ['b'], to: ['src'] },
-            ],
-          },
-        ],
-      },
-    },
-    expected: [dependency('src/high.ts', 'acyclicity/re-entry-prohibition')],
-    name: `28.5 local authorization never permits re-entry: ${label}`,
-    responsiblePart: 're-entry-prohibition',
-    tree: {
-      ...rootTree,
-      'b/main.ts': 'export const main = 1;\n',
-      'other.ts': 'export const other = 1;\n',
-      'outside.ts': 'export const outside = 1;\n',
-      'src/high.ts': "import '../outside.js';\n",
-      ...Object.fromEntries(
-        chain
-          .slice(0, -1)
-          .map((path, index) => [
-            path,
-            `import '${path === 'b/main.ts' ? '../' : './'}${chain[index + 1] ?? ''}';\n`,
-          ])
-      ),
-    },
-  })),
-  {
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            externalDependencies: [
-              { from: ['src/high.ts'], to: ['outside.ts'] },
-            ],
-            rootFragments: [root],
-          },
-        ],
-      },
-    },
-    expected: [],
-    name: '28.6 authorized exit through external-only files has no FAF taxonomy or re-entry violation',
-    responsiblePart: 're-entry-prohibition',
-    tree: {
-      ...rootTree,
-      'Other_EXTERNAL.ts':
-        'export const first = 1;\nexport const second = 2;\n',
-      'outside.ts': "import './Other_EXTERNAL.js';\n",
-      'src/high.ts': "import '../outside.js';\n",
-    },
-  },
-  ...[
-    {
-      allowed: true,
-      edges: [{ from: ['src'], to: ['b'] }],
-      label: 'direct authorized induced dependency',
-      privateTarget: false,
-      viaY: false,
-    },
-    {
-      allowed: true,
-      edges: [{ from: ['src'], to: ['b'] }],
-      label: 'authorized dependency through two external files',
-      privateTarget: false,
-      viaY: true,
-    },
-    {
-      allowed: false,
-      edges: [],
-      label: 'missing induced authorization',
-      privateTarget: false,
-      viaY: false,
-    },
-    {
-      allowed: false,
-      edges: [{ from: ['b'], to: ['src'] }],
-      label: 'inverse induced authorization only',
-      privateTarget: false,
-      viaY: false,
-    },
-    {
-      allowed: false,
-      edges: [{ from: ['src'], to: ['b'] }],
-      label: 'induced dependency into private destination',
-      privateTarget: true,
-      viaY: false,
-    },
-    {
-      allowed: false,
-      edges: [
-        { from: ['src'], to: ['b'] },
-        { from: ['b'], to: ['src'] },
-      ],
-      label: 'exercised induced reciprocal dependency',
-      privateTarget: false,
-      reciprocal: true,
-      viaY: false,
-    },
-  ].map(({ allowed, edges, label, privateTarget, reciprocal, viaY }) => ({
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            externalDependencies: [
-              { from: ['src/high.ts'], to: ['outside.ts'] },
-            ],
-            publicRootNodes: ['src/low.ts', 'b/main.ts'],
-            rootFragments: [
-              root,
-              { path: 'b', rootNodes: [['main.ts', 'private.ts']] },
-            ],
-            treeDependencies: edges,
-          },
-        ],
-      },
-    },
-    expected: allowed
-      ? []
-      : [
-          dependency(
-            privateTarget ? 'outside.ts' : 'src/high.ts',
-            resolveInducedConstraint(reciprocal, privateTarget)
-          ),
-        ],
-    name: `28.7 induced inter-Tree dependency: ${label}`,
-    responsiblePart: 're-entry-prohibition',
-    tree: {
-      ...rootTree,
-      'b/main.ts':
-        reciprocal === true
-          ? "import '../src/low.js';\n"
-          : 'export const main = 1;\n',
-      'b/private.ts': 'export const hidden = 1;\n',
-      'other.ts': "import './b/main.js';\n",
-      'outside.ts': resolveOutsideImport(viaY, privateTarget),
-      'src/high.ts': "import '../outside.js';\n",
-    },
-  })),
-  {
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            externalDependencies: [
-              { from: ['src/high.ts'], to: ['outside.ts'] },
-            ],
-            rootFragments: [root],
-          },
-        ],
-      },
-    },
-    expected: [],
-    name: '28.8 an entirely external cycle is not a FAF violation',
-    responsiblePart: 're-entry-prohibition',
-    tree: {
-      ...rootTree,
-      'other.ts': "import './outside.js';\n",
-      'outside.ts': "import './other.js';\n",
-      'src/high.ts': "import '../outside.js';\n",
-    },
-  },
-  {
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            externalDependencies: [
-              {
-                from: ['src/_src@shared/_types/a.type.ts'],
-                to: ['outside.ts'],
-              },
-            ],
-            publicRootNodes: ['src/low.ts'],
-            rootFragments: [root],
-          },
-        ],
-      },
-    },
-    expected: [
-      dependency(
-        'src/_src@shared/_types/a.type.ts',
-        'acyclicity/re-entry-prohibition'
-      ),
-    ],
-    name: '28.9 a Branch return through external code remains forbidden despite publication',
-    responsiblePart: 're-entry-prohibition',
-    tree: {
-      ...rootTree,
-      'outside.ts': "import './src/low.js';\n",
-      'src/_src@shared/_types/a.type.ts':
-        "import '../../../outside.js';\nexport type A = string;\n",
-    },
-  },
-  {
-    config: {
-      faf: {
-        common,
-        locals: [
-          {
-            externalDependencies: [
-              { from: ['src/high.ts'], to: ['outside.ts'] },
-            ],
-            rootFragments: [root],
-          },
-        ],
-      },
-    },
-    expected: [dependency('outside.ts', 'unverified/unresolved-import')],
-    name: '28.10 unavailable external dependencies make transitive verification incomplete',
-    responsiblePart: 'collect-modules',
-    tree: {
-      ...rootTree,
-      'outside.ts': "import './missing.js';\n",
-      'src/high.ts': "import '../outside.js';\n",
     },
   },
   ...[
@@ -1794,7 +1593,14 @@ const scenarios: readonly TScenario[] = [
         locals: [{ rootFragments: [root] }],
       },
     },
-    expected: [dependency('src/high.ts', 'dependency/path-alias-anchoring', 2)],
+    expected: [
+      dependency('pathAliasAnchoring', {
+        from: 'src/high.ts',
+        line: 2,
+        specifier: '#_src@shared/_types/a.type.ts',
+        to: 'src/_src@shared/_ui/_types/a.type.ts',
+      }),
+    ],
     name: '29.2 alias text does not determine its actual base domain',
     responsiblePart: 'path-alias-anchoring',
     tree: {
@@ -1815,7 +1621,13 @@ const scenarios: readonly TScenario[] = [
   },
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
-    expected: [dependency('src/high.ts', 'dependency/path-alias-anchoring')],
+    expected: [
+      dependency('pathAliasAnchoring', {
+        from: 'src/high.ts',
+        specifier: '#shared/_types/a.type.ts',
+        to: 'src/_src@shared/_types/a.type.ts',
+      }),
+    ],
     name: '29.3 every alternative of a used alias must be anchored, not only the selected one',
     responsiblePart: 'path-alias-anchoring',
     tree: {
@@ -1878,13 +1690,23 @@ const scenarios: readonly TScenario[] = [
   {
     config: {
       faf: {
-        common: { ...common, aliases: { '#shared': 'src/_src@shared' } },
+        common,
         locals: [{ rootFragments: [root] }],
       },
     },
     expected: [
-      dependency('src/high.ts', 'dependency/fragment-encapsulation'),
-      dependency('src/high.ts', 'dependency/fragment-encapsulation', 2),
+      dependency('fragmentEncapsulation', {
+        from: 'src/high.ts',
+        line: 1,
+        specifier: './_src@shared/_utils/widget/widget.util.js',
+        to: 'src/_src@shared/_utils/widget/widget.util.ts',
+      }),
+      dependency('fragmentEncapsulation', {
+        from: 'src/high.ts',
+        line: 2,
+        specifier: '#shared/_utils/widget/widget.util.js',
+        to: 'src/_src@shared/_utils/widget/widget.util.ts',
+      }),
     ],
     name: '29.6 relative and valid alias imports preserve encapsulation of deep details',
     responsiblePart: 'fragment-encapsulation',
@@ -1913,6 +1735,7 @@ const scenarios: readonly TScenario[] = [
       owner: 'fractal-branch-visibility',
       source: 'src/high.ts',
       specifier: '#shared/_types/a.type.ts',
+      target: 'src/_src@shared/_types/a.type.ts',
     },
     {
       allowed: false,
@@ -1920,6 +1743,7 @@ const scenarios: readonly TScenario[] = [
       owner: 'fractal-branch-visibility',
       source: 'src/high.ts',
       specifier: '#local/_types/a.type.ts',
+      target: 'src/_utils/widget/_widget@shared/_types/a.type.ts',
     },
     {
       allowed: false,
@@ -1927,6 +1751,7 @@ const scenarios: readonly TScenario[] = [
       owner: 'access-node-contract',
       source: 'src/_utils/widget/index.ts',
       specifier: '#local/_types/a.type.ts',
+      target: 'src/_utils/widget/_widget@shared/_types/a.type.ts',
     },
     {
       allowed: false,
@@ -1934,6 +1759,7 @@ const scenarios: readonly TScenario[] = [
       owner: 'tree-frontier',
       source: 'b/main.ts',
       specifier: '#shared/_types/a.type.ts',
+      target: 'src/_src@shared/_types/a.type.ts',
     },
     {
       allowed: false,
@@ -1941,57 +1767,46 @@ const scenarios: readonly TScenario[] = [
       owner: 'tree-frontier',
       source: 'outside.ts',
       specifier: '#shared/_types/a.type.ts',
+      target: 'src/_src@shared/_types/a.type.ts',
     },
-  ].map(({ allowed, label, owner, source, specifier }) => ({
-    config: {
-      faf: {
-        common: {
-          ...common,
-          aliases: {
-            '#local': 'src/_utils/widget/_widget@shared',
-            '#shared': 'src/_src@shared',
-          },
+  ].map((item) => {
+    const { label, owner, source, specifier } = item;
+    return {
+      config: {
+        faf: {
+          common,
+          locals: [
+            {
+              rootFragments: [root, { path: 'b', rootNodes: [['main.ts']] }],
+              treeDependencies: [{ from: ['b'], to: ['src'] }],
+            },
+          ],
         },
-        locals: [
-          {
-            rootFragments: [root, { path: 'b', rootNodes: [['main.ts']] }],
-            treeDependencies: [{ from: ['b'], to: ['src'] }],
-          },
-        ],
       },
-    },
-    expected: allowed
-      ? []
-      : [
-          dependency(
-            source,
-            owner === 'tree-frontier'
-              ? 'dependency/tree-opacity'
-              : `dependency/${owner}`
-          ),
-        ],
-    name: `29.7 valid Branch alias does not widen scope: ${label}`,
-    responsiblePart: owner,
-    tree: {
-      ...rootTree,
-      ...layerTree,
-      'b/main.ts': 'export const main = 1;\n',
-      'outside.ts': 'export const outside = 1;\n',
-      [source]: `import '${specifier}';\n${source.endsWith('index.ts') ? "export { widget } from './widget.util.js';" : ''}\n`,
-      'src/_src@shared/_types/a.type.ts': 'export type A = string;\n',
-      'src/_utils/widget/_widget@shared/_types/a.type.ts':
-        'export type A = string;\n',
-      'tsconfig.json': JSON.stringify({
-        compilerOptions: {
-          baseUrl: '.',
-          paths: {
-            '#local/*': ['./src/_utils/widget/_widget@shared/*'],
-            '#shared/*': ['./src/_src@shared/*'],
+      expected: build297Expected(item),
+      name: `29.7 valid Branch alias does not widen scope: ${label}`,
+      responsiblePart: owner,
+      tree: {
+        ...rootTree,
+        ...layerTree,
+        'b/main.ts': 'export const main = 1;\n',
+        'outside.ts': 'export const outside = 1;\n',
+        [source]: `import '${specifier}';\n${source.endsWith('index.ts') ? "export { widget } from './widget.util.js';" : ''}\n`,
+        'src/_src@shared/_types/a.type.ts': 'export type A = string;\n',
+        'src/_utils/widget/_widget@shared/_types/a.type.ts':
+          'export type A = string;\n',
+        'tsconfig.json': JSON.stringify({
+          compilerOptions: {
+            baseUrl: '.',
+            paths: {
+              '#local/*': ['./src/_utils/widget/_widget@shared/*'],
+              '#shared/*': ['./src/_src@shared/*'],
+            },
           },
-        },
-      }),
-    },
-  })),
+        }),
+      },
+    };
+  }),
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
     expected: [],
