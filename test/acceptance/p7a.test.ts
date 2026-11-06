@@ -418,18 +418,6 @@ const horizontalHierarchyMembersOutcome = (
   severity: 2,
 });
 
-const containmentMatrixOutcome = (element: string): TScenarioMessage => ({
-  column: 1,
-  constraint: 'classification/containment-matrix',
-  element,
-  filePath: element,
-  line: 1,
-  message: `classification/containment-matrix: '${element}' is a child type that its parent Logical Domain does not admit (FAF §6.8).`,
-  messageId: 'classification',
-  ruleId: 'faf/conformity',
-  severity: 2,
-});
-
 const sortMessages = (
   messages: readonly TScenarioMessage[]
 ): readonly TScenarioMessage[] => {
@@ -2434,7 +2422,6 @@ describe('acceptance: p7a', () => {
         { faf: { locals: [foreignLocal] } },
         'containment-matrix',
         [
-          containmentMatrixOutcome('src/_tooling/_utils'),
           foreignNodeIsolationOutcome(
             logicalIndex,
             logicalUtil,

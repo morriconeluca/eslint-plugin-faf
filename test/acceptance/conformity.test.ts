@@ -30,7 +30,6 @@ const conformingTree = {
 const unimplementedParts = [
   'access-node-contract',
   'acyclicity',
-  'containment-matrix',
   'external-dependencies',
   'fractal-branch-unidirectionality',
   'fractal-branch-visibility',

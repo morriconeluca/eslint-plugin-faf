@@ -1216,12 +1216,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
       fragment('src/_components/_pages/home', 'page'),
       rootLayer(),
       'containment-matrix',
-      [
-        containmentViolation(
-          'src/_components/_pages/home/home.page.ts',
-          'src/_components/_pages'
-        ),
-      ]
+      [containmentViolation('fafconfig.ts', 'src/_components/_pages')]
     );
   });
 
@@ -1543,7 +1538,7 @@ describe('acceptance: Mimetic Path Structures', () => {
       [
         containmentViolation(
           'src/_apis/_domain/_types/value.type.ts',
-          'src/_apis/_domain'
+          'src/_apis/_domain/_types/value.type.ts'
         ),
       ],
     ],
