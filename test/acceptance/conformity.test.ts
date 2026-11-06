@@ -6,6 +6,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import {
   createProject,
   lintProject,
+  lintScenario,
   warmupESLint,
 } from '../support/acceptance-project.js';
 
@@ -271,4 +272,521 @@ describe('acceptance: faf/conformity', () => {
       console.log(JSON.stringify(otherFamilies));
     }
   }, 30_000);
+
+  describe('Regola 50: invalidazione strutturale e di frontiera', () => {
+    describe('Scenario: Le modifiche strutturali invalidano le conclusioni precedenti', () => {
+      it('eliminazione di un Access Node', async () => {
+        const fixture = await createProject(
+          {
+            'src/_utils/widget/index.ts':
+              "export { widget } from './widget.util.js';\n",
+            'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
+          },
+          config
+        );
+
+        try {
+          const initial = await lintScenario(fixture.path, [
+            'src/_utils/widget/widget.util.ts',
+          ]);
+          expect(initial.messages).toEqual([]);
+
+          nodeFs.rmSync(
+            nodePath.join(fixture.path, 'src/_utils/widget/index.ts')
+          );
+
+          const after = await lintScenario(fixture.path, [
+            'src/_utils/widget/widget.util.ts',
+          ]);
+          expect(
+            after.messages.some(
+              (message) =>
+                message.constraint === 'classification/missing-access-node'
+            )
+          ).toBe(true);
+        } finally {
+          await fixture.rm();
+        }
+      });
+
+      it('spostamento di un nodo in un dominio privato', async () => {
+        const hierarchyConfig = {
+          faf: {
+            locals: [
+              {
+                horizontalHierarchies: [[['_utils'], ['_services']]],
+                roles: [
+                  { category: '_utils', name: 'util' },
+                  { category: '_services', name: 'service' },
+                ],
+                rootLayers: ['src'],
+                subGraphRoles: [{ name: 'spec' }],
+              },
+            ],
+          },
+        };
+
+        const fixture = await createProject(
+          {
+            'src/_services/auth/auth.service.ts': 'export const auth = 1;\n',
+            'src/_services/auth/index.ts':
+              "export { auth } from './auth.service.js';\n",
+            'src/_services/worker/index.ts':
+              "export { worker } from './worker.service.js';\n",
+            'src/_services/worker/worker.service.ts':
+              "import { helper } from '../../_utils/helper/index.js';\nexport const worker = helper;\n",
+            'src/_utils/helper/helper.util.ts': 'export const helper = 1;\n',
+            'src/_utils/helper/index.ts':
+              "export { helper } from './helper.util.js';\n",
+          },
+          hierarchyConfig
+        );
+
+        try {
+          const initial = await lintScenario(fixture.path, [
+            'src/_services/worker/worker.service.ts',
+          ]);
+          expect(initial.messages).toEqual([]);
+
+          nodeFs.rmSync(nodePath.join(fixture.path, 'src/_utils/helper'), {
+            recursive: true,
+          });
+          nodeFs.mkdirSync(
+            nodePath.join(fixture.path, 'src/_services/auth/_utils/helper'),
+            { recursive: true }
+          );
+          nodeFs.writeFileSync(
+            nodePath.join(
+              fixture.path,
+              'src/_services/auth/_utils/helper/helper.util.ts'
+            ),
+            'export const helper = 1;\n'
+          );
+          nodeFs.writeFileSync(
+            nodePath.join(
+              fixture.path,
+              'src/_services/auth/_utils/helper/index.ts'
+            ),
+            "export { helper } from './helper.util.js';\n"
+          );
+          nodeFs.writeFileSync(
+            nodePath.join(
+              fixture.path,
+              'src/_services/worker/worker.service.ts'
+            ),
+            "import { helper } from '../auth/_utils/helper/index.js';\nexport const worker = helper;\n"
+          );
+
+          const after = await lintScenario(fixture.path, [
+            'src/_services/worker/worker.service.ts',
+          ]);
+          expect(
+            after.messages.some(
+              (message) =>
+                message.constraint === 'dependency/private-category-visibility'
+            )
+          ).toBe(true);
+        } finally {
+          await fixture.rm();
+        }
+      });
+
+      it('modifica di un Rank', async () => {
+        const hierarchyConfig = {
+          faf: {
+            locals: [
+              {
+                horizontalHierarchies: [[['_utils'], ['_services']]],
+                roles: [
+                  { category: '_utils', name: 'util' },
+                  { category: '_services', name: 'service' },
+                ],
+                rootLayers: ['src'],
+                subGraphRoles: [{ name: 'spec' }],
+              },
+            ],
+          },
+        };
+
+        const fixture = await createProject(
+          {
+            'src/_services/worker/index.ts':
+              "export { worker } from './worker.service.js';\n",
+            'src/_services/worker/worker.service.ts':
+              "import { helper } from '../../_utils/helper/index.js';\nexport const worker = helper;\n",
+            'src/_utils/helper/helper.util.ts': 'export const helper = 1;\n',
+            'src/_utils/helper/index.ts':
+              "export { helper } from './helper.util.js';\n",
+          },
+          hierarchyConfig
+        );
+
+        try {
+          const initial = await lintScenario(fixture.path, [
+            'src/_services/worker/worker.service.ts',
+          ]);
+          expect(initial.messages).toEqual([]);
+
+          const invertedConfig = {
+            faf: {
+              locals: [
+                {
+                  horizontalHierarchies: [[['_services'], ['_utils']]],
+                  roles: [
+                    { category: '_utils', name: 'util' },
+                    { category: '_services', name: 'service' },
+                  ],
+                  rootLayers: ['src'],
+                  subGraphRoles: [{ name: 'spec' }],
+                },
+              ],
+            },
+          };
+
+          nodeFs.writeFileSync(
+            nodePath.join(fixture.path, 'fafconfig.ts'),
+            `export default ${JSON.stringify(invertedConfig)};\n`
+          );
+
+          const after = await lintScenario(fixture.path, [
+            'src/_services/worker/worker.service.ts',
+          ]);
+          expect(
+            after.messages.some(
+              (message) => message.constraint === 'dependency/peer-separation'
+            )
+          ).toBe(true);
+        } finally {
+          await fixture.rm();
+        }
+      });
+    });
+
+    describe('Schema dello scenario: Le decisioni di frontiera aggiornate invalidano le precedenti autorizzazioni', () => {
+      it('rimozione di un Root Node da publicRootNodes', async () => {
+        const initialConfig = {
+          faf: {
+            locals: [
+              {
+                publicRootNodes: ['a/main.ts'],
+                roles: [{ category: '_utils', name: 'util' }],
+                rootFragments: [{ path: 'a', rootNodes: [['main.ts']] }],
+                rootLayers: ['b'],
+                subGraphRoles: [{ name: 'spec' }],
+                treeDependencies: [{ from: ['b'], to: ['a'] }],
+              },
+            ],
+          },
+        };
+
+        const fixture = await createProject(
+          {
+            'a/main.ts': 'export const main = 1;\n',
+            'b/_utils/client/client.util.ts':
+              "import { main } from '../../../a/main.js';\nexport const client = main;\n",
+            'b/_utils/client/index.ts':
+              "export { client } from './client.util.js';\n",
+          },
+          initialConfig
+        );
+
+        try {
+          const initial = await lintScenario(fixture.path, [
+            'b/_utils/client/client.util.ts',
+          ]);
+          expect(initial.messages).toEqual([]);
+
+          const updatedConfig = {
+            faf: {
+              locals: [
+                {
+                  publicRootNodes: [],
+                  roles: [{ category: '_utils', name: 'util' }],
+                  rootFragments: [{ path: 'a', rootNodes: [['main.ts']] }],
+                  rootLayers: ['b'],
+                  subGraphRoles: [{ name: 'spec' }],
+                  treeDependencies: [{ from: ['b'], to: ['a'] }],
+                },
+              ],
+            },
+          };
+          nodeFs.writeFileSync(
+            nodePath.join(fixture.path, 'fafconfig.ts'),
+            `export default ${JSON.stringify(updatedConfig)};\n`
+          );
+
+          const after = await lintScenario(fixture.path, [
+            'b/_utils/client/client.util.ts',
+          ]);
+          expect(
+            after.messages.some(
+              (message) => message.constraint === 'dependency/tree-opacity'
+            )
+          ).toBe(true);
+        } finally {
+          await fixture.rm();
+        }
+      });
+
+      it("spostamento di un'unità esposta da un Root Layer in un Fractal Branch", async () => {
+        const initialConfig = {
+          faf: {
+            locals: [
+              {
+                roles: [{ category: '_utils', name: 'util' }],
+                rootLayers: ['a', 'b'],
+                subGraphRoles: [{ name: 'spec' }],
+                treeDependencies: [{ from: ['b'], to: ['a'] }],
+              },
+            ],
+          },
+        };
+
+        const fixture = await createProject(
+          {
+            'a/_utils/exposed/exposed.util.ts': 'export const exposed = 1;\n',
+            'a/_utils/exposed/index.ts':
+              "export { exposed } from './exposed.util.js';\n",
+            'b/_utils/client/client.util.ts':
+              "import { exposed } from '../../../a/_utils/exposed/index.js';\nexport const client = exposed;\n",
+            'b/_utils/client/index.ts':
+              "export { client } from './client.util.js';\n",
+          },
+          initialConfig
+        );
+
+        try {
+          const initial = await lintScenario(fixture.path, [
+            'b/_utils/client/client.util.ts',
+          ]);
+          expect(initial.messages).toEqual([]);
+
+          nodeFs.rmSync(nodePath.join(fixture.path, 'a/_utils/exposed'), {
+            recursive: true,
+          });
+          nodeFs.mkdirSync(
+            nodePath.join(fixture.path, 'a/_a@shared/_utils/exposed'),
+            { recursive: true }
+          );
+          nodeFs.writeFileSync(
+            nodePath.join(
+              fixture.path,
+              'a/_a@shared/_utils/exposed/exposed.util.ts'
+            ),
+            'export const exposed = 1;\n'
+          );
+          nodeFs.writeFileSync(
+            nodePath.join(fixture.path, 'a/_a@shared/_utils/exposed/index.ts'),
+            "export { exposed } from './exposed.util.js';\n"
+          );
+          nodeFs.writeFileSync(
+            nodePath.join(fixture.path, 'b/_utils/client/client.util.ts'),
+            "import { exposed } from '../../../a/_a@shared/_utils/exposed/index.js';\nexport const client = exposed;\n"
+          );
+
+          const after = await lintScenario(fixture.path, [
+            'b/_utils/client/client.util.ts',
+          ]);
+          expect(
+            after.messages.some(
+              (message) => message.constraint === 'dependency/tree-opacity'
+            )
+          ).toBe(true);
+        } finally {
+          await fixture.rm();
+        }
+      });
+
+      it('revoca della relazione orientata tra i Trees interessati', async () => {
+        const initialConfig = {
+          faf: {
+            locals: [
+              {
+                publicRootNodes: ['a/main.ts'],
+                roles: [{ category: '_utils', name: 'util' }],
+                rootFragments: [
+                  { path: 'a', rootNodes: [['main.ts']] },
+                  { path: 'b', rootNodes: [['main.ts']] },
+                ],
+                subGraphRoles: [{ name: 'spec' }],
+                treeDependencies: [{ from: ['b'], to: ['a'] }],
+              },
+            ],
+          },
+        };
+
+        const fixture = await createProject(
+          {
+            'a/main.ts': 'export const main = 1;\n',
+            'b/main.ts':
+              "import { main } from '../a/main.js';\nexport const b = main;\n",
+          },
+          initialConfig
+        );
+
+        try {
+          const initial = await lintScenario(fixture.path, ['b/main.ts']);
+          expect(initial.messages).toEqual([]);
+
+          const updatedConfig = {
+            faf: {
+              locals: [
+                {
+                  publicRootNodes: ['a/main.ts'],
+                  roles: [{ category: '_utils', name: 'util' }],
+                  rootFragments: [
+                    { path: 'a', rootNodes: [['main.ts']] },
+                    { path: 'b', rootNodes: [['main.ts']] },
+                  ],
+                  subGraphRoles: [{ name: 'spec' }],
+                  treeDependencies: [],
+                },
+              ],
+            },
+          };
+          nodeFs.writeFileSync(
+            nodePath.join(fixture.path, 'fafconfig.ts'),
+            `export default ${JSON.stringify(updatedConfig)};\n`
+          );
+
+          const after = await lintScenario(fixture.path, ['b/main.ts']);
+          expect(
+            after.messages.some(
+              (message) =>
+                message.constraint === 'dependency/tree-authorization'
+            )
+          ).toBe(true);
+        } finally {
+          await fixture.rm();
+        }
+      });
+
+      it('rimozione del file consumatore da externalDependencies.from', async () => {
+        const initialConfig = {
+          faf: {
+            locals: [
+              {
+                externalDependencies: [
+                  {
+                    from: ['src/main.ts'],
+                    to: ['outside.ts'],
+                  },
+                ],
+                roles: [{ category: '_utils', name: 'util' }],
+                rootFragments: [
+                  { path: 'src', rootNodes: [['main.ts'], ['other.ts']] },
+                ],
+                subGraphRoles: [{ name: 'spec' }],
+              },
+            ],
+          },
+        };
+
+        const fixture = await createProject(
+          {
+            'outside.ts': 'export const outside = 1;\n',
+            'src/main.ts': "import '../outside.js';\nexport const main = 1;\n",
+            'src/other.ts': 'export const other = 1;\n',
+          },
+          initialConfig
+        );
+
+        try {
+          const initial = await lintScenario(fixture.path, ['src/main.ts']);
+          expect(initial.messages).toEqual([]);
+
+          const updatedConfig = {
+            faf: {
+              locals: [
+                {
+                  externalDependencies: [
+                    {
+                      from: ['src/other.ts'],
+                      to: ['outside.ts'],
+                    },
+                  ],
+                  roles: [{ category: '_utils', name: 'util' }],
+                  rootFragments: [
+                    { path: 'src', rootNodes: [['main.ts'], ['other.ts']] },
+                  ],
+                  subGraphRoles: [{ name: 'spec' }],
+                },
+              ],
+            },
+          };
+          nodeFs.writeFileSync(
+            nodePath.join(fixture.path, 'fafconfig.ts'),
+            `export default ${JSON.stringify(updatedConfig)};\n`
+          );
+
+          const after = await lintScenario(fixture.path, ['src/main.ts']);
+          expect(
+            after.messages.some(
+              (message) =>
+                message.constraint === 'dependency/external-dependencies'
+            )
+          ).toBe(true);
+        } finally {
+          await fixture.rm();
+        }
+      });
+
+      it("modifica della base dell'alias da Fractal Branch a Layer", async () => {
+        const initialConfig = {
+          faf: {
+            locals: [
+              {
+                roles: [{ category: '_utils', name: 'util' }],
+                rootFragments: [{ path: 'src', rootNodes: [['main.ts']] }],
+                subGraphRoles: [{ name: 'spec' }],
+              },
+            ],
+          },
+        };
+
+        const fixture = await createProject(
+          {
+            'package.json': JSON.stringify({
+              imports: { '#shared/*': './src/_src@shared/*' },
+              type: 'module',
+            }),
+            'src/_src@shared/shared.ts': 'export const shared = 1;\n',
+            'src/_utils/widget/index.ts':
+              "export { widget } from './widget.util.js';\n",
+            'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
+            'src/main.ts':
+              "import { shared } from '#shared/shared.js';\nexport const main = shared;\n",
+          },
+          initialConfig
+        );
+
+        try {
+          const initial = await lintScenario(fixture.path, ['src/main.ts']);
+          expect(initial.messages).toEqual([]);
+
+          nodeFs.writeFileSync(
+            nodePath.join(fixture.path, 'package.json'),
+            JSON.stringify({
+              imports: { '#shared/*': './src/_utils/*' },
+              type: 'module',
+            })
+          );
+          nodeFs.writeFileSync(
+            nodePath.join(fixture.path, 'src/main.ts'),
+            "import { widget } from '#shared/widget/index.js';\nexport const main = widget;\n"
+          );
+
+          const after = await lintScenario(fixture.path, ['src/main.ts']);
+          expect(
+            after.messages.some(
+              (message) =>
+                message.constraint === 'dependency/path-alias-anchoring'
+            )
+          ).toBe(true);
+        } finally {
+          await fixture.rm();
+        }
+      });
+    });
+  });
 });

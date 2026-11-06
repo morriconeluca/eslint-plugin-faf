@@ -13,6 +13,7 @@ import { moduleRecordStore } from './_session@shared/_stores/module-record-store
 
 export const session = (() => {
   const memos = new Map<string, TSessionMemo>();
+  let activeConfigPath: null | string = null;
 
   const outcomesForFile = (
     byFile: ReadonlyMap<string, readonly TAnchoredOutcome[]>,
@@ -24,7 +25,17 @@ export const session = (() => {
     configPath: string,
     packageVersion: string
   ): void => {
-    moduleRecordStore.clear();
+    if (activeConfigPath !== configPath) {
+      moduleRecordStore.clear();
+      moduleRecordStore.setPersistentEntries(
+        readModuleRecordCache({
+          baseDirectory: nodePath.dirname(configPath),
+          packageVersion,
+        })
+      );
+      activeConfigPath = configPath;
+      return;
+    }
     moduleRecordStore.setPersistentEntries(
       readModuleRecordCache({
         baseDirectory: nodePath.dirname(configPath),
@@ -54,10 +65,21 @@ export const session = (() => {
       entries: moduleRecordStore.getAllEntries(),
       packageVersion: query.packageVersion,
     });
+    const watchedFiles = [
+      configPath,
+      ...result.loadedFiles,
+      nodePath.resolve(result.baseDirectory, 'package.json'),
+      ...result.externalFiles,
+    ];
     const memo: TSessionMemo = {
       byFile: result.byFile,
-      fingerprints: readFileFingerprints([configPath, ...result.loadedFiles]),
+      fingerprints: readFileFingerprints({
+        treeOrigins: result.treeOrigins,
+        watchedFiles,
+      }),
       overrideKey: overlayKey,
+      treeOrigins: result.treeOrigins,
+      watchedFiles,
     };
     memos.set(configPath, memo);
     return outcomesForFile(memo.byFile, query.filename);
@@ -67,6 +89,7 @@ export const session = (() => {
     clearModuleRecords(): void {
       moduleRecordStore.clear();
       memos.clear();
+      activeConfigPath = null;
     },
 
     outcomesFor(query: TSessionQuery): readonly TAnchoredOutcome[] {
@@ -78,10 +101,12 @@ export const session = (() => {
       if (previous === undefined) {
         return verifyFresh(query, configPath, overlay.key, overlay.text);
       }
-      const watched = [configPath, ...previous.fingerprints.keys()];
       const isUnchanged =
-        hasMatchingFileFingerprints(previous.fingerprints, watched) &&
-        previous.overrideKey === overlay.key;
+        previous.overrideKey === overlay.key &&
+        hasMatchingFileFingerprints(previous.fingerprints, {
+          treeOrigins: previous.treeOrigins,
+          watchedFiles: previous.watchedFiles,
+        });
       return isUnchanged
         ? outcomesForFile(previous.byFile, query.filename)
         : verifyFresh(query, configPath, overlay.key, overlay.text);

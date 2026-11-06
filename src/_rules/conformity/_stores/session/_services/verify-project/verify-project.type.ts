@@ -26,12 +26,27 @@ export type TVerifyProjectInput = {
  */
 export type TVerifyProjectResult = TAnchorOutcomesResult & {
   /**
+   * Absolute path of the directory hosting fafconfig.ts.
+   */
+  readonly baseDirectory: string;
+
+  /**
    * Whether module collection ran and the session may persist used Module Records.
    */
   readonly collectedModules: boolean;
 
   /**
+   * Absolute paths of external local files analyzed or declared during verification.
+   */
+  readonly externalFiles: readonly string[];
+
+  /**
    * Absolute paths of local files loaded while evaluating fafconfig.ts.
    */
   readonly loadedFiles: readonly string[];
+
+  /**
+   * Absolute paths of all declared tree origin directories.
+   */
+  readonly treeOrigins: readonly string[];
 };

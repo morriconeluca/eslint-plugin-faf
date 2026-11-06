@@ -65,6 +65,10 @@ describe('verifyProject', () => {
         expect(item.position).toEqual({ column: 1, line: 1 });
       }
       expect(result.collectedModules).toBe(true);
+      expect(result.treeOrigins).toEqual([nodePath.join(fixture.path, 'src')]);
+      expect(result.externalFiles).toEqual([
+        nodePath.join(fixture.path, 'package.json'),
+      ]);
     } finally {
       await fixture.rm();
     }
@@ -83,6 +87,8 @@ describe('verifyProject', () => {
         workingDirectory: fixture.path,
       });
       expect(result.collectedModules).toBe(false);
+      expect(result.externalFiles).toEqual([]);
+      expect(result.treeOrigins).toEqual([]);
       expect(result.outcomes).toHaveLength(1);
       expect(result.outcomes[0]?.anchorPath).toBe(configPath);
       expect(result.outcomes[0]?.outcome.constraint).toBe(

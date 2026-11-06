@@ -265,4 +265,96 @@ describe('session', () => {
       await second.rm();
     }
   });
+
+  it('invalidates the memo when a tree file is added, modified, or removed', async () => {
+    const fixture = await createFixture(conformingTree);
+
+    try {
+      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const filename = nodePath.join(
+        fixture.path,
+        'src/_utils/widget/index.ts'
+      );
+      const query = {
+        configPath,
+        filename,
+        packageVersion: '0.5.0',
+        sourceText: "export { widget } from './widget.util.js';\n",
+        workingDirectory: fixture.path,
+      };
+
+      expect(session.outcomesFor(query)).toEqual([]);
+
+      const extraFile = nodePath.join(
+        fixture.path,
+        'src/_utils/widget/extra.ts'
+      );
+      nodeFs.writeFileSync(extraFile, 'export const extra = 1;\n');
+
+      const afterAdd = await countCacheWrites(fixture.path, () => {
+        expect(session.outcomesFor(query)).toEqual([]);
+      });
+      expect(afterAdd).toBe(1);
+
+      nodeFs.writeFileSync(
+        nodePath.join(fixture.path, 'src/_utils/widget/widget.util.ts'),
+        'export const widget = 2;\n'
+      );
+
+      const afterModify = await countCacheWrites(fixture.path, () => {
+        expect(session.outcomesFor(query)).toEqual([]);
+      });
+      expect(afterModify).toBe(1);
+
+      nodeFs.rmSync(extraFile);
+      const afterRemove = await countCacheWrites(fixture.path, () => {
+        expect(session.outcomesFor(query)).toEqual([]);
+      });
+      expect(afterRemove).toBe(1);
+    } finally {
+      session.clearModuleRecords();
+      await fixture.rm();
+    }
+  });
+
+  it('invalidates the memo when package.json is modified and reuses unchanged module records', async () => {
+    const fixture = await createFixture(conformingTree);
+
+    try {
+      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const filename = nodePath.join(
+        fixture.path,
+        'src/_utils/widget/index.ts'
+      );
+      const query = {
+        configPath,
+        filename,
+        packageVersion: '0.5.0',
+        sourceText: "export { widget } from './widget.util.js';\n",
+        workingDirectory: fixture.path,
+      };
+
+      expect(session.outcomesFor(query)).toEqual([]);
+
+      nodeFs.writeFileSync(
+        nodePath.join(fixture.path, 'package.json'),
+        JSON.stringify({ description: 'updated', type: 'module' })
+      );
+      nodeFs.rmSync(cachePathOf(fixture.path));
+
+      let reloadedProductions = 0;
+      const writes = await countCacheWrites(fixture.path, () => {
+        const result = countProductions(() => {
+          expect(session.outcomesFor(query)).toEqual([]);
+        });
+        reloadedProductions = result.productions;
+      });
+
+      expect(writes).toBe(1);
+      expect(reloadedProductions).toBe(0);
+    } finally {
+      session.clearModuleRecords();
+      await fixture.rm();
+    }
+  });
 });

@@ -2,9 +2,6 @@ import type { TAnchoredOutcome } from './_session@shared/_types/anchored-outcome
 import type { TFileFingerprint } from './_session@shared/_types/file-fingerprint.type.js';
 
 /**
- * Fingerprint of one file used to invalidate a memoized verification.
- */
-/**
  * Memoized verification for one fafconfig.ts path.
  */
 export type TSessionMemo = {
@@ -22,6 +19,16 @@ export type TSessionMemo = {
    * Identity of the source overlay used to produce the memo, empty when the text matches disk.
    */
   readonly overrideKey: string;
+
+  /**
+   * Absolute paths of fractal tree origin directories.
+   */
+  readonly treeOrigins: readonly string[];
+
+  /**
+   * Absolute paths of watched configuration and external files.
+   */
+  readonly watchedFiles: readonly string[];
 };
 
 /**

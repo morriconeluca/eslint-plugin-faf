@@ -35,6 +35,7 @@ import { prepareProject } from './_services/prepare-project/index.js';
 import { anchorOutcomes } from './_utils/anchor-outcomes/index.js';
 import { buildDependencyGraph } from './_utils/build-dependency-graph/index.js';
 import { classifyTaxonomy } from './_utils/classify-taxonomy/index.js';
+import { collectExternalFiles } from './_utils/collect-external-files/index.js';
 import { deriveExternalCrossings } from './_utils/derive-external-crossings/index.js';
 import { deriveHorizontalHierarchies } from './_utils/derive-horizontal-hierarchies/index.js';
 import { derivePublicSurface } from './_utils/derive-public-surface/index.js';
@@ -54,8 +55,11 @@ export function verifyProject(
     });
     return {
       ...anchored,
+      baseDirectory: prepared.baseDirectory,
       collectedModules: false,
+      externalFiles: [],
       loadedFiles: prepared.loadedFiles,
+      treeOrigins: [],
     };
   }
   const taxonomy = classifyTaxonomy({
@@ -130,9 +134,21 @@ export function verifyProject(
       ...verifyReEntryProhibition(model),
     ],
   });
+  const treeOrigins = prepared.declarations.trees.map((tree) =>
+    nodePath.resolve(prepared.baseDirectory, tree.originPath)
+  );
+  const externalFiles = collectExternalFiles({
+    baseDirectory: prepared.baseDirectory,
+    inventory: prepared.inventory,
+    modules,
+    treeOrigins,
+  });
   return {
     ...anchored,
+    baseDirectory: prepared.baseDirectory,
     collectedModules: true,
+    externalFiles,
     loadedFiles: prepared.loadedFiles,
+    treeOrigins,
   };
 }
