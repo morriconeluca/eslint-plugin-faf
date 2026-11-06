@@ -2340,6 +2340,16 @@ describe('acceptance: p7a', () => {
       }
     );
 
+    const resolveMainContent = (source: string, operation: string): string => {
+      if (source === 'src/main.ts') {
+        return operation;
+      }
+      if (source === 'external.ts') {
+        return "import '../external.ts';\n";
+      }
+      return value;
+    };
+
     it.each(foreignArcs)(
       'Foreign Nodes do not engage in import relations with codebase files: %s to %s (reExport: %s)',
       async (source, destination, reExport) => {
@@ -2351,8 +2361,7 @@ describe('acceptance: p7a', () => {
           {
             ...foreignTree,
             [source]: operation,
-            'src/main.ts':
-              source === 'external.ts' ? "import '../external.ts';\n" : value,
+            'src/main.ts': resolveMainContent(source, operation),
           },
           { faf: { locals: [foreignLocal] } },
           'foreign-node-isolation',
@@ -2418,7 +2427,14 @@ describe('acceptance: p7a', () => {
         },
         { faf: { locals: [foreignLocal] } },
         'containment-matrix',
-        [containmentMatrixOutcome('src/_tooling/_utils')]
+        [
+          containmentMatrixOutcome('src/_tooling/_utils'),
+          foreignNodeIsolationOutcome(
+            logicalIndex,
+            logicalUtil,
+            './tool.util.js'
+          ),
+        ]
       );
     });
 
