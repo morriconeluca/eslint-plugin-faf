@@ -14,7 +14,7 @@ import type {
 
 import { createOutcome } from '../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { readPackageJson } from '../../../../_verify-project@shared/_adapters/read-package-json/index.js';
-import { classifyWorkerOutcome } from './_schemas/classify-worker-outcome/index.js';
+import { classifyWorkerOutcome } from './_utils/classify-worker-outcome/index.js';
 
 export function loadConfig(input: TLoadConfigInput): TLoadConfigResult {
   const resolvedConfigPath = nodePath.resolve(input.configPath);

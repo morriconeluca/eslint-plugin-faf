@@ -5,7 +5,7 @@ import v8 from 'node:v8';
 import type { TModuleRecord } from '../../_types/module-record.type.js';
 import type { TReadModuleRecordCacheInput } from './read-module-record-cache.type.js';
 
-import { parseModuleRecordCache } from './_schemas/parse-module-record-cache/index.js';
+import { parseModuleRecordCache } from './_utils/parse-module-record-cache/index.js';
 
 export function readModuleRecordCache(
   input: TReadModuleRecordCacheInput
@@ -19,8 +19,10 @@ export function readModuleRecordCache(
   try {
     const rawPayload: unknown = v8.deserialize(nodeFs.readFileSync(cachePath));
     return (
-      parseModuleRecordCache(rawPayload, input.packageVersion) ??
-      new Map<string, TModuleRecord>()
+      parseModuleRecordCache({
+        packageVersion: input.packageVersion,
+        raw: rawPayload,
+      }) ?? new Map<string, TModuleRecord>()
     );
   } catch {
     return new Map<string, TModuleRecord>();

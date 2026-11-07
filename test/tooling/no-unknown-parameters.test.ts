@@ -85,6 +85,11 @@ ruleTester.run('no-unknown-parameters', noUnknownParametersRule, {
       errors: [{ messageId: 'unknownParameter' }],
       filename: 'src/_schemas/read/read.util.ts',
     },
+    {
+      code: 'import type { TPayload } from "./_schemas/payload-schema/index.js"; export function validate(raw: unknown): TPayload | null { return null; }',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/validate.util.ts',
+    },
   ],
   valid: [
     {
@@ -134,6 +139,10 @@ ruleTester.run('no-unknown-parameters', noUnknownParametersRule, {
     {
       code: 'export function read(raw: Record<string, unknown>): void {}',
       filename: 'src/_utils/parse/parse.schema.ts',
+    },
+    {
+      code: 'import { payloadSchema } from "./_schemas/payload-schema/index.js"; export function validate(raw: unknown): boolean { return payloadSchema.safeParse(raw).success; }',
+      filename: 'src/validate.util.ts',
     },
   ],
 });

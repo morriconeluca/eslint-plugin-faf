@@ -1,8 +1,8 @@
 import type { Rule } from 'eslint';
 
 import { discoverConfig } from './_adapters/discover-config/index.js';
-import { readConfigFileSetting } from './_schemas/read-config-file-setting/index.js';
 import { session } from './_stores/session/index.js';
+import { readConfigFileSetting } from './_utils/read-config-file-setting/index.js';
 
 export function createConformity(packageVersion: string): Rule.RuleModule {
   const message = '{{constraint}}: {{message}} ({{reference}}).';

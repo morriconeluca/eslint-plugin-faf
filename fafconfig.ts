@@ -18,10 +18,10 @@ export default {
           {
             hierarchies: [
               ['_constants'],
+              ['_schemas'],
               ['_types'],
               ['_mocks'],
               ['_configs'],
-              ['_schemas'],
               ['_utils'],
               ['_norms'],
               ['_adapters'],
@@ -44,9 +44,9 @@ export default {
               'src/_rules/conformity/_stores/session/_services/verify-project/_norms/fragment-anatomy/_fragment-anatomy@shared',
               'src/_rules/conformity/_stores/session/_services/verify-project/_services/prepare-project/_adapters/list-entries/_adapters/scan-tree-origin/_scan-tree-origin@shared',
               'src/_rules/conformity/_stores/session/_services/verify-project/_services/prepare-project/_adapters/load-config/_load-config@shared',
-              'src/_rules/conformity/_stores/session/_services/verify-project/_services/prepare-project/_schemas/validate-config-format/_validate-config-format@shared',
               'src/_rules/conformity/_stores/session/_services/verify-project/_services/prepare-project/_utils/acquire-path-aliases/_acquire-path-aliases@shared',
               'src/_rules/conformity/_stores/session/_services/verify-project/_services/prepare-project/_utils/build-inventory/_build-inventory@shared',
+              'src/_rules/conformity/_stores/session/_services/verify-project/_services/prepare-project/_utils/validate-config-format/_validate-config-format@shared',
               'src/_rules/conformity/_stores/session/_services/verify-project/_services/prepare-project/_utils/validate-config-references/_utils/validate-frontier-references/_validate-frontier-references@shared',
               'src/_rules/conformity/_stores/session/_services/verify-project/_services/prepare-project/_utils/validate-config-references/_utils/validate-root-references/_utils/validate-local-roots/_utils/validate-root-fragment-tree/_validate-root-fragment-tree@shared',
               'src/_rules/conformity/_stores/session/_services/verify-project/_services/prepare-project/_utils/validate-config-references/_utils/validate-root-references/_utils/validate-local-roots/_validate-local-roots@shared',
@@ -74,6 +74,7 @@ export default {
             isCategoryNode: true,
             name: 'constant',
           },
+          { category: '_schemas', name: 'schema' },
           {
             allowMultipleSymbols: true,
             category: '_types',
@@ -92,7 +93,6 @@ export default {
             isCategoryNode: true,
             name: 'config',
           },
-          { category: '_schemas', name: 'schema' },
           { category: '_utils', name: 'util' },
           { category: '_norms', name: 'norm' },
           { category: '_adapters', name: 'adapter' },

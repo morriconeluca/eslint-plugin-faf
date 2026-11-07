@@ -114,9 +114,33 @@ const explicitFileRole = (filename: string): string | undefined => {
   return dotParts.length === 3 ? dotParts[1] : undefined;
 };
 
-const isExemptRole = (filename: string): boolean => {
-  const role = explicitFileRole(filename);
-  return role !== undefined && EXEMPT_ROLES.has(role);
+const isSchemaSpecifier = (specifier: unknown): boolean =>
+  typeof specifier === 'string' &&
+  (specifier.includes('/_schemas/') || specifier.endsWith('.schema.js'));
+
+const isRuntimeSchemaImport = (statement: unknown): boolean => {
+  if (
+    !isRecord(statement) ||
+    statement['type'] !== 'ImportDeclaration' ||
+    statement['importKind'] === 'type'
+  ) {
+    return false;
+  }
+  const source = statement['source'];
+  return isRecord(source) && isSchemaSpecifier(source['value']);
+};
+
+const hasRuntimeSchemaImport = (context: Rule.RuleContext): boolean =>
+  context.sourceCode.ast.body.some((statement) =>
+    isRuntimeSchemaImport(statement)
+  );
+
+const isExemptFile = (context: Rule.RuleContext): boolean => {
+  const role = explicitFileRole(context.filename) ?? '';
+  return (
+    EXEMPT_ROLES.has(role) ||
+    (role === 'util' && hasRuntimeSchemaImport(context))
+  );
 };
 
 const checkFunction = (context: Rule.RuleContext, node: unknown): void => {
@@ -144,7 +168,7 @@ const checkFunction = (context: Rule.RuleContext, node: unknown): void => {
 
 export const noUnknownParametersRule: Rule.RuleModule = {
   create(context) {
-    if (isExemptRole(context.filename)) {
+    if (isExemptFile(context)) {
       return {};
     }
 

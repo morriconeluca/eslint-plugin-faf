@@ -7,10 +7,10 @@ import { readPackageJson } from '../../_verify-project@shared/_adapters/read-pac
 import { includeExternalTargets } from './_adapters/include-external-targets/index.js';
 import { listEntries } from './_adapters/list-entries/index.js';
 import { loadConfig } from './_adapters/load-config/index.js';
-import { validateConfigFormat } from './_schemas/validate-config-format/index.js';
 import { acquirePathAliases } from './_utils/acquire-path-aliases/index.js';
 import { buildInventory } from './_utils/build-inventory/index.js';
 import { composeDeclarations } from './_utils/compose-declarations/index.js';
+import { validateConfigFormat } from './_utils/validate-config-format/index.js';
 import { validateConfigReferences } from './_utils/validate-config-references/index.js';
 
 export function prepareProject(configPath: string): TPrepareProjectResult {
