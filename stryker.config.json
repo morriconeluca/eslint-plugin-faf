@@ -9,11 +9,11 @@
     "!src/**/*.type.ts"
   ],
   "ignorePatterns": ["coverage", "reports", "dist", ".cache", ".stryker-tmp"],
-  "plugins": ["@stryker-mutator/vitest-runner"],
-  "reporters": ["clear-text", "json", "event-recorder"],
-  "eventReporter": {
-    "baseDir": "reports/mutation/events"
-  },
+  "plugins": [
+    "@stryker-mutator/vitest-runner",
+    "./scripts/stryker-plan-recorder.ts"
+  ],
+  "reporters": ["clear-text", "json", "plan-recorder"],
   "testRunner": "vitest",
   "thresholds": {
     "break": 80,
