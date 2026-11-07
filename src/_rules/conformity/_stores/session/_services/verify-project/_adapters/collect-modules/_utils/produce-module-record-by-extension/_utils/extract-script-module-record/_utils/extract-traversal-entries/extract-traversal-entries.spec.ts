@@ -251,31 +251,24 @@ describe('extractTraversalEntries', () => {
       expect(result.inlineImports[0]?.isTypeOnly).toBe(true);
     });
 
+    it('reports unsupported syntax for TS export assignment', () => {
+      const result = parseAndExtractTraversal('export = 42;');
+      expect(result.unsupportedSyntaxes).toHaveLength(1);
+      expect(result.unsupportedSyntaxes[0]?.description).toContain('export =');
+    });
+
     it.each([
       {
-        code: 'export = 42;',
-        expectedSubstring: 'export =',
-        title: 'TS export assignment',
-      },
-      {
         code: 'declare module "external-mod" {}',
-        expectedSubstring: 'declare module',
         title: 'declare module',
       },
       {
         code: 'declare global { const x: number; }',
-        expectedSubstring: 'declare global',
         title: 'declare global',
       },
-    ])(
-      'reports unsupported syntax for $title',
-      ({ code, expectedSubstring }) => {
-        const result = parseAndExtractTraversal(code);
-        expect(result.unsupportedSyntaxes).toHaveLength(1);
-        expect(result.unsupportedSyntaxes[0]?.description).toContain(
-          expectedSubstring
-        );
-      }
-    );
+    ])('does not report unsupported syntax for $title', ({ code }) => {
+      const result = parseAndExtractTraversal(code);
+      expect(result.unsupportedSyntaxes).toHaveLength(0);
+    });
   });
 });

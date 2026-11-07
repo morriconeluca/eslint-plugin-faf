@@ -19,7 +19,7 @@ describe('handleUnsupportedSyntax', () => {
     const unsupportedSyntaxes: TUnsupportedSyntax[] = [];
     const node: TAstNode = {
       ...statement,
-      start: 0,
+      start: 5,
       type: 'TSExportAssignment',
     };
 
@@ -28,7 +28,7 @@ describe('handleUnsupportedSyntax', () => {
     expect(unsupportedSyntaxes).toEqual([
       {
         description: 'TypeScript export assignment (export =) is unsupported',
-        position: { column: 1, line: 1 },
+        position: { column: 6, line: 1 },
       },
     ]);
   });
@@ -50,7 +50,7 @@ describe('handleUnsupportedSyntax', () => {
     ]);
   });
 
-  it('reports unsupported syntax for ambient module declaration', () => {
+  it('does not report unsupported syntax for ambient module declaration', () => {
     const code = 'declare module "ambient" {}';
     const result = parseSync('test.ts', code, {
       lang: 'ts',
@@ -62,22 +62,16 @@ describe('handleUnsupportedSyntax', () => {
     const node: TAstNode = {
       ...statement,
       kind: 'module',
-      start: 5,
+      start: 0,
       type: 'TSModuleDeclaration',
     };
 
     handleUnsupportedSyntax(node, locator, unsupportedSyntaxes);
 
-    expect(unsupportedSyntaxes).toEqual([
-      {
-        description:
-          'Ambient module or global augmentation (declare module / declare global) is unsupported',
-        position: { column: 6, line: 1 },
-      },
-    ]);
+    expect(unsupportedSyntaxes).toHaveLength(0);
   });
 
-  it('reports unsupported syntax for global augmentation', () => {
+  it('does not report unsupported syntax for global augmentation', () => {
     const code = 'declare global {}';
     const result = parseSync('test.ts', code, {
       lang: 'ts',
@@ -95,7 +89,7 @@ describe('handleUnsupportedSyntax', () => {
 
     handleUnsupportedSyntax(node, locator, unsupportedSyntaxes);
 
-    expect(unsupportedSyntaxes).toHaveLength(1);
+    expect(unsupportedSyntaxes).toHaveLength(0);
   });
 
   it('ignores other supported node types', () => {

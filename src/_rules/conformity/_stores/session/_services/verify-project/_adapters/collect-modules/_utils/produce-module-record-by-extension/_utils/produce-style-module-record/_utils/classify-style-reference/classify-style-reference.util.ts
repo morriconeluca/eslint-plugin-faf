@@ -5,6 +5,7 @@ import type { TClassifiedStyleReference } from './classify-style-reference.type.
 import {
   EXCLUDED_PREFIXES,
   INTERPOLATION_MARKERS,
+  PRESERVED_SPECIFIER_PREFIXES,
   QUOTE_WRAP_PATTERN,
 } from './classify-style-reference.constant.js';
 
@@ -37,6 +38,10 @@ export function classifyStyleReference(
         position,
       },
     };
+  }
+
+  if (cleaned.startsWith('#') && !cleaned.startsWith('#/')) {
+    return {};
   }
 
   const lower = cleaned.toLowerCase();
@@ -77,8 +82,9 @@ export function classifyStyleReference(
     };
   }
 
-  const isExplicitRelative =
-    cleaned.startsWith('./') || cleaned.startsWith('../');
+  const isExplicitRelative = PRESERVED_SPECIFIER_PREFIXES.some((prefix) =>
+    cleaned.startsWith(prefix)
+  );
   const specifier = isExplicitRelative ? cleaned : `./${cleaned}`;
 
   return {

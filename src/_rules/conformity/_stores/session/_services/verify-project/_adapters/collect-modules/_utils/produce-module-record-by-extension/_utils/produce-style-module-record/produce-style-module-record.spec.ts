@@ -66,10 +66,11 @@ describe('produceStyleModuleRecord', () => {
     expect(result.imports[1]?.specifier).toBe('./images/icon.png');
   });
 
-  it('preserves existing ./ and ../ relative specifiers without alteration', () => {
+  it('preserves existing ./, ../, and #/ specifiers without alteration', () => {
     const css = [
       '@import "./variables.css";',
       '@import "../common/base.css";',
+      '@import "#/_src@shared/_styles/base.css";',
       '.bg {',
       "  background: url('./assets/bg.jpg');",
       '}',
@@ -81,8 +82,9 @@ describe('produceStyleModuleRecord', () => {
 
     expect(result.imports[0]?.specifier).toBe('./variables.css');
     expect(result.imports[1]?.specifier).toBe('../common/base.css');
-    expect(result.imports[2]?.specifier).toBe('./assets/bg.jpg');
-    expect(result.imports[3]?.specifier).toBe('../fonts/inter.woff2');
+    expect(result.imports[2]?.specifier).toBe('#/_src@shared/_styles/base.css');
+    expect(result.imports[3]?.specifier).toBe('./assets/bg.jpg');
+    expect(result.imports[4]?.specifier).toBe('../fonts/inter.woff2');
   });
 
   it('extracts @import with url() syntax', () => {

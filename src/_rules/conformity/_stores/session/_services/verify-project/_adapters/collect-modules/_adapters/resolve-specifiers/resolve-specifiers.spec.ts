@@ -493,11 +493,13 @@ describe('resolveSpecifiers', () => {
           './cond-import': { import: './import.js' },
           './cond-node': { node: './node.js' },
           './cond-require': { require: './require.js' },
+          './cond-style': { style: './style.css' },
           './cond-types': { types: './types.d.ts' },
         },
         name: 'cond-pkg',
       }),
       'node_modules/cond-pkg/require.js': 'module.exports = 1;',
+      'node_modules/cond-pkg/style.css': '.btn {}',
       'node_modules/cond-pkg/types.d.ts': 'export const t: number;',
       'src/main.ts': 'export const a = 1;',
     });
@@ -524,6 +526,11 @@ describe('resolveSpecifiers', () => {
         createImport('cond-pkg/cond-types'),
       ]);
       expect(typesConditionResult[0]?.target.type).toBe('external-library');
+
+      const styleConditionResult = resolver('src/main.ts', [
+        createImport('cond-pkg/cond-style'),
+      ]);
+      expect(styleConditionResult[0]?.target.type).toBe('external-library');
 
       const defaultConditionResult = resolver('src/main.ts', [
         createImport('cond-pkg/cond-default'),
@@ -848,6 +855,124 @@ describe('resolveSpecifiers', () => {
       });
 
       realpathSpy.mockRestore();
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('strips Vite query strings from resolved paths and alias specifiers before canonicalization', async () => {
+    const fixture = await createFixture({
+      'src/_images/fatal.png': 'png',
+      'src/_src@shared/_images/shared.png': 'png',
+      'src/main.ts': 'export const main = 1;',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '#shared/*': ['./src/_src@shared/*'],
+          },
+        },
+      }),
+    });
+
+    try {
+      const realImage = nodePath.join(fixture.path, 'src/_images/fatal.png');
+      const symlinkImage = nodePath.join(
+        fixture.path,
+        'src/_images/linked.png'
+      );
+      nodeFs.symlinkSync(realImage, symlinkImage, 'file');
+
+      const aliases: readonly TEffectivePathAlias[] = [
+        {
+          prefix: '#shared',
+          source: 'common.aliases',
+          targets: ['src/_src@shared'],
+        },
+      ];
+
+      const resolver = resolveSpecifiers(fixture.path, aliases);
+
+      const relativeQueryResult = resolver('src/main.ts', [
+        createImport('./_images/fatal.png?responsive'),
+      ]);
+      expect(relativeQueryResult[0]?.target).toEqual({
+        path: 'src/_images/fatal.png',
+        type: 'local-file',
+      });
+
+      const symlinkQueryResult = resolver('src/main.ts', [
+        createImport('./_images/linked.png?responsive'),
+      ]);
+      expect(symlinkQueryResult[0]?.target).toEqual({
+        path: 'src/_images/fatal.png',
+        type: 'local-file',
+      });
+
+      const aliasQueryResult = resolver('src/main.ts', [
+        createImport('#shared/_images/shared.png?responsive'),
+      ]);
+      expect(aliasQueryResult[0]?.aliasUsed).toBe('#shared');
+      expect(aliasQueryResult[0]?.aliasAlternatives).toEqual([
+        'src/_src@shared/_images/shared.png',
+      ]);
+      expect(aliasQueryResult[0]?.target).toEqual({
+        path: 'src/_src@shared/_images/shared.png',
+        type: 'local-file',
+      });
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('falls back to bare package resolution for ./-prefixed CSS imports while keeping script ./-imports relative', async () => {
+    const fixture = await createFixture({
+      'node_modules/@scope/ui/dist/theme.css': '.theme {}',
+      'node_modules/@scope/ui/package.json': JSON.stringify({
+        exports: {
+          './theme.css': { style: './dist/theme.css' },
+        },
+        name: '@scope/ui',
+      }),
+      'node_modules/tailwindcss/index.css': '.tw {}',
+      'node_modules/tailwindcss/package.json': JSON.stringify({
+        exports: {
+          '.': { style: './index.css' },
+        },
+        name: 'tailwindcss',
+      }),
+      'src/local.css': '.local {}',
+      'src/main.css': '',
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      const results = resolver('src/main.css', [
+        createImport('./tailwindcss', 'named-import'),
+        createImport('./tailwindcss', 'css-at-import'),
+        createImport('./@scope/ui/theme.css', 'css-url'),
+        createImport('./local.css', 'css-at-import'),
+        createImport('../tailwindcss', 'css-at-import'),
+      ]);
+
+      expect(results[0]?.target.type).toBe('unresolved');
+      expect(results[1]?.target).toEqual({
+        packageName: 'tailwindcss',
+        type: 'external-library',
+      });
+      expect(results[2]?.target).toEqual({
+        packageName: '@scope/ui',
+        type: 'external-library',
+      });
+      expect(results[3]?.target).toEqual({
+        path: 'src/local.css',
+        type: 'local-file',
+      });
+      expect(results[4]?.target.type).toBe('unresolved');
+      if (results[4]?.target.type === 'unresolved') {
+        expect(results[4].target.reason).toContain("'../tailwindcss'");
+      }
     } finally {
       await fixture.rm();
     }

@@ -144,7 +144,7 @@ describe('classifyStyleReference', () => {
     expect(result.unsupportedSyntax).toBeUndefined();
   });
 
-  it('preserves existing ./ and ../ relative specifiers without alteration', () => {
+  it('preserves existing ./, ../, and #/ specifiers without alteration', () => {
     const currentResult = classifyStyleReference(
       'css-url',
       position,
@@ -158,6 +158,19 @@ describe('classifyStyleReference', () => {
       '../base/theme.css'
     );
     expect(parentResult.importItem?.specifier).toBe('../base/theme.css');
+
+    const aliasResult = classifyStyleReference(
+      'css-at-import',
+      position,
+      '#/_src@shared/_styles/base.css'
+    );
+    expect(aliasResult.importItem).toEqual({
+      isTypeOnly: false,
+      kind: 'css-at-import',
+      position,
+      specifier: '#/_src@shared/_styles/base.css',
+    });
+    expect(aliasResult.unsupportedSyntax).toBeUndefined();
   });
 
   it('unquotes double and single quoted strings properly', () => {

@@ -7,23 +7,13 @@ export function handleUnsupportedSyntax(
   locator: TSourceLocator,
   unsupportedSyntaxes: TUnsupportedSyntax[]
 ): void {
-  const start = typeof node['start'] === 'number' ? node['start'] : 0;
-  if (node.type === 'TSExportAssignment') {
-    unsupportedSyntaxes.push({
-      description: 'TypeScript export assignment (export =) is unsupported',
-      position: locator(start),
-    });
+  if (node.type !== 'TSExportAssignment') {
     return;
   }
 
-  if (
-    node.type === 'TSModuleDeclaration' &&
-    (node['kind'] === 'module' || node['kind'] === 'global')
-  ) {
-    unsupportedSyntaxes.push({
-      description:
-        'Ambient module or global augmentation (declare module / declare global) is unsupported',
-      position: locator(start),
-    });
-  }
+  const start = typeof node['start'] === 'number' ? node['start'] : 0;
+  unsupportedSyntaxes.push({
+    description: 'TypeScript export assignment (export =) is unsupported',
+    position: locator(start),
+  });
 }

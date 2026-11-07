@@ -30,7 +30,7 @@ export function resolveSpecifiers(
 
   const resolver = new ResolverFactory({
     builtinModules: true,
-    conditionNames: ['import', 'require', 'node', 'types', 'default'],
+    conditionNames: ['import', 'require', 'node', 'types', 'style', 'default'],
     extensionAlias: {
       '.cjs': ['.cts', '.cjs'],
       '.js': ['.ts', '.tsx', '.js'],
@@ -65,15 +65,24 @@ export function resolveSpecifiers(
 
   const resolveSingle = (
     directory: string,
-    specifier: string
+    specifier: string,
+    canFallbackToBare: boolean
   ): TCachedResolution => {
-    const matchedAlias = matchPathAlias(specifier, aliases);
+    const cleanSpecifier = specifier.split('?', 1)[0] ?? specifier;
+    const matchedAlias = matchPathAlias(cleanSpecifier, aliases);
     const aliasUsed = matchedAlias?.alias.prefix ?? null;
     const aliasAlternatives = matchedAlias?.targets ?? [];
 
     let resolveResult;
     try {
       resolveResult = resolver.sync(directory, specifier);
+      if (
+        canFallbackToBare &&
+        resolveResult.path === undefined &&
+        specifier.startsWith('./')
+      ) {
+        resolveResult = resolver.sync(directory, specifier.slice(2));
+      }
     } catch (error: unknown) {
       assertInvariant(error instanceof Error, 'Expected resolver error');
       return {
@@ -86,13 +95,15 @@ export function resolveSpecifiers(
       };
     }
 
-    const acquiredResolveResult =
-      resolveResult.path === undefined
-        ? resolveResult
-        : {
-            ...resolveResult,
-            path: toCanonicalPath(resolveResult.path),
-          };
+    let acquiredResolveResult = resolveResult;
+    if (resolveResult.path !== undefined) {
+      const cleanResolvedPath =
+        resolveResult.path.split('?', 1)[0] ?? resolveResult.path;
+      acquiredResolveResult = {
+        ...resolveResult,
+        path: toCanonicalPath(cleanResolvedPath),
+      };
+    }
 
     const target = classifyResolutionTarget({
       aliasAlternatives,
@@ -134,11 +145,17 @@ export function resolveSpecifiers(
           },
         });
       } else {
-        const cacheKey = `${directory}\0${importItem.specifier}`;
+        const canFallbackToBare =
+          importItem.kind === 'css-at-import' || importItem.kind === 'css-url';
+        const cacheKey = `${directory}\0${importItem.specifier}\0${String(canFallbackToBare)}`;
         let cached = resolutionCache.get(cacheKey);
 
         if (cached === undefined) {
-          cached = resolveSingle(directory, importItem.specifier);
+          cached = resolveSingle(
+            directory,
+            importItem.specifier,
+            canFallbackToBare
+          );
           resolutionCache.set(cacheKey, cached);
         }
 

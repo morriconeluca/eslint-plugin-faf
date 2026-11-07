@@ -14,6 +14,7 @@ import {
 const roles = [
   { category: '_types', isCategoryNode: true, name: 'type' },
   { category: '_fonts', implicitRoleExtensions: ['.woff2'], name: 'font' },
+  { category: '_images', implicitRoleExtensions: ['.png'], name: 'image' },
   { category: '_styles', implicitRoleExtensions: ['.css'], name: 'style' },
   { category: '_utils', name: 'util' },
 ];
@@ -76,6 +77,12 @@ const PREDICATES = {
     constraint: 'dependency/private-category-unidirectionality',
     predicate:
       'a Private Category must not import the direct Logical Nodes of its parent',
+    reference: 'FAF §6.3.3',
+  },
+  privateCategoryVisibility: {
+    constraint: 'dependency/private-category-visibility',
+    predicate:
+      'a Private Category is importable from outside only by the enabled direct Logical Nodes of its parent',
     reference: 'FAF §6.3.3',
   },
   rootNodeDiscipline: {
@@ -1879,6 +1886,101 @@ const scenarios: readonly TScenario[] = [
       ...rootTree,
       ...layerTree,
       'src/high.ts': "import './_utils/widget/index.js';\n",
+    },
+  },
+  {
+    config: {
+      faf: {
+        common: {
+          ...common,
+          aliases: { '#/_src@shared': 'src/_src@shared' },
+        },
+        locals: [
+          {
+            rootFragments: [
+              { path: 'src', rootNodes: [['main.css'], ['main.ts']] },
+            ],
+          },
+        ],
+      },
+    },
+    expected: [],
+    name: 'F3.1 CSS @import from node_modules package and #/* Path Alias resolves without unverified outcomes',
+    responsiblePart: 'collect-modules',
+    tree: {
+      'node_modules/pkg/package.json': JSON.stringify({
+        exports: { './style.css': { style: './style.css' } },
+        name: 'pkg',
+      }),
+      'node_modules/pkg/style.css': 'body { margin: 0; }\n',
+      'src/_src@shared/_styles/base.css': ':root {}\n',
+      'src/main.css':
+        "@import 'pkg/style.css';\n@import '#/_src@shared/_styles/base.css';\n",
+      'src/main.ts': 'export const main = 1;\n',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '#/_src@shared/*': ['./src/_src@shared/*'],
+          },
+        },
+      }),
+    },
+  },
+  {
+    config: { faf: { common, locals: [{ rootFragments: [root] }] } },
+    expected: [],
+    name: 'F3.2 Asset import with Vite query string in Private Category is permitted from parent Fragment Master Node',
+    responsiblePart: 'collect-modules',
+    tree: {
+      ...rootTree,
+      'src/_utils/widget/_images/fatal.png': 'png\n',
+      'src/_utils/widget/index.ts':
+        "export { widget } from './widget.util.js';\n",
+      'src/_utils/widget/widget.util.ts':
+        "import img from './_images/fatal.png?responsive';\nexport const widget = img;\n",
+    },
+  },
+  {
+    config: { faf: { common, locals: [{ rootFragments: [root] }] } },
+    expected: [
+      dependency('privateCategoryVisibility', {
+        from: 'src/high.ts',
+        specifier: './_utils/widget/_images/fatal.png?responsive',
+        to: 'src/_utils/widget/_images/fatal.png',
+      }),
+    ],
+    name: 'F3.3 Asset import with Vite query string in Private Category from outside parent Fragment reports private-category-visibility',
+    responsiblePart: 'private-category-visibility',
+    tree: {
+      ...rootTree,
+      'src/_utils/widget/_images/fatal.png': 'png\n',
+      'src/_utils/widget/index.ts':
+        "export { widget } from './widget.util.js';\n",
+      'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
+      'src/high.ts':
+        "import img from './_utils/widget/_images/fatal.png?responsive';\nexport const high = img;\n",
+    },
+  },
+  {
+    config: {
+      faf: {
+        common,
+        locals: [
+          {
+            foreignDomains: ['src/_tooling'],
+            rootFragments: [root],
+          },
+        ],
+      },
+    },
+    expected: [],
+    name: 'F3.4 Foreign Domain ambient declarations (declare module and declare global) produce no unsupported-syntax outcomes',
+    responsiblePart: 'collect-modules',
+    tree: {
+      ...rootTree,
+      'src/_tooling/globals.d.ts':
+        "declare module '*.css';\ndeclare global {\n  interface Window {}\n}\n",
     },
   },
 ];
