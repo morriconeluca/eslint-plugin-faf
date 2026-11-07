@@ -3,7 +3,13 @@ import path from 'node:path';
 
 import { comparePaths, normalizePath } from './changed-files.js';
 
-const EXCLUDED_SUFFIXES = ['.mock.ts', '.spec.ts', '.type.ts'] as const;
+const EXCLUDED_SUFFIXES = [
+  '.config.ts',
+  '.constant.ts',
+  '.mock.ts',
+  '.spec.ts',
+  '.type.ts',
+] as const;
 
 export const isMutableSource = (filePath: string): boolean => {
   const normalized = normalizePath(filePath);

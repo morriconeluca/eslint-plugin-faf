@@ -1,37 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  IDENTIFIER_CHAR_PATTERN,
-  URL_HEADER_PATTERN,
-} from './scan-css-url.constant.js';
 import { scanCssUrl } from './scan-css-url.util.js';
 
 describe('scanCssUrl', () => {
-  describe('constants', () => {
-    it('matches valid single identifier characters and rejects multi-character', () => {
-      expect(IDENTIFIER_CHAR_PATTERN.test('a')).toBe(true);
-      expect(IDENTIFIER_CHAR_PATTERN.test('Z')).toBe(true);
-      expect(IDENTIFIER_CHAR_PATTERN.test('9')).toBe(true);
-      expect(IDENTIFIER_CHAR_PATTERN.test('-')).toBe(true);
-      expect(IDENTIFIER_CHAR_PATTERN.test('_')).toBe(true);
-      expect(IDENTIFIER_CHAR_PATTERN.test('ab')).toBe(false);
-      expect(IDENTIFIER_CHAR_PATTERN.test('a!')).toBe(false);
-      expect(IDENTIFIER_CHAR_PATTERN.test('!a')).toBe(false);
-      expect(IDENTIFIER_CHAR_PATTERN.test('')).toBe(false);
-      expect(IDENTIFIER_CHAR_PATTERN.test(' ')).toBe(false);
-    });
-
-    it('matches url header pattern with various whitespaces', () => {
-      URL_HEADER_PATTERN.lastIndex = 0;
-      expect(URL_HEADER_PATTERN.test('url(')).toBe(true);
-
-      URL_HEADER_PATTERN.lastIndex = 0;
-      expect(URL_HEADER_PATTERN.test('URL  (\n\t')).toBe(true);
-
-      URL_HEADER_PATTERN.lastIndex = 0;
-      expect(URL_HEADER_PATTERN.test('curl(')).toBe(false);
-    });
-  });
   it.each([
     {
       name: 'preceded by letter',

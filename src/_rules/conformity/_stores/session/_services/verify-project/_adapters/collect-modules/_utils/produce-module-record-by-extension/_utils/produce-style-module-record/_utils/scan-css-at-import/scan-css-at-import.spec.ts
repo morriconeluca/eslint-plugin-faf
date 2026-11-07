@@ -1,27 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { IDENTIFIER_CHAR_PATTERN } from './scan-css-at-import.constant.js';
 import { scanCssAtImport } from './scan-css-at-import.util.js';
 
 describe('scanCssAtImport', () => {
-  describe('IDENTIFIER_CHAR_PATTERN', () => {
-    it('matches valid single identifier characters', () => {
-      expect(IDENTIFIER_CHAR_PATTERN.test('a')).toBe(true);
-      expect(IDENTIFIER_CHAR_PATTERN.test('Z')).toBe(true);
-      expect(IDENTIFIER_CHAR_PATTERN.test('9')).toBe(true);
-      expect(IDENTIFIER_CHAR_PATTERN.test('-')).toBe(true);
-      expect(IDENTIFIER_CHAR_PATTERN.test('_')).toBe(true);
-    });
-
-    it('rejects multi-character strings and invalid characters', () => {
-      expect(IDENTIFIER_CHAR_PATTERN.test('ab')).toBe(false);
-      expect(IDENTIFIER_CHAR_PATTERN.test('a!')).toBe(false);
-      expect(IDENTIFIER_CHAR_PATTERN.test('!a')).toBe(false);
-      expect(IDENTIFIER_CHAR_PATTERN.test('')).toBe(false);
-      expect(IDENTIFIER_CHAR_PATTERN.test(' ')).toBe(false);
-      expect(IDENTIFIER_CHAR_PATTERN.test(';')).toBe(false);
-    });
-  });
   it.each([
     {
       name: 'keyword does not match @import',

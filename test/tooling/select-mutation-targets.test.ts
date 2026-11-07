@@ -81,6 +81,8 @@ describe('selectMutationTargets', () => {
         ['src/foo/only.spec.ts'],
         [
           'src/foo/index.ts',
+          'src/foo/only.config.ts',
+          'src/foo/only.constant.ts',
           'src/foo/only.mock.ts',
           'src/foo/only.spec.ts',
           'src/foo/only.type.ts',
@@ -89,8 +91,34 @@ describe('selectMutationTargets', () => {
     ).toEqual([]);
   });
 
+  it('excludes .config.ts and .constant.ts from diff targets when touched', () => {
+    expect(
+      selectMutationTargets(
+        ['src/foo/bar.constant.ts'],
+        [
+          'src/foo/bar.config.ts',
+          'src/foo/bar.constant.ts',
+          'src/foo/bar.util.ts',
+        ]
+      )
+    ).toEqual(['src/foo/bar.util.ts']);
+
+    expect(
+      selectMutationTargets(
+        ['src/foo/bar.config.ts'],
+        [
+          'src/foo/bar.config.ts',
+          'src/foo/bar.constant.ts',
+          'src/foo/bar.util.ts',
+        ]
+      )
+    ).toEqual(['src/foo/bar.util.ts']);
+  });
+
   it('includes index.ts in listAllMutableSources for full runs while diff excludes index.ts', async () => {
     const fixture = await createFixture({
+      'src/foo/bar.config.ts': 'export const config = {};\n',
+      'src/foo/bar.constant.ts': 'export const constant = 1;\n',
       'src/foo/bar.mock.ts': 'export const mock = 1;\n',
       'src/foo/bar.spec.ts': 'export const spec = 1;\n',
       'src/foo/bar.type.ts': 'export type T = number;\n',
@@ -103,6 +131,8 @@ describe('selectMutationTargets', () => {
       expect(fullSources).toContain('src/index.ts');
       expect(fullSources).toContain('src/foo/index.ts');
       expect(fullSources).toContain('src/foo/bar.util.ts');
+      expect(fullSources).not.toContain('src/foo/bar.config.ts');
+      expect(fullSources).not.toContain('src/foo/bar.constant.ts');
       expect(fullSources).not.toContain('src/foo/bar.mock.ts');
       expect(fullSources).not.toContain('src/foo/bar.spec.ts');
       expect(fullSources).not.toContain('src/foo/bar.type.ts');

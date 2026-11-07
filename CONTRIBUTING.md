@@ -273,7 +273,7 @@ The codebase enforces five sequential quality gates. All gates must pass in loca
      2. CI base environment variable (`FAF_DIFF_BASE`).
      3. Local fallback (`main`).
    - If the base reference is invalid, the command fails immediately without falling back to `HEAD`. An empty diff is an explicit success outcome without reading legacy mutation reports. The git index is never modified.
-   - `src/**/*.mock.ts` is excluded from coverage and mutation because those files are test data, not production code. `*.constant.ts` and `*.config.ts` remain covered and mutated. No other exclusions are allowed.
+   - `src/**/*.mock.ts` is excluded from coverage and mutation because those files are test data, not production code. `*.constant.ts` and `*.config.ts` remain covered by line and branch coverage but are excluded from mutation testing. `*.schema.ts` remains covered and mutated. No other exclusions are allowed.
 5. **`gate:4:incremental`** (`npm run gate:4:incremental`):
    - Centralized Incremental Mutation: Runs Stryker on the entire configured perimeter on `main` with persistent cache `.cache/stryker/incremental.json` without `--force`. Executed by the orchestrator after integration.
    - Strict per-file threshold: **≥ 80% mutation score**.

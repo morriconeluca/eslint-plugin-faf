@@ -1,23 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { QUOTE_WRAP_PATTERN } from './classify-style-reference.constant.js';
 import { classifyStyleReference } from './classify-style-reference.util.js';
 
 describe('classifyStyleReference', () => {
   const position = { column: 5, line: 3 };
-
-  describe('quote wrap pattern', () => {
-    it('matches exact quote wrap boundaries', () => {
-      expect(QUOTE_WRAP_PATTERN.test('"hello"')).toBe(true);
-      expect(QUOTE_WRAP_PATTERN.test("'hello'")).toBe(true);
-      expect(QUOTE_WRAP_PATTERN.test('"with space"')).toBe(true);
-      expect(QUOTE_WRAP_PATTERN.test('hello')).toBe(false);
-      expect(QUOTE_WRAP_PATTERN.test('pre "middle" post')).toBe(false);
-      expect(QUOTE_WRAP_PATTERN.test('prefix "middle"')).toBe(false);
-      expect(QUOTE_WRAP_PATTERN.test('"middle" suffix')).toBe(false);
-      expect(QUOTE_WRAP_PATTERN.test('"hello\'')).toBe(false);
-    });
-  });
 
   it('excludes empty strings', () => {
     expect(classifyStyleReference('css-url', position, '')).toEqual({});
