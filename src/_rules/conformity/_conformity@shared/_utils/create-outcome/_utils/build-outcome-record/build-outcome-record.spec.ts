@@ -159,14 +159,14 @@ describe('buildOutcomeRecord', () => {
   });
 
   it('builds an unverified outcome without position', () => {
-    const code = 'unverified/not-implemented';
+    const code = 'unverified/symbolic-link';
     const outcome = buildOutcomeRecord(
       code,
       OUTCOME_CATALOG[code],
       'unverified message',
       {
         element: 'src',
-        reason: 'not-implemented',
+        reason: 'symlink',
       }
     );
     expect(outcome.position).toBeUndefined();
@@ -174,7 +174,7 @@ describe('buildOutcomeRecord', () => {
     if (outcome.family !== 'unverified') {
       return;
     }
-    expect(outcome.reason).toBe('not-implemented');
+    expect(outcome.reason).toBe('symlink');
   });
 
   it('builds a dependency outcome with specifier and default element', () => {
@@ -229,7 +229,7 @@ describe('buildOutcomeRecord', () => {
       'class msg',
       { propertyPath: 'foo' }
     );
-    expect(classOutcome.constraint).toBe('unverified/not-implemented');
+    expect(classOutcome.constraint).toBe('unverified/unsupported-syntax');
 
     const symbolCode = 'symbol/master-symbol';
     const symbolOutcome = buildOutcomeRecord(
@@ -238,15 +238,18 @@ describe('buildOutcomeRecord', () => {
       'symbol msg',
       { propertyPath: 'foo' }
     );
-    expect(symbolOutcome.constraint).toBe('unverified/not-implemented');
+    expect(symbolOutcome.constraint).toBe('unverified/unsupported-syntax');
 
-    const unverifiedCode = 'unverified/not-implemented';
+    const unverifiedCode = 'unverified/symbolic-link';
     const unverifiedOutcome = buildOutcomeRecord(
       unverifiedCode,
       OUTCOME_CATALOG[unverifiedCode],
       'unverified msg',
       { propertyPath: 'foo' }
     );
-    expect(unverifiedOutcome.constraint).toBe('unverified/not-implemented');
+    expect(unverifiedOutcome.constraint).toBe('unverified/symbolic-link');
+    if (unverifiedOutcome.family === 'unverified') {
+      expect(unverifiedOutcome.reason).toBe('unsupported-syntax');
+    }
   });
 });

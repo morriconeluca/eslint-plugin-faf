@@ -1,5 +1,4 @@
-import { ESLint } from 'eslint';
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import type { TScenarioMessage } from '../support/acceptance-project.js';
 
@@ -37,16 +36,6 @@ const outcome: TScenarioMessage = {
   severity: 2,
 };
 
-const absent: TScenarioMessage = {
-  ...outcome,
-  constraint: 'unverified/not-implemented',
-  element: 'acyclicity',
-  filePath: 'fafconfig.ts',
-  message:
-    "unverified/not-implemented: 'acyclicity' is not implemented (D-03).",
-  messageId: 'unverified',
-};
-
 describe('acceptance project support', () => {
   beforeAll(warmupESLint, 120_000);
 
@@ -64,8 +53,8 @@ describe('acceptance project support', () => {
       ).toBe('export const widget = 1;\n');
       const result = await lintScenario(fixture.path);
       expect(result.messages).toEqual([]);
-      expect(result.unimplementedParts.get('acyclicity')).toEqual([absent]);
-      expectScenario(result, 'acyclicity', [outcome]);
+      expect(result.unimplementedParts.size).toBe(0);
+      expectScenario(result, 'acyclicity', []);
       expect(await lintProject(fixture.path)).toHaveLength(3);
     } finally {
       await fixture.rm();
@@ -108,11 +97,6 @@ describe('acceptance project support', () => {
           }),
         ])
       );
-      expect(
-        forward.messages.some(
-          (message) => message.constraint === 'unverified/not-implemented'
-        )
-      ).toBe(false);
     } finally {
       await fixture.rm();
     }
@@ -168,85 +152,7 @@ describe('acceptance project support', () => {
     }
   });
 
-  it('only separates exact not-implemented outcomes and keeps duplicate outcomes', async () => {
-    const fixture = await createProject(tree, config);
-    const messages = [
-      {
-        column: 1,
-        line: 10,
-        message: absent.message,
-        messageId: 'unverified',
-        ruleId: 'faf/conformity',
-        severity: 2,
-      },
-      {
-        column: 2,
-        line: 2,
-        message: absent.message,
-        messageId: 'unverified',
-        ruleId: 'faf/conformity',
-        severity: 2,
-      },
-      {
-        column: 1,
-        line: 2,
-        message: 'unverified/not-implemented: Unexpected wording',
-        messageId: 'unverified',
-        ruleId: 'faf/conformity',
-        severity: 2,
-      },
-      {
-        column: 1,
-        line: 1,
-        message: absent.message,
-        messageId: 'unverified',
-        ruleId: 'another/rule',
-        severity: 2,
-      },
-    ] satisfies ESLint.LintResult['messages'];
-    const lint = vi.spyOn(ESLint.prototype, 'lintFiles').mockResolvedValue([
-      {
-        errorCount: 4,
-        fatalErrorCount: 0,
-        filePath: fixture.getPath('fafconfig.ts'),
-        fixableErrorCount: 0,
-        fixableWarningCount: 0,
-        messages,
-        suppressedMessages: [],
-        usedDeprecatedRules: [],
-        warningCount: 0,
-      },
-    ]);
-    try {
-      const result = await lintScenario(fixture.path);
-      expect(
-        result.messages.map((message) => [
-          message.line,
-          message.column,
-          message.constraint,
-        ])
-      ).toEqual([
-        [1, 1, null],
-        [2, 1, 'unverified/not-implemented'],
-      ]);
-      expect(
-        result.unimplementedParts
-          .get('acyclicity')
-          ?.map((message) => [message.line, message.column])
-      ).toEqual([
-        [2, 2],
-        [10, 1],
-      ]);
-      expect(() => {
-        expectScenario(result, 'acyclicity', []);
-      }).toThrow();
-    } finally {
-      lint.mockRestore();
-      await fixture.rm();
-    }
-  });
-
-  it('checks the expected outcomes immediately when the responsible part is implemented', () => {
+  it('checks the expected outcomes', () => {
     const result = { messages: [outcome], unimplementedParts: new Map() };
     expect(() => {
       expectScenario(result, 'classification-completeness', [outcome]);
@@ -259,39 +165,6 @@ describe('acceptance project support', () => {
         { ...result, messages: [] },
         'classification-completeness',
         [outcome]
-      );
-    }).toThrow();
-  });
-
-  it('rejects absent-part markers with extra, duplicate, or mismatched evidence', () => {
-    const unimplementedParts = new Map([['acyclicity', [absent]]]);
-    expect(() => {
-      expectScenario(
-        { messages: [outcome], unimplementedParts },
-        'acyclicity',
-        [outcome]
-      );
-    }).toThrow();
-    expect(() => {
-      expectScenario(
-        {
-          messages: [],
-          unimplementedParts: new Map([['acyclicity', [absent, absent]]]),
-        },
-        'acyclicity',
-        []
-      );
-    }).toThrow();
-    expect(() => {
-      expectScenario(
-        {
-          messages: [],
-          unimplementedParts: new Map([
-            ['acyclicity', [{ ...absent, element: 'tree-frontier' }]],
-          ]),
-        },
-        'acyclicity',
-        []
       );
     }).toThrow();
   });

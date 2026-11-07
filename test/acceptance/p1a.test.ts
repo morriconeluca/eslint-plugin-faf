@@ -4389,8 +4389,9 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
       [
         configMessage({
           constraint: 'unverified/cyclic-root-authorization',
-          element: 'app/a.ts',
+          element: 'app',
           family: 'unverified',
+          filePath: 'app/a.ts',
           predicate:
             'declares reciprocal root dependency authorizations without physical code cycle',
           reference: 'D-04',

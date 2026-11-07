@@ -723,12 +723,6 @@ export const OUTCOME_CATALOG = {
     predicate:
       'contains a non-literal dynamic import that cannot be resolved statically',
   },
-  'unverified/not-implemented': {
-    family: 'unverified',
-    form: 'element',
-    normativeReference: REFERENCE_D_03,
-    predicate: 'is not implemented',
-  },
   'unverified/symbolic-link': {
     family: 'unverified',
     form: 'element',

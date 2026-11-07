@@ -708,7 +708,6 @@ export type TUnverifiedConstraint =
   | 'unverified/cyclic-root-authorization'
   | 'unverified/cyclic-tree-authorization'
   | 'unverified/non-literal-dynamic-import'
-  | 'unverified/not-implemented'
   | 'unverified/symbolic-link'
   | 'unverified/unreadable-entry'
   | 'unverified/unreadable-external-file'

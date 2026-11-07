@@ -27,20 +27,8 @@ const conformingFiles = {
     "export function widget() {\n  return 'ok';\n}\n",
 };
 
-const unimplementedParts = ['acyclicity'];
-
-const compareText = (left: string, right: string): number => {
-  if (left < right) {
-    return -1;
-  }
-  if (left > right) {
-    return 1;
-  }
-  return 0;
-};
-
 describe('verifyProject', () => {
-  it('returns one not-implemented outcome for every unbuilt part of a conforming root layer', async () => {
+  it('returns zero outcomes for a conforming root layer', async () => {
     const fixture = await createFixture({
       ...conformingFiles,
       'fafconfig.ts': configSource(''),
@@ -52,18 +40,7 @@ describe('verifyProject', () => {
         configPath,
         workingDirectory: fixture.path,
       });
-      const elements = result.outcomes.map((item) => item.outcome.element);
-      const ordered = [...elements];
-      ordered.sort(compareText);
-      expect(ordered).toEqual(unimplementedParts);
-      expect(result.outcomes).toHaveLength(unimplementedParts.length);
-      for (const item of result.outcomes) {
-        expect(item.anchorPath).toBe(configPath);
-        expect(item.outcome.constraint).toBe('unverified/not-implemented');
-        expect(item.outcome.family).toBe('unverified');
-        expect(item.outcome.normativeReference.length).toBeGreaterThan(0);
-        expect(item.position).toEqual({ column: 1, line: 1 });
-      }
+      expect(result.outcomes).toEqual([]);
       expect(result.collectedModules).toBe(true);
       expect(result.treeOrigins).toEqual([nodePath.join(fixture.path, 'src')]);
       expect(result.externalFiles).toEqual([

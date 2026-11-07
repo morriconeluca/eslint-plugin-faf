@@ -5,11 +5,13 @@ import { createOutcome } from './index.js';
 describe('createOutcome', () => {
   describe('four message forms as literal assertions', () => {
     it('fosters the element form without detail as a literal message', () => {
-      const outcome = createOutcome('unverified/not-implemented', {
-        element: 'containment-matrix',
-        reason: 'not-implemented',
+      const outcome = createOutcome('unverified/symbolic-link', {
+        element: 'src/_utils/link.ts',
+        reason: 'symlink',
       });
-      expect(outcome.message).toBe("'containment-matrix' is not implemented");
+      expect(outcome.message).toBe(
+        "'src/_utils/link.ts' is a symbolic link within a tree"
+      );
     });
 
     it('fosters the element form with detail as a literal message', () => {

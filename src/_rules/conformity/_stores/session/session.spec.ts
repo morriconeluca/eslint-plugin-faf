@@ -139,18 +139,7 @@ describe('session', () => {
             sourceText: nodeFs.readFileSync(filename, 'utf8'),
             workingDirectory: fixture.path,
           });
-          if (file === 'fafconfig.ts') {
-            expect(outcomes).toHaveLength(1);
-            expect(
-              outcomes.every(
-                (item) =>
-                  item.outcome.constraint === 'unverified/not-implemented' &&
-                  item.anchorPath === configPath
-              )
-            ).toBe(true);
-          } else {
-            expect(outcomes).toEqual([]);
-          }
+          expect(outcomes).toEqual([]);
         }
       });
       expect(writes).toBe(1);

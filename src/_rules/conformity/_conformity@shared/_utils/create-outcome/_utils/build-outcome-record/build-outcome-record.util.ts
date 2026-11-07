@@ -132,25 +132,17 @@ export const buildOutcomeRecord = (() => {
         normativeReference: entry.normativeReference,
       };
     }
-    if (isUnverified(code) && isUnverifiedFacts(facts)) {
-      return {
-        ...positionSpread,
-        constraint: code,
-        element: facts.element,
-        family: 'unverified',
-        message,
-        normativeReference: entry.normativeReference,
-        reason: facts.reason,
-      };
-    }
+    const unverifiedConstraint: TUnverifiedConstraint = isUnverified(code)
+      ? code
+      : 'unverified/unsupported-syntax';
     return {
       ...positionSpread,
-      constraint: 'unverified/not-implemented',
-      element: '',
+      constraint: unverifiedConstraint,
+      element: hasElement(facts) ? facts.element : '',
       family: 'unverified',
       message,
       normativeReference: entry.normativeReference,
-      reason: 'not-implemented',
+      reason: isUnverifiedFacts(facts) ? facts.reason : 'unsupported-syntax',
     };
   }
 

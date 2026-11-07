@@ -898,11 +898,11 @@ describe('acceptance: global graph norms', () => {
     {
       description: 'another Tree',
       expected: [
-        reEntryOutcome(['a/start.ts', 'x.ts', 'b/end.ts', 'y.ts', 'a/end.ts']),
         cycleOutcome('a/start.ts', 'acyclicity/inter-tree-cycle', [
           ['a/start.ts', 'x.ts', 'b/end.ts'],
           ['b/end.ts', 'y.ts', 'a/end.ts'],
         ]),
+        reEntryOutcome(['a/start.ts', 'x.ts', 'b/end.ts', 'y.ts', 'a/end.ts']),
       ],
       x: "import './b/end.js';\n",
       y: "import './a/end.js';\n",

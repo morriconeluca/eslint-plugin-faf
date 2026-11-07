@@ -28,14 +28,12 @@ const conformingTree = {
     "export function widget() {\n  return 'ok';\n}\n",
 };
 
-const unimplementedParts = ['acyclicity'];
-
 describe('acceptance: faf/conformity', () => {
   const WARMUP_TIMEOUT_MS = 120_000;
 
   beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
 
-  it('reports one not-implemented outcome for every unbuilt part, anchored to fafconfig.ts', async () => {
+  it('reports zero outcomes for a conforming project', async () => {
     const fixture = await createProject(conformingTree, config);
 
     try {
@@ -48,21 +46,7 @@ describe('acceptance: faf/conformity', () => {
         results.find((result) => result.filePath === configPath)?.messages ??
         [];
       expect(otherMessages).toEqual([]);
-      expect(configMessages).toHaveLength(unimplementedParts.length);
-      const names = configMessages.map((message) => {
-        expect(message.ruleId).toBe('faf/conformity');
-        expect(message.messageId).toBe('unverified');
-        expect(message.line).toBe(1);
-        expect(message.message).toContain('unverified/not-implemented');
-        const matched = /'([^']+)' is not implemented \(D-03\)\./.exec(
-          message.message
-        );
-        return matched?.[1];
-      });
-      const ordered = names.filter(
-        (name): name is string => name !== undefined
-      );
-      expect(ordered).toEqual(unimplementedParts);
+      expect(configMessages).toEqual([]);
     } finally {
       await fixture.rm();
     }
@@ -97,14 +81,7 @@ describe('acceptance: faf/conformity', () => {
         results.find((result) => result.filePath === configPath)?.messages ??
         [];
       expect(otherMessages).toEqual([]);
-      expect(configMessages).toHaveLength(unimplementedParts.length);
-      expect(
-        configMessages.every(
-          (message) =>
-            message.messageId === 'unverified' &&
-            message.message.includes('unverified/not-implemented')
-        )
-      ).toBe(true);
+      expect(configMessages).toEqual([]);
       expect(verifications).toBe(1);
     } finally {
       nodeFs.renameSync = originalRename;
