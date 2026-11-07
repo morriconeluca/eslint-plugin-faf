@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const SCRIPT_DIRECTORY = fileURLToPath(new URL('./', import.meta.url));
+const REPOSITORY_ROOT = path.resolve(SCRIPT_DIRECTORY, '..');
 const TYPESCRIPT_EXTENSION = '.ts';
 const JAVASCRIPT_EXTENSION = '.js';
 
@@ -15,7 +16,10 @@ const rewriteScriptSpecifier = (
   parentURL: string
 ): string | undefined => {
   const parentPath = fileURLToPath(parentURL);
-  if (!parentPath.startsWith(SCRIPT_DIRECTORY)) {
+  if (
+    !parentPath.startsWith(REPOSITORY_ROOT) ||
+    parentPath.includes('/node_modules/')
+  ) {
     return undefined;
   }
   const rewritten = `${specifier.slice(0, -JAVASCRIPT_EXTENSION.length)}${TYPESCRIPT_EXTENSION}`;
