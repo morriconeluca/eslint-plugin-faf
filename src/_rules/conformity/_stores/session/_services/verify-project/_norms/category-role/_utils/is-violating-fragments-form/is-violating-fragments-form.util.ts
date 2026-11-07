@@ -56,24 +56,9 @@ export function isViolatingFragmentsForm(
       return classification.role.kind !== 'absent' || fileName === 'index.ts';
     }
 
-    const slashIndex = classification.path.lastIndexOf('/');
-    const fileName = classification.path.slice(slashIndex + 1);
-    const dotIndex = fileName.indexOf('.');
-    const stem = dotIndex <= 0 ? fileName : fileName.slice(0, dotIndex);
-    const parentSlashIndex = parent.path.lastIndexOf('/');
-    const parentName = parent.path.slice(parentSlashIndex + 1);
-    if (stem !== parentName) {
-      return false;
-    }
-
-    if (parent.domainKind === 'sub-category') {
-      return classification.role.kind !== 'absent';
-    }
-
     return (
-      parent.domainKind === 'fragment' &&
-      parent.relationalQualifications.isPathFragment &&
-      classification.role.roleName !== parent.imposedRoleName
+      parent.domainKind === 'sub-category' &&
+      classification.role.kind !== 'absent'
     );
   };
 

@@ -199,82 +199,81 @@ describe('isViolatingFragmentsForm', () => {
     );
   });
 
-  it('returns true when a Sub-Category of Fragments contains a file named after it', () => {
-    const file = createClassification({
+  it('returns true when a Sub-Category of Fragments contains a file with a Role regardless of stem', () => {
+    const matchingStemFile = createClassification({
       path: 'src/_utils/_user-profile/_user-profile.util.ts',
       role: { kind: 'explicit', roleName: 'util' },
     });
-    const parent = createParent({
+    const matchingStemParent = createParent({
       domainKind: 'sub-category',
       imposedRoleName: 'component',
       path: 'src/_utils/_user-profile',
     });
-    const taxonomy = createTaxonomy([parent, file]);
-    const inventory = createInventory(file.path, parent.path);
     const trees = [createTree([componentRole])];
 
-    expect(isViolatingFragmentsForm(file, taxonomy, inventory, trees)).toBe(
-      true
-    );
-  });
+    expect(
+      isViolatingFragmentsForm(
+        matchingStemFile,
+        createTaxonomy([matchingStemParent, matchingStemFile]),
+        createInventory(matchingStemFile.path, matchingStemParent.path),
+        trees
+      )
+    ).toBe(true);
 
-  it('returns false when a file in a Sub-Category does not match the directory stem', () => {
-    const file = createClassification({
-      path: 'src/_component/_atom/button.component.tsx',
+    const buttonFile = createClassification({
+      path: 'src/_components/_atoms/button.component.tsx',
       role: { kind: 'explicit', roleName: 'component' },
     });
-    const parent = createParent({
+    const atomsParent = createParent({
       domainKind: 'sub-category',
       imposedRoleName: 'component',
-      path: 'src/_component/_atom',
+      path: 'src/_components/_atoms',
     });
-    const taxonomy = createTaxonomy([parent, file]);
-    const inventory = createInventory(file.path, parent.path);
-    const trees = [createTree([componentRole])];
 
-    expect(isViolatingFragmentsForm(file, taxonomy, inventory, trees)).toBe(
-      false
-    );
+    expect(
+      isViolatingFragmentsForm(
+        buttonFile,
+        createTaxonomy([atomsParent, buttonFile]),
+        createInventory(buttonFile.path, atomsParent.path),
+        trees
+      )
+    ).toBe(true);
   });
 
-  it('returns true when a Path Fragment Master has a role that differs from imposed role', () => {
-    const file = createClassification({
-      path: 'src/_apis/_todos/get-todo/get-todo.util.ts',
-      role: { kind: 'explicit', roleName: 'util' },
-    });
+  it('returns false for any Fragment Node or Sub-Graph Node inside a Path Fragment', () => {
     const parent = createParent({
       domainKind: 'fragment',
       imposedRoleName: 'api',
       path: 'src/_apis/_todos/get-todo',
       relationalQualifications: { ...qualifications, isPathFragment: true },
     });
-    const taxonomy = createTaxonomy([parent, file]);
-    const inventory = createInventory(file.path, parent.path);
-    const trees = [createTree([apiRole], ['src/_apis'])];
-
-    expect(isViolatingFragmentsForm(file, taxonomy, inventory, trees)).toBe(
-      true
-    );
-  });
-
-  it('returns false when a Path Fragment Master matches the imposed role', () => {
-    const file = createClassification({
+    const masterFile = createClassification({
+      nodeKind: 'master-node',
       path: 'src/_apis/_todos/get-todo/get-todo.api.ts',
       role: { kind: 'explicit', roleName: 'api' },
     });
-    const parent = createParent({
-      domainKind: 'fragment',
-      imposedRoleName: 'api',
-      path: 'src/_apis/_todos/get-todo',
-      relationalQualifications: { ...qualifications, isPathFragment: true },
+    const helperFile = createClassification({
+      nodeKind: 'fragment-node',
+      path: 'src/_apis/_todos/get-todo/get-todo.util.ts',
+      role: { kind: 'explicit', roleName: 'util' },
     });
-    const taxonomy = createTaxonomy([parent, file]);
-    const inventory = createInventory(file.path, parent.path);
+    const specFile = createClassification({
+      nodeKind: 'sub-graph-node',
+      path: 'src/_apis/_todos/get-todo/get-todo.spec.ts',
+      role: { kind: 'explicit', roleName: 'spec' },
+    });
     const trees = [createTree([apiRole], ['src/_apis'])];
 
-    expect(isViolatingFragmentsForm(file, taxonomy, inventory, trees)).toBe(
-      false
-    );
+    for (const file of [masterFile, helperFile, specFile]) {
+      expect(
+        isViolatingFragmentsForm(
+          file,
+          createTaxonomy([parent, file]),
+          createInventory(file.path, parent.path),
+          trees
+        )
+      ).toBe(false);
+    }
   });
 
   it('returns false when classification is not file or parent role form is not fragments', () => {

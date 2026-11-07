@@ -599,12 +599,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
 
   it('accepts singular Categories and Sub-Categories without pluralization', async () => {
     await scenario(
-      {
-        'src/_component/_atom/button.component.tsx':
-          'export const button = 1;\n',
-        'src/_component/_atom/index.ts':
-          "export { button } from './button.component.js';\n",
-      },
+      fragment('src/_component/_atom/button', 'component'),
       rootLayer({ roles: [{ category: '_component', name: 'component' }] }),
       'nomenclature'
     );
@@ -1374,25 +1369,24 @@ describe('acceptance: Mimetic Path Structures', () => {
   });
 
   it('propagates the Parent Category Role through mimetic coordinates', async () => {
+    const path = 'src/_apis/_todos/_[todo-id]/_status/patch-todo-status';
     await scenario(
-      fragment('src/_apis/_todos/_[todo-id]/_status/patch-todo-status', 'api'),
+      {
+        ...fragment(path, 'api'),
+        [`${path}/patch-todo-status.api.ts`]:
+          "import { helper } from './patch-todo-status.util.js';\nexport const value = helper;\n",
+        [`${path}/patch-todo-status.spec.ts`]:
+          "import { value } from './patch-todo-status.api.js';\nexport const specValue = value;\n",
+        [`${path}/patch-todo-status.util.ts`]: 'export const helper = 1;\n',
+      },
       mimetic(['patch']),
       'category-role'
     );
     await scenario(
-      fragment('src/_apis/_todos/_[todo-id]/_status/patch-todo-status', 'util'),
+      fragment(path, 'util'),
       mimetic(['patch']),
-      'category-role',
-      [
-        missingMasterNode(
-          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/index.ts',
-          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status'
-        ),
-        categoryRoleViolation(
-          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/patch-todo-status.util.ts',
-          'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/patch-todo-status.util.ts'
-        ),
-      ]
+      'fragment-anatomy',
+      [missingMasterNode(`${path}/index.ts`, path)]
     );
   });
 

@@ -273,50 +273,6 @@ describe('verifyCategoryRole', () => {
     ]);
   });
 
-  it('rejects a Fragment in Category Nodes form', () => {
-    const model = buildModel({
-      classifications: [
-        createItem({
-          domainKind: 'root-layer',
-          entryKind: 'directory',
-          itemId: 0,
-          path: 'src',
-        }),
-        createItem({
-          domainKind: 'category',
-          entryKind: 'directory',
-          imposedRoleName: 'type',
-          itemId: 1,
-          path: 'src/_types',
-        }),
-        createItem({
-          domainKind: 'fragment',
-          entryKind: 'directory',
-          imposedRoleName: 'type',
-          itemId: 2,
-          path: 'src/_types/user',
-        }),
-      ],
-      inventoryItems: [
-        createInventoryItem(0, 'src', 'directory', null),
-        createInventoryItem(1, 'src/_types', 'directory', 0),
-        createInventoryItem(2, 'src/_types/user', 'directory', 1),
-      ],
-      roles: [typeRoleNodes],
-    });
-
-    expect(verifyCategoryRole(model)).toEqual([
-      {
-        constraint: 'classification/category-role',
-        element: 'src/_types/user',
-        family: 'classification',
-        message:
-          "'src/_types/user' does not have the form or the Role imposed by its Category",
-        normativeReference: 'FAF §6.3.1',
-      },
-    ]);
-  });
-
   it('rejects divergent explicit role, absent role, index.ts, and dedicated sub-graph node in Category of Nodes', () => {
     const model = buildModel({
       classifications: [
@@ -486,6 +442,27 @@ describe('verifyCategoryRole', () => {
           path: 'src/_apis/_todos/get-todo/get-todo.util.ts',
           role: { kind: 'explicit', roleName: 'util' },
         }),
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'util',
+          itemId: 8,
+          path: 'src/_utils',
+        }),
+        createItem({
+          domainKind: 'sub-category',
+          entryKind: 'directory',
+          imposedRoleName: 'util',
+          itemId: 9,
+          path: 'src/_utils/_helpers',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 10,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/_helpers/format.util.ts',
+          role: { kind: 'explicit', roleName: 'util' },
+        }),
       ],
       inventoryItems: [
         createInventoryItem(0, 'src/_types', 'directory', null),
@@ -506,6 +483,14 @@ describe('verifyCategoryRole', () => {
           'file',
           6
         ),
+        createInventoryItem(8, 'src/_utils', 'directory', null),
+        createInventoryItem(9, 'src/_utils/_helpers', 'directory', 8),
+        createInventoryItem(
+          10,
+          'src/_utils/_helpers/format.util.ts',
+          'file',
+          9
+        ),
       ],
       mimeticPaths: ['src/_apis'],
       roles: [typeRoleNodes, apiRoleFragments, utilRole],
@@ -515,10 +500,10 @@ describe('verifyCategoryRole', () => {
     expect(outcomes).toEqual([
       {
         constraint: 'classification/category-role',
-        element: 'src/_apis/_todos/get-todo/get-todo.util.ts',
+        element: 'src/_utils/_helpers/format.util.ts',
         family: 'classification',
         message:
-          "'src/_apis/_todos/get-todo/get-todo.util.ts' does not have the form or the Role imposed by its Category",
+          "'src/_utils/_helpers/format.util.ts' does not have the form or the Role imposed by its Category",
         normativeReference: 'FAF §6.3.1',
       },
     ]);
