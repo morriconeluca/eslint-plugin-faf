@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { findInterTreeWitness } from './index.js';
+import { findInterTreeWitness } from './find-inter-tree-witness.util.js';
 
 describe('findInterTreeWitness', () => {
   it('returns null when component has fewer than 2 trees', () => {

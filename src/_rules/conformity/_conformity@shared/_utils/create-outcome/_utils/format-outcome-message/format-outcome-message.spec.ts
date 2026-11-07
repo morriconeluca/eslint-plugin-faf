@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatOutcomeMessage } from './index.js';
+import { formatOutcomeMessage } from './format-outcome-message.util.js';
 
 describe('formatOutcomeMessage', () => {
   it('formats an element message without detail', () => {

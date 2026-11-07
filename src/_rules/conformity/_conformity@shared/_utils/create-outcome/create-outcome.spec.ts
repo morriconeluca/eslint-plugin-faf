@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createOutcome } from './index.js';
+import { createOutcome } from './create-outcome.util.js';
 
 describe('createOutcome', () => {
   describe('four message forms as literal assertions', () => {

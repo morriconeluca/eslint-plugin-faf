@@ -6,7 +6,7 @@ import type { TAstNode } from '../../../../../../_extract-traversal-entries@shar
 
 import { assertInvariant } from '../../../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { handleImportExpression } from './index.js';
+import { handleImportExpression } from './handle-import-expression.util.js';
 
 const parseAndHandleImportExpression = (code: string): TModuleImport[] => {
   const result = parseSync('test.ts', code, {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { THorizontalHierarchies } from '../../../../../../_verify-project@shared/_types/_compounds/horizontal-hierarchies.type.js';
 
-import { isOrderedDownward } from './index.js';
+import { isOrderedDownward } from './is-ordered-downward.util.js';
 
 describe('isOrderedDownward', () => {
   it('returns false when hierarchies are empty', () => {

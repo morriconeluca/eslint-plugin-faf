@@ -1,10 +1,10 @@
 import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
-import type { TPatternIdentifier } from './index.js';
+import type { TPatternIdentifier } from './collect-pattern-identifiers.type.js';
 
 import { assertInvariant } from '../../../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { collectPatternIdentifiers } from './index.js';
+import { collectPatternIdentifiers } from './collect-pattern-identifiers.util.js';
 
 const parseAndCollect = (code: string): TPatternIdentifier[] => {
   const result = parseSync('test.ts', code, {

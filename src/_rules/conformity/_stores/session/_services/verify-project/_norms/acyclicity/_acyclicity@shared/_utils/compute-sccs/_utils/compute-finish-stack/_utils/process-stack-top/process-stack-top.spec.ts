@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { processStackTop } from './index.js';
+import { processStackTop } from './process-stack-top.util.js';
 
 describe('processStackTop', () => {
   it('advances to an unvisited neighbor', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { reconstructTreeCycle } from './index.js';
+import { reconstructTreeCycle } from './reconstruct-tree-cycle.util.js';
 
 describe('reconstructTreeCycle', () => {
   it('reconstructs cycle of tree indices for 2-node cycle', () => {

@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { assertInvariant } from '../../../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { hasValueDeclaration } from './index.js';
+import { hasValueDeclaration } from './has-value-declaration.util.js';
 
 const parseNamespaceBody = (code: string) => {
   const result = parseSync('test.ts', code, {

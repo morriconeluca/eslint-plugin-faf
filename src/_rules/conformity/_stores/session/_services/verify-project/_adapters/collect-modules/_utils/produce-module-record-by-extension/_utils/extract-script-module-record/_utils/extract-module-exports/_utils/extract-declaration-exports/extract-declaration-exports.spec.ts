@@ -5,7 +5,7 @@ import type { TModuleExport } from '../../../../../../../../../../../../_session
 
 import { assertInvariant } from '../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractDeclarationExports } from './index.js';
+import { extractDeclarationExports } from './extract-declaration-exports.util.js';
 
 const parseAndExtractExports = (code: string): TModuleExport[] => {
   const result = parseSync('test.ts', code, {

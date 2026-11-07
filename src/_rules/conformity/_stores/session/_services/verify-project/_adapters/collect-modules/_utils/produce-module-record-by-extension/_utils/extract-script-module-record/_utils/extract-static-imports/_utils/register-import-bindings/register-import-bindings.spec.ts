@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { TImportedBinding } from '../../../../_extract-script-module-record@shared/_types/imported-binding.type.js';
 
 import { assertInvariant } from '../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { registerImportBindings } from './index.js';
+import { registerImportBindings } from './register-import-bindings.util.js';
 
 const parseImportStatement = (sourceText: string) => {
   const result = parseSync('test.ts', sourceText, {

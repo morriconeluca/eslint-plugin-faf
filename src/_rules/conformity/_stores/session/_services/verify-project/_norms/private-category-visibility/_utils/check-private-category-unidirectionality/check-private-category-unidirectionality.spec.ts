@@ -10,7 +10,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { checkPrivateCategoryUnidirectionality } from './index.js';
+import { checkPrivateCategoryUnidirectionality } from './check-private-category-unidirectionality.util.js';
 
 type TModelEntry = {
   readonly depth: number;

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
 import { hierarchyFixture } from './_derive-horizontal-hierarchies@shared/_mocks/hierarchy-fixture.mock.js';
-import { deriveHorizontalHierarchies } from './index.js';
+import { deriveHorizontalHierarchies } from './derive-horizontal-hierarchies.util.js';
 
 describe('deriveHorizontalHierarchies', () => {
   it('returns empty models without outcomes for an empty project', () => {

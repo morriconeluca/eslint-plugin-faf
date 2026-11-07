@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { TTransition } from './populate-tree-transitions.type.js';
 
 import { verificationModel } from '../../../../../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { populateTreeTransitions } from './index.js';
+import { populateTreeTransitions } from './populate-tree-transitions.util.js';
 
 describe('populateTreeTransitions', () => {
   it('registers direct edges and crossings into transition matrix and ignores duplicate equal transitions', () => {

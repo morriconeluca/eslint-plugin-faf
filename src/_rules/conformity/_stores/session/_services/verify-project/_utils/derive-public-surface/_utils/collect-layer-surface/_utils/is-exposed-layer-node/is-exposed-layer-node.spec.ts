@@ -5,7 +5,7 @@ import type {
   TTaxonomyModel,
 } from '../../../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 
-import { isExposedLayerNode } from './index.js';
+import { isExposedLayerNode } from './is-exposed-layer-node.util.js';
 
 const absentRole = { kind: 'absent' as const, roleName: null };
 

@@ -5,7 +5,7 @@ import type {
   TLogicalDomainKind,
 } from '../../../../../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 
-import { isPeerDomain } from './index.js';
+import { isPeerDomain } from './is-peer-domain.util.js';
 
 const makeClassification = (
   domainKind: null | TLogicalDomainKind

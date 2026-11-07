@@ -6,7 +6,7 @@ import type {
 } from '../../../../../../_session@shared/_types/module-record.type.js';
 import type { TImportResolution } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
-import { collectResolvedArcs } from './index.js';
+import { collectResolvedArcs } from './collect-resolved-arcs.util.js';
 
 const SOURCE = 'src/app.ts';
 const DESTINATION = 'src/widget.util.ts';

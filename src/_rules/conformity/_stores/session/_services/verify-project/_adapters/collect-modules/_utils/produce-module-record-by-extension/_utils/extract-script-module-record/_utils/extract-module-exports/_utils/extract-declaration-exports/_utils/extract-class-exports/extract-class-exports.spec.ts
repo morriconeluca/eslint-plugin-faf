@@ -5,7 +5,7 @@ import type { TModuleExport } from '../../../../../../../../../../../../../../_s
 
 import { assertInvariant } from '../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractClassExports } from './index.js';
+import { extractClassExports } from './extract-class-exports.util.js';
 
 describe('extractClassExports', () => {
   it('extracts exported class declaration', () => {

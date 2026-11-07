@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { fileStem } from './index.js';
+import { fileStem } from './file-stem.util.js';
 
 describe('fileStem', () => {
   it('derives the stem before the first dot and keeps names without one', () => {

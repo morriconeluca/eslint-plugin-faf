@@ -15,7 +15,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { checkEdgeAliasAnchoring } from './index.js';
+import { checkEdgeAliasAnchoring } from './check-edge-alias-anchoring.util.js';
 
 type TInventorySpec = {
   readonly domainKind?: TLogicalDomainKind;

@@ -22,7 +22,7 @@ import type { TSourceLocator } from '../../_extract-script-module-record@shared/
 import type { TImportedBinding } from './extract-module-exports.type.js';
 
 import { createSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractModuleExports } from './index.js';
+import { extractModuleExports } from './extract-module-exports.util.js';
 
 const collectPatternSymbols = (
   pattern: BindingPattern | BindingRestElement,

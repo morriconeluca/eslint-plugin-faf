@@ -6,7 +6,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { checkCrossingTreeAuthorization } from './index.js';
+import { checkCrossingTreeAuthorization } from './check-crossing-tree-authorization.util.js';
 
 const makeCrossing = (
   sourcePath: string,

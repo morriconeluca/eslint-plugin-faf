@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { assertInvariant } from '../../../../../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { doesPatternBindRequire } from './index.js';
+import { doesPatternBindRequire } from './does-pattern-bind-require.util.js';
 
 const parsePattern = (code: string) => {
   const result = parseSync('test.ts', code, {

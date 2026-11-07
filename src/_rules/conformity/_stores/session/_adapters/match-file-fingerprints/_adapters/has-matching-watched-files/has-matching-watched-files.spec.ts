@@ -3,7 +3,7 @@ import nodeFs from 'node:fs';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { hasMatchingWatchedFiles } from './index.js';
+import { hasMatchingWatchedFiles } from './has-matching-watched-files.adapter.js';
 
 describe('hasMatchingWatchedFiles', () => {
   it('returns true when all watched files match disk state', async () => {

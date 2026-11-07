@@ -5,7 +5,7 @@ import type { TRootSymbol } from '../../../../../../../../../../../../_session@s
 
 import { assertInvariant } from '../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { collectStatementSymbols } from './index.js';
+import { collectStatementSymbols } from './collect-statement-symbols.util.js';
 
 const parseAndCollectStatement = (
   code: string,

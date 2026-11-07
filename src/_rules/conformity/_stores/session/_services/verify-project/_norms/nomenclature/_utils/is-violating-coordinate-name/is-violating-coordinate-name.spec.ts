@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TItemClassification } from '../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 
-import { isViolatingCoordinateName } from './index.js';
+import { isViolatingCoordinateName } from './is-violating-coordinate-name.util.js';
 
 const qualifications = {
   isParentCategory: false,

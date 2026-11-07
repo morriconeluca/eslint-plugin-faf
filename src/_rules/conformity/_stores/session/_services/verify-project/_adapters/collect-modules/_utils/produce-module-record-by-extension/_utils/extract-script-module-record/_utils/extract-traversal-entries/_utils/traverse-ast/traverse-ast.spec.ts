@@ -8,7 +8,7 @@ import type {
 import type { TAstNode } from '../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
 import { createSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { traverseAst } from './index.js';
+import { traverseAst } from './traverse-ast.util.js';
 
 const parseAndTraverse = (code: string) => {
   const result = parseSync('test.ts', code, {

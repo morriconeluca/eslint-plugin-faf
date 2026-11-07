@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TOutcome } from '../../../../../../_conformity@shared/_types/outcome.type.js';
 
-import { anchorOutcomes } from './index.js';
+import { anchorOutcomes } from './anchor-outcomes.util.js';
 
 const outcome = (element: string, line: number): TOutcome => ({
   constraint: 'unverified/unresolved-import',

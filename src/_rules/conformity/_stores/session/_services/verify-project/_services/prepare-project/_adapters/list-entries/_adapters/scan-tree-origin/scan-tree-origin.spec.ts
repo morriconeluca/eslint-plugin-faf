@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { scanTreeOrigin } from './index.js';
+import { scanTreeOrigin } from './scan-tree-origin.adapter.js';
 
 describe('scanTreeOrigin', () => {
   it('produces configuration outcome when origin directory does not exist', async () => {

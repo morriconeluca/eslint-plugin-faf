@@ -10,7 +10,7 @@ import type {
   TEffectiveTree,
 } from '../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
-import { isViolatingSymbolUniqueness } from './index.js';
+import { isViolatingSymbolUniqueness } from './is-violating-symbol-uniqueness.util.js';
 
 const qualifications = {
   isParentCategory: false,

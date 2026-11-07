@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { comparePaths } from './index.js';
+import { comparePaths } from './compare-paths.util.js';
 
 describe('comparePaths', () => {
   it('compares identical paths as zero', () => {

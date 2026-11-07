@@ -9,7 +9,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { collectLayerSurface } from './index.js';
+import { collectLayerSurface } from './collect-layer-surface.util.js';
 
 const absentRole = { kind: 'absent' as const, roleName: null };
 

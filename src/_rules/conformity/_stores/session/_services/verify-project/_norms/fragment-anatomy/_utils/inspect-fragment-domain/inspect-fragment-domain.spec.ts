@@ -7,7 +7,7 @@ import type {
 } from '../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 import type { TFragmentInspection } from '../../_fragment-anatomy@shared/_types/fragment-anatomy.type.js';
 
-import { inspectFragmentDomain } from './index.js';
+import { inspectFragmentDomain } from './inspect-fragment-domain.util.js';
 
 const emptyQualifications = {
   isParentCategory: false,

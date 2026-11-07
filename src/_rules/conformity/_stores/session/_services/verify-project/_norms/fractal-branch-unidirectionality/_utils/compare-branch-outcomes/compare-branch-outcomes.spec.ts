@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TDependencyOutcome } from '../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
-import { compareBranchOutcomes } from './index.js';
+import { compareBranchOutcomes } from './compare-branch-outcomes.util.js';
 
 const createOutcome = (
   overrides: Partial<TDependencyOutcome> = {}

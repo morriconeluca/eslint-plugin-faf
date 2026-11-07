@@ -6,7 +6,7 @@ import type {
   THorizontalHierarchySet,
 } from '../../../../../../../../_verify-project@shared/_types/_compounds/horizontal-hierarchies.type.js';
 
-import { isStrictlyDescendingRoot } from './index.js';
+import { isStrictlyDescendingRoot } from './is-strictly-descending-root.util.js';
 
 const makeHierarchies = (
   options: {

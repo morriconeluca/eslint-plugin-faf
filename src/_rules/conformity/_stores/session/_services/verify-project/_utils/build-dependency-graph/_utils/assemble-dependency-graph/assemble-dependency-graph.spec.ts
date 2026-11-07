@@ -6,7 +6,7 @@ import type {
 } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 import type { TPendingEdge } from '../../_build-dependency-graph@shared/_types/pending-edge.type.js';
 
-import { assembleDependencyGraph } from './index.js';
+import { assembleDependencyGraph } from './assemble-dependency-graph.util.js';
 
 const SOURCE = 'src/a.ts';
 const OTHER = 'src/b.ts';

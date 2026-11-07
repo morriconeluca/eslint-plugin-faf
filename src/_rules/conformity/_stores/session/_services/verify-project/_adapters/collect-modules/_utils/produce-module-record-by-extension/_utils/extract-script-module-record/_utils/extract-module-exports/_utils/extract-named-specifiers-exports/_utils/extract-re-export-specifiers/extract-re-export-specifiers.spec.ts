@@ -5,7 +5,7 @@ import type { TModuleExport } from '../../../../../../../../../../../../../../_s
 
 import { assertInvariant } from '../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractReExportSpecifiers } from './index.js';
+import { extractReExportSpecifiers } from './extract-re-export-specifiers.util.js';
 
 describe('extractReExportSpecifiers', () => {
   it('extracts re-export specifiers from external source', () => {

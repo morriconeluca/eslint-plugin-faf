@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTransposeGraph } from './index.js';
+import { buildTransposeGraph } from './build-transpose-graph.util.js';
 
 describe('buildTransposeGraph', () => {
   it('transposes edges', () => {

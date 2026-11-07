@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isLiteralConfigPath } from './index.js';
+import { isLiteralConfigPath } from './is-literal-config-path.util.js';
 
 describe('isLiteralConfigPath', () => {
   describe('faf.feature: Verificare la forma dei percorsi letterali', () => {

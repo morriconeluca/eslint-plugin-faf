@@ -5,7 +5,7 @@ import type {
   TInventoryItem,
 } from '../../../../_types/_primitives/inventory.type.js';
 
-import { collectAncestors } from './index.js';
+import { collectAncestors } from './collect-ancestors.util.js';
 
 const createItem = (parameters: {
   depth: number;

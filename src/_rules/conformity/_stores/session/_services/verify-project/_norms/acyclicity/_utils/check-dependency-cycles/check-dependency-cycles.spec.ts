@@ -13,7 +13,7 @@ import type { TInventory } from '../../../../_verify-project@shared/_types/_prim
 import type { TVerificationModel } from '../../../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { checkDependencyCycles } from './index.js';
+import { checkDependencyCycles } from './check-dependency-cycles.util.js';
 
 const buildClassification = (
   path: string,

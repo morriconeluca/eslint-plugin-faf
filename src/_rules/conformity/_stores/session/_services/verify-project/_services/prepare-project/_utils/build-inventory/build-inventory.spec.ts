@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TRawInventoryEntry } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { buildInventory } from './index.js';
+import { buildInventory } from './build-inventory.util.js';
 
 describe('buildInventory', () => {
   it('builds an empty inventory with empty outcomes when no entries or origins are given', () => {

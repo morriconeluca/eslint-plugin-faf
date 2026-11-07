@@ -4,7 +4,7 @@ import type { TModuleRecord } from '../../../../../../../../_session@shared/_typ
 import type { TInventory } from '../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 import type { TReadModuleTextResult } from '../../../../_collect-modules@shared/_types/_aggregates/collect-modules.type.js';
 
-import { analyzeModuleSource } from './index.js';
+import { analyzeModuleSource } from './analyze-module-source.util.js';
 
 const inventory: TInventory = {
   items: [

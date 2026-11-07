@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveTreeOrigin } from './index.js';
+import { resolveTreeOrigin } from './resolve-tree-origin.util.js';
 
 describe('resolveTreeOrigin', () => {
   it('returns null when origins list is empty', () => {

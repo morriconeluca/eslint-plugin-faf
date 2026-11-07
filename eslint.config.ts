@@ -8,22 +8,11 @@ import unicorn from 'eslint-plugin-unicorn';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import { configs as tseslintConfigs } from 'typescript-eslint';
 
-import fafConfig from './fafconfig.js';
 import { commentPolicyRule } from './scripts/eslint/comment-policy.rule.js';
 import { noDecidedAssertionRule } from './scripts/eslint/no-decided-assertion.rule.js';
 import { noTautologicalAssertionRule } from './scripts/eslint/no-tautological-assertion.rule.js';
 import { noUnknownParametersRule } from './scripts/eslint/no-unknown-parameters.rule.js';
-import { symbolLawsRule } from './scripts/eslint/symbol-laws.rule.js';
-
-const localTree = fafConfig.faf.locals[0];
-const roles = localTree.roles.map((r) => r.name);
-const categories = Object.fromEntries(
-  localTree.roles.map((r) => [r.category, r.name])
-);
-const allowMultipleSymbolsRoles = localTree.roles
-  .filter((r) => 'allowMultipleSymbols' in r)
-  .map((r) => r.name);
-const subGraphRoles = localTree.subGraphRoles.map((r) => r.name);
+import faf from './src/main.js';
 
 const COMMON_FUNCTIONAL_RESTRICTIONS = [
   {
@@ -122,6 +111,7 @@ export default defineConfig([
   perfectionistConfigs['recommended-natural'],
   sonarjsConfigs.recommended,
   unicorn.configs.recommended,
+  faf.configs.recommended,
   {
     files: ['**/*.ts', '**/*.js'],
     languageOptions: {
@@ -138,7 +128,6 @@ export default defineConfig([
           'no-decided-assertion': noDecidedAssertionRule,
           'no-tautological-assertion': noTautologicalAssertionRule,
           'no-unknown-parameters': noUnknownParametersRule,
-          'symbol-laws': symbolLawsRule,
         },
       },
     },
@@ -384,20 +373,6 @@ export default defineConfig([
               message: PURE_ADAPTER_RESTRICTION,
             },
           ],
-        },
-      ],
-    },
-  },
-  {
-    files: [SRC_GLOB],
-    rules: {
-      'repository/symbol-laws': [
-        'error',
-        {
-          allowMultipleSymbols: allowMultipleSymbolsRoles,
-          categories,
-          roles,
-          subGraphRoles,
         },
       ],
     },

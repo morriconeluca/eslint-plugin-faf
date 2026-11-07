@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import type { TFAFConfig } from '../../../../../../../../../../_src@shared/_types/faf-config.type.js';
 import type { TInventory } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { includeExternalTargets } from './index.js';
+import { includeExternalTargets } from './include-external-targets.adapter.js';
 
 const emptyInventory: TInventory = {
   items: [],

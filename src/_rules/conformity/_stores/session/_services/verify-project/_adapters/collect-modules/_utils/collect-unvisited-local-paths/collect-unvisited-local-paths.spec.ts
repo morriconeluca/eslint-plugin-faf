@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TImportResolution } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
-import { collectUnvisitedLocalPaths } from './index.js';
+import { collectUnvisitedLocalPaths } from './collect-unvisited-local-paths.util.js';
 
 const resolution = (
   target: TImportResolution['target']

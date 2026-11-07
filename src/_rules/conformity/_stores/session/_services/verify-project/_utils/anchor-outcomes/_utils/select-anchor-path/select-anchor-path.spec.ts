@@ -8,7 +8,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { selectAnchorPath } from './index.js';
+import { selectAnchorPath } from './select-anchor-path.util.js';
 
 const baseDirectory = '/repo';
 const configPath = '/repo/fafconfig.ts';

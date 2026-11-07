@@ -5,7 +5,7 @@ import type { TRootSymbol } from '../../../../../../../../../../../../../../_ses
 
 import { assertInvariant } from '../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { collectTypeSymbols } from './index.js';
+import { collectTypeSymbols } from './collect-type-symbols.util.js';
 
 describe('collectTypeSymbols', () => {
   it('collects interface symbol with type space', () => {

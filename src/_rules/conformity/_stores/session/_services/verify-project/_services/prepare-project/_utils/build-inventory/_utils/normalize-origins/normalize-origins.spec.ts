@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeOrigins } from './index.js';
+import { normalizeOrigins } from './normalize-origins.util.js';
 
 describe('normalizeOrigins', () => {
   it('returns empty array when origins is empty', () => {

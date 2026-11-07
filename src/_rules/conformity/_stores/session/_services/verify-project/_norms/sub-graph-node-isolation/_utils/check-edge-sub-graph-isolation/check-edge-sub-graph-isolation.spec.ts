@@ -11,7 +11,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { checkEdgeSubGraphIsolation } from './index.js';
+import { checkEdgeSubGraphIsolation } from './check-edge-sub-graph-isolation.util.js';
 
 type TItemEntry = {
   readonly id: number;

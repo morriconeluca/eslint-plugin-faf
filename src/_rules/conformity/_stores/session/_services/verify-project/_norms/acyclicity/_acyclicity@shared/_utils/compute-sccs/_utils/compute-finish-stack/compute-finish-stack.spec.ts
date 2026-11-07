@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeFinishStack } from './index.js';
+import { computeFinishStack } from './compute-finish-stack.util.js';
 
 describe('computeFinishStack', () => {
   it('computes finish stack for single node', () => {

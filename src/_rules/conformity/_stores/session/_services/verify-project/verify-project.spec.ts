@@ -2,7 +2,7 @@ import { createFixture } from 'fs-fixture';
 import nodePath from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 
-import { verifyProject } from './index.js';
+import { verifyProject } from './verify-project.service.js';
 
 const packageJson = JSON.stringify({ type: 'module' });
 

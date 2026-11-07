@@ -17,7 +17,7 @@ import type { TInventoryItem } from '../../_verify-project@shared/_types/_primit
 import type { TVerificationModel } from '../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { verifyAccessNodeContract } from './index.js';
+import { verifyAccessNodeContract } from './access-node-contract.norm.js';
 
 const makeFileItem = (
   id: number,

@@ -7,7 +7,7 @@ import type {
   TTaxonomyModel,
 } from '../../../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 
-import { isPeerPair } from './index.js';
+import { isPeerPair } from './is-peer-pair.util.js';
 
 const makeClassification = (
   id: number,

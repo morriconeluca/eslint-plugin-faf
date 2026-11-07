@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TInventoryItem } from '../../../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { isTreeFilePath } from './index.js';
+import { isTreeFilePath } from './is-tree-file-path.util.js';
 
 const item = (
   id: number,

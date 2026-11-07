@@ -2,7 +2,7 @@ import { createFixture } from 'fs-fixture';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { readFileSnapshot } from './index.js';
+import { readFileSnapshot } from './read-file-snapshot.adapter.js';
 
 describe('readFileSnapshot', () => {
   it('returns mtime, size, and text for a regular file', async () => {

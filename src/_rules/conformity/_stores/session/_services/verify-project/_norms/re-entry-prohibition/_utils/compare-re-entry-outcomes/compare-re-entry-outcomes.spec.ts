@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TDependencyOutcome } from '../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
-import { compareReEntryOutcomes } from './index.js';
+import { compareReEntryOutcomes } from './compare-re-entry-outcomes.util.js';
 
 const outcome = (
   from: string,

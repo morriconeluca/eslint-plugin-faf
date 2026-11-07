@@ -15,7 +15,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { checkEdgeExternalDependency } from './index.js';
+import { checkEdgeExternalDependency } from './check-edge-external-dependency.util.js';
 
 type TGraphVertexEntry = {
   readonly nature: TVertexNature;

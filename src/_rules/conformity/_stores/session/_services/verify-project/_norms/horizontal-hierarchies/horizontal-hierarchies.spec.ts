@@ -13,7 +13,7 @@ import type {
 import type { TVerificationModel } from '../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { verifyHorizontalHierarchies } from './index.js';
+import { verifyHorizontalHierarchies } from './horizontal-hierarchies.norm.js';
 
 const defaultRole = { kind: 'absent' as const, roleName: null };
 

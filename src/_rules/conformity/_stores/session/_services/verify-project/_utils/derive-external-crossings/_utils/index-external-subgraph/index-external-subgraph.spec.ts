@@ -6,7 +6,7 @@ import type {
   TVertexNature,
 } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
-import { indexExternalSubgraph } from './index.js';
+import { indexExternalSubgraph } from './index-external-subgraph.util.js';
 
 const TREE_NODE: TVertexNature = { inventoryId: 1, kind: 'tree-node' };
 const EXTERNAL_FILE: TVertexNature = { kind: 'external-local-file' };

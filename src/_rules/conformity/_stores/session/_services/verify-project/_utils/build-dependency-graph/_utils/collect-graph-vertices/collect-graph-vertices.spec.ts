@@ -7,7 +7,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { collectGraphVertices } from './index.js';
+import { collectGraphVertices } from './collect-graph-vertices.util.js';
 
 const TREE_FILE = 'src/widget.util.ts';
 const EXTERNAL_FILE = 'legacy/outside.ts';

@@ -7,7 +7,7 @@ import type {
 } from '../../../../../../_session@shared/_types/module-record.type.js';
 import type { TItemClassification } from '../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 
-import { isViolatingMasterSymbol } from './index.js';
+import { isViolatingMasterSymbol } from './is-violating-master-symbol.util.js';
 
 const qualifications = {
   isParentCategory: false,

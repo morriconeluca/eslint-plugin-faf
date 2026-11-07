@@ -226,28 +226,14 @@ describe('acceptance: faf/conformity', () => {
     }
   });
 
-  it('produces no configuration outcomes for this repository', async () => {
+  it('produces zero conformity outcomes for this repository', async () => {
     const repository = nodePath.resolve(import.meta.dirname, '../..');
     const results = await lintProject(repository, [
       'fafconfig.ts',
       'src/main.ts',
     ]);
-    const config = results.flatMap((result) =>
-      result.messages.filter((message) => message.messageId === 'configuration')
-    );
-    expect(config).toEqual([]);
-    const otherFamilies = results.flatMap((result) =>
-      result.messages
-        .filter((message) => message.messageId !== 'configuration')
-        .map((message) => ({
-          filePath: result.filePath,
-          message: message.message,
-          messageId: message.messageId,
-        }))
-    );
-    if (otherFamilies.length > 0) {
-      console.log(JSON.stringify(otherFamilies));
-    }
+    const messages = results.flatMap((result) => result.messages);
+    expect(messages).toEqual([]);
   }, 30_000);
 
   describe('Regola 50: invalidazione strutturale e di frontiera', () => {

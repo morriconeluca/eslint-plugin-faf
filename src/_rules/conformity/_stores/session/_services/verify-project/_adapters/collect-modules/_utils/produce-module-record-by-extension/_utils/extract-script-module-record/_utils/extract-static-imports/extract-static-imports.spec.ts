@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { createSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractStaticImports } from './index.js';
+import { extractStaticImports } from './extract-static-imports.util.js';
 
 const parseAndExtract = (sourceText: string) => {
   const result = parseSync('test.ts', sourceText, {

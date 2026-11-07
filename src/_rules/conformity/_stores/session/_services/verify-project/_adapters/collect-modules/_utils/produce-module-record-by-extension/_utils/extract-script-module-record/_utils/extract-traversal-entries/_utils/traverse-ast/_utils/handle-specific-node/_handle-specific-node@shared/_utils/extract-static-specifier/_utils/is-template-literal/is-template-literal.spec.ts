@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isTemplateLiteral } from './index.js';
+import { isTemplateLiteral } from './is-template-literal.util.js';
 
 describe('isTemplateLiteral', () => {
   it('returns true for TemplateLiteral node', () => {

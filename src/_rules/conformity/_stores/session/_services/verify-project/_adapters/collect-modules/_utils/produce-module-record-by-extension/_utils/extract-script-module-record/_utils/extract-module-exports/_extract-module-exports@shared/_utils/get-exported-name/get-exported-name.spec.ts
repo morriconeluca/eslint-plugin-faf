@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { assertInvariant } from '../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { getExportedName } from './index.js';
+import { getExportedName } from './get-exported-name.util.js';
 
 describe('getExportedName', () => {
   it('extracts name from identifier node', () => {

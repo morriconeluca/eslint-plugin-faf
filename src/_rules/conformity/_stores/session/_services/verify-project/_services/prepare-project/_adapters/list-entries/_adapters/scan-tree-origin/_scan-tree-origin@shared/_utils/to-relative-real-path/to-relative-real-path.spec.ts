@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { toRelativeRealPath } from './index.js';
+import { toRelativeRealPath } from './to-relative-real-path.util.js';
 
 describe('toRelativeRealPath', () => {
   it('returns relative path when target is inside base directory', () => {

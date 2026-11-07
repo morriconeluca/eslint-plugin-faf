@@ -7,7 +7,7 @@ import type {
 } from '../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 import type { TInventory } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { isViolatingDirectoryRole } from './index.js';
+import { isViolatingDirectoryRole } from './is-violating-directory-role.util.js';
 
 const qualifications = {
   isParentCategory: false,

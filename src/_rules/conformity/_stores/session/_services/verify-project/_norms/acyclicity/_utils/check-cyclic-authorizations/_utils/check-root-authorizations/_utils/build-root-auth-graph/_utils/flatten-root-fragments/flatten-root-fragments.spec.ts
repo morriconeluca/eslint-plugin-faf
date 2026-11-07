@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { flattenRootFragments } from './index.js';
+import { flattenRootFragments } from './flatten-root-fragments.util.js';
 
 describe('flattenRootFragments', () => {
   it('flattens nested root fragments', () => {

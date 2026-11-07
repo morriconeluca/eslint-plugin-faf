@@ -10,7 +10,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { checkPrivateCategoryVisibility } from './index.js';
+import { checkPrivateCategoryVisibility } from './check-private-category-visibility.util.js';
 
 type TModelEntry = {
   readonly depth: number;

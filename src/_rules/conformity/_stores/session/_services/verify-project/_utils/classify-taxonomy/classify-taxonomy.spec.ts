@@ -19,7 +19,7 @@ import { classifyFile } from './_utils/classify-file/index.js';
 import { finalizeClassifications } from './_utils/finalize-classifications/index.js';
 import { getRoleFromName } from './_utils/get-role-from-name/index.js';
 import { selectForeignNodes } from './_utils/select-foreign-nodes/index.js';
-import { classifyTaxonomy } from './index.js';
+import { classifyTaxonomy } from './classify-taxonomy.util.js';
 
 const DOT = '.';
 

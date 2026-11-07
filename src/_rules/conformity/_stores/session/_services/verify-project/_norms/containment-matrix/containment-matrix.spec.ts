@@ -14,7 +14,7 @@ import type {
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
 import { CONTAINMENT_MATRIX } from './_configs/containment-matrix.config.js';
-import { verifyContainmentMatrix } from './index.js';
+import { verifyContainmentMatrix } from './containment-matrix.norm.js';
 
 const absentRole = { kind: 'absent' as const, roleName: null };
 

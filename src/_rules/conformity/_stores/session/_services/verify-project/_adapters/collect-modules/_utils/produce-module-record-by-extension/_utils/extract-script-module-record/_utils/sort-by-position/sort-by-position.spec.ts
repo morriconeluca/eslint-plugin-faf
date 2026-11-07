@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { sortByPosition } from './index.js';
+import { sortByPosition } from './sort-by-position.util.js';
 
 describe('sortByPosition', () => {
   it('returns empty array when input is empty', () => {

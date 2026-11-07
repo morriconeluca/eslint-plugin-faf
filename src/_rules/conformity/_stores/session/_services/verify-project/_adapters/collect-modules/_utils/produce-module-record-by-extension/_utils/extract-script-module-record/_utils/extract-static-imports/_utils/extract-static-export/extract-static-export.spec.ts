@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { assertInvariant } from '../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractStaticExport } from './index.js';
+import { extractStaticExport } from './extract-static-export.util.js';
 
 const parseAndExtractStaticExport = (code: string) => {
   const result = parseSync('test.ts', code, {

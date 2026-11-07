@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { createSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractRootSymbols } from './index.js';
+import { extractRootSymbols } from './extract-root-symbols.util.js';
 
 const parseAndExtractSymbols = (
   sourceText: string,

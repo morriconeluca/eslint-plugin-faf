@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TEffectiveMimeticStructure } from '../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
-import { isViolatingPathFragmentName } from './index.js';
+import { isViolatingPathFragmentName } from './is-violating-path-fragment-name.util.js';
 
 describe('isViolatingPathFragmentName', () => {
   it('verifies target-only naming when no action catalog is declared', () => {

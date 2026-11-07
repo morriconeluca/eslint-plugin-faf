@@ -5,7 +5,7 @@ import type { TInventory } from '../../../../../../_verify-project@shared/_types
 import type { TVerificationModel } from '../../../../../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { buildQuotientGraph } from './index.js';
+import { buildQuotientGraph } from './build-quotient-graph.util.js';
 
 const createTreeDeclaration = (originPath: string): TEffectiveTree => ({
   catalog: {

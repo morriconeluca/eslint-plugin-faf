@@ -10,7 +10,7 @@ import type { TInventory } from '../../../../_verify-project@shared/_types/_prim
 import type { TVerificationModel } from '../../../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { checkInterTreeCycles } from './index.js';
+import { checkInterTreeCycles } from './check-inter-tree-cycles.util.js';
 
 const createEdge = (
   sourcePath: string,

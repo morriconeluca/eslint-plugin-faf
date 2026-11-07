@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TEdgeMetadata } from '../../../../../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
-import { populateAdjacencyEdges } from './index.js';
+import { populateAdjacencyEdges } from './populate-adjacency-edges.util.js';
 
 const createEdge = (
   sourcePath: string,

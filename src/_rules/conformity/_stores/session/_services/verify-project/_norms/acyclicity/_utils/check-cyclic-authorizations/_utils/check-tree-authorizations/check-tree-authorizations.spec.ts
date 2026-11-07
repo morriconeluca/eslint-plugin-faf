@@ -6,7 +6,7 @@ import type { TVerificationModel } from '../../../../../../_verify-project@share
 
 import { createOutcome } from '../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { verificationModel } from '../../../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { checkTreeAuthorizations } from './index.js';
+import { checkTreeAuthorizations } from './check-tree-authorizations.util.js';
 
 const createTreeDeclaration = ({
   originPath,

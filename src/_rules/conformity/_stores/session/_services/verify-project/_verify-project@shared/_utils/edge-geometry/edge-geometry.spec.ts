@@ -5,7 +5,7 @@ import type {
   TInventoryItem,
 } from '../../_types/_primitives/inventory.type.js';
 
-import { describeEdgeGeometry } from './index.js';
+import { describeEdgeGeometry } from './edge-geometry.util.js';
 
 const createItem = (parameters: {
   depth: number;

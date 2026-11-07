@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TModuleRecordProducer } from '../../../../../../../../_session@shared/_types/module-record.type.js';
 
-import { extractScriptModuleRecord } from './index.js';
+import { extractScriptModuleRecord } from './extract-script-module-record.util.js';
 
 describe('extractScriptModuleRecord', () => {
   it('satisfies TModuleRecordProducer contract type and returns script language', () => {

@@ -5,7 +5,7 @@ import type {
   TModuleImport,
 } from '../../../../../../../../_session@shared/_types/module-record.type.js';
 
-import { hasMatchingDirectReExport } from './index.js';
+import { hasMatchingDirectReExport } from './has-matching-direct-re-export.util.js';
 
 describe('hasMatchingDirectReExport', () => {
   const direct: TModuleImport = {

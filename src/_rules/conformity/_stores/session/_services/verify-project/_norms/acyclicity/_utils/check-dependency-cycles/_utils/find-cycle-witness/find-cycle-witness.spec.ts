@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { findCycleWitness } from './index.js';
+import { findCycleWitness } from './find-cycle-witness.util.js';
 
 describe('findCycleWitness', () => {
   it('returns self-loop witness when self loop is present', () => {

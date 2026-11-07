@@ -2,7 +2,7 @@ import { createFixture } from 'fs-fixture';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { readOriginDirents } from './index.js';
+import { readOriginDirents } from './read-origin-dirents.adapter.js';
 
 describe('readOriginDirents', () => {
   it('reads dirents recursively from an existing directory', async () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createConformity } from './index.js';
+import { createConformity } from './conformity.rule.js';
 
 describe('conformity', () => {
   it('exposes one message per outcome family and no autofix or options', () => {

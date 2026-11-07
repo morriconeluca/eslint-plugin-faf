@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TInProgressInventoryEntry } from '../../_build-inventory@shared/_types/build-inventory.type.js';
 
-import { traverseInventoryTree } from './index.js';
+import { traverseInventoryTree } from './traverse-inventory-tree.util.js';
 
 describe('traverseInventoryTree', () => {
   it('returns empty inventory when roots array is empty', () => {

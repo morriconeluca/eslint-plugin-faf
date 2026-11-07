@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { processDirent } from './index.js';
+import { processDirent } from './process-dirent.adapter.js';
 
 describe('processDirent', () => {
   it('processes a regular file dirent', async () => {

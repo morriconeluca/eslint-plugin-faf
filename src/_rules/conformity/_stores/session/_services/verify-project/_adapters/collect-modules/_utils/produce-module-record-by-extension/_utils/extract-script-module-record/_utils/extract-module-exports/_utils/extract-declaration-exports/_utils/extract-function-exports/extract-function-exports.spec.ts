@@ -5,7 +5,7 @@ import type { TModuleExport } from '../../../../../../../../../../../../../../_s
 
 import { assertInvariant } from '../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractFunctionExports } from './index.js';
+import { extractFunctionExports } from './extract-function-exports.util.js';
 
 describe('extractFunctionExports', () => {
   it('extracts named function export', () => {

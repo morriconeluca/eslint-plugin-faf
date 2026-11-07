@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isLintablePath } from './index.js';
+import { isLintablePath } from './is-lintable-path.util.js';
 
 describe('isLintablePath', () => {
   it('accepts each lintable extension and rejects other suffixes', () => {

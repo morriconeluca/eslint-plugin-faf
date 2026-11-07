@@ -8,7 +8,7 @@ import type {
 } from '../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 import type { THorizontalHierarchyConflict } from '../../../../_verify-project@shared/_types/_compounds/horizontal-hierarchies.type.js';
 
-import { collectOverlapOutcomes } from './index.js';
+import { collectOverlapOutcomes } from './collect-overlap-outcomes.util.js';
 
 const defaultRole = { kind: 'absent' as const, roleName: null };
 

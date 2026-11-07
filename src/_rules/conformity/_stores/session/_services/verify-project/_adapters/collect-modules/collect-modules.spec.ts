@@ -9,7 +9,7 @@ import type {
 } from '../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
 import { moduleRecordStore } from '../../../../_session@shared/_stores/module-record-store/index.js';
-import { collectModules } from './index.js';
+import { collectModules } from './collect-modules.adapter.js';
 
 const fileItem = (id: number, path: string): TInventoryItem => ({
   depth: 1,

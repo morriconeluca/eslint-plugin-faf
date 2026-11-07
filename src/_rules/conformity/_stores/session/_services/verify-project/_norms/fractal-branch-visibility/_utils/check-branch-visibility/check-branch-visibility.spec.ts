@@ -12,7 +12,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { checkBranchVisibility } from './index.js';
+import { checkBranchVisibility } from './check-branch-visibility.util.js';
 
 const createEdge = (from: string, to: string): TEdgeMetadata => ({
   aliasAlternatives: [],

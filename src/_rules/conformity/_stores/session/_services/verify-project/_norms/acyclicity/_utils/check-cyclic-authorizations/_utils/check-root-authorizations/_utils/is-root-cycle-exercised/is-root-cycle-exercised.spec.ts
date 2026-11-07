@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { TAcyclicityOutcome } from '../../../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
 import { createOutcome } from '../../../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
-import { isRootCycleExercised } from './index.js';
+import { isRootCycleExercised } from './is-root-cycle-exercised.util.js';
 
 describe('isRootCycleExercised', () => {
   it('detects exercised root cycle', () => {

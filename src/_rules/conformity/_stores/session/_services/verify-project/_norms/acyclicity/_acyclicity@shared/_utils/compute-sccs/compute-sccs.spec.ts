@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeSccs } from './index.js';
+import { computeSccs } from './compute-sccs.util.js';
 
 describe('computeSccs', () => {
   it('handles empty graph', () => {

@@ -6,7 +6,7 @@ import type {
   TInventoryItem,
 } from '../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { anchorDomainPath } from './index.js';
+import { anchorDomainPath } from './anchor-domain-path.util.js';
 
 const item = (
   id: number,

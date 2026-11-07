@@ -7,7 +7,7 @@ import type {
   TVertexNature,
 } from '../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
-import { deriveExternalCrossings } from './index.js';
+import { deriveExternalCrossings } from './derive-external-crossings.util.js';
 
 const TREE_NODE: TVertexNature = { inventoryId: 1, kind: 'tree-node' };
 const EXTERNAL_FILE: TVertexNature = { kind: 'external-local-file' };

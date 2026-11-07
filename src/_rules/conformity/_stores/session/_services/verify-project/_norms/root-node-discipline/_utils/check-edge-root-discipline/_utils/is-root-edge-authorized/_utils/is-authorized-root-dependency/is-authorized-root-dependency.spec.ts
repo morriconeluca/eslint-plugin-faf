@@ -6,7 +6,7 @@ import type {
   TEffectiveTree,
 } from '../../../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
-import { isAuthorizedRootDependency } from './index.js';
+import { isAuthorizedRootDependency } from './is-authorized-root-dependency.util.js';
 
 const makeTree = (
   originPath: string,

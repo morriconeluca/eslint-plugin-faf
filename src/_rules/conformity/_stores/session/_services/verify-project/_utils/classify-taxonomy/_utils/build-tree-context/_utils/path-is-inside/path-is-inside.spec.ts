@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isPathInside } from './index.js';
+import { isPathInside } from './path-is-inside.util.js';
 
 describe('isPathInside', () => {
   it('matches a path equal to an ancestor and a strict descendant', () => {

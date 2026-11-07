@@ -7,7 +7,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { isViolatingDomainName } from './index.js';
+import { isViolatingDomainName } from './is-violating-domain-name.util.js';
 
 const qualifications = {
   isParentCategory: false,

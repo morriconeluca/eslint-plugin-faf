@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TEffectiveTree } from '../../../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
-import { buildTreeAuthGraph } from './index.js';
+import { buildTreeAuthGraph } from './build-tree-auth-graph.util.js';
 
 const createTree = (
   originPath: string,

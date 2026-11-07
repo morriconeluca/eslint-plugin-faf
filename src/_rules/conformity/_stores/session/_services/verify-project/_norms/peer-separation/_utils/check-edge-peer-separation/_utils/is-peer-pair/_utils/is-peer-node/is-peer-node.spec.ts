@@ -5,7 +5,7 @@ import type {
   TNodeKind,
 } from '../../../../../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 
-import { isPeerNode } from './index.js';
+import { isPeerNode } from './is-peer-node.util.js';
 
 const makeClassification = (
   nodeKind: null | TNodeKind

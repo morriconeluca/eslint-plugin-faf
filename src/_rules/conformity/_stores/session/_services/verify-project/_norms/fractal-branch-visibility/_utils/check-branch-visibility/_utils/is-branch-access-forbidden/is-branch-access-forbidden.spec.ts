@@ -9,7 +9,7 @@ import type {
 import type { TInventoryItem } from '../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 import type { TEdgeGeometry } from '../../../../../../_verify-project@shared/_utils/edge-geometry/index.js';
 
-import { isBranchAccessForbidden } from './index.js';
+import { isBranchAccessForbidden } from './is-branch-access-forbidden.util.js';
 
 const createClassification = (
   id: number,

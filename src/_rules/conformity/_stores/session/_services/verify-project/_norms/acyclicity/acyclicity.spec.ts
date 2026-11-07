@@ -18,7 +18,7 @@ import type { TInventory } from '../../_verify-project@shared/_types/_primitives
 import type { TVerificationModel } from '../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { verifyAcyclicity } from './index.js';
+import { verifyAcyclicity } from './acyclicity.norm.js';
 
 const buildClassification = (
   path: string,

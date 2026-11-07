@@ -6,7 +6,7 @@ import type {
   TEffectiveRole,
 } from '../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
-import { getRoleFromName } from './index.js';
+import { getRoleFromName } from './get-role-from-name.util.js';
 
 const createCatalog = (parameters: {
   roles: readonly {

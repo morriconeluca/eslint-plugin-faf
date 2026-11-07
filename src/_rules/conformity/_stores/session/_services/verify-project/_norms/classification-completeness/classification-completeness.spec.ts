@@ -7,7 +7,7 @@ import type {
 import type { TVerificationModel } from '../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { verifyClassificationCompleteness } from './index.js';
+import { verifyClassificationCompleteness } from './classification-completeness.norm.js';
 
 const absentRole = { kind: 'absent' as const, roleName: null };
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TInventoryItem } from '../../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { isDescendantOrSelf } from './index.js';
+import { isDescendantOrSelf } from './is-descendant-or-self.util.js';
 
 const createMockItem = (
   preorderStart: number,

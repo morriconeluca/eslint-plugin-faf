@@ -5,7 +5,7 @@ import type { TRootSymbol } from '../../../../../../../../../../../../../../../.
 
 import { assertInvariant } from '../../../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { collectPatternBindings } from './index.js';
+import { collectPatternBindings } from './collect-pattern-bindings.util.js';
 
 const parseAndCollect = (code: string): TRootSymbol[] => {
   const result = parseSync('test.ts', code, {

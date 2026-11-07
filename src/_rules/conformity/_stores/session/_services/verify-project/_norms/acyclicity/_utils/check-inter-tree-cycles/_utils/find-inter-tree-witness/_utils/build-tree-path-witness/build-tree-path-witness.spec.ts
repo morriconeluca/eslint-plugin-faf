@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildTreePathWitness } from './index.js';
+import { buildTreePathWitness } from './build-tree-path-witness.util.js';
 
 describe('buildTreePathWitness', () => {
   it('builds witness from tree path and transition matrix', () => {

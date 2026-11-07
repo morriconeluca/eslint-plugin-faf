@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TInProgressInventoryEntry } from '../../_build-inventory@shared/_types/build-inventory.type.js';
 
-import { groupTreeNodes } from './index.js';
+import { groupTreeNodes } from './group-tree-nodes.util.js';
 
 const inventoryEntry = (
   path: string,

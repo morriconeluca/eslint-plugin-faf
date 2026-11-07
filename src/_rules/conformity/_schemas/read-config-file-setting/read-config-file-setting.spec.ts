@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { readConfigFileSetting } from './index.js';
+import { readConfigFileSetting } from './read-config-file-setting.schema.js';
 
 describe('readConfigFileSetting', () => {
   it('reads a string settings.faf.configFile and ignores other shapes', () => {

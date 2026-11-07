@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createDirectoryBase } from './index.js';
+import { createDirectoryBase } from './create-directory-base.util.js';
 
 describe('createDirectoryBase', () => {
   it('returns a blank directory classification rooted at the parent fragment', () => {

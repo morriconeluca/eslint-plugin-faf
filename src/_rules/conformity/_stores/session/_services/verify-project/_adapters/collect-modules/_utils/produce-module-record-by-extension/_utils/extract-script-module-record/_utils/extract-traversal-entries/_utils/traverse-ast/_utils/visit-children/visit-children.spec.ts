@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TAstNode } from '../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
-import { visitChildren } from './index.js';
+import { visitChildren } from './visit-children.util.js';
 
 describe('visitChildren', () => {
   it('visits direct AST child nodes', () => {

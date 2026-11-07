@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createSourceLocator } from './index.js';
+import { createSourceLocator } from './create-source-locator.util.js';
 
 describe('createSourceLocator', () => {
   it('returns line 1 column 1 for offset 0 in empty text', () => {

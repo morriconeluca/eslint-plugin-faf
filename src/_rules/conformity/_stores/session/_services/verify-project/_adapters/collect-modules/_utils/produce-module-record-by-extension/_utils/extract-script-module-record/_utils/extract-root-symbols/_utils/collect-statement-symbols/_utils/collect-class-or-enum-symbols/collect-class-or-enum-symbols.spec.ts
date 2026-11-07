@@ -5,7 +5,7 @@ import type { TRootSymbol } from '../../../../../../../../../../../../../../_ses
 
 import { assertInvariant } from '../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { collectClassOrEnumSymbols } from './index.js';
+import { collectClassOrEnumSymbols } from './collect-class-or-enum-symbols.util.js';
 
 describe('collectClassOrEnumSymbols', () => {
   it('collects named class declaration symbol', () => {

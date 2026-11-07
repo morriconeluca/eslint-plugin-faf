@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { assertInvariant } from '../../../../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { extractStaticSpecifier } from './index.js';
+import { extractStaticSpecifier } from './extract-static-specifier.util.js';
 
 describe('extractStaticSpecifier', () => {
   it('extracts string from Literal node', () => {

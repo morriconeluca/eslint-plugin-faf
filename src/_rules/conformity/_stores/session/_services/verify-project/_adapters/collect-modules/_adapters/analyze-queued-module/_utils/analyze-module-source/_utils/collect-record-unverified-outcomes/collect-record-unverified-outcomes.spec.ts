@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { TModuleRecord } from '../../../../../../../../../../_session@shared/_types/module-record.type.js';
 import type { TImportResolution } from '../../../../../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
-import { collectRecordUnverifiedOutcomes } from './index.js';
+import { collectRecordUnverifiedOutcomes } from './collect-record-unverified-outcomes.util.js';
 
 const record = (
   imports: TModuleRecord['imports'],

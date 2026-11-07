@@ -9,7 +9,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { selectDesignatedRootNodes } from './index.js';
+import { selectDesignatedRootNodes } from './select-designated-root-nodes.util.js';
 
 const absentRole = { kind: 'absent' as const, roleName: null };
 

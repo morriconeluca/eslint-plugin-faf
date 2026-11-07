@@ -9,7 +9,7 @@ import type { TImportedBinding } from '../../../../../../_extract-script-module-
 
 import { assertInvariant } from '../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractLocalSpecifiers } from './index.js';
+import { extractLocalSpecifiers } from './extract-local-specifiers.util.js';
 
 describe('extractLocalSpecifiers', () => {
   it('extracts local symbol export', () => {

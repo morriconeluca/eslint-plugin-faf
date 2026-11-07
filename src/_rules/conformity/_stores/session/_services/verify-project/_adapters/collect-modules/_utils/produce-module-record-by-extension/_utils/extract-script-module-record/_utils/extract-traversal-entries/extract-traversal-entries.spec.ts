@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { createSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractTraversalEntries } from './index.js';
+import { extractTraversalEntries } from './extract-traversal-entries.util.js';
 
 const parseAndExtractTraversal = (sourceText: string) => {
   const parseResult = parseSync('test.ts', sourceText, {

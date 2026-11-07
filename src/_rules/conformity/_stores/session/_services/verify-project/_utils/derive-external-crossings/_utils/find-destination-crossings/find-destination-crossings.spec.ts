@@ -7,7 +7,7 @@ import type {
 } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 import type { TIndexedExternalSubgraph } from '../../_derive-external-crossings@shared/_types/indexed-subgraph.type.js';
 
-import { findDestinationCrossings } from './index.js';
+import { findDestinationCrossings } from './find-destination-crossings.util.js';
 
 const TREE_NODE: TVertexNature = { inventoryId: 1, kind: 'tree-node' };
 const EXTERNAL_FILE: TVertexNature = { kind: 'external-local-file' };

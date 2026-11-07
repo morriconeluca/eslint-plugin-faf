@@ -11,7 +11,7 @@ import type {
   TInventoryItem,
 } from '../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { derivePublicSurface } from './index.js';
+import { derivePublicSurface } from './derive-public-surface.util.js';
 
 const absentRole = { kind: 'absent' as const, roleName: null };
 

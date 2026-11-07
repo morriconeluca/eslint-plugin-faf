@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { blankFileFields } from './index.js';
+import { blankFileFields } from './blank-file-fields.util.js';
 
 describe('blankFileFields', () => {
   it('returns file fields with the supplied role and null domain data', () => {

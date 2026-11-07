@@ -17,7 +17,7 @@ import type {
 import type { TVerificationModel } from '../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { verifyTreeFrontier } from './index.js';
+import { verifyTreeFrontier } from './tree-frontier.norm.js';
 
 type TEntrySpec = {
   readonly path: string;

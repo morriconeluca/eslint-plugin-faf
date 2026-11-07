@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { TLogicalDomainKind } from '../../../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 
 import { hierarchyFixture } from '../../../../_derive-horizontal-hierarchies@shared/_mocks/hierarchy-fixture.mock.js';
-import { isOrderableSiblingSet } from './index.js';
+import { isOrderableSiblingSet } from './is-orderable-sibling-set.util.js';
 
 describe('isOrderableSiblingSet', () => {
   it.each<TLogicalDomainKind>(['root-layer', 'layer', 'fractal-branch'])(

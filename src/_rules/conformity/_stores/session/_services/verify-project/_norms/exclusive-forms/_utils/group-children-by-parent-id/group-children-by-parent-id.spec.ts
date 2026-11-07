@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TInventoryItem } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { groupChildrenByParentId } from './index.js';
+import { groupChildrenByParentId } from './group-children-by-parent-id.util.js';
 
 const createItem = (
   id: number,

@@ -10,7 +10,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { isViolatingUnitName } from './index.js';
+import { isViolatingUnitName } from './is-violating-unit-name.util.js';
 
 const qualifications = {
   isParentCategory: false,

@@ -8,7 +8,7 @@ import type {
 } from '../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 import type { THorizontalHierarchySet } from '../../../../_verify-project@shared/_types/_compounds/horizontal-hierarchies.type.js';
 
-import { collectMemberOutcomes } from './index.js';
+import { collectMemberOutcomes } from './collect-member-outcomes.util.js';
 
 const defaultRole = { kind: 'absent' as const, roleName: null };
 

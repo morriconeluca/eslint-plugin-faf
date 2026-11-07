@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isAstNode } from './index.js';
+import { isAstNode } from './is-ast-node.util.js';
 
 describe('isAstNode', () => {
   it('returns true for object with string type', () => {

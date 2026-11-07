@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TInventoryItem } from '../../../../_types/_primitives/inventory.type.js';
 
-import { findLowestCommonAncestor } from './index.js';
+import { findLowestCommonAncestor } from './find-lowest-common-ancestor.util.js';
 
 const createItem = (parameters: {
   depth: number;

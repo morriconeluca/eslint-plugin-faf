@@ -13,7 +13,7 @@ import type {
 import type { TVerificationModel } from '../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { verifyForeignNodeIsolation } from './index.js';
+import { verifyForeignNodeIsolation } from './foreign-node-isolation.norm.js';
 
 const buildClassification = (
   path: string,

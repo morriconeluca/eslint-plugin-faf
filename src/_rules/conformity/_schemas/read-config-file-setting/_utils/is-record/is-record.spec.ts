@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isRecord } from './index.js';
+import { isRecord } from './is-record.util.js';
 
 describe('isRecord', () => {
   it('accepts plain objects and rejects arrays, null, and primitives', () => {

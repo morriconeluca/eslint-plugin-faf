@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { assertInvariant } from '../../../../../../../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { doesTargetDeclareRequire } from './index.js';
+import { doesTargetDeclareRequire } from './does-target-declare-require.util.js';
 
 const parseStatement = (code: string) => {
   const result = parseSync('test.ts', code, {

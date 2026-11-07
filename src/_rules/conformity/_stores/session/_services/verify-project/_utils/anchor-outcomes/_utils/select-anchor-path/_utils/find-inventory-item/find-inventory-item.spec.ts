@@ -5,7 +5,7 @@ import type {
   TInventoryItem,
 } from '../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { findInventoryItem } from './index.js';
+import { findInventoryItem } from './find-inventory-item.util.js';
 
 const item = (id: number, path: string): TInventoryItem => ({
   depth: 0,

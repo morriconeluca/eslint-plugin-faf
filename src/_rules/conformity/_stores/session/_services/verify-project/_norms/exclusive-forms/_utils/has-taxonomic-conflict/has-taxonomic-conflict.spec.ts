@@ -11,7 +11,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { hasTaxonomicConflict } from './index.js';
+import { hasTaxonomicConflict } from './has-taxonomic-conflict.util.js';
 
 type TSpec = {
   readonly domainKind?: null | TLogicalDomainKind;

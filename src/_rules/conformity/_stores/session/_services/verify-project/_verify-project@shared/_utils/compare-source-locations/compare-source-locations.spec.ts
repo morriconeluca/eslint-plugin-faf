@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compareSourceLocations } from './index.js';
+import { compareSourceLocations } from './compare-source-locations.util.js';
 
 describe('compareSourceLocations', () => {
   it('returns zero when line and column are equal', () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TForeignPatternRejectReason } from './compile-foreign-pattern.type.js';
 
-import { compileForeignPattern } from './index.js';
+import { compileForeignPattern } from './compile-foreign-pattern.util.js';
 
 describe('compileForeignPattern', () => {
   describe('faf.feature: Applicare i pattern ai file nell ambito src', () => {

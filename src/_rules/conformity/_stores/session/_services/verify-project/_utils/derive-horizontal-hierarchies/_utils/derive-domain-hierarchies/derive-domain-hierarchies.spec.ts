@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { hierarchyFixture } from '../../_derive-horizontal-hierarchies@shared/_mocks/hierarchy-fixture.mock.js';
-import { deriveDomainHierarchies } from './index.js';
+import { deriveDomainHierarchies } from './derive-domain-hierarchies.util.js';
 
 describe('deriveDomainHierarchies', () => {
   it('selects direct children by exact name, retains rank gaps and ignores absent names', () => {

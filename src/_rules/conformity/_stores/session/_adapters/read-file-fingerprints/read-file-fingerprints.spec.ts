@@ -2,7 +2,7 @@ import { createFixture } from 'fs-fixture';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { readFileFingerprints } from './index.js';
+import { readFileFingerprints } from './read-file-fingerprints.adapter.js';
 
 describe('readFileFingerprints', () => {
   it('records mtime and size, and a missing file as an absent fingerprint', async () => {

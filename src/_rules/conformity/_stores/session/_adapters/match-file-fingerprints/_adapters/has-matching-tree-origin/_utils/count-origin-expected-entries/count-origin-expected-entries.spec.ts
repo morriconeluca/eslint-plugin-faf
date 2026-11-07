@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TFileFingerprint } from '../../../../../../_session@shared/_types/file-fingerprint.type.js';
 
-import { countOriginExpectedEntries } from './index.js';
+import { countOriginExpectedEntries } from './count-origin-expected-entries.util.js';
 
 describe('countOriginExpectedEntries', () => {
   it('counts expected fingerprints residing under the origin path prefix', () => {

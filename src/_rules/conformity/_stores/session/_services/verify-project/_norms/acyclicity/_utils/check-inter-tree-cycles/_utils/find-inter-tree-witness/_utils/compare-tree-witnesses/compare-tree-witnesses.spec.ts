@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compareTreeWitnesses } from './index.js';
+import { compareTreeWitnesses } from './compare-tree-witnesses.util.js';
 
 describe('compareTreeWitnesses', () => {
   it('compares identical witnesses as zero', () => {

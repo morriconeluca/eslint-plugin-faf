@@ -16,7 +16,7 @@ import type { TVerificationModel } from '../../_verify-project@shared/_types/_sy
 
 import { OUTCOME_CATALOG } from '../../../../../../_conformity@shared/_configs/outcome-catalog.config.js';
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { verifyExclusiveForms } from './index.js';
+import { verifyExclusiveForms } from './exclusive-forms.norm.js';
 
 type TItemSpec = {
   readonly domainKind?: null | TLogicalDomainKind;

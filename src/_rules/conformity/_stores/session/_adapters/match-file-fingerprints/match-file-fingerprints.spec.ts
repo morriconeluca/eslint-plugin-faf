@@ -3,7 +3,7 @@ import nodeFs from 'node:fs';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { hasMatchingFileFingerprints } from './index.js';
+import { hasMatchingFileFingerprints } from './match-file-fingerprints.adapter.js';
 
 describe('hasMatchingFileFingerprints', () => {
   it('returns true when watched files and tree origins match expected fingerprints', async () => {

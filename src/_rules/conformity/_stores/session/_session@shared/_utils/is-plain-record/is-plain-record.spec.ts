@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isPlainRecord } from './index.js';
+import { isPlainRecord } from './is-plain-record.util.js';
 
 describe('isPlainRecord', () => {
   it('returns true for plain objects', () => {

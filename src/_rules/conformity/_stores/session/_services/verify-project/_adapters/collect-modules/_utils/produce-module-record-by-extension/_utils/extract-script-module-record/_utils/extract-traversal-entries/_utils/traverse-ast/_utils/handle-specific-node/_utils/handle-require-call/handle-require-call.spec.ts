@@ -9,7 +9,7 @@ import type { TAstNode } from '../../../../../../_extract-traversal-entries@shar
 
 import { assertInvariant } from '../../../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { handleRequireCall } from './index.js';
+import { handleRequireCall } from './handle-require-call.util.js';
 
 const parseAndHandleRequire = (code: string) => {
   const result = parseSync('test.ts', code, {

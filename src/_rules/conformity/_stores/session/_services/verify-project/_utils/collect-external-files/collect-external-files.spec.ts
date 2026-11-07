@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { TModuleCollection } from '../../_verify-project@shared/_types/_aggregates/module-collection.type.js';
 import type { TInventory } from '../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { collectExternalFiles } from './index.js';
+import { collectExternalFiles } from './collect-external-files.util.js';
 
 const emptyModules: TModuleCollection = {
   records: new Map(),

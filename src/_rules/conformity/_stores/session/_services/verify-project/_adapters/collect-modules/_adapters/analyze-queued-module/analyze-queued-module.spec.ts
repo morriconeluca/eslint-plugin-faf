@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TInventory } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { analyzeQueuedModule } from './index.js';
+import { analyzeQueuedModule } from './analyze-queued-module.adapter.js';
 
 const inventory: TInventory = {
   items: [],

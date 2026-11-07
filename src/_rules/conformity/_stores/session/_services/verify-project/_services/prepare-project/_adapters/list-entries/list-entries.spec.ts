@@ -5,7 +5,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { toPosixPath } from '../../../../../../_session@shared/_utils/to-posix-path/index.js';
-import { listEntries } from './index.js';
+import { listEntries } from './list-entries.adapter.js';
 
 describe('listEntries', () => {
   it('returns empty value when origins list is empty', () => {

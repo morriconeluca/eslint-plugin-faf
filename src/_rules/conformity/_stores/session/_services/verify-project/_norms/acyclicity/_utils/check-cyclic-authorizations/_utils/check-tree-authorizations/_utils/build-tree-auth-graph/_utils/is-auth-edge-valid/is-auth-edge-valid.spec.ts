@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isAuthEdgeValid } from './index.js';
+import { isAuthEdgeValid } from './is-auth-edge-valid.util.js';
 
 describe('isAuthEdgeValid', () => {
   it('validates distinct unvisited indices', () => {

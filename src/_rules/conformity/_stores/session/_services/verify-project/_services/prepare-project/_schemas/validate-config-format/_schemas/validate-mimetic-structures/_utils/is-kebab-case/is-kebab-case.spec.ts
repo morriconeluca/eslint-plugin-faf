@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isKebabCase } from './index.js';
+import { isKebabCase } from './is-kebab-case.util.js';
 
 describe('isKebabCase', () => {
   describe('brief scenarios', () => {

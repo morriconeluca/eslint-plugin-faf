@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { produceModuleRecordByExtension } from './index.js';
+import { produceModuleRecordByExtension } from './produce-module-record-by-extension.util.js';
 
 const SCRIPT_EXTENSIONS = [
   '.ts',

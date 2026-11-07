@@ -9,7 +9,7 @@ import type { TInventoryItem } from '../../../../../../_verify-project@shared/_t
 import type { TVerificationModel } from '../../../../../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { isRootEdgeAuthorized } from './index.js';
+import { isRootEdgeAuthorized } from './is-root-edge-authorized.util.js';
 
 const makeEdge = (
   sourcePath: string,

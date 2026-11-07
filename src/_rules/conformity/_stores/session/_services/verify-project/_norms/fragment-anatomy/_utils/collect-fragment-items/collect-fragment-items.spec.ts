@@ -9,7 +9,7 @@ import type { TInventoryItem } from '../../../../_verify-project@shared/_types/_
 import type { TVerificationModel } from '../../../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { collectFragmentItems } from './index.js';
+import { collectFragmentItems } from './collect-fragment-items.util.js';
 
 const emptyQualifications = {
   isParentCategory: false,

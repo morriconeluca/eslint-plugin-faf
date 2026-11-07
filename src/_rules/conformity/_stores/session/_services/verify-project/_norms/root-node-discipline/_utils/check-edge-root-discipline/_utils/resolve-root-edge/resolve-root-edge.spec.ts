@@ -13,7 +13,7 @@ import type {
 import type { TVerificationModel } from '../../../../../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { resolveRootEdge } from './index.js';
+import { resolveRootEdge } from './resolve-root-edge.util.js';
 
 type TTestItem = {
   readonly id: number;

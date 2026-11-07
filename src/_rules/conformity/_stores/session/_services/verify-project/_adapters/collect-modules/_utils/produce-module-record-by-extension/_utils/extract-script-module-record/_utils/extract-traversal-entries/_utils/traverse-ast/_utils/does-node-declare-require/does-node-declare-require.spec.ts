@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { TAstNode } from '../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
 import { assertInvariant } from '../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { doesNodeDeclareRequire } from './index.js';
+import { doesNodeDeclareRequire } from './does-node-declare-require.util.js';
 
 describe('doesNodeDeclareRequire', () => {
   it('returns true when program body declares require', () => {

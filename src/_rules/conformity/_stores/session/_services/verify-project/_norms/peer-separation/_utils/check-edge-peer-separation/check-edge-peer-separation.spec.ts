@@ -13,7 +13,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { checkEdgePeerSeparation } from './index.js';
+import { checkEdgePeerSeparation } from './check-edge-peer-separation.util.js';
 
 const createEdge = (from: string, to: string): TEdgeMetadata => ({
   aliasAlternatives: [],

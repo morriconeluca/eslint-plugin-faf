@@ -10,7 +10,7 @@ import type { TVerificationModel } from '../../../../_verify-project@shared/_typ
 
 import { createOutcome } from '../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { verificationModel } from '../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { checkCyclicAuthorizations } from './index.js';
+import { checkCyclicAuthorizations } from './check-cyclic-authorizations.util.js';
 
 const createTreeDeclaration = ({
   originPath,

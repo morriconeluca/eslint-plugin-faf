@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { hierarchyFixture } from '../../_derive-horizontal-hierarchies@shared/_mocks/hierarchy-fixture.mock.js';
-import { deriveNodeHierarchies } from './index.js';
+import { deriveNodeHierarchies } from './derive-node-hierarchies.util.js';
 
 describe('deriveNodeHierarchies', () => {
   it('uses classified catalog ranks for Fragment Nodes and the shared top rank for entry nodes', () => {

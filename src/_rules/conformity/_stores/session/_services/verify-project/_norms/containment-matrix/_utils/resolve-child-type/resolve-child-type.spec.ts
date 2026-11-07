@@ -6,7 +6,7 @@ import type {
   TNodeKind,
 } from '../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 
-import { resolveChildType } from './index.js';
+import { resolveChildType } from './resolve-child-type.util.js';
 
 const absentRole = { kind: 'absent' as const, roleName: null };
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compareWitnessSegment } from './index.js';
+import { compareWitnessSegment } from './compare-witness-segment.util.js';
 
 describe('compareWitnessSegment', () => {
   it('compares identical segments as zero', () => {

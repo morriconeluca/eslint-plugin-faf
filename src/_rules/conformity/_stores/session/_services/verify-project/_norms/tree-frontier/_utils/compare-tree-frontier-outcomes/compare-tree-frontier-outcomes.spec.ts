@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TDependencyOutcome } from '../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
-import { compareTreeFrontierOutcomes } from './index.js';
+import { compareTreeFrontierOutcomes } from './compare-tree-frontier-outcomes.util.js';
 
 const baseOutcome: TDependencyOutcome = {
   constraint: 'dependency/tree-opacity',

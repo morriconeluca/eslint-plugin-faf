@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { selectMinElement } from './index.js';
+import { selectMinElement } from './select-min-element.util.js';
 
 describe('selectMinElement', () => {
   it('returns the first element from non-empty array', () => {

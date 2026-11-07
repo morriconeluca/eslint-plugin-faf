@@ -6,7 +6,7 @@ import type {
   TModuleRecord,
 } from '../../../../../../_session@shared/_types/module-record.type.js';
 
-import { collectReExportPositions } from './index.js';
+import { collectReExportPositions } from './collect-re-export-positions.util.js';
 
 const makeRecord = (
   exports: readonly TModuleExport[] = [],

@@ -5,7 +5,7 @@ import type { TRootSymbol } from '../../../../../../../../../../../../../../_ses
 
 import { assertInvariant } from '../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { collectVariableSymbols } from './index.js';
+import { collectVariableSymbols } from './collect-variable-symbols.util.js';
 
 describe('collectVariableSymbols', () => {
   it('collects variable symbols from multiple declarators', () => {

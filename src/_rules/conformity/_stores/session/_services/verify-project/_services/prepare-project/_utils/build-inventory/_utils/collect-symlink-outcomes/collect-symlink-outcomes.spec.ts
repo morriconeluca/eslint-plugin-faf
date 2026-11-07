@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TInventoryItem } from '../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { collectSymlinkOutcomes } from './index.js';
+import { collectSymlinkOutcomes } from './collect-symlink-outcomes.util.js';
 
 const createItem = (
   isSymlink: boolean,

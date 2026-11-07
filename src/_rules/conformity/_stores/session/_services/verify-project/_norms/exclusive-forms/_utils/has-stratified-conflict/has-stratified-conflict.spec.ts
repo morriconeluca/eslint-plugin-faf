@@ -11,7 +11,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { hasStratifiedConflict } from './index.js';
+import { hasStratifiedConflict } from './has-stratified-conflict.util.js';
 
 type TSpec = {
   readonly domainKind?: null | TLogicalDomainKind;

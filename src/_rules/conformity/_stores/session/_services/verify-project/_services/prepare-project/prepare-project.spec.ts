@@ -2,7 +2,7 @@ import { createFixture } from 'fs-fixture';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { prepareProject } from './index.js';
+import { prepareProject } from './prepare-project.service.js';
 
 const roles = `roles: [{ name: 'util', category: '_utils' }], subGraphRoles: [{ name: 'spec' }],`;
 

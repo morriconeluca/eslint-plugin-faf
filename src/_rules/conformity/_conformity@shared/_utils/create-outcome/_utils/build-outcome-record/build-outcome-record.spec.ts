@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { OUTCOME_CATALOG } from '../../../../_configs/outcome-catalog.config.js';
-import { buildOutcomeRecord } from './index.js';
+import { buildOutcomeRecord } from './build-outcome-record.util.js';
 
 describe('buildOutcomeRecord', () => {
   it('builds an acyclicity outcome with position and cycle', () => {

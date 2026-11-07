@@ -3,7 +3,7 @@ import nodeFs from 'node:fs';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { hasMatchingTreeOrigin } from './index.js';
+import { hasMatchingTreeOrigin } from './has-matching-tree-origin.adapter.js';
 
 describe('hasMatchingTreeOrigin', () => {
   it('returns true when tree origin contents match disk state', async () => {

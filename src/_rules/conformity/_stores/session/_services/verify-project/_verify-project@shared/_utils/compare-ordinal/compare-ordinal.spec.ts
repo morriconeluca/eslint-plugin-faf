@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compareOrdinal } from './index.js';
+import { compareOrdinal } from './compare-ordinal.util.js';
 
 describe('compareOrdinal', () => {
   it('returns zero when both strings are equal, including the empty string', () => {

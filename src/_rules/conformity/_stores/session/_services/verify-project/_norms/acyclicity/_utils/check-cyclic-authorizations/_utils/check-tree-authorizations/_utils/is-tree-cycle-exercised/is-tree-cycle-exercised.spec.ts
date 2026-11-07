@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { TAcyclicityOutcome } from '../../../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
 import { createOutcome } from '../../../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
-import { isTreeCycleExercised } from './index.js';
+import { isTreeCycleExercised } from './is-tree-cycle-exercised.util.js';
 
 describe('isTreeCycleExercised', () => {
   it('detects exercised tree cycle when cycle has 2 or more origin trees from sources only', () => {

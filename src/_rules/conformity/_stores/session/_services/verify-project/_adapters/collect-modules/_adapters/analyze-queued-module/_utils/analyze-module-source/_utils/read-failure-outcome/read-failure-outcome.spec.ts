@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TModuleReadFailureKind } from '../../../../../../_collect-modules@shared/_types/_aggregates/collect-modules.type.js';
 
-import { readFailureOutcome } from './index.js';
+import { readFailureOutcome } from './read-failure-outcome.util.js';
 
 const readKinds = [
   'directory',

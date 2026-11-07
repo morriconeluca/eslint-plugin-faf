@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildWitnessPayload } from './index.js';
+import { buildWitnessPayload } from './build-witness-payload.util.js';
 
 describe('buildWitnessPayload', () => {
   it('extracts element and secondNode from witness', () => {

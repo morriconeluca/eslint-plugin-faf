@@ -11,7 +11,7 @@ import type {
 } from '../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 import type { TEdgeGeometry } from '../../../../../../_verify-project@shared/_utils/edge-geometry/index.js';
 
-import { collectCrossedBranches } from './index.js';
+import { collectCrossedBranches } from './collect-crossed-branches.util.js';
 
 const createClassification = (
   id: number,

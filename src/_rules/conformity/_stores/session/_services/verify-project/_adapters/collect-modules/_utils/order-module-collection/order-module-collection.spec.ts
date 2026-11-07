@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { TModuleRecord } from '../../../../../../_session@shared/_types/module-record.type.js';
 import type { TImportResolution } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
-import { orderModuleCollection } from './index.js';
+import { orderModuleCollection } from './order-module-collection.util.js';
 
 const record = (language: TModuleRecord['language']): TModuleRecord => ({
   exports: [],

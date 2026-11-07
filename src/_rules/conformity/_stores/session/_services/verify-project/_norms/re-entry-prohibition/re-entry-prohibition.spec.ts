@@ -13,7 +13,7 @@ import type {
 import type { TVerificationModel } from '../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { verifyReEntryProhibition } from './index.js';
+import { verifyReEntryProhibition } from './re-entry-prohibition.norm.js';
 
 const makeTree = (originPath: string): TEffectiveTree => ({
   catalog: {

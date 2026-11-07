@@ -5,7 +5,7 @@ import type { TExtractedImportEquals } from './extract-import-equals.type.js';
 
 import { assertInvariant } from '../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractImportEquals } from './index.js';
+import { extractImportEquals } from './extract-import-equals.util.js';
 
 const parseImportEquals = (code: string): null | TExtractedImportEquals => {
   const result = parseSync('test.ts', code, {

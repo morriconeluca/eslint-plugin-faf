@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TInProgressInventoryEntry } from '../../_build-inventory@shared/_types/build-inventory.type.js';
 
-import { populateEntryMap } from './index.js';
+import { populateEntryMap } from './populate-entry-map.util.js';
 
 describe('populateEntryMap', () => {
   it('populates map with filtered entries and missing origin directory', () => {

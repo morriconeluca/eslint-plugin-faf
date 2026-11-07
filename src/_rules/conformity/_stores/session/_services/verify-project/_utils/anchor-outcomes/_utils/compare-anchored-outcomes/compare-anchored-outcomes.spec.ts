@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { TOutcome } from '../../../../../../../../_conformity@shared/_types/outcome.type.js';
 import type { TAnchoredOutcome } from '../../../../../../_session@shared/_types/anchored-outcome.type.js';
 
-import { compareAnchoredOutcomes } from './index.js';
+import { compareAnchoredOutcomes } from './compare-anchored-outcomes.util.js';
 
 const anchored = (
   anchorPath: string,

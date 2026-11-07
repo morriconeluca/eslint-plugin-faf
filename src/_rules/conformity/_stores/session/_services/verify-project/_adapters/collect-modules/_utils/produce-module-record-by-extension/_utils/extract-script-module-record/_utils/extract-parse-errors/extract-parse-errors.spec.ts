@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { createSourceLocator } from '../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractParseErrors } from './index.js';
+import { extractParseErrors } from './extract-parse-errors.util.js';
 
 describe('extractParseErrors', () => {
   it('extracts error position using first label start', () => {

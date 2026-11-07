@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { assertInvariant } from './index.js';
+import { assertInvariant } from './assert-invariant.util.js';
 
 const assertBoolean = (isCondition: boolean, message: string): void => {
   assertInvariant(isCondition, message);

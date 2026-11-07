@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { findSelfLoopWitness } from './index.js';
+import { findSelfLoopWitness } from './find-self-loop-witness.util.js';
 
 describe('findSelfLoopWitness', () => {
   it('returns self-loop path when present', () => {

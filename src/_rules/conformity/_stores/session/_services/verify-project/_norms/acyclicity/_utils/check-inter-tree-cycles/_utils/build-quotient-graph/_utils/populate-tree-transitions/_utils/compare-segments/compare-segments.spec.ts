@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compareSegments } from './index.js';
+import { compareSegments } from './compare-segments.util.js';
 
 describe('compareSegments', () => {
   it('orders segments with earlier sources first even if destinations are reversed', () => {

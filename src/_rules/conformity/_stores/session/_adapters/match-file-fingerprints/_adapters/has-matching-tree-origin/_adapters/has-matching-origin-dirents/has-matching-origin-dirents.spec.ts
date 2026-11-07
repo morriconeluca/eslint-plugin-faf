@@ -3,7 +3,7 @@ import nodeFs from 'node:fs';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { hasMatchingOriginDirents } from './index.js';
+import { hasMatchingOriginDirents } from './has-matching-origin-dirents.adapter.js';
 
 describe('hasMatchingOriginDirents', () => {
   it('returns true when all dirents match expected fingerprints', async () => {

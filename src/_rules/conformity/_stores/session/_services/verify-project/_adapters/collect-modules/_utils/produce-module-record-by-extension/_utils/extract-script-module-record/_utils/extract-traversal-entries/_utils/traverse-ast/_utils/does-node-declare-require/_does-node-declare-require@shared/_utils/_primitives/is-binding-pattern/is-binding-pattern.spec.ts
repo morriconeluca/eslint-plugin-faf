@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isBindingPattern } from './index.js';
+import { isBindingPattern } from './is-binding-pattern.util.js';
 
 describe('isBindingPattern', () => {
   it.each([

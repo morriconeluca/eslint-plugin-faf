@@ -5,7 +5,7 @@ import type { TUnsupportedSyntax } from '../../../../../../../../../../../../../
 import type { TAstNode } from '../../../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
 import { createSourceLocator } from '../../../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { handleUnsupportedSyntax } from './index.js';
+import { handleUnsupportedSyntax } from './handle-unsupported-syntax.util.js';
 
 describe('handleUnsupportedSyntax', () => {
   it('reports unsupported syntax for TSExportAssignment with start offset', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { collectSccComponent } from './index.js';
+import { collectSccComponent } from './collect-scc-component.util.js';
 
 describe('collectSccComponent', () => {
   it('collects component vertices', () => {

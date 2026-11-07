@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TUnverifiedOutcome } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
-import { compareUnverifiedOutcomes } from './index.js';
+import { compareUnverifiedOutcomes } from './compare-unverified-outcomes.util.js';
 
 const outcome = (
   element: string,

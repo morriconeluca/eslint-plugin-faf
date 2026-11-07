@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { deduplicateNeighborRow } from './index.js';
+import { deduplicateNeighborRow } from './deduplicate-neighbor-row.util.js';
 
 describe('deduplicateNeighborRow', () => {
   it('deduplicates and sorts numbers', () => {

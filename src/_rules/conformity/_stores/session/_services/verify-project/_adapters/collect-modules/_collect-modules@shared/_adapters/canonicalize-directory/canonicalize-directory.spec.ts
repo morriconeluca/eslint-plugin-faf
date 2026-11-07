@@ -3,7 +3,7 @@ import nodeFs from 'node:fs';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { canonicalizeDirectory } from './index.js';
+import { canonicalizeDirectory } from './canonicalize-directory.adapter.js';
 
 describe('canonicalizeDirectory', () => {
   it('returns the real path of an existing directory', async () => {

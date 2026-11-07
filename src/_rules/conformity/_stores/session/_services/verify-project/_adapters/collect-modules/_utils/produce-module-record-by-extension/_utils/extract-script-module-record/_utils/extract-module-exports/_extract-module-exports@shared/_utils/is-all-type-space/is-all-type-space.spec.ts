@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TRootSymbol } from '../../../../../../../../../../../../../_session@shared/_types/module-record.type.js';
 
-import { isAllTypeSpace } from './index.js';
+import { isAllTypeSpace } from './is-all-type-space.util.js';
 
 describe('isAllTypeSpace', () => {
   it('returns true when all matching symbols are type space', () => {

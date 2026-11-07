@@ -9,7 +9,7 @@ import type { TImportedBinding } from '../../../../_extract-script-module-record
 
 import { assertInvariant } from '../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { extractNamedSpecifiersExports } from './index.js';
+import { extractNamedSpecifiersExports } from './extract-named-specifiers-exports.util.js';
 
 const parseAndExtractSpecifiers = (
   code: string,

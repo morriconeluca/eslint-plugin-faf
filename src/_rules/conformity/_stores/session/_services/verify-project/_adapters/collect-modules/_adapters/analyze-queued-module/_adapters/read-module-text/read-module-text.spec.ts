@@ -3,7 +3,7 @@ import nodeFs from 'node:fs';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { readModuleText } from './index.js';
+import { readModuleText } from './read-module-text.adapter.js';
 
 describe('readModuleText', () => {
   it('reads a UTF-8 file and an empty file', async () => {

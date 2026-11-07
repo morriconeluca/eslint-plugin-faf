@@ -3,12 +3,25 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import eslintConfig from '../../eslint.config.js';
+
 const fixtureRoot = path.resolve(
   import.meta.dirname,
   '../../src/_rules/conformity/_utils/role-purity-fixture'
 );
 
-const eslint = new ESLint({ ignore: false });
+const eslint = new ESLint({
+  ignore: false,
+  overrideConfig: [
+    ...eslintConfig,
+    {
+      rules: {
+        'faf/conformity': 'off',
+      },
+    },
+  ],
+  overrideConfigFile: true,
+});
 
 const writeFixture = (relativePath: string, content: string): string => {
   const fullPath = path.join(fixtureRoot, relativePath);

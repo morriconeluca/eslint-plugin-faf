@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { compareSegmentElements } from './index.js';
+import { compareSegmentElements } from './compare-segment-elements.util.js';
 
 describe('compareSegmentElements', () => {
   it('compares identical segments as zero', () => {

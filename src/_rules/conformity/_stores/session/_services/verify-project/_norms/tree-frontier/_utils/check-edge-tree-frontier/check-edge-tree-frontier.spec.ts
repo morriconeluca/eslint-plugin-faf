@@ -6,7 +6,7 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { checkEdgeTreeFrontier } from './index.js';
+import { checkEdgeTreeFrontier } from './check-edge-tree-frontier.util.js';
 
 const makeEdge = (
   sourcePath: string,

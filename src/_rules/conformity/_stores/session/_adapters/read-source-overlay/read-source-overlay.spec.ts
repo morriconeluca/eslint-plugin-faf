@@ -2,7 +2,7 @@ import { createFixture } from 'fs-fixture';
 import nodePath from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { readSourceOverlay } from './index.js';
+import { readSourceOverlay } from './read-source-overlay.adapter.js';
 
 describe('readSourceOverlay', () => {
   it('omits the overlay when the text matches disk and keeps it otherwise', async () => {

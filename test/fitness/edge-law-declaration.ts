@@ -1,5 +1,6 @@
 import type {
   TFAFConfig,
+  TFAFLocalHorizontalHierarchy,
   TFAFRoles,
 } from '../../src/_src@shared/_types/faf-config.type.js';
 
@@ -73,11 +74,19 @@ export function declarationFromFafConfig(
     horizontalHierarchies,
     config.faf.common?.horizontalHierarchies
   );
+  appendLocalHierarchies(
+    horizontalHierarchies,
+    config.faf.common?.localHorizontalHierarchies
+  );
   categoryNames.push(...collectCategoryNames(config.faf.common?.roles));
 
   for (const local of config.faf.locals) {
     appendAuthorizations(externalAuthorizations, local.externalDependencies);
     appendHierarchies(horizontalHierarchies, local.horizontalHierarchies);
+    appendLocalHierarchies(
+      horizontalHierarchies,
+      local.localHorizontalHierarchies
+    );
     categoryNames.push(...collectCategoryNames(local.roles));
     if (local.rootFragments !== undefined) {
       for (const rootFragment of local.rootFragments) {
@@ -116,6 +125,18 @@ function appendHierarchies(
     return;
   }
   target.push(...hierarchies);
+}
+
+function appendLocalHierarchies(
+  target: THorizontalHierarchy[],
+  localHierarchies: readonly TFAFLocalHorizontalHierarchy[] | undefined
+): void {
+  if (localHierarchies === undefined) {
+    return;
+  }
+  for (const entry of localHierarchies) {
+    target.push(entry.hierarchies);
+  }
 }
 
 function appendRootLayers(

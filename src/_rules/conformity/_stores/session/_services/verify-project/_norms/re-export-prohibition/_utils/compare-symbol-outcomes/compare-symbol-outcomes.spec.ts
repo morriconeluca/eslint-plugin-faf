@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TSymbolOutcome } from '../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
-import { compareSymbolOutcomes } from './index.js';
+import { compareSymbolOutcomes } from './compare-symbol-outcomes.util.js';
 
 const makeOutcome = (
   overrides: Partial<TSymbolOutcome> & Pick<TSymbolOutcome, 'element'>

@@ -17,7 +17,7 @@ import type {
 import type { TVerificationModel } from '../../../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { collectBranchOutcomes } from './index.js';
+import { collectBranchOutcomes } from './collect-branch-outcomes.util.js';
 
 type TModelEntry = {
   readonly depth: number;

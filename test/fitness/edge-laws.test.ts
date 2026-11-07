@@ -75,9 +75,13 @@ describe('fitness: FAF edge laws', () => {
       collected.collection.sources.some((source) => source.endsWith('.spec.ts'))
     ).toBe(true);
     const declaration = declarationFromFafConfig(fafConfig);
-    expect(declaration.horizontalHierarchies).toEqual(
-      fafConfig.faf.locals[0].horizontalHierarchies
-    );
+    const expectedHierarchies = [
+      ...fafConfig.faf.locals[0].horizontalHierarchies,
+      ...fafConfig.faf.locals[0].localHorizontalHierarchies.map(
+        (localHierarchy) => localHierarchy.hierarchies
+      ),
+    ];
+    expect(declaration.horizontalHierarchies).toEqual(expectedHierarchies);
     expect(declaration.treeOrigins).toEqual(['src']);
     const violations = evaluateEdgeLaws(
       collected.collection.edges,

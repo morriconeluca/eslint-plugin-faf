@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { dedupeSourceLocations } from './index.js';
+import { dedupeSourceLocations } from './dedupe-source-locations.util.js';
 
 describe('dedupeSourceLocations', () => {
   it('returns empty array when input is empty', () => {

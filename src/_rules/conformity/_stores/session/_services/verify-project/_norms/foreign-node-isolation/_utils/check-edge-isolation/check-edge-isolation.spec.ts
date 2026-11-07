@@ -7,7 +7,7 @@ import type {
 } from '../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 import type { TEdgeMetadata } from '../../../../_verify-project@shared/_types/_compounds/dependency-graph.type.js';
 
-import { checkEdgeIsolation } from './index.js';
+import { checkEdgeIsolation } from './check-edge-isolation.util.js';
 
 const buildClassification = (
   path: string,

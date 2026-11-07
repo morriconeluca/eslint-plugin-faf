@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { inspectOrigin } from './index.js';
+import { inspectOrigin } from './inspect-origin.adapter.js';
 
 describe('inspectOrigin', () => {
   it('returns configuration outcome when origin directory does not exist', async () => {

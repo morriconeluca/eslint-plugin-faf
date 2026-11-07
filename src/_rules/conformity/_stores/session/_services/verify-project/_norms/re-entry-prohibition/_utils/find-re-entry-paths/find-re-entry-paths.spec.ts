@@ -17,7 +17,7 @@ import type {
 import type { TVerificationModel } from '../../../../_verify-project@shared/_types/_systems/verification-model.type.js';
 
 import { verificationModel } from '../../../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { findReEntryPaths } from './index.js';
+import { findReEntryPaths } from './find-re-entry-paths.util.js';
 
 const makeTree = (originPath: string): TEffectiveTree => ({
   catalog: {

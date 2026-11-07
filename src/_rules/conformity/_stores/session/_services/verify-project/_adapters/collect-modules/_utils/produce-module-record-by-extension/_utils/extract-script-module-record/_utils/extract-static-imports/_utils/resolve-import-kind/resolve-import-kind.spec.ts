@@ -2,7 +2,7 @@ import { parseSync } from 'oxc-parser';
 import { describe, expect, it } from 'vitest';
 
 import { assertInvariant } from '../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { resolveImportKind } from './index.js';
+import { resolveImportKind } from './resolve-import-kind.util.js';
 
 const parseImportStatement = (sourceText: string) => {
   const result = parseSync('test.ts', sourceText, {

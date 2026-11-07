@@ -5,7 +5,7 @@ import type {
   TInventoryItem,
 } from '../../../../../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { lintableChildren } from './index.js';
+import { lintableChildren } from './lintable-children.util.js';
 
 const item = (
   id: number,

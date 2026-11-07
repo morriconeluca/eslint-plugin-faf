@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import eslintConfig from '../../eslint.config.js';
+
 type TRestrictedSyntaxOption = {
   readonly selector: string;
 };
@@ -31,7 +33,18 @@ describe('toolchain conventions', () => {
     import.meta.dirname,
     `../../.cache/test-fixtures/toolchain-conventions-${String(process.pid)}`
   );
-  const eslint = new ESLint({ ignore: false });
+  const eslint = new ESLint({
+    ignore: false,
+    overrideConfig: [
+      ...eslintConfig,
+      {
+        rules: {
+          'faf/conformity': 'off',
+        },
+      },
+    ],
+    overrideConfigFile: true,
+  });
 
   const calculateConfig = async (filePath: string): Promise<unknown> =>
     eslint.calculateConfigForFile(filePath);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isStatement } from './index.js';
+import { isStatement } from './is-statement.util.js';
 
 describe('isStatement', () => {
   it('returns true for statement object with type string', () => {

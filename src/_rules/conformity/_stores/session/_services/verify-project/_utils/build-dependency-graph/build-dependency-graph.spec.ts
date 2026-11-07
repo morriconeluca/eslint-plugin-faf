@@ -14,7 +14,7 @@ import type {
 } from '../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
 import { verificationModel } from '../../_verify-project@shared/_mocks/verification-model.mock.js';
-import { buildDependencyGraph } from './index.js';
+import { buildDependencyGraph } from './build-dependency-graph.util.js';
 
 const TREE_SOURCE = 'src/app.ts';
 const TREE_TARGET = 'src/widget.util.ts';

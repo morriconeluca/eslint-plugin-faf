@@ -6,7 +6,7 @@ import type { TAstNode } from '../../../../../../_extract-traversal-entries@shar
 
 import { assertInvariant } from '../../../../../../../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
 import { createSourceLocator } from '../../../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { handleTsImportType } from './index.js';
+import { handleTsImportType } from './handle-ts-import-type.util.js';
 
 describe('handleTsImportType', () => {
   it('extracts typescript import type expression', () => {

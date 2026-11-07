@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TDependencyOutcome } from '../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
-import { compareEdgeOutcomes } from './index.js';
+import { compareEdgeOutcomes } from './compare-edge-outcomes.util.js';
 
 type TOutcomeOptions = {
   readonly from: string;

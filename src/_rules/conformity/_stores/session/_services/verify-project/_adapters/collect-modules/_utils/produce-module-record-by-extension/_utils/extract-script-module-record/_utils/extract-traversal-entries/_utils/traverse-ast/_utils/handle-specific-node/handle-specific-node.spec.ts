@@ -7,7 +7,7 @@ import type {
 import type { TAstNode } from '../../../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
 import { createSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
-import { handleSpecificNode } from './index.js';
+import { handleSpecificNode } from './handle-specific-node.util.js';
 
 describe('handleSpecificNode', () => {
   it('handles require call expression when not shadowed', () => {

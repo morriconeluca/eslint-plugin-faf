@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { populateRootAuthAdjacency } from './index.js';
+import { populateRootAuthAdjacency } from './populate-root-auth-adjacency.util.js';
 
 describe('populateRootAuthAdjacency', () => {
   it('populates adjacency from root fragment dependency pairs and deduplicates correctly', () => {

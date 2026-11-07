@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import eslintConfig from '../../eslint.config.js';
+
 describe('unnecessary type predicate conditions', () => {
   it('flags assertInvariant conditions already decided by the parameter type', async () => {
     const fixtureDirectory = path.resolve(
@@ -25,7 +27,18 @@ describe('unnecessary type predicate conditions', () => {
     );
 
     try {
-      const eslint = new ESLint({ ignore: false });
+      const eslint = new ESLint({
+        ignore: false,
+        overrideConfig: [
+          ...eslintConfig,
+          {
+            rules: {
+              'faf/conformity': 'off',
+            },
+          },
+        ],
+        overrideConfigFile: true,
+      });
       const results = await eslint.lintFiles([fixturePath]);
       const ruleIds = (results[0]?.messages ?? []).map(
         (message) => message.ruleId

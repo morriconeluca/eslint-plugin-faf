@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { TModuleRecordProducer } from './_session@shared/_types/module-record.type.js';
 
 import { moduleRecordStore } from './_session@shared/_stores/module-record-store/index.js';
-import { session } from './index.js';
+import { session } from './session.store.js';
 
 const configSource = `export default { faf: { locals: [{ roles: [{ name: "util", category: "_utils" }], rootLayers: ["src"] }] } };`;
 
