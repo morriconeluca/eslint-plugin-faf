@@ -68,9 +68,9 @@ Place each unit from its production consumers only (actual imports, specs exclud
 
 Sibling Fragments in one Category do not import each other. When shared units in the same Category must depend on each other, order them with Systemic Design Sub-Categories inside that Category: `_primitives` (Rank 0) < `_compounds` (Rank 1) < `_aggregates` < `_systems` < `_ecosystems`. Do not lift them into a higher domain. The general Horizontal Hierarchy declares that order as `[['_primitives'], ['_compounds'], ['_aggregates'], ['_systems'], ['_ecosystems']]`. A Sub-Category propagates the Parent Category's Role and is not itself a catalog Category.
 
-A helper used by one Fragment lives in that Fragment's Private Category. A helper used by several units of the same domain lives in that domain's Fractal Branch. From outside a Fragment, import only its `index.ts`.
+A helper used by one Fragment lives in that Fragment's Private Category. A helper used by several units of the same domain lives in that domain's Fractal Branch. From outside a Fragment, import exclusively its `index.ts`. Within the same Fragment, the Sub-Graph Node `<name>.spec.ts` (which shares the top Rank with `index.ts` according to `FAF.md` §6.1.3) directly imports its Fragment's Master Node `./<name>.<role>.js` (and any other Fragment Nodes of lower Rank within the Fragment), and imports `index.ts` for Sub-Fragments or other external units.
 
-A spec tests only its own Fragment. It imports only what that Fragment's Fragment Nodes can import. It does not retest Sub-Fragments, which have their own spec. Inputs are data, `_mocks`, or legal imports of the Fragment. A case that truly composes several stages belongs to the spec of the composer (`verify-project`) or to `test/`, not to one stage's spec.
+A spec tests only its own Fragment. It does not retest Sub-Fragments, which have their own spec. Inputs are data, `_mocks`, or legal imports of the Fragment. A case that truly composes several stages belongs to the spec of the composer (`verify-project`) or to `test/`, not to one stage's spec.
 
 ### 2.4 Role Catalog
 
@@ -115,11 +115,7 @@ A `util` is always pure. Expected failures remain data. The only `throw` is `ass
 
 ### 2.6 Category Order and Norm Names
 
-Sibling Categories follow one general Horizontal Hierarchy:
-`[['_constants'], ['_types'], ['_mocks'], ['_configs'], ['_schemas'], ['_utils'], ['_norms'], ['_adapters'], ['_services'], ['_stores'], ['_rules']]`.
-Sibling Sub-Categories follow the Systemic Design hierarchy:
-`[['_primitives'], ['_compounds'], ['_aggregates'], ['_systems'], ['_ecosystems']]`.
-Private Categories of one Fragment are not ordered against each other. Each norm Fragment is named after the FAF prescription it checks. A helper used by one norm lives in that norm's Private Category.
+In Fractal Branches (`*@shared`), non-private sibling Categories follow the `localHorizontalHierarchies` declared in `fafconfig.ts` (`[['_constants'], ['_types'], ['_mocks'], ['_configs'], ['_schemas'], ['_utils'], ['_norms'], ['_adapters'], ['_services'], ['_stores'], ['_rules']]`), while sibling Sub-Categories follow the general Systemic Design `horizontalHierarchies` (`[['_primitives'], ['_compounds'], ['_aggregates'], ['_systems'], ['_ecosystems']]`). Private Categories of a Fragment or Root Fragment are not ordered against each other. Each norm Fragment is named after the FAF prescription it checks. A helper used by one norm lives in that norm's Private Category.
 
 ### 2.7 Fragment Anatomy
 
@@ -255,16 +251,11 @@ The codebase enforces five sequential quality gates. All gates must pass in loca
    - Formatter: Runs Prettier check across the workspace (`prettier --check`).
    - Type check: Runs TypeScript compiler without emit (`tsc --noEmit`).
 2. **`gate:2`** (`npm run gate:2`):
-   - Linting: Runs ESLint with type-checked rules, comment policy, SonarJS, Unicorn, Perfectionist, and import rules.
+   - Linting: Runs ESLint across the entire project including `faf/conformity` (`faf.configs.recommended`, plugin self-hosting) alongside repository convention rules (type-checked rules, comment policy, SonarJS, Unicorn, Perfectionist, and import rules).
 3. **`gate:3`** (`npm run gate:3`):
    - Testing & Coverage: Runs Vitest test suite with v8 coverage analysis.
    - Strict per-file thresholds: **≥ 95% line coverage** and **≥ 90% branch coverage**.
-   - Fitness tests in `test/fitness/` include the dependency graph (cycles, reachability from `src/main.ts`, and `dist/` imports) and the FAF edge laws on every relative import in `src/**/*.ts`, specs included. The edge-law fitness test reads Horizontal Hierarchies and `externalDependencies` from `fafconfig.ts` and reports every violated edge with its law:
-     - **Peer separation**: no edge between the subtrees of two different children of a Category or Sub-Category, except toward that domain's Fractal Branch or toward a sibling of strictly lower rank in the same Horizontal Hierarchy. The catalog Category hierarchy does not order Private Category siblings.
-     - **Unidirectionality**: a file in a Private Category subtree does not import the direct child files of the parent Fragment or Root Fragment; a file in a Fractal Branch subtree does not import the direct child files of the parent domain or any other subtree of that parent.
-     - **Encapsulation**: from outside a Fragment, only that Fragment's `index.ts` is importable. Category Nodes and Sub-Category chains declared by the Horizontal Hierarchies are not Fragments.
-     - **Climb**: an import that climbs to an ancestor and descends again must reach a Fractal Branch, or a sibling domain of strictly lower rank in the same Horizontal Hierarchy. That hierarchy orders catalog Categories only when they are non-private siblings (children of a Layer, a Root Layer, or a Fractal Branch). Every edge between Private Category siblings is forbidden, including edges from their subtrees. Ordered Sub-Categories (`_primitives` < `_compounds` < …) remain ordered even inside a Private Category.
-     - **Tree exit**: a relative import that resolves outside every Fractal Tree origin is allowed only when the source/target pair is authorized by `externalDependencies`.
+   - Fitness tests in `test/fitness/`: Runs `test/fitness/dependency-graph.test.ts` (cycles, reachability from `src/main.ts`, and `dist/` imports). FAF edge laws are now verified by `faf/conformity` in `gate:2`.
 4. **`gate:4:diff`** (`npm run gate:4:diff`):
    - Mutation Testing (Diff): Runs Stryker Mutator on source files in touched `src/` directories with `--incremental --force` and its own cache `.cache/stryker/diff.json`, followed by threshold evaluation (`scripts/check-mutation-threshold.ts`).
    - Strict per-file threshold: **≥ 80% mutation score**.
