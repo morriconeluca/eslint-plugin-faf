@@ -73,6 +73,9 @@ export default defineConfig({
           globals: true,
           include: ['src/**/*.spec.ts'],
           name: 'unit',
+          sequence: {
+            groupOrder: 1,
+          },
         },
       },
       {
@@ -83,6 +86,9 @@ export default defineConfig({
           globals: true,
           include: ['test/**/*.test.ts'],
           name: 'integration',
+          sequence: {
+            groupOrder: 2,
+          },
         },
       },
     ],
