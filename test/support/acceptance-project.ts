@@ -151,6 +151,9 @@ export const expectScenario = (
 };
 
 export const warmupESLint = async (): Promise<void> => {
+  if ('__stryker__' in globalThis) {
+    return;
+  }
   await lintProject(nodePath.resolve(import.meta.dirname, '../..'), [
     'src/main.ts',
   ]);
