@@ -20,7 +20,6 @@ export const collectBranchOutcomes = (() => {
 
   type TCandidateSource = {
     readonly depth: number;
-    readonly parentId: null | number;
     readonly path: string;
     readonly vertex: number;
   };
@@ -94,7 +93,6 @@ export const collectBranchOutcomes = (() => {
     }
     return {
       depth: item.depth,
-      parentId: item.parentId,
       path,
       vertex,
     };
@@ -120,37 +118,13 @@ export const collectBranchOutcomes = (() => {
     );
   };
 
-  const hasBranchUnderLca = (
-    startParentId: null | number,
-    lcaId: number,
-    inventory: TInventory,
-    taxonomy: TTaxonomyModel
-  ): boolean => {
-    let currentId = startParentId;
-    while (currentId !== null && currentId !== lcaId) {
-      const parentItem = inventory.items[currentId];
-      if (
-        parentItem !== undefined &&
-        taxonomy.byItemId.get(parentItem.id)?.domainKind === FRACTAL_BRANCH
-      ) {
-        return true;
-      }
-      currentId = parentItem === undefined ? null : parentItem.parentId;
-    }
-    return false;
-  };
-
   const isViolation = (
     sourcePath: string,
-    sourceParentId: null | number,
     destinationPath: string,
     inventory: TInventory,
     taxonomy: TTaxonomyModel
   ): boolean => {
-    if (
-      sourcePath === destinationPath ||
-      !isEligibleDestination(destinationPath, inventory, taxonomy)
-    ) {
+    if (!isEligibleDestination(destinationPath, inventory, taxonomy)) {
       return false;
     }
     const geometry = describeEdgeGeometry(
@@ -159,22 +133,10 @@ export const collectBranchOutcomes = (() => {
       inventory,
       taxonomy
     );
-    if (!geometry.sameTree) {
-      return false;
-    }
-    const hasBranch = hasBranchUnderLca(
-      sourceParentId,
-      geometry.lowestCommonAncestor.id,
-      inventory,
-      taxonomy
-    );
-    if (!hasBranch) {
-      return false;
-    }
-    const destinationStepId = geometry.firstStepDestination?.id;
     return (
-      destinationStepId === undefined ||
-      taxonomy.byItemId.get(destinationStepId)?.domainKind !== FRACTAL_BRANCH
+      geometry.firstStepSource !== null &&
+      taxonomy.byItemId.get(geometry.firstStepSource.id)?.domainKind ===
+        FRACTAL_BRANCH
     );
   };
 
@@ -251,7 +213,6 @@ export const collectBranchOutcomes = (() => {
       if (
         !isViolation(
           source.path,
-          source.parentId,
           destinationPath,
           environment.inventory,
           environment.taxonomy
@@ -321,7 +282,6 @@ export const collectBranchOutcomes = (() => {
     if (
       isViolation(
         source.path,
-        source.parentId,
         edge.destinationPath,
         environment.inventory,
         environment.taxonomy

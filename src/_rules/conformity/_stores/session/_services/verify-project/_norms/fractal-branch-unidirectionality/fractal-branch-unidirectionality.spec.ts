@@ -674,11 +674,13 @@ describe('verifyFractalBranchUnidirectionality', () => {
     const allowedModel = buildTestModel(nestedEntries, ancestorAllowedEdges);
     expect(verifyFractalBranchUnidirectionality(allowedModel)).toEqual([]);
 
+    const tableBranchSource =
+      'src/_components/table/_table@shared/_types/table-sort.type.ts';
     const directParentViolationEdges = [
       createEdge(
-        source,
+        tableBranchSource,
         'src/_components/table/table.component.ts',
-        '../../../../table.component.js'
+        '../../table.component.js'
       ),
     ];
     const parentViolationModel = buildTestModel(
@@ -689,10 +691,23 @@ describe('verifyFractalBranchUnidirectionality', () => {
       verifyFractalBranchUnidirectionality(parentViolationModel);
     expect(parentOutcomes).toEqual([
       expect.objectContaining({
-        from: source,
+        from: tableBranchSource,
         to: 'src/_components/table/table.component.ts',
       }),
     ]);
+
+    const outerParentNonBranchEdges = [
+      createEdge(
+        source,
+        'src/_components/table/table.component.ts',
+        '../../../../table.component.js'
+      ),
+    ];
+    const outerParentModel = buildTestModel(
+      nestedEntries,
+      outerParentNonBranchEdges
+    );
+    expect(verifyFractalBranchUnidirectionality(outerParentModel)).toEqual([]);
 
     const siblingSubtreeViolationEdges = [
       createEdge(
@@ -775,8 +790,8 @@ describe('verifyFractalBranchUnidirectionality', () => {
       ),
       createEdge(
         'src/_utils/unit/_unit@shared/_types/deep.type.ts',
-        'src/main.ts',
-        '../../../../main.js'
+        'src/_utils/unit/unit.util.ts',
+        '../../unit.util.js'
       ),
     ];
     const model = buildTestModel(branchTreeEntries, edges);

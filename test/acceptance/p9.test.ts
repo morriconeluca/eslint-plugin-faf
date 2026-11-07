@@ -477,6 +477,25 @@ describe('acceptance: global graph norms', () => {
     );
   });
 
+  it('allows a nested Fractal Branch node to import a lower Layer outside its parent', async () => {
+    await runScenario(
+      {
+        'src/_src@shared/_domain/_types/domain.type.ts':
+          'export type Domain = string;\n',
+        'src/_src@shared/_network/_apis/_apis@shared/_types/api.type.ts':
+          "import '../../../../_domain/_types/domain.type.js';\nexport type Api = string;\n",
+        'src/main.ts': 'export const main = 1;\n',
+      },
+      {
+        horizontalHierarchies: [[['_domain'], ['_network']]],
+        roles: [...roles, { category: '_apis', name: 'api' }],
+        rootFragments: [root('src', ['main.ts'])],
+      },
+      'fractal-branch-unidirectionality',
+      []
+    );
+  });
+
   it.each([
     [
       'chain',

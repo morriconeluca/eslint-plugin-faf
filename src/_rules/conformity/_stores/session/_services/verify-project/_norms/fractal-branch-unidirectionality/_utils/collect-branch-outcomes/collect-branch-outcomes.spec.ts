@@ -372,9 +372,19 @@ describe('collectBranchOutcomes', () => {
     const multiDepthEntries: TModelEntry[] = [
       ...baseBranchEntries,
       {
+        depth: 3,
+        id: 5,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 3,
+        path: 'src/_src@shared/_types/a-start.type.ts',
+        preorderEnd: 4,
+        preorderStart: 4,
+      },
+      {
         depth: 4,
         domainKind: 'category',
-        id: 5,
+        id: 6,
         kind: 'directory',
         parentId: 3,
         path: 'src/_src@shared/_types/nested',
@@ -383,11 +393,11 @@ describe('collectBranchOutcomes', () => {
       },
       {
         depth: 5,
-        id: 6,
+        id: 7,
         kind: 'file',
         nodeKind: 'category-node',
-        parentId: 5,
-        path: 'src/_src@shared/_types/nested/deep.type.ts',
+        parentId: 6,
+        path: 'src/_src@shared/_types/nested/z-deep.type.ts',
         preorderEnd: 7,
         preorderStart: 7,
       },
@@ -400,7 +410,12 @@ describe('collectBranchOutcomes', () => {
         '../../main.js'
       ),
       createEdge(
-        'src/_src@shared/_types/nested/deep.type.ts',
+        'src/_src@shared/_types/a-start.type.ts',
+        'src/main.ts',
+        '../../main.js'
+      ),
+      createEdge(
+        'src/_src@shared/_types/nested/z-deep.type.ts',
         'src/main.ts',
         '../../../main.js'
       ),
@@ -409,7 +424,8 @@ describe('collectBranchOutcomes', () => {
     const outcomes = collectBranchOutcomes(model);
 
     expect(outcomes.map((item) => item.from)).toEqual([
-      'src/_src@shared/_types/nested/deep.type.ts',
+      'src/_src@shared/_types/nested/z-deep.type.ts',
+      'src/_src@shared/_types/a-start.type.ts',
       'src/_src@shared/_types/start.type.ts',
     ]);
   });
@@ -821,6 +837,11 @@ describe('collectBranchOutcomes', () => {
     const edges = [
       createEdge(
         'src/_src@shared/_types/root.type.ts',
+        'external-a.ts',
+        '../../../external-a.js'
+      ),
+      createEdge(
+        'src/_src@shared/_types/root.type.ts',
         'src/_src@shared/_types/alt2.type.ts',
         './alt2.type.js'
       ),
@@ -829,6 +850,7 @@ describe('collectBranchOutcomes', () => {
         'src/_src@shared/_types/alt1.type.ts',
         './alt1.type.js'
       ),
+      createEdge('external-a.ts', 'src/main.ts', './src/main.js'),
       createEdge(
         'src/_src@shared/_types/alt1.type.ts',
         'src/main.ts',
@@ -840,7 +862,7 @@ describe('collectBranchOutcomes', () => {
         '../../main.js'
       ),
     ];
-    const model = buildTestModel(entries, edges);
+    const model = buildTestModel(entries, edges, ['external-a.ts']);
     const outcomes = collectBranchOutcomes(model);
 
     const rootOutcome = outcomes.find(
@@ -848,7 +870,7 @@ describe('collectBranchOutcomes', () => {
     );
     expect(rootOutcome?.chain).toEqual([
       'src/_src@shared/_types/root.type.ts',
-      'src/_src@shared/_types/alt1.type.ts',
+      'external-a.ts',
       'src/main.ts',
     ]);
   });
@@ -1298,18 +1320,25 @@ describe('collectBranchOutcomes', () => {
         'src/_src@shared/_types/start.type.ts',
         'src/main.ts',
         '../../main.js',
-        { line: 2 }
+        { importIndex: 2, line: 3 }
       ),
       createEdge(
         'src/_src@shared/_types/start.type.ts',
         'src/main.ts',
         '../../main.js',
-        { line: 1 }
+        { importIndex: 0, line: 1 }
+      ),
+      createEdge(
+        'src/_src@shared/_types/start.type.ts',
+        'src/main.ts',
+        '../../main.js',
+        { importIndex: 1, line: 2 }
       ),
     ];
     const model = buildTestModel(baseBranchEntries, edges);
     const outcomes = collectBranchOutcomes(model);
     expect(outcomes).toHaveLength(1);
+    expect(outcomes[0]?.position?.line).toBe(1);
   });
 
   it('covers boundary fallback paths', () => {
@@ -1527,14 +1556,35 @@ describe('collectBranchOutcomes', () => {
     const edges = [
       createEdge(
         'src/_src@shared/_types/start.type.ts',
-        'src/_src@shared/_types',
-        './index.js'
+        'src',
+        '../../index.js'
       ),
+      createEdge(
+        'src/_src@shared/_types/start.type.ts',
+        'src/dangling.ts',
+        '../../dangling.js'
+      ),
+      createEdge('src/_src@shared/_types', 'src/main.ts', '../main.js'),
     ];
     const model = buildTestModel(baseBranchEntries, edges, [
+      'src',
       'src/_src@shared/_types',
+      'src/dangling.ts',
     ]);
-    expect(collectBranchOutcomes(model)).toEqual([]);
+    const danglingModel: TVerificationModel = {
+      ...model,
+      basis: {
+        ...model.basis,
+        inventory: {
+          ...model.basis.inventory,
+          pathToId: new Map([
+            ...model.basis.inventory.pathToId,
+            ['src/dangling.ts', 999],
+          ]),
+        },
+      },
+    };
+    expect(collectBranchOutcomes(danglingModel)).toEqual([]);
   });
 
   it('handles sparse graph structures with missing edges or targets safely', () => {
@@ -1572,5 +1622,119 @@ describe('collectBranchOutcomes', () => {
       graph: sparseGraphMissingTarget,
     };
     expect(collectBranchOutcomes(sparseModelMissingTarget)).toEqual([]);
+  });
+
+  it('allows a nested Fractal Branch node to import a sibling Layer of its ancestor', () => {
+    const entries: TModelEntry[] = [
+      {
+        depth: 0,
+        domainKind: 'root-fragment',
+        id: 0,
+        kind: 'directory',
+        parentId: null,
+        path: 'src',
+        preorderEnd: 11,
+        preorderStart: 0,
+      },
+      {
+        depth: 1,
+        domainKind: 'fractal-branch',
+        id: 1,
+        kind: 'directory',
+        parentId: 0,
+        path: 'src/_src@shared',
+        preorderEnd: 11,
+        preorderStart: 1,
+      },
+      {
+        depth: 2,
+        domainKind: 'layer',
+        id: 2,
+        kind: 'directory',
+        parentId: 1,
+        path: 'src/_src@shared/_domain',
+        preorderEnd: 4,
+        preorderStart: 2,
+      },
+      {
+        depth: 3,
+        domainKind: 'category',
+        id: 3,
+        kind: 'directory',
+        parentId: 2,
+        path: 'src/_src@shared/_domain/_schemas',
+        preorderEnd: 4,
+        preorderStart: 3,
+      },
+      {
+        depth: 4,
+        id: 4,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 3,
+        path: 'src/_src@shared/_domain/_schemas/dto.schema.ts',
+        preorderEnd: 4,
+        preorderStart: 4,
+      },
+      {
+        depth: 2,
+        domainKind: 'layer',
+        id: 5,
+        kind: 'directory',
+        parentId: 1,
+        path: 'src/_src@shared/_network',
+        preorderEnd: 10,
+        preorderStart: 5,
+      },
+      {
+        depth: 3,
+        domainKind: 'category',
+        id: 6,
+        kind: 'directory',
+        parentId: 5,
+        path: 'src/_src@shared/_network/_apis',
+        preorderEnd: 10,
+        preorderStart: 6,
+      },
+      {
+        depth: 4,
+        domainKind: 'fractal-branch',
+        id: 7,
+        kind: 'directory',
+        parentId: 6,
+        path: 'src/_src@shared/_network/_apis/_apis@shared',
+        preorderEnd: 10,
+        preorderStart: 7,
+      },
+      {
+        depth: 5,
+        domainKind: 'category',
+        id: 8,
+        kind: 'directory',
+        parentId: 7,
+        path: 'src/_src@shared/_network/_apis/_apis@shared/_schemas',
+        preorderEnd: 10,
+        preorderStart: 8,
+      },
+      {
+        depth: 6,
+        id: 9,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 8,
+        path: 'src/_src@shared/_network/_apis/_apis@shared/_schemas/paged.schema.ts',
+        preorderEnd: 9,
+        preorderStart: 9,
+      },
+    ];
+    const edges = [
+      createEdge(
+        'src/_src@shared/_network/_apis/_apis@shared/_schemas/paged.schema.ts',
+        'src/_src@shared/_domain/_schemas/dto.schema.ts',
+        '../../../../_domain/_schemas/dto.schema.js'
+      ),
+    ];
+    const model = buildTestModel(entries, edges);
+    expect(collectBranchOutcomes(model)).toEqual([]);
   });
 });

@@ -2312,7 +2312,6 @@ describe('acceptance: p7a', () => {
         `${reader}/use-table-context.hook.ts`,
         'private-category-visibility',
         (s: string, d: string, spec: string) => [
-          fractalBranchUnidirectionalityOutcome(s, d, spec),
           privateCategoryUnidirectionalityOutcome(s, d, spec),
         ],
       ],
