@@ -581,6 +581,47 @@ describe('acceptance: global graph norms', () => {
     );
   });
 
+  it('reports unverified cyclic root authorizations when unexercised in code', async () => {
+    await runScenario(
+      {
+        'src/a/main.ts': 'export const a = 1;\n',
+        'src/b/main.ts': 'export const b = 1;\n',
+      },
+      {
+        rootFragments: [
+          {
+            ...root('src', []),
+            subRootFragments: [
+              {
+                ...root('src/a', ['main.ts']),
+                dependencyEdges: [{ from: ['main.ts'], to: ['src/b/main.ts'] }],
+              },
+              {
+                ...root('src/b', ['main.ts']),
+                dependencyEdges: [{ from: ['main.ts'], to: ['src/a/main.ts'] }],
+              },
+            ],
+          },
+        ],
+      },
+      'acyclicity',
+      [
+        {
+          column: 1,
+          constraint: 'unverified/cyclic-root-authorization',
+          element: 'src/a',
+          filePath: 'src/a/main.ts',
+          line: 1,
+          message:
+            "unverified/cyclic-root-authorization: 'src/a' declares reciprocal root dependency authorizations without physical code cycle (D-04).",
+          messageId: 'unverified',
+          ruleId: 'faf/conformity',
+          severity: 2,
+        },
+      ]
+    );
+  });
+
   it('checks cycles among unreachable modules', async () => {
     await runScenario(
       {
@@ -593,11 +634,6 @@ describe('acceptance: global graph norms', () => {
       { rootFragments: [root('src', ['main.ts'])] },
       'acyclicity',
       [
-        peerSeparationOutcome(
-          'src/_types/a.type.ts',
-          'src/_types/b.type.ts',
-          './b.type.js'
-        ),
         cycleOutcome('src/_types/a.type.ts', 'acyclicity/dependency-cycle', [
           [
             'src/_types/a.type.ts',
@@ -605,6 +641,11 @@ describe('acceptance: global graph norms', () => {
             'src/_types/a.type.ts',
           ],
         ]),
+        peerSeparationOutcome(
+          'src/_types/a.type.ts',
+          'src/_types/b.type.ts',
+          './b.type.js'
+        ),
         peerSeparationOutcome(
           'src/_types/b.type.ts',
           'src/_types/a.type.ts',
@@ -626,11 +667,6 @@ describe('acceptance: global graph norms', () => {
       { rootFragments: [root('src', ['main.ts'])] },
       'acyclicity',
       [
-        peerSeparationOutcome(
-          'src/_types/a.type.ts',
-          'src/_types/b.type.ts',
-          './b.type.js'
-        ),
         cycleOutcome('src/_types/a.type.ts', 'acyclicity/dependency-cycle', [
           [
             'src/_types/a.type.ts',
@@ -638,6 +674,11 @@ describe('acceptance: global graph norms', () => {
             'src/_types/a.type.ts',
           ],
         ]),
+        peerSeparationOutcome(
+          'src/_types/a.type.ts',
+          'src/_types/b.type.ts',
+          './b.type.js'
+        ),
         peerSeparationOutcome(
           'src/_types/b.type.ts',
           'src/_types/a.type.ts',
@@ -789,6 +830,60 @@ describe('acceptance: global graph norms', () => {
 
   it.each([
     {
+      description: 'no imports between A and B',
+      files: {},
+    },
+    {
+      description: 'only import from A to B',
+      files: { 'a/source.ts': "import '../b/target.js';\n" },
+    },
+    {
+      description: 'only import from B to A',
+      files: { 'b/source.ts': "import '../a/target.js';\n" },
+    },
+  ])(
+    'reports unverified cyclic tree authorizations when unexercised: $description',
+    async ({ files }) => {
+      await runScenario(
+        {
+          'a/source.ts': 'export const source = 1;\n',
+          'a/target.ts': 'export const target = 1;\n',
+          'b/source.ts': 'export const source = 1;\n',
+          'b/target.ts': 'export const target = 1;\n',
+          ...files,
+        },
+        {
+          publicRootNodes: ['a/target.ts', 'b/target.ts'],
+          rootFragments: [
+            root('a', ['source.ts', 'target.ts']),
+            root('b', ['source.ts', 'target.ts']),
+          ],
+          treeDependencies: [
+            { from: ['a'], to: ['b'] },
+            { from: ['b'], to: ['a'] },
+          ],
+        },
+        'acyclicity',
+        [
+          {
+            column: 1,
+            constraint: 'unverified/cyclic-tree-authorization',
+            element: 'a',
+            filePath: 'a/source.ts',
+            line: 1,
+            message:
+              "unverified/cyclic-tree-authorization: 'a' declares reciprocal tree dependencies without physical code cycle (D-04).",
+            messageId: 'unverified',
+            ruleId: 'faf/conformity',
+            severity: 2,
+          },
+        ]
+      );
+    }
+  );
+
+  it.each([
+    {
       description: 'one external file',
       expected: [reEntryOutcome(['a/start.ts', 'x.ts', 'a/end.ts'])],
       x: "import './a/end.js';\n",
@@ -804,6 +899,10 @@ describe('acceptance: global graph norms', () => {
       description: 'another Tree',
       expected: [
         reEntryOutcome(['a/start.ts', 'x.ts', 'b/end.ts', 'y.ts', 'a/end.ts']),
+        cycleOutcome('a/start.ts', 'acyclicity/inter-tree-cycle', [
+          ['a/start.ts', 'x.ts', 'b/end.ts'],
+          ['b/end.ts', 'y.ts', 'a/end.ts'],
+        ]),
       ],
       x: "import './b/end.js';\n",
       y: "import './a/end.js';\n",
@@ -827,10 +926,13 @@ describe('acceptance: global graph norms', () => {
             ...externalConfig.externalDependencies,
             { from: ['b/end.ts'], to: ['y.ts'] },
           ],
-          treeDependencies: [
-            { from: ['a'], to: ['b'] },
-            { from: ['b'], to: ['a'] },
-          ],
+          treeDependencies:
+            description === 'another Tree'
+              ? [
+                  { from: ['a'], to: ['b'] },
+                  { from: ['b'], to: ['a'] },
+                ]
+              : [],
         },
         're-entry-prohibition',
         expected

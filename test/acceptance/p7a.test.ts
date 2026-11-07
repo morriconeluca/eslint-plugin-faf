@@ -521,6 +521,81 @@ const sortMessages = (
   return sorted;
 };
 
+const cycleOutcome = (
+  filePath: string,
+  segments: readonly (readonly string[])[]
+): TScenarioMessage => {
+  const segmentsText = segments
+    .map((segment) => segment.join(' -> '))
+    .join('; ');
+  return {
+    column: 1,
+    constraint: 'acyclicity/dependency-cycle',
+    element: filePath,
+    filePath,
+    line: 1,
+    message: `acyclicity/dependency-cycle: '${filePath}' is part of a dependency cycle: ${segmentsText} (FAF §5).`,
+    messageId: 'acyclicity',
+    ruleId: 'faf/conformity',
+    severity: 2,
+  };
+};
+
+const collectInternalRankViolations = (
+  from: string,
+  to: string,
+  isAllowed: boolean,
+  source: string,
+  destination: string,
+  directory: string
+): readonly TScenarioMessage[] => {
+  const violations: TScenarioMessage[] = [];
+  if (!isAllowed) {
+    if (from === 'index') {
+      violations.push(
+        accessNodeSourcesOutcome(
+          source,
+          destination,
+          specifier(source, destination)
+        )
+      );
+    }
+    violations.push(
+      peerSeparationOutcome(source, destination, specifier(source, destination))
+    );
+    if (to === 'spec' || to === 'story') {
+      violations.push(
+        subGraphNodeIsolationOutcome(
+          source,
+          destination,
+          specifier(source, destination)
+        )
+      );
+    }
+  }
+
+  if (from === 'component' && to === 'index') {
+    violations.push(
+      cycleOutcome(`${directory}/index.ts`, [
+        [
+          `${directory}/index.ts`,
+          `${directory}/unit.component.ts`,
+          `${directory}/index.ts`,
+        ],
+      ])
+    );
+  }
+
+  const rankRoles = new Set(['context', 'job', 'repository', 'service']);
+  if (rankRoles.has(from)) {
+    violations.push(fragmentNodeRankOutcome(source));
+  }
+  if (rankRoles.has(to)) {
+    violations.push(fragmentNodeRankOutcome(destination));
+  }
+  return violations;
+};
+
 const runScenario = async (
   tree: FileTree,
   config: Readonly<Record<string, unknown>>,
@@ -839,43 +914,14 @@ describe('acceptance: p7a', () => {
         const directory = 'src/_components/unit';
         const source = `${directory}/${nodeFile(from)}`;
         const destination = `${directory}/${nodeFile(to)}`;
-        const violations: TScenarioMessage[] = [];
-
-        if (!allowed) {
-          if (from === 'index') {
-            violations.push(
-              accessNodeSourcesOutcome(
-                source,
-                destination,
-                specifier(source, destination)
-              )
-            );
-          }
-          violations.push(
-            peerSeparationOutcome(
-              source,
-              destination,
-              specifier(source, destination)
-            )
-          );
-          if (to === 'spec' || to === 'story') {
-            violations.push(
-              subGraphNodeIsolationOutcome(
-                source,
-                destination,
-                specifier(source, destination)
-              )
-            );
-          }
-        }
-
-        const rankRoles = new Set(['context', 'job', 'repository', 'service']);
-        if (rankRoles.has(from)) {
-          violations.push(fragmentNodeRankOutcome(source));
-        }
-        if (rankRoles.has(to)) {
-          violations.push(fragmentNodeRankOutcome(destination));
-        }
+        const violations = collectInternalRankViolations(
+          from,
+          to,
+          allowed,
+          source,
+          destination,
+          directory
+        );
 
         const getResponsiblePart = (): string => {
           if (to === 'spec' || to === 'story') {
@@ -1889,6 +1935,9 @@ describe('acceptance: p7a', () => {
         { faf: { locals: [{ roles, rootLayers: ['src'] }] } },
         'private-category-visibility',
         [
+          cycleOutcome(branchSource, [
+            [branchSource, privateDestination, privateSource, branchSource],
+          ]),
           fractalBranchUnidirectionalityOutcome(
             branchSource,
             privateDestination,
