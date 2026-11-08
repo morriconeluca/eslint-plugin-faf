@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
-import { compileInBothModes } from './type-harness.js';
+import {
+  compileInBothModes,
+  WARMUP_TIMEOUT_MS,
+  warmupTypeHarness,
+} from './type-harness.js';
 
 const DIVERGENCE_SNIPPET = `
 import type { TFAFConfig } from './src/main.js';
@@ -15,6 +19,10 @@ const divergent: TEquals<TDivergent, TFAFConfig> = true;
 `;
 
 describe('Zod schema equivalence with TFAFConfig', () => {
+  beforeAll(() => {
+    warmupTypeHarness();
+  }, WARMUP_TIMEOUT_MS);
+
   it('rejects a divergent type in both optional-property modes', () => {
     const result = compileInBothModes(DIVERGENCE_SNIPPET);
     expect(result.strictErrors.length).toBeGreaterThan(0);
