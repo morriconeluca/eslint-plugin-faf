@@ -76,7 +76,7 @@ describe('selectPresentChangedFiles and path utilities', () => {
 
 describe('resolveModifiedFiles', () => {
   it('matches the tracked diff and untracked files still present without mutating git', () => {
-    const diff = readGitLines(['diff', '--name-only', 'main']);
+    const diff = readGitLines(['diff', '--name-only', 'HEAD']);
     const untracked = readGitLines([
       'ls-files',
       '--others',
@@ -89,7 +89,7 @@ describe('resolveModifiedFiles', () => {
     expected.sort(comparePaths);
 
     const stageBefore = readGitLines(['ls-files', '--stage']);
-    expect(resolveModifiedFiles('main')).toEqual(expected);
+    expect(resolveModifiedFiles('HEAD')).toEqual(expected);
     expect(readGitLines(['ls-files', '--stage'])).toEqual(stageBefore);
   });
 });

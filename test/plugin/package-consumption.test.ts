@@ -20,6 +20,8 @@ import {
 } from 'typescript';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import packageJson from '../../package.json' with { type: 'json' };
+
 const PACKAGE_NAME = '@morriconeluca/eslint-plugin-faf';
 const TSUP_CLI = 'node_modules/tsup/dist/cli-default.js';
 const UTF8 = 'utf8';
@@ -235,7 +237,7 @@ describe('published package consumption', () => {
       namespaceKeys: [],
       ruleType: 'problem',
       self: true,
-      version: '0.5.0',
+      version: packageJson.version,
     });
     if (!isDefinedReport(report)) {
       expect(isDefinedReport(report)).toBe(true);
@@ -253,7 +255,7 @@ describe('published package consumption', () => {
       namespaceKeys: ['default'],
       ruleType: 'problem',
       self: true,
-      version: '0.5.0',
+      version: packageJson.version,
     });
     if (!isDefinedReport(report)) {
       expect(isDefinedReport(report)).toBe(true);

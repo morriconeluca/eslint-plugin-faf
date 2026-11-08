@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TFAFConfig } from '../../src/main.js';
 
+import packageJson from '../../package.json' with { type: 'json' };
 import plugin from '../../src/main.js';
 
 describe('plugin entrypoint', () => {
@@ -19,7 +20,7 @@ describe('plugin entrypoint', () => {
     expect(plugin.meta).toEqual({
       name: '@morriconeluca/eslint-plugin-faf',
       namespace: 'faf',
-      version: '0.5.0',
+      version: packageJson.version,
     });
     const recommended = plugin.configs.recommended;
     expect(recommended.plugins.faf).toBe(plugin);
