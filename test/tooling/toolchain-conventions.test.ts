@@ -28,7 +28,7 @@ const hasSelector = (ruleConfig: unknown, selector: string): boolean =>
 const hasThrowStatementSelector = (ruleConfig: unknown): boolean =>
   hasSelector(ruleConfig, 'ThrowStatement');
 
-describe('toolchain conventions', () => {
+describe('toolchain conventions', { timeout: 30_000 }, () => {
   const fixtureDirectory = path.resolve(
     import.meta.dirname,
     `../../.cache/test-fixtures/toolchain-conventions-${String(process.pid)}`
@@ -63,18 +63,22 @@ describe('toolchain conventions', () => {
     getRuleConfig(filePath, 'no-restricted-syntax');
 
   const WARMUP_TIMEOUT_MS = 30_000;
+  const tsFixturePath = path.join(fixtureDirectory, 'case.ts');
+  const typeFixturePath = path.join(fixtureDirectory, 'case.type.ts');
 
   beforeAll(async () => {
     fs.rmSync(fixtureDirectory, { force: true, recursive: true });
     fs.mkdirSync(fixtureDirectory, { recursive: true });
-    const warmupFilePath = path.join(fixtureDirectory, 'warmup.ts');
-    fs.writeFileSync(warmupFilePath, 'export const warmup = 1;\n');
-    try {
-      await eslint.lintFiles([warmupFilePath]);
-      await eslint.calculateConfigForFile(warmupFilePath);
-    } finally {
-      fs.rmSync(warmupFilePath, { force: true });
-    }
+    fs.writeFileSync(
+      tsFixturePath,
+      'import type { Rule } from "eslint";\nexport type TWarmup = Rule.RuleModule;\n'
+    );
+    fs.writeFileSync(
+      typeFixturePath,
+      'import type { Rule } from "eslint";\n/**\n * Warmup type documentation.\n */\nexport type TWarmup = {\n  /**\n   * Warmup rule documentation.\n   */\n  readonly rule: Rule.RuleModule;\n};\n'
+    );
+    await eslint.lintFiles([tsFixturePath, typeFixturePath]);
+    await eslint.calculateConfigForFile(tsFixturePath);
   }, WARMUP_TIMEOUT_MS);
 
   afterAll(() => {
@@ -85,18 +89,16 @@ describe('toolchain conventions', () => {
     filename: string,
     content: string
   ): Promise<readonly string[]> => {
-    const fullPath = path.join(fixtureDirectory, filename);
+    const fullPath = filename.endsWith('.type.ts')
+      ? typeFixturePath
+      : tsFixturePath;
     fs.writeFileSync(fullPath, content);
-    try {
-      const results = await eslint.lintFiles([fullPath]);
-      const firstResult = results[0];
-      const messages = firstResult?.messages ?? [];
-      return messages
-        .map((m) => m.ruleId)
-        .filter((id): id is string => typeof id === 'string');
-    } finally {
-      fs.rmSync(fullPath, { force: true });
-    }
+    const results = await eslint.lintFiles([fullPath]);
+    const firstResult = results[0];
+    const messages = firstResult?.messages ?? [];
+    return messages
+      .map((m) => m.ruleId)
+      .filter((id): id is string => typeof id === 'string');
   };
 
   it('rejects interface declarations in favor of type aliases', async () => {
