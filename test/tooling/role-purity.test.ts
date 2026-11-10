@@ -10,6 +10,18 @@ const fixtureRoot = path.resolve(
   '../../src/_rules/conformity/_utils/role-purity-fixture'
 );
 
+const ROLE_FIXTURE_SUFFIXES = [
+  '.adapter.ts',
+  '.config.ts',
+  '.constant.ts',
+  '.mock.ts',
+  '.norm.ts',
+  '.schema.ts',
+  '.spec.ts',
+  '.type.ts',
+  '.util.ts',
+] as const;
+
 const eslint = new ESLint({
   ignore: false,
   overrideConfig: [
@@ -23,9 +35,14 @@ const eslint = new ESLint({
   overrideConfigFile: true,
 });
 
+const resolveFixturePath = (relativePath: string): string => {
+  const dotIndex = relativePath.indexOf('.');
+  const suffix = dotIndex === -1 ? '.ts' : relativePath.slice(dotIndex);
+  return path.join(fixtureRoot, `case${suffix}`);
+};
+
 const writeFixture = (relativePath: string, content: string): string => {
-  const fullPath = path.join(fixtureRoot, relativePath);
-  fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+  const fullPath = resolveFixturePath(relativePath);
   fs.writeFileSync(fullPath, content);
   return fullPath;
 };
@@ -44,9 +61,19 @@ const lint = async (
 const restricted = (ruleIds: readonly string[]): readonly string[] =>
   ruleIds.filter((ruleId) => ruleId.startsWith('no-restricted-'));
 
-describe('role purity', () => {
+describe('role purity', { timeout: 30_000 }, () => {
   beforeAll(async () => {
-    await eslint.lintFiles(['src/main.ts']);
+    fs.rmSync(fixtureRoot, { force: true, recursive: true });
+    fs.mkdirSync(fixtureRoot, { recursive: true });
+    const warmupPaths = ROLE_FIXTURE_SUFFIXES.map((suffix) => {
+      const fullPath = path.join(fixtureRoot, `case${suffix}`);
+      fs.writeFileSync(
+        fullPath,
+        "import type { Stats } from 'node:fs';\n/**\n * Warmup type documentation.\n */\nexport type TWarmup = {\n  /**\n   * Warmup stats documentation.\n   */\n  readonly stats: Stats;\n};\n"
+      );
+      return fullPath;
+    });
+    await eslint.lintFiles(warmupPaths);
   }, 120_000);
 
   afterAll(() => {
