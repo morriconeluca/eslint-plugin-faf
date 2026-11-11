@@ -8,12 +8,15 @@ export const REFERENCE_D_09 = 'D-09';
 export const REFERENCE_D_14 = 'D-14';
 
 export const REFERENCE_FAF_4 = 'FAF §4';
+export const REFERENCE_FAF_4_6_3_1 = 'FAF §4, §6.3.1';
 export const REFERENCE_FAF_4_6_3_5_6_6 = 'FAF §4, §6.3.5, §6.6';
 export const REFERENCE_FAF_4_6_7 = 'FAF §4, §6.7';
 export const REFERENCE_FAF_5 = 'FAF §5';
 export const REFERENCE_FAF_6 = 'FAF §6';
 export const REFERENCE_FAF_6_1_1 = 'FAF §6.1.1';
 export const REFERENCE_FAF_6_1_3 = 'FAF §6.1.3';
+export const REFERENCE_FAF_6_2 = 'FAF §6.2';
+export const REFERENCE_FAF_6_2_1 = 'FAF §6.2.1';
 export const REFERENCE_FAF_6_2_2 = 'FAF §6.2.2';
 export const REFERENCE_FAF_6_3_1 = 'FAF §6.3.1';
 export const REFERENCE_FAF_6_3_2_MULTIPLE =

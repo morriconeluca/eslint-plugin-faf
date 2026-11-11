@@ -984,7 +984,7 @@ describe('classifyTaxonomy', () => {
       family: 'configuration',
       message:
         "'src/extra.ts' must be either enumerated as a Root Node or designated as a Foreign Node",
-      normativeReference: 'FAF §6.2.2',
+      normativeReference: 'FAF §6.2.1',
       propertyPath: 'trees[0].rootFragments[0]',
     });
   });
@@ -1640,7 +1640,7 @@ describe('observable classification contract', () => {
         element: 'src/blog',
         family: 'configuration',
         message: "'src/blog' must be declared in subRootFragments",
-        normativeReference: 'FAF §6.2.2',
+        normativeReference: 'FAF §6.2',
         propertyPath: 'trees[0].rootFragments[0].subRootFragments',
       },
     ]);
@@ -1668,7 +1668,7 @@ describe('observable classification contract', () => {
         element: 'src/blog',
         family: 'configuration',
         message: "'src/blog' must be declared in subRootFragments",
-        normativeReference: 'FAF §6.2.2',
+        normativeReference: 'FAF §6.2',
         propertyPath: 'trees[0].rootFragments.subRootFragments',
       },
       {
@@ -1677,7 +1677,7 @@ describe('observable classification contract', () => {
         family: 'configuration',
         message:
           "'src/main.ts' must be either enumerated as a Root Node or designated as a Foreign Node",
-        normativeReference: 'FAF §6.2.2',
+        normativeReference: 'FAF §6.2.1',
         propertyPath: 'trees[0].rootFragments',
       },
     ]);

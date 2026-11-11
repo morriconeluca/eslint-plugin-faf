@@ -247,8 +247,8 @@ const invalidImplicitExtension = (propertyPath: string): TScenarioMessage =>
     'fafconfig.ts',
     propertyPath,
     'configuration/invalid-implicit-extension',
-    'must start with a dot and contain only lowercase letters',
-    'FAF §6.3.1',
+    'must be a dot-prefixed asset extension reserved to non-script files',
+    'FAF §4, §6.3.1',
     'configuration'
   );
 
@@ -274,7 +274,7 @@ const nestedRootFragmentNotDirectChild = (element: string): TScenarioMessage =>
     element,
     'configuration/nested-root-fragment-not-direct-child',
     'must be a direct child directory of the root fragment',
-    'FAF §6.2.2',
+    'FAF §6.2',
     'configuration'
   );
 
@@ -768,22 +768,29 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
     );
   });
 
-  it('rejects implicit TypeScript Roles rather than weakening the Asset boundary', async () => {
-    await scenario(
-      { src: {} },
-      rootLayer({
-        roles: [
-          { category: '_utils', implicitRoleExtensions: ['.ts'], name: 'util' },
-        ],
-      }),
-      'validate-config-format',
-      [
-        invalidImplicitExtension(
-          'faf.locals[0].roles[0].implicitRoleExtensions[0]'
-        ),
-      ]
-    );
-  });
+  it.each(['.ts', '.d.ts'])(
+    'rejects implicit TypeScript Roles %s rather than weakening the Asset boundary',
+    async (extension) => {
+      await scenario(
+        { src: {} },
+        rootLayer({
+          roles: [
+            {
+              category: '_utils',
+              implicitRoleExtensions: [extension],
+              name: 'util',
+            },
+          ],
+        }),
+        'validate-config-format',
+        [
+          invalidImplicitExtension(
+            'faf.locals[0].roles[0].implicitRoleExtensions[0]'
+          ),
+        ]
+      );
+    }
+  );
 
   it.each(['src', 'AppShell', '[todoId]', '(auth)', '_root'])(
     'allows nested Root Fragment name %s',

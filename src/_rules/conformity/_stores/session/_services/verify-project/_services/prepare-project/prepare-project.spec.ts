@@ -126,4 +126,24 @@ describe('prepareProject', () => {
       await fixture.rm();
     }
   });
+
+  it('returns ready result with effective declarations containing aliases', async () => {
+    const fixture = await createFixture({
+      'fafconfig.ts': `export default { faf: { common: { aliases: { '#shared': 'src' } }, locals: [{ ${roles} rootLayers: ['src'] }] } };`,
+      'package.json': JSON.stringify({ type: 'module' }),
+      'src/main.ts': 'export const main = 1;\n',
+    });
+    try {
+      const result = prepareProject(
+        nodePath.join(fixture.path, 'fafconfig.ts')
+      );
+      expect(result.kind).toBe('ready');
+      if (result.kind === 'ready') {
+        expect(result.declarations.aliases).toHaveLength(1);
+        expect(result.declarations.aliases[0]?.prefix).toBe('#shared');
+      }
+    } finally {
+      await fixture.rm();
+    }
+  });
 });

@@ -195,7 +195,7 @@ describe('validateRootFragments', () => {
       constraint: 'configuration/invalid-file-name',
       message:
         'Root node file name "app/app.tsx" must be a direct child without "/".',
-      normativeReference: 'FAF §4',
+      normativeReference: 'D-05',
       payload: [{ path: 'src', rootNodes: [['app/app.tsx']] }],
       propertyPath: 'faf.locals[0].rootFragments[0].rootNodes[0][0]',
     },
@@ -319,7 +319,7 @@ describe('validateRootFragments', () => {
     {
       constraint: 'configuration/invalid-file-name',
       message: 'File name "app/main.ts" cannot contain "/".',
-      normativeReference: 'FAF §4',
+      normativeReference: 'D-05',
       payload: [
         {
           dependencyEdges: [{ from: ['app/main.ts'], to: ['b.ts'] }],

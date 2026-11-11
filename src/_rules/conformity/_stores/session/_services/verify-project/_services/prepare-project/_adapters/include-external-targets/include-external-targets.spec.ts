@@ -78,4 +78,75 @@ describe('includeExternalTargets', () => {
       await fixture.rm();
     }
   });
+
+  it('adds external dependency directory targets as directories in inventory', async () => {
+    const fixture = await createFixture({
+      'legacy/client.ts': 'export const client = 1;\n',
+    });
+
+    try {
+      const config: TFAFConfig = {
+        faf: {
+          locals: [
+            {
+              externalDependencies: [{ from: ['src/main.ts'], to: ['legacy'] }],
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      };
+      const inventory = includeExternalTargets(
+        emptyInventory,
+        config,
+        fixture.path
+      );
+      expect(inventory.pathToId.get('legacy')).toBe(0);
+      expect(inventory.items[0]?.kind).toBe('directory');
+      expect(inventory.items[0]?.treeOrigin).toBeNull();
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('adds common aliases pointing to existing directories or files', async () => {
+    const fixture = await createFixture({
+      'src/_shared/index.ts': 'export const shared = 1;\n',
+      'src/file.ts': 'export const file = 1;\n',
+    });
+
+    try {
+      const config: TFAFConfig = {
+        faf: {
+          common: {
+            aliases: {
+              '#file': 'src/file.ts',
+              '#missing': 'src/nonexistent',
+              '#shared': 'src/_shared',
+            },
+          },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      };
+      const inventory = includeExternalTargets(
+        emptyInventory,
+        config,
+        fixture.path
+      );
+      expect(inventory.pathToId.get('src/_shared')).toBeDefined();
+      expect(inventory.pathToId.get('src/file.ts')).toBeDefined();
+      expect(inventory.pathToId.get('src/nonexistent')).toBeUndefined();
+
+      const sharedItem =
+        inventory.items[inventory.pathToId.get('src/_shared') ?? -1];
+      expect(sharedItem?.kind).toBe('directory');
+      expect(sharedItem?.treeOrigin).toBeNull();
+
+      const fileItem =
+        inventory.items[inventory.pathToId.get('src/file.ts') ?? -1];
+      expect(fileItem?.kind).toBe('file');
+      expect(fileItem?.treeOrigin).toBeNull();
+    } finally {
+      await fixture.rm();
+    }
+  });
 });

@@ -276,7 +276,7 @@ describe('acceptance: p2', () => {
             'src/blog',
             'configuration/undeclared-sub-root-fragment',
             "'src/blog' must be declared in subRootFragments",
-            'FAF §6.2.2',
+            'FAF §6.2',
             'configuration'
           ),
           diagnostic(

@@ -2967,6 +2967,25 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
       defaultTree,
       {
         faf: {
+          locals: [{ roles: defaultRoles, rootLayers: ['src\\app'] }],
+        },
+      },
+      'prepare-project',
+      [
+        configMessage({
+          constraint: 'configuration/invalid-literal-path',
+          element: 'faf.locals[0].rootLayers[0]',
+          predicate:
+            'must be a POSIX relative path without empty or parent segments',
+          reference: 'D-05',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
           locals: [{ roles: defaultRoles, rootLayers: ['../src'] }],
         },
       },
@@ -3400,8 +3419,9 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
         configMessage({
           constraint: 'configuration/invalid-implicit-extension',
           element: 'faf.locals[0].roles[0].implicitRoleExtensions[0]',
-          predicate: 'must start with a dot and contain only lowercase letters',
-          reference: 'FAF §6.3.1',
+          predicate:
+            'must be a dot-prefixed asset extension reserved to non-script files',
+          reference: 'FAF §4, §6.3.1',
         }),
       ]
     );
@@ -3430,8 +3450,9 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
         configMessage({
           constraint: 'configuration/invalid-implicit-extension',
           element: 'faf.locals[0].roles[0].implicitRoleExtensions[0]',
-          predicate: 'must start with a dot and contain only lowercase letters',
-          reference: 'FAF §6.3.1',
+          predicate:
+            'must be a dot-prefixed asset extension reserved to non-script files',
+          reference: 'FAF §4, §6.3.1',
         }),
       ]
     );
@@ -3498,8 +3519,40 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
         configMessage({
           constraint: 'configuration/invalid-implicit-extension',
           element: 'faf.locals[0].roles[0].implicitRoleExtensions[0]',
-          predicate: 'must start with a dot and contain only lowercase letters',
-          reference: 'FAF §6.3.1',
+          predicate:
+            'must be a dot-prefixed asset extension reserved to non-script files',
+          reference: 'FAF §4, §6.3.1',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              roles: [
+                {
+                  category: '_fonts',
+                  implicitRoleExtensions: ['.d.ts'],
+                  isCategoryNode: true,
+                  name: 'font',
+                },
+              ],
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      },
+      'prepare-project',
+      [
+        configMessage({
+          constraint: 'configuration/invalid-implicit-extension',
+          element: 'faf.locals[0].roles[0].implicitRoleExtensions[0]',
+          predicate:
+            'must be a dot-prefixed asset extension reserved to non-script files',
+          reference: 'FAF §4, §6.3.1',
         }),
       ]
     );
@@ -3783,7 +3836,7 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           element: 'app/extra.ts',
           predicate:
             'must be either enumerated as a Root Node or designated as a Foreign Node',
-          reference: 'FAF §6.2.2',
+          reference: 'FAF §6.2.1',
         }),
       ]
     );
@@ -3842,8 +3895,8 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
         configMessage({
           constraint: 'configuration/invalid-file-name',
           element: 'faf.locals[0].rootFragments[0].rootNodes[0][0]',
-          predicate: 'must adhere to kebab-case grammar',
-          reference: 'FAF §4',
+          predicate: 'must be a direct child file name without path separators',
+          reference: 'D-05',
         }),
       ]
     );
@@ -3983,7 +4036,7 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           constraint: 'configuration/nested-root-fragment-not-direct-child',
           element: 'app/nested/deep',
           predicate: 'must be a direct child directory of the root fragment',
-          reference: 'FAF §6.2.2',
+          reference: 'FAF §6.2',
         }),
       ]
     );
@@ -4026,7 +4079,7 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           constraint: 'configuration/undeclared-sub-root-fragment',
           element: 'app/child',
           predicate: 'must be declared in subRootFragments',
-          reference: 'FAF §6.2.2',
+          reference: 'FAF §6.2',
         }),
       ]
     );

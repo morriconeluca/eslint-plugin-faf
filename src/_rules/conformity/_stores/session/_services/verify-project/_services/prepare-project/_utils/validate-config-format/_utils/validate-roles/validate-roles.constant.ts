@@ -7,6 +7,9 @@ export const CONSTRAINT_INVALID_IMPLICIT_EXT =
 export const FORBIDDEN_CODE_EXTENSIONS = new Set([
   '.cjs',
   '.cts',
+  '.d.cts',
+  '.d.mts',
+  '.d.ts',
   '.js',
   '.jsx',
   '.mjs',

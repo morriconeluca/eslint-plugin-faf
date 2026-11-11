@@ -425,7 +425,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
                 file,
                 'configuration/unenumerated-root-file',
                 'must be either enumerated as a Root Node or designated as a Foreign Node',
-                'FAF §6.2.2'
+                'FAF §6.2.1'
               ),
               classificationMessage(
                 anchorFile,
@@ -1673,6 +1673,7 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
 
       const tree: FileTree = {
         ...baseLayerTree,
+        'src/_src@shared': {},
         ...(imports !== null && {
           'package.json': JSON.stringify({
             imports,
@@ -1844,6 +1845,113 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
       await fixture.rm();
     }
   });
+
+  it('rejects common.aliases pointing to a missing directory', async () => {
+    const config = {
+      faf: {
+        common: {
+          aliases: {
+            '#shared': 'src/nonexistent',
+          },
+        },
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'src/nonexistent',
+          'configuration/non-existent-path',
+          'does not exist',
+          'D-14',
+          `Alias base "src/nonexistent" does not exist under configuration base "${fixture.path}"`
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects common.aliases pointing to an existing file', async () => {
+    const config = {
+      faf: {
+        common: {
+          aliases: {
+            '#shared': 'src/_utils/widget/widget.util.ts',
+          },
+        },
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'src/_utils/widget/widget.util.ts',
+          'configuration/expected-directory',
+          'must be a directory',
+          'D-14',
+          'Alias base "src/_utils/widget/widget.util.ts" must be a directory'
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects common.aliases containing wildcard asterisk in value', async () => {
+    const config = {
+      faf: {
+        common: {
+          aliases: {
+            '#shared': 'src/_src@shared/*',
+          },
+        },
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'faf.common.aliases.#shared',
+          'configuration/invalid-literal-path',
+          'must be a POSIX relative path without empty or parent segments',
+          'D-05'
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
 });
 
 describe('Rule 45: Frontier properties select nodes and relations without deviating from structure', () => {
@@ -1934,15 +2042,141 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
       'destB/_utils/w/index.ts': "export { w } from './w.util.js';\n",
       'destB/_utils/w/w.util.ts': 'export const w = 1;\n',
       'lib/_utils/w/index.ts': "export { w } from './w.util.js';\n",
-      'lib/_utils/w/w.util.ts': 'export const w = 1;\n',
+      'lib/_utils/w/w.util.ts':
+        "import { w as wa } from '../../../destA/_utils/w/index.js';\nimport { w as wb } from '../../../destB/_utils/w/index.js';\nexport const w = wa + wb;\n",
       'src/_utils/w/index.ts': "export { w } from './w.util.js';\n",
-      'src/_utils/w/w.util.ts': 'export const w = 1;\n',
+      'src/_utils/w/w.util.ts':
+        "import { w as wa } from '../../../destA/_utils/w/index.js';\nimport { w as wb } from '../../../destB/_utils/w/index.js';\nexport const w = wa + wb;\n",
     };
 
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
       expectScenario(result, 'tree-frontier', []);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects self tree dependency', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+            treeDependencies: [
+              {
+                from: ['src'],
+                to: ['src'],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'src',
+          'configuration/tree-dependency-self',
+          'cannot declare a tree dependency on itself',
+          'FAF §7.2'
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects tree dependency targeting a nested rootFragment path instead of tree origin', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            roles,
+            rootFragments: [
+              {
+                path: 'dest',
+                rootNodes: [['main.ts']],
+                subRootFragments: [
+                  { path: 'dest/sub', rootNodes: [['sub.ts']] },
+                ],
+              },
+            ],
+            rootLayers: ['src'],
+            subGraphRoles,
+            treeDependencies: [
+              {
+                from: ['src'],
+                to: ['dest/sub'],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const tree: FileTree = {
+      ...baseLayerTree,
+      'dest/main.ts': 'export const main = 1;\n',
+      'dest/sub/sub.ts': 'export const sub = 1;\n',
+    };
+
+    const fixture = await createProject(tree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'dest/sub',
+          'configuration/tree-dependency-not-tree-origin',
+          'must identify a declared tree origin as a tree dependency',
+          'FAF §7.2'
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects tree dependency targeting a non-existent origin path', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+            treeDependencies: [
+              {
+                from: ['src'],
+                to: ['nonexistent'],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'nonexistent',
+          'configuration/non-existent-path',
+          'does not exist',
+          'D-14',
+          `Tree dependency target "nonexistent" does not exist under configuration base "${fixture.path}"`
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
     } finally {
       await fixture.rm();
     }
@@ -2033,13 +2267,13 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
     {
       caseName: 'to identifies an external directory',
       from: ['src/_utils/widget/widget.util.ts'],
-      getExpected: (baseDirectory: string) => [
+      getExpected: () => [
         configMessage(
           'legacy',
-          'configuration/non-existent-path',
-          'does not exist',
+          'configuration/expected-file',
+          'must be a file',
           'D-14',
-          `External dependency target "legacy" does not exist under configuration base "${baseDirectory}"`
+          'External dependency target "legacy" must be a file'
         ),
       ],
       responsiblePart: 'prepare-project',
@@ -2173,13 +2407,12 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
       aliases: { '#shared': 'src/_src@shared' },
       caseName: 'target value attempts alias selection',
       from: ['src/_utils/widget/widget.util.ts'],
-      getExpected: (baseDirectory: string) => [
+      getExpected: () => [
         configMessage(
           '#shared/client.ts',
-          'configuration/non-existent-path',
-          'does not exist',
-          'D-14',
-          `External dependency target "#shared/client.ts" does not exist under configuration base "${baseDirectory}"`
+          'configuration/external-dependency-to-alias',
+          'cannot be targeted as an external dependency because it is a path alias',
+          'FAF §7.3'
         ),
       ],
       responsiblePart: 'prepare-project',
@@ -2320,6 +2553,36 @@ describe('Rule 47: Optional properties and structural types do not render valida
           'must be a file',
           'D-14',
           'External dependency source "src/_utils/widget" must be a file'
+        ),
+      ],
+      tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
+    },
+    {
+      caseName: 'existing directory in externalDependencies.to',
+      config: {
+        faf: {
+          locals: [
+            {
+              externalDependencies: [
+                {
+                  from: ['src/_utils/widget/widget.util.ts'],
+                  to: ['legacy'],
+                },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      getExpected: () => [
+        configMessage(
+          'legacy',
+          'configuration/expected-file',
+          'must be a file',
+          'D-14',
+          'External dependency target "legacy" must be a file'
         ),
       ],
       tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
@@ -2570,7 +2833,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'src/app/README.md',
           'configuration/unenumerated-root-file',
           'must be either enumerated as a Root Node or designated as a Foreign Node',
-          'FAF §6.2.2'
+          'FAF §6.2.1'
         ),
         classificationMessage(
           'src/app/app.tsx',
