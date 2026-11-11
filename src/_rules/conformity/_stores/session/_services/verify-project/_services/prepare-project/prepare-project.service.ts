@@ -98,7 +98,8 @@ export function prepareProject(configPath: string): TPrepareProjectResult {
   const inventory = includeExternalTargets(
     built.inventory,
     formatted.value,
-    loaded.value.configDirectory
+    loaded.value.configDirectory,
+    origins
   );
   const references = validateConfigReferences(
     formatted.value,

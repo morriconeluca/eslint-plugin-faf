@@ -1395,6 +1395,29 @@ const scenarios: readonly TScenario[] = [
       'outside.ts': "import './src/high.js';\nimport './src/low.js';\n",
     },
   },
+  {
+    config: {
+      faf: {
+        common,
+        locals: [{ publicRootNodes: ['src/high.ts'], rootFragments: [root] }],
+      },
+    },
+    expected: [
+      dependency('treeOpacity', {
+        from: 'scripts/outside.ts',
+        line: 2,
+        specifier: '../src/low.js',
+        to: 'src/low.ts',
+      }),
+    ],
+    name: '28.1 local external consumers in subdirectories enter only through Public Surface without Tree authorization',
+    responsiblePart: 'tree-frontier',
+    tree: {
+      ...rootTree,
+      'scripts/outside.ts':
+        "import '../src/high.js';\nimport '../src/low.js';\n",
+    },
+  },
   ...[
     { allowed: false, from: [], label: 'no authorization', to: [] },
     {
@@ -1841,6 +1864,14 @@ const scenarios: readonly TScenario[] = [
       label: 'local external consumer',
       owner: 'tree-frontier',
       source: 'outside.ts',
+      specifier: '#shared/_types/a.type.ts',
+      target: 'src/_src@shared/_types/a.type.ts',
+    },
+    {
+      allowed: false,
+      label: 'local external consumer in subdirectory',
+      owner: 'tree-frontier',
+      source: 'scripts/outside.ts',
       specifier: '#shared/_types/a.type.ts',
       target: 'src/_src@shared/_types/a.type.ts',
     },

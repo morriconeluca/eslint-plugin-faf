@@ -2517,6 +2517,24 @@ describe('acceptance: p7a', () => {
       }
     );
 
+    it('a local file external to all Trees in a subdirectory importing a Foreign Node emits foreign-node-isolation and tree-opacity', async () => {
+      const source = 'scripts/external.ts';
+      const destination = 'src/foreign.ts';
+      const spec = specifier(source, destination);
+      await runScenario(
+        {
+          ...foreignTree,
+          [source]: `import '${spec}';\n`,
+        },
+        { faf: { locals: [foreignLocal] } },
+        'foreign-node-isolation',
+        [
+          foreignNodeIsolationOutcome(source, destination, spec),
+          treeOpacityOutcome(source, destination, spec),
+        ]
+      );
+    });
+
     it.each([
       ['ambient declarations', 'declare const ambient: string;\n'],
       ['empty export', 'export {};\n'],

@@ -9,12 +9,24 @@ import type {
 
 import { LINTABLE_EXTENSIONS } from '../../../../../../../../../../_src@shared/_constants/faf.constant.js';
 import { toPosixPath } from '../../../../../../_session@shared/_utils/to-posix-path/index.js';
+import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 
 export function includeExternalTargets(
   inventory: TInventory,
   config: TFAFConfig,
-  baseDirectory: string
+  baseDirectory: string,
+  origins?: readonly string[]
 ): TInventory {
+  const skippedDirectoryNames: ReadonlySet<string> = new Set([
+    'build',
+    'coverage',
+    'dist',
+    'node_modules',
+    'out',
+    'reports',
+    'tmp',
+  ]);
+
   const items = [...inventory.items];
   const pathToId = new Map(inventory.pathToId);
   const realPathToId = new Map(inventory.realPathToId);
@@ -41,21 +53,72 @@ export function includeExternalTargets(
     return null;
   };
 
-  const collectRootCandidates = (): readonly string[] => {
-    if (!nodeFs.existsSync(baseDirectory)) {
+  const declaredOriginList =
+    origins ??
+    config.faf.locals.flatMap((local) => [
+      ...(local.rootLayers ?? []),
+      ...(local.rootFragments?.map((rootFragment) => rootFragment.path) ?? []),
+    ]);
+
+  const declaredOrigins = new Set(
+    declaredOriginList.map((origin) => toPosixPath(origin))
+  );
+
+  const collectExternalCandidates = (): readonly string[] => {
+    if (declaredOrigins.has('.') || !nodeFs.existsSync(baseDirectory)) {
       return [];
     }
-    const dirents = nodeFs.readdirSync(baseDirectory, { withFileTypes: true });
-    return dirents
-      .filter(
-        (dirent) =>
-          dirent.isFile() &&
-          dirent.name !== 'fafconfig.ts' &&
-          LINTABLE_EXTENSIONS.some((extension) =>
-            dirent.name.endsWith(extension)
-          )
-      )
-      .map((dirent) => dirent.name);
+
+    const readDirectory = (directory: string): readonly nodeFs.Dirent[] => {
+      try {
+        return nodeFs.readdirSync(directory, {
+          withFileTypes: true,
+        });
+      } catch {
+        return [];
+      }
+    };
+
+    const candidates: string[] = [];
+    const directoryQueue: string[] = [baseDirectory];
+
+    const processDirent = (
+      dirent: nodeFs.Dirent,
+      currentDirectory: string
+    ): void => {
+      if (dirent.name.startsWith('.') || dirent.isSymbolicLink()) {
+        return;
+      }
+      const fullPath = nodePath.join(currentDirectory, dirent.name);
+      const relativePath = toPosixPath(
+        nodePath.relative(baseDirectory, fullPath)
+      );
+
+      if (
+        dirent.isDirectory() &&
+        !skippedDirectoryNames.has(dirent.name) &&
+        !declaredOrigins.has(relativePath)
+      ) {
+        directoryQueue.push(fullPath);
+      }
+
+      if (
+        relativePath !== 'fafconfig.ts' &&
+        dirent.isFile() &&
+        LINTABLE_EXTENSIONS.some((extension) => dirent.name.endsWith(extension))
+      ) {
+        candidates.push(relativePath);
+      }
+    };
+
+    for (const currentDirectory of directoryQueue) {
+      for (const dirent of readDirectory(currentDirectory)) {
+        processDirent(dirent, currentDirectory);
+      }
+    }
+
+    candidates.sort(compareOrdinal);
+    return candidates;
   };
 
   const sections = [
@@ -65,7 +128,7 @@ export function includeExternalTargets(
   const targets = [
     ...sections.flatMap((section) => section ?? []).flatMap((edge) => edge.to),
     ...Object.values(config.faf.common?.aliases ?? {}),
-    ...collectRootCandidates(),
+    ...collectExternalCandidates(),
   ];
 
   for (const target of targets) {
