@@ -976,25 +976,97 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
   });
 
   it('explicates nominal grammar beyond unequivocal cases', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            roles: [{ category: '_utils', name: 'util' }],
+            rootLayers: ['src'],
+          },
+        ],
+      },
+    };
+
     await runScenario(
       {
+        'src/_utils/2fa-parser/2fa-parser.util.ts':
+          'export const twoFaParser = 1;\n',
+        'src/_utils/2fa-parser/index.ts':
+          "export { twoFaParser } from './2fa-parser.util.js';\n",
+        'src/_utils/http-client/http-client.util.ts':
+          'export const httpClient = 1;\n',
+        'src/_utils/http-client/index.ts':
+          "export { httpClient } from './http-client.util.js';\n",
         'src/_utils/v2-parser/index.ts':
           "export { v2Parser } from './v2-parser.util.js';\n",
         'src/_utils/v2-parser/v2-parser.util.ts':
           'export const v2Parser = 1;\n',
       },
-      {
-        faf: {
-          locals: [
-            {
-              roles: [{ category: '_utils', name: 'util' }],
-              rootLayers: ['src'],
-            },
-          ],
-        },
-      },
+      config,
       'nomenclature',
       []
+    );
+
+    await runScenario(
+      {
+        'src/_utils/HTTPClient/HTTPClient.util.ts':
+          'export const httpClient = 1;\n',
+        'src/_utils/HTTPClient/index.ts':
+          "export { httpClient } from './HTTPClient.util.js';\n",
+      },
+      config,
+      'nomenclature',
+      [
+        makeScenarioMessage({
+          constraint: 'classification/nomenclature',
+          element: 'src/_utils/HTTPClient',
+          filePath: 'src/_utils/HTTPClient/HTTPClient.util.ts',
+          messageId: 'classification',
+          predicate:
+            'does not follow the naming contract of its classification',
+          reference: 'FAF §4, §6.3.5, §6.6',
+        }),
+        makeScenarioMessage({
+          constraint: 'classification/nomenclature',
+          element: 'src/_utils/HTTPClient/HTTPClient.util.ts',
+          filePath: 'src/_utils/HTTPClient/HTTPClient.util.ts',
+          messageId: 'classification',
+          predicate:
+            'does not follow the naming contract of its classification',
+          reference: 'FAF §4, §6.3.5, §6.6',
+        }),
+      ]
+    );
+
+    await runScenario(
+      {
+        'src/_utils/café-parser/café-parser.util.ts':
+          'export const cafeParser = 1;\n',
+        'src/_utils/café-parser/index.ts':
+          "export { cafeParser } from './café-parser.util.js';\n",
+      },
+      config,
+      'nomenclature',
+      [
+        makeScenarioMessage({
+          constraint: 'classification/nomenclature',
+          element: 'src/_utils/café-parser',
+          filePath: 'src/_utils/café-parser/café-parser.util.ts',
+          messageId: 'classification',
+          predicate:
+            'does not follow the naming contract of its classification',
+          reference: 'FAF §4, §6.3.5, §6.6',
+        }),
+        makeScenarioMessage({
+          constraint: 'classification/nomenclature',
+          element: 'src/_utils/café-parser/café-parser.util.ts',
+          filePath: 'src/_utils/café-parser/café-parser.util.ts',
+          messageId: 'classification',
+          predicate:
+            'does not follow the naming contract of its classification',
+          reference: 'FAF §4, §6.3.5, §6.6',
+        }),
+      ]
     );
   });
 
