@@ -663,6 +663,53 @@ describe('extractScriptModuleRecord', () => {
     });
   });
 
+  describe('CommonJS export assignments and unsupported syntax reporting', () => {
+    it.each([
+      {
+        code: 'module.exports = { value: 1 };',
+        file: 'test.cjs',
+        title: 'module.exports assignment',
+      },
+      {
+        code: 'module.exports.x = 1;',
+        file: 'test.ts',
+        title: 'module.exports.x assignment',
+      },
+      {
+        code: 'exports.x = 1;',
+        file: 'test.ts',
+        title: 'exports.x assignment',
+      },
+    ])('reports unsupported syntax for $title', ({ code, file }) => {
+      const record = extractScriptModuleRecord(file, code);
+      expect(record.unsupportedSyntaxes).toEqual([
+        {
+          description:
+            'CommonJS export assignment (module.exports / exports) is unsupported',
+          position: { column: 1, line: 1 },
+        },
+      ]);
+    });
+
+    it.each([
+      {
+        code: 'function configure(module: unknown) { module.exports = 1; }',
+        title: 'module is shadowed by function parameter',
+      },
+      {
+        code: '{ const exports = { x: 0 }; exports.x = 1; }',
+        title: 'exports is shadowed by local variable',
+      },
+      {
+        code: 'exports.push(1);',
+        title: 'non-assignment calls like exports.push',
+      },
+    ])('does not report unsupported syntax when $title', ({ code }) => {
+      const record = extractScriptModuleRecord('test.ts', code);
+      expect(record.unsupportedSyntaxes).toHaveLength(0);
+    });
+  });
+
   describe('performance on 2,000-line source file', () => {
     it('extracts module record from 2,000 lines and measures execution duration', () => {
       const lines: string[] = [

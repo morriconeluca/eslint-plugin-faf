@@ -11,6 +11,12 @@ import { assertInvariant } from '../../../../../../../../../../../../_verify-pro
 import { createSourceLocator } from '../../../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import { extractLocalSpecifiers } from './extract-local-specifiers.util.js';
 
+const createSymbol = (name: string, space: 'type' | 'value'): TRootSymbol => ({
+  name,
+  position: { column: 6, line: 1 },
+  space,
+});
+
 describe('extractLocalSpecifiers', () => {
   it('extracts local symbol export', () => {
     const code = 'export { val };';
@@ -246,6 +252,260 @@ describe('extractLocalSpecifiers', () => {
         origin: {
           specifier: './dep.js',
           type: 'namespace',
+        },
+        position: { column: 10, line: 1 },
+      },
+    ]);
+  });
+
+  it('exports local type symbol when declaration is type-only and imported binding is value', () => {
+    const code = 'export type { Bar };';
+    const result = parseSync('test.ts', code, {
+      lang: 'ts',
+      sourceType: 'module',
+    });
+    const statement = result.program.body[0];
+    assertInvariant(
+      statement?.type === 'ExportNamedDeclaration',
+      'Expected export'
+    );
+    const locator = createSourceLocator(code);
+    const exports: TModuleExport[] = [];
+    const bindings = new Map<string, TImportedBinding>([
+      [
+        'Bar',
+        {
+          importedName: 'Bar',
+          isNamespace: false,
+          isTypeOnly: false,
+          localName: 'Bar',
+          specifier: './other.js',
+        },
+      ],
+    ]);
+    const symbols: TRootSymbol[] = [
+      { name: 'Bar', position: { column: 6, line: 1 }, space: 'type' },
+    ];
+
+    extractLocalSpecifiers(statement, symbols, bindings, locator, exports);
+
+    expect(exports).toEqual([
+      {
+        exportedName: 'Bar',
+        isTypeOnly: true,
+        origin: { symbolName: 'Bar', type: 'local-symbol' },
+        position: { column: 15, line: 1 },
+      },
+    ]);
+  });
+
+  it('exports local type symbol when specifier is type-only and imported binding is value', () => {
+    const code = 'export { type Bar };';
+    const result = parseSync('test.ts', code, {
+      lang: 'ts',
+      sourceType: 'module',
+    });
+    const statement = result.program.body[0];
+    assertInvariant(
+      statement?.type === 'ExportNamedDeclaration',
+      'Expected export'
+    );
+    const locator = createSourceLocator(code);
+    const exports: TModuleExport[] = [];
+    const bindings = new Map<string, TImportedBinding>([
+      [
+        'Bar',
+        {
+          importedName: 'Bar',
+          isNamespace: false,
+          isTypeOnly: false,
+          localName: 'Bar',
+          specifier: './other.js',
+        },
+      ],
+    ]);
+    const symbols: TRootSymbol[] = [
+      { name: 'Bar', position: { column: 6, line: 1 }, space: 'type' },
+    ];
+
+    extractLocalSpecifiers(statement, symbols, bindings, locator, exports);
+
+    expect(exports).toEqual([
+      {
+        exportedName: 'Bar',
+        isTypeOnly: true,
+        origin: { symbolName: 'Bar', type: 'local-symbol' },
+        position: { column: 10, line: 1 },
+      },
+    ]);
+  });
+
+  it('exports imported binding when export is not explicitly type-only even if local type exists', () => {
+    const code = 'export { Bar };';
+    const result = parseSync('test.ts', code, {
+      lang: 'ts',
+      sourceType: 'module',
+    });
+    const statement = result.program.body[0];
+    assertInvariant(
+      statement?.type === 'ExportNamedDeclaration',
+      'Expected export'
+    );
+    const locator = createSourceLocator(code);
+    const exports: TModuleExport[] = [];
+    const bindings = new Map<string, TImportedBinding>([
+      [
+        'Bar',
+        {
+          importedName: 'Bar',
+          isNamespace: false,
+          isTypeOnly: false,
+          localName: 'Bar',
+          specifier: './other.js',
+        },
+      ],
+    ]);
+    const symbols: TRootSymbol[] = [
+      { name: 'Bar', position: { column: 6, line: 1 }, space: 'type' },
+    ];
+
+    extractLocalSpecifiers(statement, symbols, bindings, locator, exports);
+
+    expect(exports).toEqual([
+      {
+        exportedName: 'Bar',
+        isTypeOnly: false,
+        origin: {
+          importedName: 'Bar',
+          specifier: './other.js',
+          type: 'imported-binding',
+        },
+        position: { column: 10, line: 1 },
+      },
+    ]);
+  });
+
+  it.each([
+    {
+      bindings: new Map<string, TImportedBinding>([
+        [
+          'Bar',
+          {
+            importedName: 'Bar',
+            isNamespace: false,
+            isTypeOnly: true,
+            localName: 'Bar',
+            specifier: './other.js',
+          },
+        ],
+      ]),
+      symbols: [createSymbol('Bar', 'type')],
+      title: 'imported binding is already type-only',
+    },
+    {
+      bindings: new Map<string, TImportedBinding>([
+        [
+          'Bar',
+          {
+            importedName: 'Bar',
+            isNamespace: false,
+            isTypeOnly: false,
+            localName: 'Bar',
+            specifier: './other.js',
+          },
+        ],
+      ]),
+      symbols: [createSymbol('Bar', 'value')],
+      title: 'local symbol is in value space',
+    },
+    {
+      bindings: new Map<string, TImportedBinding>([
+        [
+          'Bar',
+          {
+            importedName: 'Bar',
+            isNamespace: false,
+            isTypeOnly: false,
+            localName: 'Bar',
+            specifier: './other.js',
+          },
+        ],
+      ]),
+      symbols: [createSymbol('Other', 'type')],
+      title: 'local type symbol has different name',
+    },
+  ])(
+    'exports imported binding when declaration is type-only and $title',
+    ({ bindings, symbols }) => {
+      const code = 'export type { Bar };';
+      const result = parseSync('test.ts', code, {
+        lang: 'ts',
+        sourceType: 'module',
+      });
+      const statement = result.program.body[0];
+      assertInvariant(
+        statement?.type === 'ExportNamedDeclaration',
+        'Expected export'
+      );
+      const locator = createSourceLocator(code);
+      const exports: TModuleExport[] = [];
+
+      extractLocalSpecifiers(statement, symbols, bindings, locator, exports);
+
+      expect(exports).toEqual([
+        {
+          exportedName: 'Bar',
+          isTypeOnly: true,
+          origin: {
+            importedName: 'Bar',
+            specifier: './other.js',
+            type: 'imported-binding',
+          },
+          position: { column: 15, line: 1 },
+        },
+      ]);
+    }
+  );
+
+  it('exports imported binding when type-only import merges with local value symbol and export is value', () => {
+    const code = 'export { Foo };';
+    const result = parseSync('test.ts', code, {
+      lang: 'ts',
+      sourceType: 'module',
+    });
+    const statement = result.program.body[0];
+    assertInvariant(
+      statement?.type === 'ExportNamedDeclaration',
+      'Expected export'
+    );
+    const locator = createSourceLocator(code);
+    const exports: TModuleExport[] = [];
+    const bindings = new Map<string, TImportedBinding>([
+      [
+        'Foo',
+        {
+          importedName: 'Foo',
+          isNamespace: false,
+          isTypeOnly: true,
+          localName: 'Foo',
+          specifier: './dep.js',
+        },
+      ],
+    ]);
+    const symbols: TRootSymbol[] = [
+      { name: 'Foo', position: { column: 6, line: 1 }, space: 'value' },
+    ];
+
+    extractLocalSpecifiers(statement, symbols, bindings, locator, exports);
+
+    expect(exports).toEqual([
+      {
+        exportedName: 'Foo',
+        isTypeOnly: true,
+        origin: {
+          importedName: 'Foo',
+          specifier: './dep.js',
+          type: 'imported-binding',
         },
         position: { column: 10, line: 1 },
       },

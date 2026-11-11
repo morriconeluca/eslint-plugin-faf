@@ -16,7 +16,15 @@ export function extractTraversalEntries(
   const inlineImports: TModuleImport[] = [];
   const unsupportedSyntaxes: TUnsupportedSyntax[] = [];
 
-  traverseAst(program, false, locator, inlineImports, unsupportedSyntaxes);
+  traverseAst(
+    program,
+    false,
+    false,
+    false,
+    locator,
+    inlineImports,
+    unsupportedSyntaxes
+  );
 
   return {
     inlineImports,

@@ -21,7 +21,15 @@ describe('handleSpecificNode', () => {
       type: 'CallExpression',
     };
 
-    handleSpecificNode(node, false, locator, inlineImports, unsupported);
+    handleSpecificNode(
+      node,
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
 
     expect(inlineImports).toHaveLength(1);
     expect(inlineImports[0]?.kind).toBe('require-call');
@@ -38,7 +46,15 @@ describe('handleSpecificNode', () => {
       type: 'CallExpression',
     };
 
-    handleSpecificNode(node, true, locator, inlineImports, unsupported);
+    handleSpecificNode(
+      node,
+      true,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
 
     expect(inlineImports).toHaveLength(0);
   });
@@ -53,7 +69,15 @@ describe('handleSpecificNode', () => {
       type: 'ImportExpression',
     };
 
-    handleSpecificNode(node, false, locator, inlineImports, unsupported);
+    handleSpecificNode(
+      node,
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
 
     expect(inlineImports).toHaveLength(1);
     expect(inlineImports[0]?.kind).toBe('literal-dynamic-import');
@@ -69,7 +93,15 @@ describe('handleSpecificNode', () => {
       type: 'TSImportType',
     };
 
-    handleSpecificNode(node, false, locator, inlineImports, unsupported);
+    handleSpecificNode(
+      node,
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
 
     expect(inlineImports).toHaveLength(1);
     expect(inlineImports[0]?.kind).toBe('typescript-import-type');
@@ -84,8 +116,72 @@ describe('handleSpecificNode', () => {
       type: 'TSExportAssignment',
     };
 
-    handleSpecificNode(node, false, locator, inlineImports, unsupported);
+    handleSpecificNode(
+      node,
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
 
     expect(unsupported).toHaveLength(1);
+  });
+
+  it('handles unsupported syntax for module.exports assignment', () => {
+    const locator = createSourceLocator('');
+    const inlineImports: TModuleImport[] = [];
+    const unsupported: TUnsupportedSyntax[] = [];
+    const node: TAstNode = {
+      left: {
+        computed: false,
+        object: { name: 'module', type: 'Identifier' },
+        property: { name: 'exports', type: 'Identifier' },
+        type: 'MemberExpression',
+      },
+      start: 0,
+      type: 'AssignmentExpression',
+    };
+
+    handleSpecificNode(
+      node,
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
+
+    expect(unsupported).toHaveLength(1);
+  });
+
+  it('skips module.exports assignment when module is shadowed', () => {
+    const locator = createSourceLocator('');
+    const inlineImports: TModuleImport[] = [];
+    const unsupported: TUnsupportedSyntax[] = [];
+    const node: TAstNode = {
+      left: {
+        computed: false,
+        object: { name: 'module', type: 'Identifier' },
+        property: { name: 'exports', type: 'Identifier' },
+        type: 'MemberExpression',
+      },
+      start: 0,
+      type: 'AssignmentExpression',
+    };
+
+    handleSpecificNode(
+      node,
+      false,
+      true,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
+
+    expect(unsupported).toHaveLength(0);
   });
 });

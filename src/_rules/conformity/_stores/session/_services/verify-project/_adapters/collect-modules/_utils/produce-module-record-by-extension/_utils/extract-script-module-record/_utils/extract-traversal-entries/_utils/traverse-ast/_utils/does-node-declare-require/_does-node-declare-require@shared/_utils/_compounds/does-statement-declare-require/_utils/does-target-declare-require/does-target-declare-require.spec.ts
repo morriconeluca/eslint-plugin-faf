@@ -34,4 +34,34 @@ describe('doesTargetDeclareRequire', () => {
     const statement = parseStatement(code);
     expect(doesTargetDeclareRequire(statement)).toBe(expected);
   });
+
+  it.each([
+    {
+      code: 'namespace module {}',
+      expected: true,
+      name: 'module',
+      title: 'namespace with custom name',
+    },
+    {
+      code: 'class exports {}',
+      expected: true,
+      name: 'exports',
+      title: 'class with custom name',
+    },
+    {
+      code: 'function module() {}',
+      expected: true,
+      name: 'module',
+      title: 'function with custom name',
+    },
+    {
+      code: 'enum exports { A }',
+      expected: true,
+      name: 'exports',
+      title: 'enum with custom name',
+    },
+  ])('evaluates $title as $expected', ({ code, expected, name }) => {
+    const statement = parseStatement(code);
+    expect(doesTargetDeclareRequire(statement, name)).toBe(expected);
+  });
 });

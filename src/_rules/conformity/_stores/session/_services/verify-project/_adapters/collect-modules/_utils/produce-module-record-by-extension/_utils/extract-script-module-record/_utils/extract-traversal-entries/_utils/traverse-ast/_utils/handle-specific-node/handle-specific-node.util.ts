@@ -15,6 +15,8 @@ import { handleUnsupportedSyntax } from './_utils/handle-unsupported-syntax/inde
 export function handleSpecificNode(
   node: TAstNode,
   isRequireShadowed: boolean,
+  isModuleShadowed: boolean,
+  isExportsShadowed: boolean,
   locator: TSourceLocator,
   inlineImports: TModuleImport[],
   unsupportedSyntaxes: TUnsupportedSyntax[]
@@ -42,5 +44,11 @@ export function handleSpecificNode(
     return;
   }
 
-  handleUnsupportedSyntax(node, locator, unsupportedSyntaxes);
+  handleUnsupportedSyntax(
+    node,
+    isModuleShadowed,
+    isExportsShadowed,
+    locator,
+    unsupportedSyntaxes
+  );
 }

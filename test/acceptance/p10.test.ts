@@ -1172,6 +1172,115 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
       ]
     );
   });
+
+  it('explicates analysis limits for TypeScript export = assignment', async () => {
+    await runScenario(
+      {
+        'src/legacy.ts': 'export = legacy;\n',
+      },
+      {
+        faf: {
+          locals: [
+            {
+              roles: [{ category: '_utils', name: 'util' }],
+              rootFragments: [{ path: 'src', rootNodes: [['legacy.ts']] }],
+            },
+          ],
+        },
+      },
+      'collect-modules',
+      [
+        makeScenarioMessage({
+          column: 1,
+          constraint: 'unverified/unsupported-syntax',
+          element: 'src/legacy.ts',
+          filePath: 'src/legacy.ts',
+          messageId: 'unverified',
+          predicate:
+            'contains unsupported syntax: TypeScript export assignment (export =) is unsupported',
+          reference: 'D-07',
+        }),
+      ]
+    );
+  });
+
+  it('explicates analysis limits for CommonJS module.exports and exports assignments in .cjs and .ts Logical Nodes', async () => {
+    await runScenario(
+      {
+        'src/module.cjs': 'module.exports = { value: 1 };\n',
+        'src/module.ts': 'exports.value = 1;\n',
+      },
+      {
+        faf: {
+          locals: [
+            {
+              roles: [{ category: '_utils', name: 'util' }],
+              rootFragments: [
+                { path: 'src', rootNodes: [['module.cjs', 'module.ts']] },
+              ],
+            },
+          ],
+        },
+      },
+      'collect-modules',
+      [
+        makeScenarioMessage({
+          column: 1,
+          constraint: 'unverified/unsupported-syntax',
+          element: 'src/module.cjs',
+          filePath: 'src/module.cjs',
+          messageId: 'unverified',
+          predicate:
+            'contains unsupported syntax: CommonJS export assignment (module.exports / exports) is unsupported',
+          reference: 'D-07',
+        }),
+        makeScenarioMessage({
+          column: 1,
+          constraint: 'unverified/unsupported-syntax',
+          element: 'src/module.ts',
+          filePath: 'src/module.ts',
+          messageId: 'unverified',
+          predicate:
+            'contains unsupported syntax: CommonJS export assignment (module.exports / exports) is unsupported',
+          reference: 'D-07',
+        }),
+      ]
+    );
+  });
+
+  it('explicates analysis limits for dynamic require calls', async () => {
+    await runScenario(
+      {
+        'src/_utils/loader/index.ts':
+          "export { load } from './loader.util.js';\n",
+        'src/_utils/loader/loader.util.ts':
+          'export const load = (target: string) => require(target);\n',
+      },
+      {
+        faf: {
+          locals: [
+            {
+              roles: [{ category: '_utils', name: 'util' }],
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      },
+      'collect-modules',
+      [
+        makeScenarioMessage({
+          column: 41,
+          constraint: 'unverified/unsupported-syntax',
+          element: 'src/_utils/loader/loader.util.ts',
+          filePath: 'src/_utils/loader/loader.util.ts',
+          messageId: 'unverified',
+          predicate:
+            'contains unsupported syntax: Unsupported non-literal require call',
+          reference: 'D-07',
+        }),
+      ]
+    );
+  });
 });
 
 describe('Rule 49: Le restrizioni del formato e i limiti di verifica producono esiti bloccanti distinti', () => {

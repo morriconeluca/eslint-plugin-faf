@@ -80,4 +80,40 @@ describe('doesNodeDeclareRequire', () => {
     const node: TAstNode = { type: 'NumericLiteral', value: 42 };
     expect(doesNodeDeclareRequire(node)).toBe(false);
   });
+
+  it('returns true when program body declares custom name', () => {
+    const result = parseSync('test.ts', 'const module = 1;', {
+      lang: 'ts',
+      sourceType: 'module',
+    });
+    const node: TAstNode = { ...result.program, type: result.program.type };
+    expect(doesNodeDeclareRequire(node, 'module')).toBe(true);
+  });
+
+  it('returns true when function declares custom name parameter', () => {
+    const result = parseSync('test.ts', 'function fn(exports) {}', {
+      lang: 'ts',
+      sourceType: 'module',
+    });
+    const statement = result.program.body[0];
+    assertInvariant(
+      statement?.type === 'FunctionDeclaration',
+      'Expected function'
+    );
+    const node: TAstNode = { ...statement, type: statement.type };
+    expect(doesNodeDeclareRequire(node, 'exports')).toBe(true);
+  });
+
+  it('returns true when catch clause binds custom name', () => {
+    const result = parseSync('test.ts', 'try {} catch (module) {}', {
+      lang: 'ts',
+      sourceType: 'module',
+    });
+    const statement = result.program.body[0];
+    assertInvariant(statement?.type === 'TryStatement', 'Expected try');
+    const handler = statement.handler;
+    assertInvariant(handler !== null, 'Expected catch handler');
+    const node: TAstNode = { ...handler, type: handler.type };
+    expect(doesNodeDeclareRequire(node, 'module')).toBe(true);
+  });
 });
