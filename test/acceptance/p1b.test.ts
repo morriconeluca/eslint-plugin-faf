@@ -1729,7 +1729,7 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
       faf: {
         common: {
           aliases: {
-            '#shared': 'src/_src@shared/_ui',
+            '#shared': 'src/_src@shared',
             '#shared/apis': 'src/_src@shared/_network/_apis/_apis@shared',
           },
         },
@@ -1743,21 +1743,84 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
       },
     };
 
-    const tree: FileTree = {
+    const tsconfig = JSON.stringify({
+      compilerOptions: {
+        baseUrl: '.',
+        paths: {
+          '#shared/*': ['./src/_src@shared/*'],
+          '#shared/apis/*': ['./src/_src@shared/_network/_apis/_apis@shared/*'],
+        },
+      },
+    });
+
+    const validTree: FileTree = {
       ...baseLayerTree,
       'src/_src@shared/_network/_apis/_apis@shared/_utils/u/index.ts':
         "export { u } from './u.util.js';\n",
       'src/_src@shared/_network/_apis/_apis@shared/_utils/u/u.util.ts':
         'export const u = 1;\n',
+      'src/_src@shared/_network/_apis/service/index.ts':
+        "export { service } from './service.api.js';\n",
+      'src/_src@shared/_network/_apis/service/service.api.ts':
+        "import { u } from '#shared/apis/_utils/u/index.js';\nexport const service = u;\n",
       'src/_src@shared/_ui/_types/a.type.ts': 'export type TA = string;\n',
+      'src/_utils/widget/widget.util.ts':
+        "import type { TA } from '#shared/_ui/_types/a.type.js';\nexport const widget: TA = 'widget';\n",
+      'tsconfig.json': tsconfig,
     };
 
-    const fixture = await createProject(tree, config);
+    const validFixture = await createProject(validTree, config);
     try {
-      const result = await lintScenario(fixture.path);
+      const result = await lintScenario(validFixture.path);
       expectScenario(result, 'prepare-project', []);
     } finally {
-      await fixture.rm();
+      await validFixture.rm();
+    }
+
+    const mismatchTree: FileTree = {
+      ...validTree,
+      'src/_utils/widget/widget.util.ts':
+        "import '#sharedness/something.js';\nexport const widget = 1;\n",
+    };
+    const mismatchFixture = await createProject(mismatchTree, config);
+    try {
+      const result = await lintScenario(mismatchFixture.path);
+      const expected = [
+        createScenarioMessage(
+          'src/_utils/widget/widget.util.ts',
+          'src/_utils/widget/widget.util.ts',
+          'unverified/unresolved-import',
+          "'src/_utils/widget/widget.util.ts' contains an import that could not be resolved: Cannot find module '#sharedness/something.js'",
+          'D-08',
+          'unverified'
+        ),
+      ];
+      expectScenario(result, 'unverified', expected);
+    } finally {
+      await mismatchFixture.rm();
+    }
+
+    const exactTree: FileTree = {
+      ...validTree,
+      'src/_utils/widget/widget.util.ts':
+        "import '#shared';\nexport const widget = 1;\n",
+    };
+    const exactFixture = await createProject(exactTree, config);
+    try {
+      const result = await lintScenario(exactFixture.path);
+      const expected = [
+        createScenarioMessage(
+          'src/_utils/widget/widget.util.ts',
+          'src/_utils/widget/widget.util.ts',
+          'unverified/unresolved-import',
+          "'src/_utils/widget/widget.util.ts' contains an import that could not be resolved: Cannot find module '#shared'",
+          'D-08',
+          'unverified'
+        ),
+      ];
+      expectScenario(result, 'unverified', expected);
+    } finally {
+      await exactFixture.rm();
     }
   });
 
@@ -1841,6 +1904,59 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
     try {
       const result = await lintScenario(fixture.path);
       expectScenario(result, 'prepare-project', []);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('detects discordance when an undeclared tsconfig path alias is imported', async () => {
+    const config = {
+      faf: {
+        common: {
+          aliases: {
+            '#shared': 'src/_src@shared',
+          },
+        },
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const tree: FileTree = {
+      ...baseLayerTree,
+      'src/_src@shared/_types/a.type.ts': 'export type TA = string;\n',
+      'src/_utils/widget/widget.util.ts':
+        "import '@undeclared/_types/a.type.js';\nexport const widget = 1;\n",
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '#shared/*': ['./src/_src@shared/*'],
+            '@undeclared/*': ['./src/_src@shared/*'],
+          },
+        },
+      }),
+    };
+
+    const fixture = await createProject(tree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        createScenarioMessage(
+          'src/_utils/widget/widget.util.ts',
+          'src/_utils/widget/widget.util.ts',
+          'unverified/unresolved-import',
+          "'src/_utils/widget/widget.util.ts' contains an import that could not be resolved: Path alias resolution falls outside the declared alias targets",
+          'D-08',
+          'unverified'
+        ),
+      ];
+      expectScenario(result, 'unverified', expected);
     } finally {
       await fixture.rm();
     }

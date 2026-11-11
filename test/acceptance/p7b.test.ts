@@ -1760,7 +1760,12 @@ const scenarios: readonly TScenario[] = [
   {
     config: {
       faf: {
-        common,
+        common: {
+          ...common,
+          aliases: {
+            '#shared': 'src/_src@shared',
+          },
+        },
         locals: [{ rootFragments: [root] }],
       },
     },
@@ -1844,7 +1849,13 @@ const scenarios: readonly TScenario[] = [
     return {
       config: {
         faf: {
-          common,
+          common: {
+            ...common,
+            aliases: {
+              '#local': 'src/_utils/widget/_widget@shared',
+              '#shared': 'src/_src@shared',
+            },
+          },
           locals: [
             {
               rootFragments: [root, { path: 'b', rootNodes: [['main.ts']] }],

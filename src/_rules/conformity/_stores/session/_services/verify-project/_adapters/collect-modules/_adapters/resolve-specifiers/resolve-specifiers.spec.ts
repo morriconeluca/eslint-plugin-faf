@@ -977,4 +977,251 @@ describe('resolveSpecifiers', () => {
       await fixture.rm();
     }
   });
+
+  it('reports discordance when an undeclared tsconfig paths alias is imported', async () => {
+    const fixture = await createFixture({
+      'src/target.ts': 'export const target = 1;',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '@undeclared/*': ['./src/*'],
+          },
+        },
+      }),
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      const result = resolver('src/main.ts', [
+        createImport('@undeclared/target.js'),
+      ]);
+      expect(result[0]?.aliasUsed).toBeNull();
+      expect(result[0]?.aliasAlternatives).toEqual([]);
+      expect(result[0]?.target).toEqual({
+        reason:
+          'Path alias resolution falls outside the declared alias targets',
+        type: 'unresolved',
+      });
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('reports discordance when an undeclared tsconfig baseUrl specifier is imported', async () => {
+    const fixture = await createFixture({
+      'src/domain/target.ts': 'export const target = 1;',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+        },
+      }),
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      const result = resolver('src/app/main.ts', [
+        createImport('src/domain/target.js'),
+      ]);
+      expect(result[0]?.aliasUsed).toBeNull();
+      expect(result[0]?.target).toEqual({
+        reason:
+          'Path alias resolution falls outside the declared alias targets',
+        type: 'unresolved',
+      });
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('reports discordance when tsconfig paths resolves to a different path than bare resolution', async () => {
+    const fixture = await createFixture({
+      'node_modules/my-pkg/index.js': 'module.exports = 1;',
+      'node_modules/my-pkg/package.json': JSON.stringify({
+        main: './index.js',
+        name: 'my-pkg',
+      }),
+      'src/override.ts': 'export const override = 1;',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            'my-pkg': ['./src/override.ts'],
+          },
+        },
+      }),
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      const result = resolver('src/main.ts', [createImport('my-pkg')]);
+      expect(result[0]?.aliasUsed).toBeNull();
+      expect(result[0]?.target).toEqual({
+        reason:
+          'Path alias resolution falls outside the declared alias targets',
+        type: 'unresolved',
+      });
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('reports discordance when an undeclared tsconfig paths alias includes query parameters', async () => {
+    const fixture = await createFixture({
+      'src/target.ts': 'export const target = 1;',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '@undeclared/*': ['./src/*'],
+          },
+        },
+      }),
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      const result = resolver('src/main.ts', [
+        createImport('@undeclared/target.js?param=value'),
+      ]);
+      expect(result[0]?.aliasUsed).toBeNull();
+      expect(result[0]?.target).toEqual({
+        reason:
+          'Path alias resolution falls outside the declared alias targets',
+        type: 'unresolved',
+      });
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('handles oxc-resolver crash in non-tsconfig resolution by reporting discordance', async () => {
+    const fixture = await createFixture({
+      'src/target.ts': 'export const target = 1;',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '@undeclared/*': ['./src/*'],
+          },
+        },
+      }),
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      let callCount = 0;
+      const spy = vi
+        .spyOn(ResolverFactory.prototype, 'sync')
+        .mockImplementation((_directory: string, _spec: string) => {
+          callCount += 1;
+          if (callCount === 1) {
+            return { path: nodePath.join(fixture.path, 'src/target.ts') };
+          }
+          failWhen(isContinuing(), 'Simulated oxc-resolver crash');
+          return { error: 'Simulated oxc-resolver crash' };
+        });
+
+      const result = resolver('src/main.ts', [
+        createImport('@undeclared/target.js'),
+      ]);
+      expect(result[0]?.target).toEqual({
+        reason:
+          'Path alias resolution falls outside the declared alias targets',
+        type: 'unresolved',
+      });
+
+      spy.mockRestore();
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('skips discordance check for absolute specifiers', async () => {
+    const fixture = await createFixture({
+      'src/target.ts': 'export const target = 1;',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '/virtual/*': ['./src/*'],
+          },
+        },
+      }),
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      const result = resolver('src/main.ts', [
+        createImport('/virtual/target.js'),
+      ]);
+      expect(result[0]?.target).toEqual({
+        path: 'src/target.ts',
+        type: 'local-file',
+      });
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('skips discordance check for builtin modules when tsconfig is present', async () => {
+    const fixture = await createFixture({
+      'src/main.ts': 'export const main = 1;',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+        },
+      }),
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      const result = resolver('src/main.ts', [createImport('node:path')]);
+      expect(result[0]?.target).toEqual({
+        packageName: 'node:path',
+        type: 'external-library',
+      });
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('does not trigger discordance when css relative fallback is used', async () => {
+    const fixture = await createFixture({
+      'node_modules/tailwindcss/index.css': '.tw {}',
+      'node_modules/tailwindcss/package.json': JSON.stringify({
+        exports: {
+          '.': { style: './index.css' },
+        },
+        name: 'tailwindcss',
+      }),
+      'src/main.css': '',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+        },
+      }),
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      const result = resolver('src/main.css', [
+        createImport('./tailwindcss', 'css-at-import'),
+      ]);
+      expect(result[0]?.target).toEqual({
+        packageName: 'tailwindcss',
+        type: 'external-library',
+      });
+    } finally {
+      await fixture.rm();
+    }
+  });
 });
