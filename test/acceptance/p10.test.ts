@@ -186,6 +186,36 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
           }),
         ]
       );
+
+      await runScenario(
+        {
+          'src/_types/value.type.ts': 'export type TValue = number;\n',
+        },
+        {
+          faf: {
+            locals: [
+              {
+                layers: ['src/_types'],
+                roles: [
+                  { category: '_types', isCategoryNode: true, name: 'type' },
+                ],
+                rootLayers: ['src'],
+              },
+            ],
+          },
+        },
+        'prepare-project',
+        [
+          makeScenarioMessage({
+            constraint: 'configuration/unknown-property',
+            element: 'faf.locals[0].layers',
+            filePath: 'fafconfig.ts',
+            messageId: 'configuration',
+            predicate: 'is not a recognized property',
+            reference: 'D-14',
+          }),
+        ]
+      );
     });
 
     it('row 2: rejects origin designated as both Root Fragment and Root Layer', async () => {
@@ -246,10 +276,10 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
     it('row 4: rejects an organizational directory without determinable classification', async () => {
       await runScenario(
         {
+          'src/_utils/widget/_mystery/orphan.ts': 'export const orphan = 1;\n',
           'src/_utils/widget/index.ts':
             "export { widget } from './widget.util.js';\n",
           'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
-          'src/notes/orphan.ts': 'export const orphan = 1;\n',
         },
         {
           faf: {
@@ -265,16 +295,16 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
         [
           makeScenarioMessage({
             constraint: 'classification/unclassifiable-directory',
-            element: 'src/notes',
-            filePath: 'src/notes/orphan.ts',
+            element: 'src/_utils/widget/_mystery',
+            filePath: 'src/_utils/widget/_mystery/orphan.ts',
             messageId: 'classification',
             predicate: 'has no unique Logical Domain classification',
             reference: 'FAF §6.9',
           }),
           makeScenarioMessage({
             constraint: 'classification/unclassifiable-file',
-            element: 'src/notes/orphan.ts',
-            filePath: 'src/notes/orphan.ts',
+            element: 'src/_utils/widget/_mystery/orphan.ts',
+            filePath: 'src/_utils/widget/_mystery/orphan.ts',
             messageId: 'classification',
             predicate:
               'is neither a uniquely classified Logical Node nor a Foreign Node',
@@ -569,6 +599,41 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             predicate:
               'has a Horizontal Hierarchy over children that FAF does not allow to be ordered',
             reference: 'FAF §6.9',
+          }),
+        ]
+      );
+
+      await runScenario(
+        {
+          'src/_a/_types/a.type.ts': 'export type TA = number;\n',
+          'src/_b/_utils/b/b.util.ts':
+            "import type { TA } from '../../../_a/_types/a.type.js';\nexport const b = 1;\n",
+          'src/_b/_utils/b/index.ts': "export { b } from './b.util.js';\n",
+        },
+        {
+          faf: {
+            locals: [
+              {
+                horizontalHierarchies: [[['a/_types'], ['b/_utils']]],
+                roles: [
+                  { category: '_types', isCategoryNode: true, name: 'type' },
+                  { category: '_utils', name: 'util' },
+                ],
+                rootLayers: ['src'],
+              },
+            ],
+          },
+        },
+        'peer-separation',
+        [
+          makeDirectEdgeMessage({
+            constraint: 'dependency/peer-separation',
+            from: 'src/_b/_utils/b/b.util.ts',
+            predicate:
+              'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
+            reference: 'FAF §5',
+            specifier: '../../../_a/_types/a.type.js',
+            to: 'src/_a/_types/a.type.ts',
           }),
         ]
       );
@@ -1530,7 +1595,7 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
       faf: {
         locals: [
           {
-            publicRootNodes: ['main.ts'],
+            publicRootNodes: ['src/main.ts'],
             roles: [{ category: '_utils', name: 'util' }],
             rootFragments: [
               {
@@ -1552,6 +1617,7 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
         'src/main.ts',
         'src/_utils/widget/widget.util.ts',
       ]);
+      expect(orderA.messages.length).toBeGreaterThan(0);
       expect(orderA.messages).toEqual(orderB.messages);
       expect(orderA.unimplementedParts).toEqual(orderB.unimplementedParts);
     } finally {
