@@ -109,6 +109,25 @@ const dependencyMessage = (
   );
 };
 
+const pathDependencyMessage = (
+  chain: readonly string[],
+  constraint: string,
+  predicate: string,
+  reference: string
+): TScenarioMessage => {
+  const from = chain[0] ?? '';
+  const to = chain.at(-1) ?? '';
+  const messageText = `'${from}' reaches '${to}' through ${chain.join(' -> ')}: ${predicate}`;
+  return createScenarioMessage(
+    from,
+    from,
+    constraint,
+    messageText,
+    reference,
+    'dependency'
+  );
+};
+
 type TSubRoot = {
   readonly path: string;
   readonly rootNodes: readonly (readonly string[])[];
@@ -425,7 +444,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
                 file,
                 'configuration/unenumerated-root-file',
                 'must be either enumerated as a Root Node or designated as a Foreign Node',
-                'FAF §6.2.2'
+                'FAF §6.2.1'
               ),
               classificationMessage(
                 anchorFile,
@@ -1673,6 +1692,7 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
 
       const tree: FileTree = {
         ...baseLayerTree,
+        'src/_src@shared': {},
         ...(imports !== null && {
           'package.json': JSON.stringify({
             imports,
@@ -1728,7 +1748,7 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
       faf: {
         common: {
           aliases: {
-            '#shared': 'src/_src@shared/_ui',
+            '#shared': 'src/_src@shared',
             '#shared/apis': 'src/_src@shared/_network/_apis/_apis@shared',
           },
         },
@@ -1742,21 +1762,84 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
       },
     };
 
-    const tree: FileTree = {
+    const tsconfig = JSON.stringify({
+      compilerOptions: {
+        baseUrl: '.',
+        paths: {
+          '#shared/*': ['./src/_src@shared/*'],
+          '#shared/apis/*': ['./src/_src@shared/_network/_apis/_apis@shared/*'],
+        },
+      },
+    });
+
+    const validTree: FileTree = {
       ...baseLayerTree,
       'src/_src@shared/_network/_apis/_apis@shared/_utils/u/index.ts':
         "export { u } from './u.util.js';\n",
       'src/_src@shared/_network/_apis/_apis@shared/_utils/u/u.util.ts':
         'export const u = 1;\n',
+      'src/_src@shared/_network/_apis/service/index.ts':
+        "export { service } from './service.api.js';\n",
+      'src/_src@shared/_network/_apis/service/service.api.ts':
+        "import { u } from '#shared/apis/_utils/u/index.js';\nexport const service = u;\n",
       'src/_src@shared/_ui/_types/a.type.ts': 'export type TA = string;\n',
+      'src/_utils/widget/widget.util.ts':
+        "import type { TA } from '#shared/_ui/_types/a.type.js';\nexport const widget: TA = 'widget';\n",
+      'tsconfig.json': tsconfig,
     };
 
-    const fixture = await createProject(tree, config);
+    const validFixture = await createProject(validTree, config);
     try {
-      const result = await lintScenario(fixture.path);
+      const result = await lintScenario(validFixture.path);
       expectScenario(result, 'prepare-project', []);
     } finally {
-      await fixture.rm();
+      await validFixture.rm();
+    }
+
+    const mismatchTree: FileTree = {
+      ...validTree,
+      'src/_utils/widget/widget.util.ts':
+        "import '#sharedness/something.js';\nexport const widget = 1;\n",
+    };
+    const mismatchFixture = await createProject(mismatchTree, config);
+    try {
+      const result = await lintScenario(mismatchFixture.path);
+      const expected = [
+        createScenarioMessage(
+          'src/_utils/widget/widget.util.ts',
+          'src/_utils/widget/widget.util.ts',
+          'unverified/unresolved-import',
+          "'src/_utils/widget/widget.util.ts' contains an import that could not be resolved: Cannot find module '#sharedness/something.js'",
+          'D-08',
+          'unverified'
+        ),
+      ];
+      expectScenario(result, 'unverified', expected);
+    } finally {
+      await mismatchFixture.rm();
+    }
+
+    const exactTree: FileTree = {
+      ...validTree,
+      'src/_utils/widget/widget.util.ts':
+        "import '#shared';\nexport const widget = 1;\n",
+    };
+    const exactFixture = await createProject(exactTree, config);
+    try {
+      const result = await lintScenario(exactFixture.path);
+      const expected = [
+        createScenarioMessage(
+          'src/_utils/widget/widget.util.ts',
+          'src/_utils/widget/widget.util.ts',
+          'unverified/unresolved-import',
+          "'src/_utils/widget/widget.util.ts' contains an import that could not be resolved: Cannot find module '#shared'",
+          'D-08',
+          'unverified'
+        ),
+      ];
+      expectScenario(result, 'unverified', expected);
+    } finally {
+      await exactFixture.rm();
     }
   });
 
@@ -1840,6 +1923,166 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
     try {
       const result = await lintScenario(fixture.path);
       expectScenario(result, 'prepare-project', []);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('detects discordance when an undeclared tsconfig path alias is imported', async () => {
+    const config = {
+      faf: {
+        common: {
+          aliases: {
+            '#shared': 'src/_src@shared',
+          },
+        },
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const tree: FileTree = {
+      ...baseLayerTree,
+      'src/_src@shared/_types/a.type.ts': 'export type TA = string;\n',
+      'src/_utils/widget/widget.util.ts':
+        "import '@undeclared/_types/a.type.js';\nexport const widget = 1;\n",
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '#shared/*': ['./src/_src@shared/*'],
+            '@undeclared/*': ['./src/_src@shared/*'],
+          },
+        },
+      }),
+    };
+
+    const fixture = await createProject(tree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        createScenarioMessage(
+          'src/_utils/widget/widget.util.ts',
+          'src/_utils/widget/widget.util.ts',
+          'unverified/unresolved-import',
+          "'src/_utils/widget/widget.util.ts' contains an import that could not be resolved: Path alias resolution falls outside the declared alias targets",
+          'D-08',
+          'unverified'
+        ),
+      ];
+      expectScenario(result, 'unverified', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects common.aliases pointing to a missing directory', async () => {
+    const config = {
+      faf: {
+        common: {
+          aliases: {
+            '#shared': 'src/nonexistent',
+          },
+        },
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'src/nonexistent',
+          'configuration/non-existent-path',
+          'does not exist',
+          'D-14',
+          `Alias base "src/nonexistent" does not exist under configuration base "${fixture.path}"`
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects common.aliases pointing to an existing file', async () => {
+    const config = {
+      faf: {
+        common: {
+          aliases: {
+            '#shared': 'src/_utils/widget/widget.util.ts',
+          },
+        },
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'src/_utils/widget/widget.util.ts',
+          'configuration/expected-directory',
+          'must be a directory',
+          'D-14',
+          'Alias base "src/_utils/widget/widget.util.ts" must be a directory'
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects common.aliases containing wildcard asterisk in value', async () => {
+    const config = {
+      faf: {
+        common: {
+          aliases: {
+            '#shared': 'src/_src@shared/*',
+          },
+        },
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'faf.common.aliases.#shared',
+          'configuration/invalid-literal-path',
+          'must be a POSIX relative path without empty or parent segments',
+          'D-05'
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
     } finally {
       await fixture.rm();
     }
@@ -1934,15 +2177,141 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
       'destB/_utils/w/index.ts': "export { w } from './w.util.js';\n",
       'destB/_utils/w/w.util.ts': 'export const w = 1;\n',
       'lib/_utils/w/index.ts': "export { w } from './w.util.js';\n",
-      'lib/_utils/w/w.util.ts': 'export const w = 1;\n',
+      'lib/_utils/w/w.util.ts':
+        "import { w as wa } from '../../../destA/_utils/w/index.js';\nimport { w as wb } from '../../../destB/_utils/w/index.js';\nexport const w = wa + wb;\n",
       'src/_utils/w/index.ts': "export { w } from './w.util.js';\n",
-      'src/_utils/w/w.util.ts': 'export const w = 1;\n',
+      'src/_utils/w/w.util.ts':
+        "import { w as wa } from '../../../destA/_utils/w/index.js';\nimport { w as wb } from '../../../destB/_utils/w/index.js';\nexport const w = wa + wb;\n",
     };
 
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
       expectScenario(result, 'tree-frontier', []);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects self tree dependency', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+            treeDependencies: [
+              {
+                from: ['src'],
+                to: ['src'],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'src',
+          'configuration/tree-dependency-self',
+          'cannot declare a tree dependency on itself',
+          'FAF §7.2'
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects tree dependency targeting a nested rootFragment path instead of tree origin', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            roles,
+            rootFragments: [
+              {
+                path: 'dest',
+                rootNodes: [['main.ts']],
+                subRootFragments: [
+                  { path: 'dest/sub', rootNodes: [['sub.ts']] },
+                ],
+              },
+            ],
+            rootLayers: ['src'],
+            subGraphRoles,
+            treeDependencies: [
+              {
+                from: ['src'],
+                to: ['dest/sub'],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const tree: FileTree = {
+      ...baseLayerTree,
+      'dest/main.ts': 'export const main = 1;\n',
+      'dest/sub/sub.ts': 'export const sub = 1;\n',
+    };
+
+    const fixture = await createProject(tree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'dest/sub',
+          'configuration/tree-dependency-not-tree-origin',
+          'must identify a declared tree origin as a tree dependency',
+          'FAF §7.2'
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('rejects tree dependency targeting a non-existent origin path', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+            treeDependencies: [
+              {
+                from: ['src'],
+                to: ['nonexistent'],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'nonexistent',
+          'configuration/non-existent-path',
+          'does not exist',
+          'D-14',
+          `Tree dependency target "nonexistent" does not exist under configuration base "${fixture.path}"`
+        ),
+      ];
+      expectScenario(result, 'prepare-project', expected);
     } finally {
       await fixture.rm();
     }
@@ -2033,13 +2402,13 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
     {
       caseName: 'to identifies an external directory',
       from: ['src/_utils/widget/widget.util.ts'],
-      getExpected: (baseDirectory: string) => [
+      getExpected: () => [
         configMessage(
           'legacy',
-          'configuration/non-existent-path',
-          'does not exist',
+          'configuration/expected-file',
+          'must be a file',
           'D-14',
-          `External dependency target "legacy" does not exist under configuration base "${baseDirectory}"`
+          'External dependency target "legacy" must be a file'
         ),
       ],
       responsiblePart: 'prepare-project',
@@ -2173,13 +2542,12 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
       aliases: { '#shared': 'src/_src@shared' },
       caseName: 'target value attempts alias selection',
       from: ['src/_utils/widget/widget.util.ts'],
-      getExpected: (baseDirectory: string) => [
+      getExpected: () => [
         configMessage(
           '#shared/client.ts',
-          'configuration/non-existent-path',
-          'does not exist',
-          'D-14',
-          `External dependency target "#shared/client.ts" does not exist under configuration base "${baseDirectory}"`
+          'configuration/external-dependency-to-alias',
+          'cannot be targeted as an external dependency because it is a path alias',
+          'FAF §7.3'
         ),
       ],
       responsiblePart: 'prepare-project',
@@ -2320,6 +2688,36 @@ describe('Rule 47: Optional properties and structural types do not render valida
           'must be a file',
           'D-14',
           'External dependency source "src/_utils/widget" must be a file'
+        ),
+      ],
+      tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
+    },
+    {
+      caseName: 'existing directory in externalDependencies.to',
+      config: {
+        faf: {
+          locals: [
+            {
+              externalDependencies: [
+                {
+                  from: ['src/_utils/widget/widget.util.ts'],
+                  to: ['legacy'],
+                },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      getExpected: () => [
+        configMessage(
+          'legacy',
+          'configuration/expected-file',
+          'must be a file',
+          'D-14',
+          'External dependency target "legacy" must be a file'
         ),
       ],
       tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
@@ -2521,10 +2919,6 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
       name: 'replaces general hierarchies while preserving the three local hierarchies',
       responsiblePart: 'horizontal-hierarchies',
     },
-    {
-      name: 'separates root hierarchy, exposure and inter-tree relations in example',
-      responsiblePart: 'tree-frontier',
-    },
   ] as const;
 
   it.each(hypotheticalPropertiesCases)('$name', async ({ responsiblePart }) => {
@@ -2537,6 +2931,177 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
       expectScenario(result, responsiblePart, []);
     } finally {
       await fixture.rm();
+    }
+  });
+
+  it('separates root hierarchy, exposure and inter-tree relations in example', async () => {
+    const positiveFixture = await createProject(
+      fullHypotheticalTree,
+      fullHypotheticalConfig
+    );
+    try {
+      const result = await lintScenario(positiveFixture.path);
+      expectScenario(result, 'tree-frontier', []);
+    } finally {
+      await positiveFixture.rm();
+    }
+
+    const inverseRootTree: FileTree = {
+      ...fullHypotheticalTree,
+      'src/app/app.tsx': "import '../main.js';\nexport const App = 1;\n",
+      'src/main.tsx': "import './main.css';\nexport const Main = 1;\n",
+    };
+    const inverseRootFixture = await createProject(
+      inverseRootTree,
+      fullHypotheticalConfig
+    );
+    try {
+      const result = await lintScenario(inverseRootFixture.path);
+      const expected = [
+        dependencyMessage(
+          'src/app/app.tsx',
+          'src/main.tsx',
+          '../main.js',
+          'dependency/root-node-discipline',
+          'a Root Node is importable only by Root Nodes authorized by rootNodes or dependencyEdges',
+          'FAF §6.2.2'
+        ),
+      ];
+      expectScenario(result, 'root-node-discipline', expected);
+    } finally {
+      await inverseRootFixture.rm();
+    }
+
+    const inverseTreeTree: FileTree = {
+      ...fullHypotheticalTree,
+      'packages/contracts/src/_types/todo.type.ts':
+        "import '../../../../src/app/app.js';\nexport type TTodo = string;\n",
+      'src/_src@shared/_network/_apis/_health/get-health/get-health.api.ts':
+        "import { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientAdapter() });\n",
+    };
+    const inverseTreeFixture = await createProject(
+      inverseTreeTree,
+      fullHypotheticalConfig
+    );
+    try {
+      const result = await lintScenario(inverseTreeFixture.path);
+      const expected = [
+        dependencyMessage(
+          'packages/contracts/src/_types/todo.type.ts',
+          'src/app/app.tsx',
+          '../../../../src/app/app.js',
+          'dependency/tree-authorization',
+          'a dependency between Fractal Trees requires an oriented treeDependencies authorization',
+          'FAF §7.2, §7.3'
+        ),
+      ];
+      expectScenario(result, 'tree-authorization', expected);
+    } finally {
+      await inverseTreeFixture.rm();
+    }
+
+    const deepImportTree: FileTree = {
+      ...fullHypotheticalTree,
+      'src/_src@shared/_network/_apis/_health/get-health/get-health.api.ts':
+        "import { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/format-label.util.js';\nimport { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport type { TTodo } from '../../../../../../packages/contracts/src/_types/todo.type.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientAdapter() });\n",
+    };
+    const deepImportFixture = await createProject(
+      deepImportTree,
+      fullHypotheticalConfig
+    );
+    try {
+      const result = await lintScenario(deepImportFixture.path);
+      const expected = [
+        dependencyMessage(
+          'src/_src@shared/_network/_apis/_health/get-health/get-health.api.ts',
+          'packages/formatters/src/_utils/format-label/format-label.util.ts',
+          '../../../../../../packages/formatters/src/_utils/format-label/format-label.util.js',
+          'dependency/tree-opacity',
+          'only the Public Surface of a Fractal Tree is importable from outside the Tree',
+          'FAF §7.1'
+        ),
+      ];
+      expectScenario(result, 'tree-opacity', expected);
+    } finally {
+      await deepImportFixture.rm();
+    }
+
+    const branchImportTree: FileTree = {
+      ...fullHypotheticalTree,
+      'packages/contracts/src/_types/todo.type.ts':
+        "import '../../../../src/_src@shared/_domain/_utils/dom/dom.util.js';\nexport type TTodo = string;\n",
+      'src/_src@shared/_network/_apis/_health/get-health/get-health.api.ts':
+        "import { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientAdapter() });\n",
+    };
+    const branchImportFixture = await createProject(
+      branchImportTree,
+      fullHypotheticalConfig
+    );
+    try {
+      const result = await lintScenario(branchImportFixture.path);
+      const expected = [
+        dependencyMessage(
+          'packages/contracts/src/_types/todo.type.ts',
+          'src/_src@shared/_domain/_utils/dom/dom.util.ts',
+          '../../../../src/_src@shared/_domain/_utils/dom/dom.util.js',
+          'dependency/fractal-branch-visibility',
+          'a Fractal Branch is importable only from the subtree of its parent, except the parent Access Node',
+          'FAF §6.6.2'
+        ),
+        dependencyMessage(
+          'packages/contracts/src/_types/todo.type.ts',
+          'src/_src@shared/_domain/_utils/dom/dom.util.ts',
+          '../../../../src/_src@shared/_domain/_utils/dom/dom.util.js',
+          'dependency/tree-authorization',
+          'a dependency between Fractal Trees requires an oriented treeDependencies authorization',
+          'FAF §7.2, §7.3'
+        ),
+        dependencyMessage(
+          'packages/contracts/src/_types/todo.type.ts',
+          'src/_src@shared/_domain/_utils/dom/dom.util.ts',
+          '../../../../src/_src@shared/_domain/_utils/dom/dom.util.js',
+          'dependency/tree-opacity',
+          'only the Public Surface of a Fractal Tree is importable from outside the Tree',
+          'FAF §7.1'
+        ),
+      ];
+      expectScenario(result, 'tree-frontier', expected);
+    } finally {
+      await branchImportFixture.rm();
+    }
+
+    const intraBranchTree: FileTree = {
+      ...fullHypotheticalTree,
+      'src/app/app.tsx':
+        "import '#/_apis@shared/_utils/legacy-client/legacy-client.util.js';\nexport const App = 1;\n",
+    };
+    const intraBranchFixture = await createProject(
+      intraBranchTree,
+      fullHypotheticalConfig
+    );
+    try {
+      const result = await lintScenario(intraBranchFixture.path);
+      const expected = [
+        dependencyMessage(
+          'src/app/app.tsx',
+          'src/_src@shared/_network/_apis/_apis@shared/_utils/legacy-client/legacy-client.util.ts',
+          '#/_apis@shared/_utils/legacy-client/legacy-client.util.js',
+          'dependency/fractal-branch-visibility',
+          'a Fractal Branch is importable only from the subtree of its parent, except the parent Access Node',
+          'FAF §6.6.2'
+        ),
+        dependencyMessage(
+          'src/app/app.tsx',
+          'src/_src@shared/_network/_apis/_apis@shared/_utils/legacy-client/legacy-client.util.ts',
+          '#/_apis@shared/_utils/legacy-client/legacy-client.util.js',
+          'dependency/fragment-encapsulation',
+          'a Fragment is importable from outside only through its index.ts',
+          'FAF §6.1.1'
+        ),
+      ];
+      expectScenario(result, 'fractal-branch-visibility', expected);
+    } finally {
+      await intraBranchFixture.rm();
     }
   });
 
@@ -2570,7 +3135,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'src/app/README.md',
           'configuration/unenumerated-root-file',
           'must be either enumerated as a Root Node or designated as a Foreign Node',
-          'FAF §6.2.2'
+          'FAF §6.2.1'
         ),
         classificationMessage(
           'src/app/app.tsx',
@@ -2623,6 +3188,95 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
       expectScenario(directResult, 'external-dependencies', expected);
     } finally {
       await directFixture.rm();
+    }
+
+    const indexImportTree: FileTree = {
+      ...fullHypotheticalTree,
+      'src/_src@shared/_network/_apis/_apis@shared/_utils/legacy-client/index.ts':
+        "import '../../../../../../../legacy/client.js';\nexport { legacyClientAdapter } from './legacy-client.util.js';\n",
+    };
+    const indexImportFixture = await createProject(
+      indexImportTree,
+      fullHypotheticalConfig
+    );
+    try {
+      const result = await lintScenario(indexImportFixture.path);
+      const expected = [
+        dependencyMessage(
+          'src/_src@shared/_network/_apis/_apis@shared/_utils/legacy-client/index.ts',
+          'legacy/client.ts',
+          '../../../../../../../legacy/client.js',
+          'dependency/access-node-sources',
+          'an Access Node imports only direct Fragment Nodes of its own Fragment',
+          'FAF §6.1.1'
+        ),
+      ];
+      expectScenario(result, 'access-node-sources', expected);
+    } finally {
+      await indexImportFixture.rm();
+    }
+
+    const branchVisibilityTree: FileTree = {
+      ...fullHypotheticalTree,
+      'src/main.tsx':
+        "import { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport './main.css';\nimport { App } from './app/app.js';\nexport const Main = App;\n",
+    };
+    const branchVisibilityFixture = await createProject(
+      branchVisibilityTree,
+      fullHypotheticalConfig
+    );
+    try {
+      const result = await lintScenario(branchVisibilityFixture.path);
+      const expected = [
+        dependencyMessage(
+          'src/main.tsx',
+          'src/_src@shared/_network/_apis/_apis@shared/_utils/legacy-client/index.ts',
+          '#/_apis@shared/_utils/legacy-client/index.js',
+          'dependency/fractal-branch-visibility',
+          'a Fractal Branch is importable only from the subtree of its parent, except the parent Access Node',
+          'FAF §6.6.2'
+        ),
+      ];
+      expectScenario(result, 'fractal-branch-visibility', expected);
+    } finally {
+      await branchVisibilityFixture.rm();
+    }
+
+    const reEntryTree: FileTree = {
+      ...fullHypotheticalTree,
+      'legacy/client.ts':
+        "import '../src/app/app.js';\nexport const legacyClient = 1;\n",
+      'src/_src@shared/_network/_apis/_health/get-health/get-health.api.ts':
+        "import type { TTodo } from '../../../../../../packages/contracts/src/_types/todo.type.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel });\n",
+    };
+    const reEntryFixture = await createProject(
+      reEntryTree,
+      fullHypotheticalConfig
+    );
+    try {
+      const result = await lintScenario(reEntryFixture.path);
+      const chain = [
+        'src/_src@shared/_network/_apis/_apis@shared/_utils/legacy-client/legacy-client.util.ts',
+        'legacy/client.ts',
+        'src/app/app.tsx',
+      ];
+      const expected = [
+        pathDependencyMessage(
+          chain,
+          'dependency/fractal-branch-unidirectionality',
+          'a Fractal Branch must not depend on the other subtrees of its parent',
+          'FAF §6.6.2'
+        ),
+        pathDependencyMessage(
+          chain,
+          'dependency/re-entry-prohibition',
+          'a path through local files outside all Fractal Trees must not re-enter its Fractal Tree',
+          'FAF §7.3'
+        ),
+      ];
+      expectScenario(result, 're-entry-prohibition', expected);
+    } finally {
+      await reEntryFixture.rm();
     }
   });
 });

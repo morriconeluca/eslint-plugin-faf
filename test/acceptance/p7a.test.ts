@@ -713,6 +713,7 @@ const foreignLocal: TFAFLocalConfig = {
     'src/vite-env.d.ts',
     'src/vitest-setup.ts',
   ],
+  publicRootNodes: ['other/main.ts'],
   roles: [],
   rootFragments: [
     { path: 'src', rootNodes: [['main.ts']] },
@@ -1114,8 +1115,7 @@ describe('acceptance: p7a', () => {
     });
 
     it('local Ranks do not become global constraints across Sub-Categories', async () => {
-      const source =
-        'src/_components/_molecules/consumer/consumer.component.ts';
+      const source = 'src/_components/_molecules/consumer/consumer.type.ts';
       const destination = 'src/_components/_atoms/unit/index.ts';
       await runScenario(
         {
@@ -1123,6 +1123,7 @@ describe('acceptance: p7a', () => {
           'src/_components/_atoms/unit/index.ts':
             "export { value } from './unit.component.js';\n",
           'src/_components/_atoms/unit/unit.component.ts': value,
+          'src/_components/_molecules/consumer/consumer.component.ts': value,
           'src/_components/_molecules/consumer/index.ts':
             "export { value } from './consumer.component.js';\n",
         },
@@ -1532,9 +1533,12 @@ describe('acceptance: p7a', () => {
     );
 
     it('a hierarchy cannot make sibling Private Categories communicate', async () => {
+      const source = 'src/_components/button/button.component.ts';
+      const destination = 'src/_hooks/use-toggle/index.ts';
+      const spec = specifier(source, destination);
       await runScenario(
         {
-          'src/_components/button/button.component.ts': value,
+          [source]: `import '${spec}';\n${value}`,
           'src/_components/button/index.ts':
             "export { value } from './button.component.js';\n",
           'src/_hooks/use-toggle/index.ts':
@@ -1545,7 +1549,7 @@ describe('acceptance: p7a', () => {
           faf: {
             locals: [
               {
-                horizontalHierarchies: [[['_components'], ['_hooks']]],
+                horizontalHierarchies: [[['_hooks'], ['_components']]],
                 roles,
                 rootFragments: [{ path: 'src', rootNodes: [] }],
               },
@@ -1553,7 +1557,11 @@ describe('acceptance: p7a', () => {
           },
         },
         'horizontal-hierarchies',
-        [horizontalHierarchyMembersOutcome('src')]
+        [
+          horizontalHierarchyMembersOutcome('src'),
+          peerSeparationOutcome(source, destination, spec),
+          privateCategoryVisibilityOutcome(source, destination, spec),
+        ]
       );
     });
   });
@@ -2496,10 +2504,7 @@ describe('acceptance: p7a', () => {
           foreignNodeIsolationOutcome(source, destination, spec),
         ];
         if (source === 'src/foreign.ts' && destination === 'other/main.ts') {
-          expected.push(
-            treeAuthorizationOutcome(source, destination, spec),
-            treeOpacityOutcome(source, destination, spec)
-          );
+          expected.push(treeAuthorizationOutcome(source, destination, spec));
         }
         if (source === 'external.ts' && destination === 'src/foreign.ts') {
           expected.push(treeOpacityOutcome(source, destination, spec));
@@ -2516,6 +2521,24 @@ describe('acceptance: p7a', () => {
         );
       }
     );
+
+    it('a local file external to all Trees in a subdirectory importing a Foreign Node emits foreign-node-isolation and tree-opacity', async () => {
+      const source = 'scripts/external.ts';
+      const destination = 'src/foreign.ts';
+      const spec = specifier(source, destination);
+      await runScenario(
+        {
+          ...foreignTree,
+          [source]: `import '${spec}';\n`,
+        },
+        { faf: { locals: [foreignLocal] } },
+        'foreign-node-isolation',
+        [
+          foreignNodeIsolationOutcome(source, destination, spec),
+          treeOpacityOutcome(source, destination, spec),
+        ]
+      );
+    });
 
     it.each([
       ['ambient declarations', 'declare const ambient: string;\n'],

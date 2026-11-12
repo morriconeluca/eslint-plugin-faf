@@ -44,4 +44,28 @@ describe('doesFunctionDeclareRequire', () => {
     const node = parseFunctionNode(code);
     expect(doesFunctionDeclareRequire(node)).toBe(expected);
   });
+
+  it.each([
+    {
+      code: 'function module() {}',
+      expected: true,
+      name: 'module',
+      title: 'function name with custom name',
+    },
+    {
+      code: 'function test(exports: unknown) {}',
+      expected: true,
+      name: 'exports',
+      title: 'parameter with custom name',
+    },
+    {
+      code: 'function test() { const module = 1; }',
+      expected: true,
+      name: 'module',
+      title: 'body variable with custom name',
+    },
+  ])('evaluates $title as $expected', ({ code, expected, name }) => {
+    const node = parseFunctionNode(code);
+    expect(doesFunctionDeclareRequire(node, name)).toBe(expected);
+  });
 });

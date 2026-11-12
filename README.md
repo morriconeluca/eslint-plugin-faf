@@ -246,7 +246,17 @@ The plugin analyzes codebases using high-performance, deterministic static tooli
 - **CSS Stylesheets**: Scanned with a dedicated parser for `@import` and `url()` references, establishing dependency edges to other stylesheets and static assets.
 - **Binary Assets**: Recognized as terminal leaf nodes (sinks) with incoming edges but zero outgoing edges.
 - **Boundary Resolution (`oxc-resolver`)**: Resolves module specifiers against your project's `tsconfig.json` (`paths`, `baseUrl`) and `package.json` (`imports`, `exports`). Workspace packages inside a monorepo are classified as local codebase files; external `node_modules` packages and Node.js built-ins (`node:*`) act as terminal sinks.
-- **Incomplete Checks (`unverified`)**: Any unanalyzable construct (such as non-literal dynamic imports `import(variable)`, unreadable files, symbolic links inside trees, or unsupported syntax) emits a blocking `unverified/*` outcome. Incomplete checks are never treated as proof of conformity.
+- **Incomplete Checks (`unverified`)**: Any unanalyzable construct (such as non-literal dynamic imports `import(variable)`, unreadable files, or symbolic links inside trees) emits a blocking `unverified/*` outcome. Non-literal `require(...)` calls, TypeScript `export =` assignments, and CommonJS `module.exports` / `exports.*` assignments are unsupported constructs that emit `unverified/unsupported-syntax`. Incomplete checks are never treated as proof of conformity.
+
+### Nominal Kebab-Case Grammar
+
+The lexical policy enforced by the plugin requires standard architectural element names to match the ASCII regular expression `^[a-z0-9]+(?:-[a-z0-9]+)*$`:
+
+- **Permitted Characters**: Lowercase ASCII letters `a-z` and digits `0-9` separated by single hyphens.
+- **Initial Digits**: Permitted, such as `2fa-service` or `v2-parser`.
+- **Acronyms**: Must be lowercase, such as `http-client`.
+- **Rejected Forms**: Uppercase letters (e.g. `HTTPClient`), consecutive, leading, or trailing hyphens, non-prefix underscores, and non-ASCII Unicode characters (e.g. `café-parser`).
+- **Free Naming**: Free naming applies to designated Tree origins, Root Fragments, Root Nodes, Foreign Domains, and Foreign Nodes.
 
 ---
 

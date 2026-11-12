@@ -19,7 +19,15 @@ const parseAndTraverse = (code: string) => {
   const inlineImports: TModuleImport[] = [];
   const unsupportedSyntaxes: TUnsupportedSyntax[] = [];
   const rootNode: TAstNode = { ...result.program, type: result.program.type };
-  traverseAst(rootNode, false, locator, inlineImports, unsupportedSyntaxes);
+  traverseAst(
+    rootNode,
+    false,
+    false,
+    false,
+    locator,
+    inlineImports,
+    unsupportedSyntaxes
+  );
   return { inlineImports, unsupportedSyntaxes };
 };
 
@@ -63,5 +71,55 @@ describe('traverseAst', () => {
     const { unsupportedSyntaxes } = parseAndTraverse(code);
     expect(unsupportedSyntaxes).toHaveLength(1);
     expect(unsupportedSyntaxes[0]?.description).toContain('export =');
+  });
+
+  it.each([
+    {
+      code: 'module.exports = 1;',
+      title: 'module.exports',
+    },
+    {
+      code: 'module.exports.foo = 1;',
+      title: 'module.exports.foo',
+    },
+    {
+      code: 'exports.x = 1;',
+      title: 'exports.x',
+    },
+  ])('reports unsupported syntax for $title assignment', ({ code }) => {
+    const { unsupportedSyntaxes } = parseAndTraverse(code);
+    expect(unsupportedSyntaxes).toEqual([
+      {
+        description:
+          'CommonJS export assignment (module.exports / exports) is unsupported',
+        position: { column: 1, line: 1 },
+      },
+    ]);
+  });
+
+  it.each([
+    {
+      code: 'function fn(exports: unknown) { exports.x = 1; }',
+      title: 'exports variable is shadowed in parameter',
+    },
+    {
+      code: 'function fn(module: unknown) { module.exports = 1; }',
+      title: 'module variable is shadowed in parameter',
+    },
+    {
+      code: '{ const exports = { x: 0 }; exports.x = 1; }',
+      title: 'exports variable is shadowed in local scope',
+    },
+    {
+      code: '{ const module = { exports: 0 }; module.exports = 1; }',
+      title: 'module variable is shadowed in local scope',
+    },
+    {
+      code: 'exports.push(1);',
+      title: 'non-assignment call like exports.push',
+    },
+  ])('does not report when $title', ({ code }) => {
+    const { unsupportedSyntaxes } = parseAndTraverse(code);
+    expect(unsupportedSyntaxes).toHaveLength(0);
   });
 });

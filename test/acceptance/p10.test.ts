@@ -186,6 +186,36 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
           }),
         ]
       );
+
+      await runScenario(
+        {
+          'src/_types/value.type.ts': 'export type TValue = number;\n',
+        },
+        {
+          faf: {
+            locals: [
+              {
+                layers: ['src/_types'],
+                roles: [
+                  { category: '_types', isCategoryNode: true, name: 'type' },
+                ],
+                rootLayers: ['src'],
+              },
+            ],
+          },
+        },
+        'prepare-project',
+        [
+          makeScenarioMessage({
+            constraint: 'configuration/unknown-property',
+            element: 'faf.locals[0].layers',
+            filePath: 'fafconfig.ts',
+            messageId: 'configuration',
+            predicate: 'is not a recognized property',
+            reference: 'D-14',
+          }),
+        ]
+      );
     });
 
     it('row 2: rejects origin designated as both Root Fragment and Root Layer', async () => {
@@ -246,10 +276,10 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
     it('row 4: rejects an organizational directory without determinable classification', async () => {
       await runScenario(
         {
+          'src/_utils/widget/_mystery/orphan.ts': 'export const orphan = 1;\n',
           'src/_utils/widget/index.ts':
             "export { widget } from './widget.util.js';\n",
           'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
-          'src/notes/orphan.ts': 'export const orphan = 1;\n',
         },
         {
           faf: {
@@ -265,16 +295,16 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
         [
           makeScenarioMessage({
             constraint: 'classification/unclassifiable-directory',
-            element: 'src/notes',
-            filePath: 'src/notes/orphan.ts',
+            element: 'src/_utils/widget/_mystery',
+            filePath: 'src/_utils/widget/_mystery/orphan.ts',
             messageId: 'classification',
             predicate: 'has no unique Logical Domain classification',
             reference: 'FAF §6.9',
           }),
           makeScenarioMessage({
             constraint: 'classification/unclassifiable-file',
-            element: 'src/notes/orphan.ts',
-            filePath: 'src/notes/orphan.ts',
+            element: 'src/_utils/widget/_mystery/orphan.ts',
+            filePath: 'src/_utils/widget/_mystery/orphan.ts',
             messageId: 'classification',
             predicate:
               'is neither a uniquely classified Logical Node nor a Foreign Node',
@@ -569,6 +599,41 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             predicate:
               'has a Horizontal Hierarchy over children that FAF does not allow to be ordered',
             reference: 'FAF §6.9',
+          }),
+        ]
+      );
+
+      await runScenario(
+        {
+          'src/_a/_types/a.type.ts': 'export type TA = number;\n',
+          'src/_b/_utils/b/b.util.ts':
+            "import type { TA } from '../../../_a/_types/a.type.js';\nexport const b = 1;\n",
+          'src/_b/_utils/b/index.ts': "export { b } from './b.util.js';\n",
+        },
+        {
+          faf: {
+            locals: [
+              {
+                horizontalHierarchies: [[['a/_types'], ['b/_utils']]],
+                roles: [
+                  { category: '_types', isCategoryNode: true, name: 'type' },
+                  { category: '_utils', name: 'util' },
+                ],
+                rootLayers: ['src'],
+              },
+            ],
+          },
+        },
+        'peer-separation',
+        [
+          makeDirectEdgeMessage({
+            constraint: 'dependency/peer-separation',
+            from: 'src/_b/_utils/b/b.util.ts',
+            predicate:
+              'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
+            reference: 'FAF §5',
+            specifier: '../../../_a/_types/a.type.js',
+            to: 'src/_a/_types/a.type.ts',
           }),
         ]
       );
@@ -976,25 +1041,97 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
   });
 
   it('explicates nominal grammar beyond unequivocal cases', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            roles: [{ category: '_utils', name: 'util' }],
+            rootLayers: ['src'],
+          },
+        ],
+      },
+    };
+
     await runScenario(
       {
+        'src/_utils/2fa-parser/2fa-parser.util.ts':
+          'export const twoFaParser = 1;\n',
+        'src/_utils/2fa-parser/index.ts':
+          "export { twoFaParser } from './2fa-parser.util.js';\n",
+        'src/_utils/http-client/http-client.util.ts':
+          'export const httpClient = 1;\n',
+        'src/_utils/http-client/index.ts':
+          "export { httpClient } from './http-client.util.js';\n",
         'src/_utils/v2-parser/index.ts':
           "export { v2Parser } from './v2-parser.util.js';\n",
         'src/_utils/v2-parser/v2-parser.util.ts':
           'export const v2Parser = 1;\n',
       },
-      {
-        faf: {
-          locals: [
-            {
-              roles: [{ category: '_utils', name: 'util' }],
-              rootLayers: ['src'],
-            },
-          ],
-        },
-      },
+      config,
       'nomenclature',
       []
+    );
+
+    await runScenario(
+      {
+        'src/_utils/HTTPClient/HTTPClient.util.ts':
+          'export const httpClient = 1;\n',
+        'src/_utils/HTTPClient/index.ts':
+          "export { httpClient } from './HTTPClient.util.js';\n",
+      },
+      config,
+      'nomenclature',
+      [
+        makeScenarioMessage({
+          constraint: 'classification/nomenclature',
+          element: 'src/_utils/HTTPClient',
+          filePath: 'src/_utils/HTTPClient/HTTPClient.util.ts',
+          messageId: 'classification',
+          predicate:
+            'does not follow the naming contract of its classification',
+          reference: 'FAF §4, §6.3.5, §6.6',
+        }),
+        makeScenarioMessage({
+          constraint: 'classification/nomenclature',
+          element: 'src/_utils/HTTPClient/HTTPClient.util.ts',
+          filePath: 'src/_utils/HTTPClient/HTTPClient.util.ts',
+          messageId: 'classification',
+          predicate:
+            'does not follow the naming contract of its classification',
+          reference: 'FAF §4, §6.3.5, §6.6',
+        }),
+      ]
+    );
+
+    await runScenario(
+      {
+        'src/_utils/café-parser/café-parser.util.ts':
+          'export const cafeParser = 1;\n',
+        'src/_utils/café-parser/index.ts':
+          "export { cafeParser } from './café-parser.util.js';\n",
+      },
+      config,
+      'nomenclature',
+      [
+        makeScenarioMessage({
+          constraint: 'classification/nomenclature',
+          element: 'src/_utils/café-parser',
+          filePath: 'src/_utils/café-parser/café-parser.util.ts',
+          messageId: 'classification',
+          predicate:
+            'does not follow the naming contract of its classification',
+          reference: 'FAF §4, §6.3.5, §6.6',
+        }),
+        makeScenarioMessage({
+          constraint: 'classification/nomenclature',
+          element: 'src/_utils/café-parser/café-parser.util.ts',
+          filePath: 'src/_utils/café-parser/café-parser.util.ts',
+          messageId: 'classification',
+          predicate:
+            'does not follow the naming contract of its classification',
+          reference: 'FAF §4, §6.3.5, §6.6',
+        }),
+      ]
     );
   });
 
@@ -1095,6 +1232,115 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           messageId: 'unverified',
           predicate:
             'contains a non-literal dynamic import that cannot be resolved statically',
+          reference: 'D-07',
+        }),
+      ]
+    );
+  });
+
+  it('explicates analysis limits for TypeScript export = assignment', async () => {
+    await runScenario(
+      {
+        'src/legacy.ts': 'export = legacy;\n',
+      },
+      {
+        faf: {
+          locals: [
+            {
+              roles: [{ category: '_utils', name: 'util' }],
+              rootFragments: [{ path: 'src', rootNodes: [['legacy.ts']] }],
+            },
+          ],
+        },
+      },
+      'collect-modules',
+      [
+        makeScenarioMessage({
+          column: 1,
+          constraint: 'unverified/unsupported-syntax',
+          element: 'src/legacy.ts',
+          filePath: 'src/legacy.ts',
+          messageId: 'unverified',
+          predicate:
+            'contains unsupported syntax: TypeScript export assignment (export =) is unsupported',
+          reference: 'D-07',
+        }),
+      ]
+    );
+  });
+
+  it('explicates analysis limits for CommonJS module.exports and exports assignments in .cjs and .ts Logical Nodes', async () => {
+    await runScenario(
+      {
+        'src/module.cjs': 'module.exports = { value: 1 };\n',
+        'src/module.ts': 'exports.value = 1;\n',
+      },
+      {
+        faf: {
+          locals: [
+            {
+              roles: [{ category: '_utils', name: 'util' }],
+              rootFragments: [
+                { path: 'src', rootNodes: [['module.cjs', 'module.ts']] },
+              ],
+            },
+          ],
+        },
+      },
+      'collect-modules',
+      [
+        makeScenarioMessage({
+          column: 1,
+          constraint: 'unverified/unsupported-syntax',
+          element: 'src/module.cjs',
+          filePath: 'src/module.cjs',
+          messageId: 'unverified',
+          predicate:
+            'contains unsupported syntax: CommonJS export assignment (module.exports / exports) is unsupported',
+          reference: 'D-07',
+        }),
+        makeScenarioMessage({
+          column: 1,
+          constraint: 'unverified/unsupported-syntax',
+          element: 'src/module.ts',
+          filePath: 'src/module.ts',
+          messageId: 'unverified',
+          predicate:
+            'contains unsupported syntax: CommonJS export assignment (module.exports / exports) is unsupported',
+          reference: 'D-07',
+        }),
+      ]
+    );
+  });
+
+  it('explicates analysis limits for dynamic require calls', async () => {
+    await runScenario(
+      {
+        'src/_utils/loader/index.ts':
+          "export { load } from './loader.util.js';\n",
+        'src/_utils/loader/loader.util.ts':
+          'export const load = (target: string) => require(target);\n',
+      },
+      {
+        faf: {
+          locals: [
+            {
+              roles: [{ category: '_utils', name: 'util' }],
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      },
+      'collect-modules',
+      [
+        makeScenarioMessage({
+          column: 41,
+          constraint: 'unverified/unsupported-syntax',
+          element: 'src/_utils/loader/loader.util.ts',
+          filePath: 'src/_utils/loader/loader.util.ts',
+          messageId: 'unverified',
+          predicate:
+            'contains unsupported syntax: Unsupported non-literal require call',
           reference: 'D-07',
         }),
       ]
@@ -1349,7 +1595,7 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
       faf: {
         locals: [
           {
-            publicRootNodes: ['main.ts'],
+            publicRootNodes: ['src/main.ts'],
             roles: [{ category: '_utils', name: 'util' }],
             rootFragments: [
               {
@@ -1371,6 +1617,7 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
         'src/main.ts',
         'src/_utils/widget/widget.util.ts',
       ]);
+      expect(orderA.messages.length).toBeGreaterThan(0);
       expect(orderA.messages).toEqual(orderB.messages);
       expect(orderA.unimplementedParts).toEqual(orderB.unimplementedParts);
     } finally {

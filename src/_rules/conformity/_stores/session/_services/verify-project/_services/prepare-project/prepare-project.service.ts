@@ -80,7 +80,11 @@ export function prepareProject(configPath: string): TPrepareProjectResult {
       declarations.outcomes
     );
   }
-  const origins = declarations.value.trees.map((tree) => tree.originPath);
+  const effectiveDeclarations = {
+    ...declarations.value,
+    aliases: aliases.value,
+  };
+  const origins = effectiveDeclarations.trees.map((tree) => tree.originPath);
   const entries = listEntries(loaded.value.configDirectory, origins);
   if (!entries.ok) {
     return blocked(
@@ -94,11 +98,12 @@ export function prepareProject(configPath: string): TPrepareProjectResult {
   const inventory = includeExternalTargets(
     built.inventory,
     formatted.value,
-    loaded.value.configDirectory
+    loaded.value.configDirectory,
+    origins
   );
   const references = validateConfigReferences(
     formatted.value,
-    declarations.value,
+    effectiveDeclarations,
     inventory
   );
   if (references.length > 0) {
@@ -113,7 +118,7 @@ export function prepareProject(configPath: string): TPrepareProjectResult {
     aliases: aliases.value,
     baseDirectory: loaded.value.configDirectory,
     configPath: loaded.value.configPath,
-    declarations: declarations.value,
+    declarations: effectiveDeclarations,
     inventory,
     inventoryOutcomes: built.outcomes,
     kind: 'ready',

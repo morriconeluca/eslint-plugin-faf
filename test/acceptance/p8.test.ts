@@ -415,6 +415,10 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
       'a definition initialized from an import',
       "import { x } from './example.constant';\nexport const y = x;",
     ],
+    [
+      'a local type export with same name as imported value',
+      "import { source } from './example.constant';\ntype source = string;\nexport type { source };",
+    ],
   ])('allows local export provenance: %s', async (_name, content) => {
     await checkScenario(
       {

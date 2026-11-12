@@ -247,8 +247,8 @@ const invalidImplicitExtension = (propertyPath: string): TScenarioMessage =>
     'fafconfig.ts',
     propertyPath,
     'configuration/invalid-implicit-extension',
-    'must start with a dot and contain only lowercase letters',
-    'FAF §6.3.1',
+    'must be a dot-prefixed asset extension reserved to non-script files',
+    'FAF §4, §6.3.1',
     'configuration'
   );
 
@@ -274,7 +274,7 @@ const nestedRootFragmentNotDirectChild = (element: string): TScenarioMessage =>
     element,
     'configuration/nested-root-fragment-not-direct-child',
     'must be a direct child directory of the root fragment',
-    'FAF §6.2.2',
+    'FAF §6.2',
     'configuration'
   );
 
@@ -509,21 +509,37 @@ beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
 
 describe('acceptance: contextual nomenclature and qualifications', () => {
   it.each([
-    ['Category', 'src/_components', true],
-    ['Category without underscore', 'src/components', false],
-    ['Sub-Category', 'src/_utils/_atoms', true],
-    ['Sub-Category without underscore', 'src/atoms', false],
-    ['Layer', 'src/_domain', true],
-    ['Layer without underscore', 'src/domain', false],
+    ['Category', 'src/_components', 'nomenclature', []],
+    [
+      'Category without underscore',
+      'src/components',
+      'classification-completeness',
+      [unclassifiableDirectory('fafconfig.ts', 'src/components')],
+    ],
+    ['Sub-Category', 'src/_utils/_atoms', 'nomenclature', []],
+    [
+      'Sub-Category without underscore',
+      'src/atoms',
+      'classification-completeness',
+      [unclassifiableDirectory('fafconfig.ts', 'src/atoms')],
+    ],
+    [
+      'Sub-Category with uppercase',
+      'src/_utils/_BadSub',
+      'nomenclature',
+      [invalidNomenclature('fafconfig.ts', 'src/_utils/_BadSub')],
+    ],
+    ['Layer', 'src/_domain', 'nomenclature', []],
+    [
+      'Layer without underscore',
+      'src/domain',
+      'classification-completeness',
+      [unclassifiableDirectory('fafconfig.ts', 'src/domain')],
+    ],
   ])(
     'verifies ordinary naming through classification: %s',
-    async (_kind, path, valid) => {
-      await scenario(
-        { [path]: {} },
-        rootLayer(),
-        valid ? 'nomenclature' : 'classification-completeness',
-        valid ? [] : [unclassifiableDirectory('fafconfig.ts', path)]
-      );
+    async (_kind, path, responsiblePart, expected) => {
+      await scenario({ [path]: {} }, rootLayer(), responsiblePart, expected);
     }
   );
 
@@ -768,22 +784,29 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
     );
   });
 
-  it('rejects implicit TypeScript Roles rather than weakening the Asset boundary', async () => {
-    await scenario(
-      { src: {} },
-      rootLayer({
-        roles: [
-          { category: '_utils', implicitRoleExtensions: ['.ts'], name: 'util' },
-        ],
-      }),
-      'validate-config-format',
-      [
-        invalidImplicitExtension(
-          'faf.locals[0].roles[0].implicitRoleExtensions[0]'
-        ),
-      ]
-    );
-  });
+  it.each(['.ts', '.d.ts'])(
+    'rejects implicit TypeScript Roles %s rather than weakening the Asset boundary',
+    async (extension) => {
+      await scenario(
+        { src: {} },
+        rootLayer({
+          roles: [
+            {
+              category: '_utils',
+              implicitRoleExtensions: [extension],
+              name: 'util',
+            },
+          ],
+        }),
+        'validate-config-format',
+        [
+          invalidImplicitExtension(
+            'faf.locals[0].roles[0].implicitRoleExtensions[0]'
+          ),
+        ]
+      );
+    }
+  );
 
   it.each(['src', 'AppShell', '[todoId]', '(auth)', '_root'])(
     'allows nested Root Fragment name %s',
@@ -1420,6 +1443,7 @@ describe('acceptance: Mimetic Path Structures', () => {
     ['get-or-create-todo', true],
     ['get-todo', true],
     ['get-or-create-todo-list', true],
+    ['get-or-create', false],
     ['get-or-create-', false],
     ['getter-todo', false],
   ])(
@@ -1495,6 +1519,28 @@ describe('acceptance: Mimetic Path Structures', () => {
       [
         invalidNomenclature(`${path}/home.api.ts`, path),
         invalidNomenclature(`${path}/home.api.ts`, `${path}/home.api.ts`),
+      ]
+    );
+
+    const nestedPath = 'src/_pages/home/_apis/delete-todo';
+    await scenario(
+      {
+        ...fragment('src/_pages/home', 'page'),
+        ...fragment(nestedPath, 'api'),
+      },
+      rootLayer({
+        mimeticPathStructures: [
+          { paths: ['src/_pages'] },
+          { actions: ['get', 'post'], paths: ['src/_pages/home/_apis'] },
+        ],
+      }),
+      'nomenclature',
+      [
+        invalidNomenclature(`${nestedPath}/delete-todo.api.ts`, nestedPath),
+        invalidNomenclature(
+          `${nestedPath}/delete-todo.api.ts`,
+          `${nestedPath}/delete-todo.api.ts`
+        ),
       ]
     );
   });

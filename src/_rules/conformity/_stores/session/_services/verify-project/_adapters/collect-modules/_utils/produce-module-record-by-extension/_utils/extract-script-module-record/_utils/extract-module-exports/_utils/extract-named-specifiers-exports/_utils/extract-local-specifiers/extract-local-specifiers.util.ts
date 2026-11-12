@@ -14,6 +14,7 @@ import {
 } from '../../../../_extract-module-exports@shared/_constants/module-exports.constant.js';
 import { getExportedName } from '../../../../_extract-module-exports@shared/_utils/get-exported-name/index.js';
 import { isAllTypeSpace } from '../../../../_extract-module-exports@shared/_utils/is-all-type-space/index.js';
+import { isLocalTypeExport } from './_utils/is-local-type-export/index.js';
 
 export function extractLocalSpecifiers(
   statement: ExportNamedDeclaration,
@@ -29,12 +30,15 @@ export function extractLocalSpecifiers(
     const localName = getExportedName(specifier.local);
     const position = locator(specifier.start);
     const binding = importedBindings.get(localName);
+    const isExplicitlyTypeOnly =
+      isDeclarationTypeOnly || specifier.exportKind === 'type';
 
-    if (binding === undefined) {
+    if (
+      binding === undefined ||
+      isLocalTypeExport(isExplicitlyTypeOnly, binding, localName, rootSymbols)
+    ) {
       const isTypeOnly =
-        isDeclarationTypeOnly ||
-        specifier.exportKind === 'type' ||
-        isAllTypeSpace(localName, rootSymbols);
+        isExplicitlyTypeOnly || isAllTypeSpace(localName, rootSymbols);
 
       exports.push({
         exportedName,
@@ -43,10 +47,7 @@ export function extractLocalSpecifiers(
         position,
       });
     } else {
-      const isTypeOnly =
-        isDeclarationTypeOnly ||
-        specifier.exportKind === 'type' ||
-        binding.isTypeOnly;
+      const isTypeOnly = isExplicitlyTypeOnly || binding.isTypeOnly;
 
       const origin = binding.isNamespace
         ? { specifier: binding.specifier, type: NAMESPACE_ORIGIN }

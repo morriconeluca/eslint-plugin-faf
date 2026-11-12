@@ -56,7 +56,10 @@ export const aliasesSchema = z
           path: [key],
         });
       }
-      if (value.length > 0 && !formFields.isLiteralPath(value)) {
+      if (
+        value.includes('*') ||
+        (value.length > 0 && !formFields.isLiteralPath(value))
+      ) {
         context.addIssue({
           code: 'custom',
           message: formFields.fixed(CONSTRAINT_INVALID_LITERAL_PATH),

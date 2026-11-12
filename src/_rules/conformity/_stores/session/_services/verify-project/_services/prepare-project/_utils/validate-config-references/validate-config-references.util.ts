@@ -3,6 +3,7 @@ import type { TConfigOutcome } from '../../../../../../../../_conformity@shared/
 import type { TEffectiveDeclarations } from '../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 import type { TInventory } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
+import { validateAliasReferences } from './_utils/validate-alias-references/index.js';
 import { validateForeignReferences } from './_utils/validate-foreign-references/index.js';
 import { validateFrontierReferences } from './_utils/validate-frontier-references/index.js';
 import { validateRootReferences } from './_utils/validate-root-references/index.js';
@@ -21,5 +22,6 @@ export function validateConfigReferences(
     ...validateForeignReferences(config, context),
     ...validateStructuralReferences(config, context),
     ...validateFrontierReferences(config, context),
+    ...validateAliasReferences(config, context),
   ]);
 }

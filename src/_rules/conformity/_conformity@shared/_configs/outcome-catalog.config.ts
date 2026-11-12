@@ -10,12 +10,15 @@ import {
   REFERENCE_D_09,
   REFERENCE_D_14,
   REFERENCE_FAF_4,
+  REFERENCE_FAF_4_6_3_1,
   REFERENCE_FAF_4_6_3_5_6_6,
   REFERENCE_FAF_4_6_7,
   REFERENCE_FAF_5,
   REFERENCE_FAF_6,
   REFERENCE_FAF_6_1_1,
   REFERENCE_FAF_6_1_3,
+  REFERENCE_FAF_6_2,
+  REFERENCE_FAF_6_2_1,
   REFERENCE_FAF_6_2_2,
   REFERENCE_FAF_6_3_1,
   REFERENCE_FAF_6_3_2_MULTIPLE,
@@ -323,8 +326,8 @@ export const OUTCOME_CATALOG = {
   'configuration/invalid-file-name': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_FAF_4,
-    predicate: 'must adhere to kebab-case grammar',
+    normativeReference: REFERENCE_D_05,
+    predicate: 'must be a direct child file name without path separators',
   },
   'configuration/invalid-foreign-pattern': {
     family: 'configuration',
@@ -335,8 +338,9 @@ export const OUTCOME_CATALOG = {
   'configuration/invalid-implicit-extension': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_FAF_6_3_1,
-    predicate: 'must start with a dot and contain only lowercase letters',
+    normativeReference: REFERENCE_FAF_4_6_3_1,
+    predicate:
+      'must be a dot-prefixed asset extension reserved to non-script files',
   },
   'configuration/invalid-literal-path': {
     family: 'configuration',
@@ -413,7 +417,7 @@ export const OUTCOME_CATALOG = {
   'configuration/nested-root-fragment-not-direct-child': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_FAF_6_2_2,
+    normativeReference: REFERENCE_FAF_6_2,
     predicate: 'must be a direct child directory of the root fragment',
   },
   'configuration/non-existent-path': {
@@ -492,7 +496,7 @@ export const OUTCOME_CATALOG = {
   'configuration/root-node-not-direct-child': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_FAF_6_2_2,
+    normativeReference: REFERENCE_FAF_6_2_1,
     predicate: 'must be a direct child root node of the root fragment',
   },
   'configuration/scope-mismatch': {
@@ -529,13 +533,13 @@ export const OUTCOME_CATALOG = {
   'configuration/undeclared-sub-root-fragment': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_FAF_6_2_2,
+    normativeReference: REFERENCE_FAF_6_2,
     predicate: 'must be declared in subRootFragments',
   },
   'configuration/unenumerated-root-file': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_FAF_6_2_2,
+    normativeReference: REFERENCE_FAF_6_2_1,
     predicate:
       'must be either enumerated as a Root Node or designated as a Foreign Node',
   },

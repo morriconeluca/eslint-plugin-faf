@@ -134,6 +134,9 @@ function outcomeFallbackPhrase(propertyPath: string): string {
 }
 
 function phraseFor(propertyPath: string): string {
+  if (propertyPath.includes('aliases')) {
+    return 'Alias base';
+  }
   if (propertyPath.includes('foreignDomains')) {
     return 'Foreign domain';
   }
@@ -1411,6 +1414,46 @@ describe('validateConfigReferences', () => {
     };
     expect(constraintsOf(config, inventory)).toEqual([
       'faf.common.foreignDomains[0]|configuration/reference-outside-trees|foreign-config/docs',
+    ]);
+  });
+
+  it('validates common aliases references against the inventory', () => {
+    const inventory = createInventory([
+      { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
+      {
+        kind: 'directory',
+        parentId: 0,
+        path: 'src/_shared',
+        treeOrigin: 'src',
+      },
+      { kind: 'file', parentId: 0, path: 'src/main.ts', treeOrigin: 'src' },
+    ]);
+    const validConfig: TFAFConfig = {
+      faf: {
+        common: {
+          aliases: {
+            '#shared': 'src/_shared',
+          },
+        },
+        locals: [localLayer('src')],
+      },
+    };
+    expect(constraintsOf(validConfig, inventory)).toEqual([]);
+
+    const invalidConfig: TFAFConfig = {
+      faf: {
+        common: {
+          aliases: {
+            '#file': 'src/main.ts',
+            '#missing': 'src/missing',
+          },
+        },
+        locals: [localLayer('src')],
+      },
+    };
+    expect(constraintsOf(invalidConfig, inventory)).toEqual([
+      'faf.common.aliases.#file|configuration/expected-directory|src/main.ts',
+      'faf.common.aliases.#missing|configuration/non-existent-path|src/missing',
     ]);
   });
 });

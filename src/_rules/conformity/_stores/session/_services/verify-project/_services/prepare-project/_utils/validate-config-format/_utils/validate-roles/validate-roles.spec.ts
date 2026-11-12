@@ -310,7 +310,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-implicit-extension',
       message: 'Implicit extension "png" must start with a leading dot.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['png'], name: 'util' },
       ],
@@ -319,7 +319,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-implicit-extension',
       message: 'Implicit extension ".dir/png" cannot be a path.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         {
           category: '_utils',
@@ -332,7 +332,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-implicit-extension',
       message: 'Implicit extension ".png*" cannot contain pattern characters.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.png*'], name: 'util' },
       ],
@@ -342,7 +342,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".ts" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.ts'], name: 'util' },
       ],
@@ -352,7 +352,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".tsx" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.tsx'], name: 'util' },
       ],
@@ -362,7 +362,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".js" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.js'], name: 'util' },
       ],
@@ -372,7 +372,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".jsx" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.jsx'], name: 'util' },
       ],
@@ -382,7 +382,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".mjs" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.mjs'], name: 'util' },
       ],
@@ -392,7 +392,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".cjs" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.cjs'], name: 'util' },
       ],
@@ -402,7 +402,7 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".mts" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.mts'], name: 'util' },
       ],
@@ -412,9 +412,47 @@ describe('validateRoles', () => {
       constraint: 'configuration/invalid-implicit-extension',
       message:
         'Implicit extension ".cts" cannot be a TypeScript or JavaScript code extension.',
-      normativeReference: 'FAF §6.3.1',
+      normativeReference: 'FAF §4, §6.3.1',
       payload: [
         { category: '_utils', implicitRoleExtensions: ['.cts'], name: 'util' },
+      ],
+      propertyPath: 'faf.common.roles[0].implicitRoleExtensions[0]',
+    },
+    {
+      constraint: 'configuration/invalid-implicit-extension',
+      message:
+        'Implicit extension ".d.ts" cannot be a TypeScript or JavaScript code extension.',
+      normativeReference: 'FAF §4, §6.3.1',
+      payload: [
+        { category: '_utils', implicitRoleExtensions: ['.d.ts'], name: 'util' },
+      ],
+      propertyPath: 'faf.common.roles[0].implicitRoleExtensions[0]',
+    },
+    {
+      constraint: 'configuration/invalid-implicit-extension',
+      message:
+        'Implicit extension ".d.mts" cannot be a TypeScript or JavaScript code extension.',
+      normativeReference: 'FAF §4, §6.3.1',
+      payload: [
+        {
+          category: '_utils',
+          implicitRoleExtensions: ['.d.mts'],
+          name: 'util',
+        },
+      ],
+      propertyPath: 'faf.common.roles[0].implicitRoleExtensions[0]',
+    },
+    {
+      constraint: 'configuration/invalid-implicit-extension',
+      message:
+        'Implicit extension ".d.cts" cannot be a TypeScript or JavaScript code extension.',
+      normativeReference: 'FAF §4, §6.3.1',
+      payload: [
+        {
+          category: '_utils',
+          implicitRoleExtensions: ['.d.cts'],
+          name: 'util',
+        },
       ],
       propertyPath: 'faf.common.roles[0].implicitRoleExtensions[0]',
     },

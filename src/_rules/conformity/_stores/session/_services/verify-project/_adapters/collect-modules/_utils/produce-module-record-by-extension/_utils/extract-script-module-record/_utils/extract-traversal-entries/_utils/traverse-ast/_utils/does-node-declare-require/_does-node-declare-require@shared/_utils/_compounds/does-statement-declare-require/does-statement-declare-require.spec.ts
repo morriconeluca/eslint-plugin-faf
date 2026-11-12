@@ -38,4 +38,37 @@ describe('doesStatementDeclareRequire', () => {
     const statement = parseFirstStatement(code);
     expect(doesStatementDeclareRequire(statement)).toBe(expected);
   });
+
+  it.each([
+    {
+      code: 'const module = 1;',
+      expected: true,
+      name: 'module',
+      title: 'variable with custom name',
+    },
+    {
+      code: 'export const exports = 1;',
+      expected: true,
+      name: 'exports',
+      title: 'exported variable with custom name',
+    },
+    {
+      code: "import module from 'pkg';",
+      expected: true,
+      name: 'module',
+      title: 'import with custom name',
+    },
+    {
+      code: "import exports = require('pkg');",
+      expected: true,
+      name: 'exports',
+      title: 'import equals with custom name',
+    },
+  ])(
+    'evaluates $title declaration as $expected',
+    ({ code, expected, name }) => {
+      const statement = parseFirstStatement(code);
+      expect(doesStatementDeclareRequire(statement, name)).toBe(expected);
+    }
+  );
 });

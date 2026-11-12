@@ -97,5 +97,11 @@ describe('isLiteralConfigPath', () => {
     it('accepts multi-level ordinary paths', () => {
       expect(isLiteralConfigPath('a/b/c')).toBe(true);
     });
+
+    it('rejects path containing backslash', () => {
+      expect(isLiteralConfigPath('src\\app')).toBe(false);
+      expect(isLiteralConfigPath('\\src')).toBe(false);
+      expect(isLiteralConfigPath('src\\')).toBe(false);
+    });
   });
 });

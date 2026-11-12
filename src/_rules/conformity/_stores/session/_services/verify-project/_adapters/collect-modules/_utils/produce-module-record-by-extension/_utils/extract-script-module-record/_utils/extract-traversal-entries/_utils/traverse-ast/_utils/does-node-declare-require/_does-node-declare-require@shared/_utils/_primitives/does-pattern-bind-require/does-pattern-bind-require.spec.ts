@@ -53,4 +53,40 @@ describe('doesPatternBindRequire', () => {
     const pattern = parsePattern(code);
     expect(doesPatternBindRequire(pattern)).toBe(expected);
   });
+
+  it.each([
+    {
+      code: 'const module = 1;',
+      expected: true,
+      name: 'module',
+      title: 'direct identifier with custom name',
+    },
+    {
+      code: 'const { exports = fn } = obj;',
+      expected: true,
+      name: 'exports',
+      title: 'assignment pattern default with custom name',
+    },
+    {
+      code: 'const [first, , module] = items;',
+      expected: true,
+      name: 'module',
+      title: 'array pattern element with custom name',
+    },
+    {
+      code: 'const { prop: exports } = obj;',
+      expected: true,
+      name: 'exports',
+      title: 'object pattern property with custom name',
+    },
+    {
+      code: 'const [...module] = args;',
+      expected: true,
+      name: 'module',
+      title: 'rest element with custom name',
+    },
+  ])('evaluates $title as $expected', ({ code, expected, name }) => {
+    const pattern = parsePattern(code);
+    expect(doesPatternBindRequire(pattern, name)).toBe(expected);
+  });
 });

@@ -674,7 +674,7 @@ describe('validateConfigFormat', () => {
       description: 'slash in root node in local rootFragments',
       message:
         'Root node file name "app/app.tsx" must be a direct child without "/".',
-      normativeReference: 'FAF §4',
+      normativeReference: 'D-05',
       payload: {
         faf: {
           locals: [
