@@ -144,15 +144,14 @@ const otherDependency = (
   );
 };
 
-const checkScenario = async (
+const runScenario = async (
   files: FileTree,
-  responsiblePart: string,
   expected: readonly TScenarioMessage[],
   local: Readonly<Record<string, unknown>> = declarations
 ): Promise<void> => {
   const fixture = await createProject(files, { faf: { locals: [local] } });
   try {
-    expectScenario(await lintScenario(fixture.path), responsiblePart, expected);
+    expectScenario(await lintScenario(fixture.path), expected);
   } finally {
     await fixture.rm();
   }
@@ -211,34 +210,31 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
     ],
     ['import only', "import { x } from './example.constant';", 0],
   ])('counts root Symbols: %s', async (_name, content, count) => {
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [`${fragment}/example.constant.ts`]: 'export const x = 1;\n',
         [detail]: content,
       },
-      'symbol-uniqueness',
       count > 1 ? [cardinality(detail)] : []
     );
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [`${fragment}/example.constant.ts`]: 'export const x = 1;\n',
         [detail]: `${content}\nconst sentinel = 0;`,
       },
-      'symbol-uniqueness',
       count === 0 ? [] : [cardinality(detail)]
     );
   });
 
   it('does not count nested bindings against the Master', async () => {
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [master]:
           'export function Example(parameter: number) { const local = parameter; function helper() { return local; } return helper(); }\n',
       },
-      'symbol-uniqueness',
       []
     );
   });
@@ -261,9 +257,8 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
       2,
     ],
   ])('enforces ordinary cardinality: %s', async (_name, content, count) => {
-    await checkScenario(
+    await runScenario(
       { ...tree, [detail]: content },
-      'symbol-uniqueness',
       count > 1 ? [cardinality(detail)] : []
     );
   });
@@ -277,18 +272,16 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
   ])(
     'requires exactly one defined and exported Master Symbol: %i/%i',
     async (count, exported, content) => {
-      await checkScenario(
+      await runScenario(
         { ...tree, [master]: content },
-        'symbol-uniqueness',
         count === 1 && exported === 1 ? [] : [masterCardinality()]
       );
     }
   );
 
   it('never applies a Role exemption to the Master', async () => {
-    await checkScenario(
+    await runScenario(
       { ...tree, [master]: 'const hidden = 1; export function Example() {}' },
-      'symbol-uniqueness',
       [masterCardinality()],
       {
         ...declarations,
@@ -301,9 +294,8 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
     'requires an explicit ordinary Role exemption: %s',
     async (role) => {
       const file = `src/_${role}s/example.${role}.ts`;
-      await checkScenario(
+      await runScenario(
         { ...tree, [file]: 'export const first = 1; export const second = 2;' },
-        'symbol-uniqueness',
         [cardinality(file)]
       );
     }
@@ -312,13 +304,12 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
   it.each(['spec', 'story'])(
     'exempts Sub-Graph Nodes without a flag: %s',
     async (role) => {
-      await checkScenario(
+      await runScenario(
         {
           ...tree,
           [`${fragment}/example.${role}.ts`]:
             'const first = 1; const second = 2;',
         },
-        'symbol-uniqueness',
         []
       );
     }
@@ -326,7 +317,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
 
   it('retains the re-export prohibition for exempt Roles', async () => {
     const file = 'src/_types/public.type.ts';
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [file]:
@@ -334,7 +325,6 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
         'src/_types/_types@shared/_types/source.type.ts':
           'export type ExampleProps = string;',
       },
-      're-export-prohibition',
       [reExport(file)],
       {
         ...declarations,
@@ -344,7 +334,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
   });
 
   it('does not apply Symbol laws to explicit or implicit Assets', async () => {
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [`${fragment}/_example@shared/_styles/base.css`]: 'body {}',
@@ -354,7 +344,6 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
         'src/_styles/theme.css':
           '@import "./_styles@shared/_styles/base.css"; body {} a {}',
       },
-      'symbol-uniqueness',
       [],
       {
         ...declarations,
@@ -385,14 +374,13 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
     "import * as source from './example.constant';\nexport { source };",
     "import type { Value } from './example.constant';\nexport type { Value };",
   ])('rejects imported export provenance: %s', async (content) => {
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [`${fragment}/example.constant.ts`]:
           'const value = 1; type Value = number; export { value, value as default }; export type { Value };',
         [detail]: content,
       },
-      're-export-prohibition',
       [reExport(detail, content.includes('\n') ? 2 : 1)],
       {
         ...declarations,
@@ -420,14 +408,13 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
       "import { source } from './example.constant';\ntype source = string;\nexport type { source };",
     ],
   ])('allows local export provenance: %s', async (_name, content) => {
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [`${fragment}/example.constant.ts`]:
           'export const source = () => 1; export const x = 1;',
         [detail]: content,
       },
-      're-export-prohibition',
       [],
       {
         ...declarations,
@@ -449,15 +436,11 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
     "import { Example } from './example.component'; export { Example };",
     "export * from './example.component'; export type * from './example.type';",
   ])('allows exposure of direct Fragment Nodes: %s', async (content) => {
-    await checkScenario(
-      { ...tree, [access]: content },
-      'access-node-contract',
-      []
-    );
+    await runScenario({ ...tree, [access]: content }, []);
   });
 
   it('allows public selection to omit internal hook and constants', async () => {
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [`${fragment}/example.constant.ts`]: 'export const value = 1;',
@@ -465,7 +448,6 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
         [access]:
           "export * from './example.component'; export type * from './example.type';",
       },
-      'access-node-contract',
       []
     );
   });
@@ -478,11 +460,9 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
     'export interface PublicContract {}',
     'export class PublicClass {}',
   ])('rejects own Access Node definitions: %s', async (content) => {
-    await checkScenario(
-      { ...tree, [access]: `${content}\n${masterExport}` },
-      'access-node-contract',
-      [ownSymbols()]
-    );
+    await runScenario({ ...tree, [access]: `${content}\n${masterExport}` }, [
+      ownSymbols(),
+    ]);
   });
 
   it.each([
@@ -532,7 +512,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
   ] as const)(
     'rejects foreign Access Node sources: %s',
     async (_name, specifier, target, otherConstraints) => {
-      await checkScenario(
+      await runScenario(
         {
           ...tree,
           [`${fragment}/_example@shared/_types/value.type.ts`]:
@@ -555,7 +535,6 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
           'src/_src@shared/_types/value.type.ts': 'export const value = 1;',
           'src/main.ts': 'export const root = 1;',
         },
-        'access-node-contract',
         [
           accessNodeSource(specifier, target),
           ...otherConstraints.map((constraint) =>
@@ -619,22 +598,20 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
   ])(
     'checks effective Master exposure: %s',
     async (_name, content, masterContent, exposed) => {
-      await checkScenario(
+      await runScenario(
         { ...tree, [access]: content, [master]: masterContent },
-        'access-node-contract',
         exposed ? [] : [missingMaster()]
       );
     }
   );
 
   it('does not confuse a public alias with Master provenance', async () => {
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [access]:
           "export type { ExampleProps as Example } from './example.type';",
       },
-      'access-node-contract',
       [missingMaster()]
     );
   });
@@ -649,17 +626,12 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
       'export const schema = () => 1; export type Inferred = ReturnType<typeof schema>;',
     ],
   ])('emits no semantic judgment about %s', async (_name, content) => {
-    await checkScenario(
-      { ...tree, [detail]: content },
-      'symbol-uniqueness',
-      [],
-      {
-        ...declarations,
-        roles: roles.map((role) =>
-          role.name === 'type' ? { ...role, allowMultipleSymbols: true } : role
-        ),
-      }
-    );
+    await runScenario({ ...tree, [detail]: content }, [], {
+      ...declarations,
+      roles: roles.map((role) =>
+        role.name === 'type' ? { ...role, allowMultipleSymbols: true } : role
+      ),
+    });
   });
 
   it.each([
@@ -680,24 +652,19 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
       'export function Example() { return globalThis; }',
     ],
   ])('emits no heuristic outcome for %s', async (_name, content) => {
-    await checkScenario(
-      { ...tree, [master]: content },
-      'symbol-uniqueness',
-      []
-    );
+    await runScenario({ ...tree, [master]: content }, []);
   });
 
   it.each(['exclusive detail proximity', 'primary concept with one consumer'])(
     'does not prescribe placement for %s',
     async () => {
-      await checkScenario(
+      await runScenario(
         {
           ...tree,
           [master]:
             'import { value } from "../../_types/value.type";\nexport function Example() { return value; }',
           'src/_types/value.type.ts': 'export const value = 1;',
         },
-        'symbol-uniqueness',
         [],
         {
           ...declarations,
@@ -708,7 +675,7 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
   );
 
   it('does not prescribe nearest common ancestor sharing', async () => {
-    await checkScenario(
+    await runScenario(
       {
         ...tree,
         [master]:
@@ -719,7 +686,6 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
           'import { value } from "../../_types/value.type";\nexport function Other() { return value; }',
         'src/_types/value.type.ts': 'export const value = 1;',
       },
-      'symbol-uniqueness',
       [],
       {
         ...declarations,
@@ -731,13 +697,12 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
   it.each(['error', 'class', 'repository', 'service'])(
     'does not infer a Role from class syntax: %s',
     async (role) => {
-      await checkScenario(
+      await runScenario(
         {
           [`src/_${role}s/example/example.${role}.ts`]:
             'export class Example {}',
           [`src/_${role}s/example/index.ts`]: `export { Example } from './example.${role}';`,
         },
-        'symbol-uniqueness',
         [],
         { ...declarations, roles: [{ category: `_${role}s`, name: role }] }
       );

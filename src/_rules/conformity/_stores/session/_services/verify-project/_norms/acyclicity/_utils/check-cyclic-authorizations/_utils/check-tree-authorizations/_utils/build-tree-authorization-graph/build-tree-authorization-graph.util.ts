@@ -1,12 +1,12 @@
 import type { TEffectiveTree } from '../../../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
-import type { TTreeAuthGraph } from './build-tree-auth-graph.type.js';
+import type { TTreeAuthorizationGraph } from './build-tree-authorization-graph.type.js';
 
 import { compareOrdinal } from '../../../../../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { isAuthEdgeValid } from './_utils/is-auth-edge-valid/index.js';
+import { isAuthorizationEdgeValid } from './_utils/is-authorization-edge-valid/index.js';
 
-export function buildTreeAuthGraph(
+export function buildTreeAuthorizationGraph(
   trees: readonly TEffectiveTree[]
-): TTreeAuthGraph {
+): TTreeAuthorizationGraph {
   const treeOrigins = trees.map((t) => t.originPath);
   const sortedOrigins = [...treeOrigins];
   sortedOrigins.sort(compareOrdinal);
@@ -27,7 +27,7 @@ export function buildTreeAuthGraph(
       if (
         u === undefined ||
         v === undefined ||
-        !isAuthEdgeValid(u, v, seenEdges)
+        !isAuthorizationEdgeValid(u, v, seenEdges)
       ) {
         continue;
       }

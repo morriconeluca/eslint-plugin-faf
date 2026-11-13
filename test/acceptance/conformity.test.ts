@@ -236,9 +236,9 @@ describe('acceptance: faf/conformity', () => {
     expect(messages).toEqual([]);
   }, 30_000);
 
-  describe('Regola 50: invalidazione strutturale e di frontiera', () => {
-    describe('Scenario: Le modifiche strutturali invalidano le conclusioni precedenti', () => {
-      it('eliminazione di un Access Node', async () => {
+  describe('structural and frontier cache invalidation', () => {
+    describe('structural filesystem and configuration changes invalidate cached outcomes', () => {
+      it('detects deletion of an Access Node', async () => {
         const fixture = await createProject(
           {
             'src/_utils/widget/index.ts':
@@ -252,7 +252,7 @@ describe('acceptance: faf/conformity', () => {
           const initial = await lintScenario(fixture.path, [
             'src/_utils/widget/widget.util.ts',
           ]);
-          expect(initial.messages).toEqual([]);
+          expect(initial).toEqual([]);
 
           nodeFs.rmSync(
             nodePath.join(fixture.path, 'src/_utils/widget/index.ts')
@@ -262,7 +262,7 @@ describe('acceptance: faf/conformity', () => {
             'src/_utils/widget/widget.util.ts',
           ]);
           expect(
-            after.messages.some(
+            after.some(
               (message) =>
                 message.constraint === 'classification/missing-access-node'
             )
@@ -272,7 +272,7 @@ describe('acceptance: faf/conformity', () => {
         }
       });
 
-      it('spostamento di un nodo in un dominio privato', async () => {
+      it('detects moving a Fragment into a Private Category', async () => {
         const hierarchyConfig = {
           faf: {
             locals: [
@@ -309,7 +309,7 @@ describe('acceptance: faf/conformity', () => {
           const initial = await lintScenario(fixture.path, [
             'src/_services/worker/worker.service.ts',
           ]);
-          expect(initial.messages).toEqual([]);
+          expect(initial).toEqual([]);
 
           nodeFs.rmSync(nodePath.join(fixture.path, 'src/_utils/helper'), {
             recursive: true,
@@ -344,7 +344,7 @@ describe('acceptance: faf/conformity', () => {
             'src/_services/worker/worker.service.ts',
           ]);
           expect(
-            after.messages.some(
+            after.some(
               (message) =>
                 message.constraint === 'dependency/private-category-visibility'
             )
@@ -354,7 +354,7 @@ describe('acceptance: faf/conformity', () => {
         }
       });
 
-      it('modifica di un Rank', async () => {
+      it('detects inversion of a Horizontal Hierarchy Rank', async () => {
         const hierarchyConfig = {
           faf: {
             locals: [
@@ -388,7 +388,7 @@ describe('acceptance: faf/conformity', () => {
           const initial = await lintScenario(fixture.path, [
             'src/_services/worker/worker.service.ts',
           ]);
-          expect(initial.messages).toEqual([]);
+          expect(initial).toEqual([]);
 
           const invertedConfig = {
             faf: {
@@ -415,7 +415,7 @@ describe('acceptance: faf/conformity', () => {
             'src/_services/worker/worker.service.ts',
           ]);
           expect(
-            after.messages.some(
+            after.some(
               (message) => message.constraint === 'dependency/peer-separation'
             )
           ).toBe(true);
@@ -425,8 +425,8 @@ describe('acceptance: faf/conformity', () => {
       });
     });
 
-    describe('Schema dello scenario: Le decisioni di frontiera aggiornate invalidano le precedenti autorizzazioni', () => {
-      it('rimozione di un Root Node da publicRootNodes', async () => {
+    describe('updated frontier declarations invalidate previously authorized dependencies', () => {
+      it('detects removal of a Root Node from publicRootNodes', async () => {
         const initialConfig = {
           faf: {
             locals: [
@@ -457,7 +457,7 @@ describe('acceptance: faf/conformity', () => {
           const initial = await lintScenario(fixture.path, [
             'b/_utils/client/client.util.ts',
           ]);
-          expect(initial.messages).toEqual([]);
+          expect(initial).toEqual([]);
 
           const updatedConfig = {
             faf: {
@@ -482,7 +482,7 @@ describe('acceptance: faf/conformity', () => {
             'b/_utils/client/client.util.ts',
           ]);
           expect(
-            after.messages.some(
+            after.some(
               (message) => message.constraint === 'dependency/tree-opacity'
             )
           ).toBe(true);
@@ -491,7 +491,7 @@ describe('acceptance: faf/conformity', () => {
         }
       });
 
-      it("spostamento di un'unità esposta da un Root Layer in un Fractal Branch", async () => {
+      it('detects moving an exposed Root Layer unit into a Fractal Branch', async () => {
         const initialConfig = {
           faf: {
             locals: [
@@ -522,7 +522,7 @@ describe('acceptance: faf/conformity', () => {
           const initial = await lintScenario(fixture.path, [
             'b/_utils/client/client.util.ts',
           ]);
-          expect(initial.messages).toEqual([]);
+          expect(initial).toEqual([]);
 
           nodeFs.rmSync(nodePath.join(fixture.path, 'a/_utils/exposed'), {
             recursive: true,
@@ -551,7 +551,7 @@ describe('acceptance: faf/conformity', () => {
             'b/_utils/client/client.util.ts',
           ]);
           expect(
-            after.messages.some(
+            after.some(
               (message) => message.constraint === 'dependency/tree-opacity'
             )
           ).toBe(true);
@@ -560,7 +560,7 @@ describe('acceptance: faf/conformity', () => {
         }
       });
 
-      it('revoca della relazione orientata tra i Trees interessati', async () => {
+      it('detects revocation of an oriented treeDependencies authorization', async () => {
         const initialConfig = {
           faf: {
             locals: [
@@ -589,7 +589,7 @@ describe('acceptance: faf/conformity', () => {
 
         try {
           const initial = await lintScenario(fixture.path, ['b/main.ts']);
-          expect(initial.messages).toEqual([]);
+          expect(initial).toEqual([]);
 
           const updatedConfig = {
             faf: {
@@ -614,7 +614,7 @@ describe('acceptance: faf/conformity', () => {
 
           const after = await lintScenario(fixture.path, ['b/main.ts']);
           expect(
-            after.messages.some(
+            after.some(
               (message) =>
                 message.constraint === 'dependency/tree-authorization'
             )
@@ -624,7 +624,7 @@ describe('acceptance: faf/conformity', () => {
         }
       });
 
-      it('rimozione del file consumatore da externalDependencies.from', async () => {
+      it('detects removal of the consumer file from externalDependencies.from', async () => {
         const initialConfig = {
           faf: {
             locals: [
@@ -656,7 +656,7 @@ describe('acceptance: faf/conformity', () => {
 
         try {
           const initial = await lintScenario(fixture.path, ['src/main.ts']);
-          expect(initial.messages).toEqual([]);
+          expect(initial).toEqual([]);
 
           const updatedConfig = {
             faf: {
@@ -684,7 +684,7 @@ describe('acceptance: faf/conformity', () => {
 
           const after = await lintScenario(fixture.path, ['src/main.ts']);
           expect(
-            after.messages.some(
+            after.some(
               (message) =>
                 message.constraint === 'dependency/external-dependencies'
             )
@@ -694,7 +694,7 @@ describe('acceptance: faf/conformity', () => {
         }
       });
 
-      it("modifica della base dell'alias da Fractal Branch a Layer", async () => {
+      it('detects changing a Path Alias base from a Fractal Branch to a Category', async () => {
         const initialConfig = {
           faf: {
             locals: [
@@ -725,7 +725,7 @@ describe('acceptance: faf/conformity', () => {
 
         try {
           const initial = await lintScenario(fixture.path, ['src/main.ts']);
-          expect(initial.messages).toEqual([]);
+          expect(initial).toEqual([]);
 
           nodeFs.writeFileSync(
             nodePath.join(fixture.path, 'package.json'),
@@ -741,7 +741,7 @@ describe('acceptance: faf/conformity', () => {
 
           const after = await lintScenario(fixture.path, ['src/main.ts']);
           expect(
-            after.messages.some(
+            after.some(
               (message) =>
                 message.constraint === 'dependency/path-alias-anchoring'
             )

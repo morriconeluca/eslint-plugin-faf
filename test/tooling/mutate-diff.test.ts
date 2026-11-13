@@ -72,7 +72,7 @@ const sampleReportPayload = JSON.stringify({
   schemaVersion: '1.0',
 });
 
-describe('resolveDiffBase and resolveRunParameters (P1 wiring & precedence)', () => {
+describe('resolveDiffBase and resolveRunParameters', () => {
   it('resolves explicit argument, CI env var, or fallback main by precedence', () => {
     expect(resolveDiffBase('target-ref', 'ci-ref')).toBe('target-ref');
     expect(resolveDiffBase(undefined, 'ci-ref')).toBe('ci-ref');
@@ -95,13 +95,13 @@ describe('resolveDiffBase and resolveRunParameters (P1 wiring & precedence)', ()
     );
   });
 
-  it('rejects overriding mode with a second --mode flag (F2 case 4)', () => {
+  it('rejects overriding mode with a second --mode flag', () => {
     const conflicting = resolveRunParameters(['--mode=diff', '--mode=force']);
     expect(conflicting.error).toContain('Cannot specify multiple --mode flags');
     expect(conflicting.mode).toBe('diff');
   });
 
-  it('rejects unknown options starting with "--" and does not fallback to main (F2 case 5)', () => {
+  it('rejects unknown options starting with "--" and does not fallback to main', () => {
     expect(
       resolveRunParameters(['--mode=diff', '--invalid-base']).error
     ).toContain('Unknown option');
@@ -118,7 +118,7 @@ describe('resolveDiffBase and resolveRunParameters (P1 wiring & precedence)', ()
   });
 });
 
-describe('mutate-diff in isolated git repository (P1 execution)', () => {
+describe('mutate-diff in isolated git repository', () => {
   it('handles empty diff with explicit message and exit code zero', async () => {
     const fixture = await createFixture({ 'README.md': 'sample' });
     try {

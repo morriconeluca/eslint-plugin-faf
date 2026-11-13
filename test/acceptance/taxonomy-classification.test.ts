@@ -33,23 +33,22 @@ const diagnostic = (
 const runScenario = async (
   tree: FileTree,
   config: Readonly<Record<string, unknown>>,
-  responsiblePart: string,
   expected: readonly TScenarioMessage[]
 ): Promise<void> => {
   const fixture = await createProject(tree, config);
   try {
-    expectScenario(await lintScenario(fixture.path), responsiblePart, expected);
+    expectScenario(await lintScenario(fixture.path), expected);
   } finally {
     await fixture.rm();
   }
 };
 
-describe('acceptance: p2', () => {
+describe('acceptance: taxonomy classification', () => {
   const WARMUP_TIMEOUT_MS = 120_000;
 
   beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
 
-  describe('Rule: The FAF perimeter consists of autonomous and disjoint Fractal Trees (FAF §3, §4, §6.2, §6.5)', () => {
+  describe('autonomous and disjoint Fractal Trees (FAF §3, §4, §6.2, §6.5)', () => {
     it('analyzes multiple independent disjoint trees', async () => {
       await runScenario(
         {
@@ -79,7 +78,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         []
       );
     });
@@ -105,14 +103,13 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'compose-declarations',
         [
           diagnostic(
             'fafconfig.ts',
             'src',
             'configuration/duplicate-origin',
             "'src' is declared more than once as a tree origin",
-            'D-06',
+            'FAF §3',
             'configuration'
           ),
         ]
@@ -137,14 +134,13 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'compose-declarations',
         [
           diagnostic(
             'fafconfig.ts',
             'src/app',
             'configuration/overlapping-origins',
             "'src/app' overlaps with another declared tree origin: Origin 'src/app' is contained within origin 'src'",
-            'D-06',
+            'FAF §3',
             'configuration'
           ),
         ]
@@ -185,7 +181,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         []
       );
     });
@@ -208,7 +203,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         []
       );
     });
@@ -230,14 +224,13 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'validate-config-format',
         [
           diagnostic(
             'fafconfig.ts',
             'faf.locals[0]',
             'configuration/missing-origin',
             "'faf.locals[0]' must be an existing tree origin directory",
-            'D-06',
+            'FAF §3',
             'configuration'
           ),
           diagnostic(
@@ -245,7 +238,7 @@ describe('acceptance: p2', () => {
             'faf.locals[0].layers',
             'configuration/unknown-property',
             "'faf.locals[0].layers' is not a recognized property",
-            'D-14',
+            'FAF §1.2, §6.9',
             'configuration'
           ),
         ]
@@ -269,7 +262,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         [
           diagnostic(
             'fafconfig.ts',
@@ -308,7 +300,7 @@ describe('acceptance: p2', () => {
     });
   });
 
-  describe('Rule: Classification is complete and precedes ordering and authorization (FAF §4, §6.3, §6.7, §6.9)', () => {
+  describe('classification completeness before ordering and authorization (FAF §4, §6.3, §6.7, §6.9)', () => {
     it('associates exact catalog names without linguistic inference', async () => {
       await runScenario(
         {
@@ -329,7 +321,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         []
       );
     });
@@ -354,7 +345,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         [
           diagnostic(
             'fafconfig.ts',
@@ -392,7 +382,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         []
       );
     });
@@ -419,7 +408,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'containment-matrix',
         [
           diagnostic(
             'fafconfig.ts',
@@ -455,7 +443,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'containment-matrix',
         [
           diagnostic(
             'fafconfig.ts',
@@ -495,7 +482,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         []
       );
     });
@@ -528,7 +514,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         []
       );
     });
@@ -558,7 +543,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classify-taxonomy',
         []
       );
     });
@@ -581,7 +565,6 @@ describe('acceptance: p2', () => {
             ],
           },
         },
-        'classification-completeness',
         [
           diagnostic(
             'src/notes/orphan.ts',

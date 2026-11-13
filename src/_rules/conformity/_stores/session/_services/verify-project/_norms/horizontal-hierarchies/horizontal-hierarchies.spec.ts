@@ -83,17 +83,17 @@ describe('verifyHorizontalHierarchies', () => {
 
   describe('orderable sibling sets produce no outcomes', () => {
     it.each([
-      ['Categories non private sorelle', 'src', 'root-layer'],
-      ['Sub-Categories sorelle', 'src/_utils', 'category'],
+      ['non-private sibling Categories', 'src', 'root-layer'],
+      ['sibling Sub-Categories', 'src/_utils', 'category'],
       [
-        'Sub-Categories sorelle in Private Category',
+        'sibling Sub-Categories in Private Category',
         'src/_utils/btn/_types',
         'category',
       ],
-      ['Layers fratelli', 'src', 'root-layer'],
-      ['Sub-Layers fratelli', 'src/_domain', 'layer'],
-      ['Logical Nodes diretti di un Fragment', 'src/_utils/widget', 'fragment'],
-      ['Root Nodes di un Root Fragment', 'src', 'root-fragment'],
+      ['sibling Layers', 'src', 'root-layer'],
+      ['sibling Sub-Layers', 'src/_domain', 'layer'],
+      ['direct Logical Nodes of a Fragment', 'src/_utils/widget', 'fragment'],
+      ['Root Nodes of a Root Fragment', 'src', 'root-fragment'],
     ] as const)(
       'admits valid sibling set: %s',
       (_name, parentPath, domainKind) => {
@@ -113,21 +113,21 @@ describe('verifyHorizontalHierarchies', () => {
 
   describe('non-orderable sibling sets produce horizontal-hierarchy-members', () => {
     it.each([
-      ['Private Categories sorelle', 'src/_utils/widget', 'fragment'],
-      ['Fragments fratelli in Category', 'src/_utils', 'category'],
-      ['Category Nodes fratelli', 'src/_types', 'category'],
-      ['Path Sub-Categories sorelle', 'src/_apis', 'category'],
-      ['Path Sub-Category e Path Fragment fratelli', 'src/_apis', 'category'],
-      ['Path Fragments fratelli', 'src/_apis', 'category'],
-      ['Root Fragments fratelli', 'src', 'root-fragment'],
+      ['sibling Private Categories', 'src/_utils/widget', 'fragment'],
+      ['sibling Fragments in Category', 'src/_utils', 'category'],
+      ['sibling Category Nodes', 'src/_types', 'category'],
+      ['sibling Path Sub-Categories', 'src/_apis', 'category'],
+      ['sibling Path Sub-Category and Path Fragment', 'src/_apis', 'category'],
+      ['sibling Path Fragments', 'src/_apis', 'category'],
+      ['sibling Root Fragments', 'src', 'root-fragment'],
       ['Fractal Branch', 'src', 'root-layer'],
       ['Foreign Domain', 'src', 'root-layer'],
       [
-        'Logical Nodes e Logical Domains fratelli insieme',
+        'sibling Logical Nodes and Logical Domains mixed together',
         'src/_types',
         'category',
       ],
-      ['elementi con genitori diversi', 'src/_domain', 'layer'],
+      ['elements with different parents', 'src/_domain', 'layer'],
     ] as const)(
       'rejects invalid sibling set: %s',
       (_name, parentPath, domainKind) => {

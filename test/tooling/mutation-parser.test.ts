@@ -24,7 +24,7 @@ const makeReportObject = (mutants: readonly Record<string, unknown>[]) => ({
   source: 'export const a = 1;\n',
 });
 
-describe('mutation-parser (V1 payload and report parsing)', () => {
+describe('mutation-parser report payload parsing', () => {
   it('rejects invalid json, unsupported schema or missing fields', () => {
     for (const payload of [
       '{ bad json',
@@ -108,7 +108,7 @@ const makePlanMutant = (id: string, startCol = 0, endCol = 4) => ({
   },
 });
 
-describe('mutation-parser (V1 plan payload parsing)', () => {
+describe('mutation-parser execution plan payload parsing', () => {
   it('parses valid plan payload converting 0-based to 1-based coordinates', () => {
     const raw = JSON.stringify({ mutantPlans: [makePlanMutant('1')] });
     const result = parsePlanPayload(raw, '/root');

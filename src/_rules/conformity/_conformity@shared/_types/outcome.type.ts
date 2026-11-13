@@ -60,7 +60,7 @@ export type TCatalogEntry = {
   readonly form: TOutcomeForm;
 
   /**
-   * Normative framework or architectural decision reference.
+   * Normative FAF specification clause reference.
    */
   readonly normativeReference: string;
 
@@ -249,7 +249,7 @@ export type TConfigOutcome = {
   readonly message: string;
 
   /**
-   * Specification clause reference such as FAF §6.3.1, D-06, or D-14.
+   * Specification clause reference such as FAF §1.2, FAF §3, or FAF §6.3.1.
    */
   readonly normativeReference: string;
 
@@ -765,7 +765,7 @@ export type TUnverifiedOutcome = {
   readonly message: string;
 
   /**
-   * Specification clause reference such as D-03, D-06, or D-09.
+   * Specification clause reference such as FAF §1.2, FAF §4, or FAF §7.3.
    */
   readonly normativeReference: string;
 

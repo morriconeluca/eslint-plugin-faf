@@ -1,7 +1,7 @@
 import type { TCounts, TMutationEvaluationResult } from './mutation-types.js';
 
-export const DIFF_INC_FILE = '.cache/stryker/diff.json';
-export const INC_FILE = '.cache/stryker/incremental.json';
+export const DIFF_CACHE_FILE = '.cache/stryker/diff.json';
+export const INCREMENTAL_CACHE_FILE = '.cache/stryker/incremental.json';
 
 export type TArchivedArtifacts = {
   readonly plan?: TArtifactReference;

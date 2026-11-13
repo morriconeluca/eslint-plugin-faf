@@ -51,10 +51,9 @@ describe('acceptance project support', () => {
       expect(
         await fixture.readFile('src/_utils/widget/widget.util.ts', 'utf8')
       ).toBe('export const widget = 1;\n');
-      const result = await lintScenario(fixture.path);
-      expect(result.messages).toEqual([]);
-      expect(result.unimplementedParts.size).toBe(0);
-      expectScenario(result, 'acyclicity', []);
+      const messages = await lintScenario(fixture.path);
+      expect(messages).toEqual([]);
+      expectScenario(messages, []);
       expect(await lintProject(fixture.path)).toHaveLength(3);
     } finally {
       await fixture.rm();
@@ -79,7 +78,7 @@ describe('acceptance project support', () => {
         'fafconfig.ts',
       ]);
       expect(reverse).toEqual(forward);
-      expect(forward.messages).toEqual(
+      expect(forward).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             column: 1,
@@ -111,8 +110,8 @@ describe('acceptance project support', () => {
       }
     );
     try {
-      const result = await lintScenario(fixture.path);
-      expect(result.messages).toEqual(
+      const messages = await lintScenario(fixture.path);
+      expect(messages).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             constraint: 'configuration/unknown-property',
@@ -128,7 +127,6 @@ describe('acceptance project support', () => {
           }),
         ])
       );
-      expect(result.unimplementedParts.size).toBe(0);
     } finally {
       await fixture.rm();
     }
@@ -140,8 +138,8 @@ describe('acceptance project support', () => {
     });
     const fixture = await createProject(tree, explicitUndefined);
     try {
-      const result = await lintScenario(fixture.path);
-      expect(result.messages).toEqual([
+      const messages = await lintScenario(fixture.path);
+      expect(messages).toEqual([
         expect.objectContaining({
           constraint: 'configuration/unknown-property',
           messageId: 'configuration',
@@ -153,19 +151,14 @@ describe('acceptance project support', () => {
   });
 
   it('checks the expected outcomes', () => {
-    const result = { messages: [outcome], unimplementedParts: new Map() };
     expect(() => {
-      expectScenario(result, 'classification-completeness', [outcome]);
+      expectScenario([outcome], [outcome]);
     }).not.toThrow();
     expect(() => {
-      expectScenario(result, 'classification-completeness', []);
+      expectScenario([outcome], []);
     }).toThrow();
     expect(() => {
-      expectScenario(
-        { ...result, messages: [] },
-        'classification-completeness',
-        [outcome]
-      );
+      expectScenario([], [outcome]);
     }).toThrow();
   });
 });

@@ -122,7 +122,7 @@ describe('buildInventory', () => {
       element: 'src/link.ts',
       family: 'unverified',
       message: "'src/link.ts' is a symbolic link within a tree: src/real.ts",
-      normativeReference: 'D-06',
+      normativeReference: 'FAF §3, §6.9',
       reason: 'src/real.ts',
     });
 

@@ -359,7 +359,7 @@ const fullHypotheticalTree: FileTree = {
   }),
 };
 
-describe('Rule 41: Foreign families select files with explicit grammar and scope', () => {
+describe('acceptance: Foreign Node families and scopes', () => {
   const patternCases = [
     { expected: true, file: 'src/README.md', pattern: '*.md' },
     { expected: true, file: 'src/app/README.md', pattern: '*.md' },
@@ -454,7 +454,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
                 'FAF §6.9'
               ),
             ];
-        expectScenario(result, 'classify-taxonomy', expectedMessages);
+        expectScenario(result, expectedMessages);
       } finally {
         await fixture.rm();
       }
@@ -498,7 +498,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'classify-taxonomy', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -526,7 +526,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
           'faf.locals[0].foreignNodes[0].paths',
           'configuration/empty-list',
           'cannot be an empty list',
-          'D-14'
+          'FAF §1.2, §6.9'
         ),
       ],
       tree: baseLayerTree,
@@ -539,7 +539,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
           'faf.locals[0].foreignNodes[0].patterns',
           'configuration/empty-list',
           'cannot be an empty list',
-          'D-14'
+          'FAF §1.2, §6.9'
         ),
       ],
       tree: baseLayerTree,
@@ -552,7 +552,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
           'nonexistent',
           'configuration/non-existent-path',
           'does not exist',
-          'D-14',
+          'FAF §1.2, §6.9',
           `Foreign family path "nonexistent" does not exist under configuration base "${baseDirectory}"`
         ),
       ],
@@ -586,7 +586,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
           'faf.locals[0].foreignNodes[0].patterns[0]',
           'configuration/invalid-foreign-pattern',
           'must adhere to allowed glob pattern grammar',
-          'D-05'
+          'FAF §6.7'
         ),
       ],
       tree: baseLayerTree,
@@ -599,7 +599,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
           'faf.locals[0].foreignNodes[0].patterns[0]',
           'configuration/invalid-foreign-pattern',
           'must adhere to allowed glob pattern grammar',
-          'D-05'
+          'FAF §6.7'
         ),
       ],
       tree: baseLayerTree,
@@ -612,7 +612,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
           'faf.locals[0].foreignNodes[0].patterns[0]',
           'configuration/invalid-foreign-pattern',
           'must adhere to allowed glob pattern grammar',
-          'D-05'
+          'FAF §6.7'
         ),
       ],
       tree: baseLayerTree,
@@ -625,7 +625,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
           'faf.locals[0].foreignNodes[0].patterns[0]',
           'configuration/invalid-foreign-pattern',
           'must adhere to allowed glob pattern grammar',
-          'D-05'
+          'FAF §6.7'
         ),
       ],
       tree: baseLayerTree,
@@ -638,7 +638,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
           'faf.locals[0].foreignNodes[0].patterns[0]',
           'configuration/invalid-foreign-pattern',
           'must adhere to allowed glob pattern grammar',
-          'D-05'
+          'FAF §6.7'
         ),
       ],
       tree: baseLayerTree,
@@ -666,7 +666,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
       try {
         const result = await lintScenario(fixture.path);
         const expected = item.getExpected(fixture.path);
-        expectScenario(result, 'prepare-project', expected);
+        expectScenario(result, expected);
       } finally {
         await fixture.rm();
       }
@@ -674,7 +674,7 @@ describe('Rule 41: Foreign families select files with explicit grammar and scope
   );
 });
 
-describe('Rule 42: General and local hierarchies order effective sets without precedence', () => {
+describe('acceptance: general and local Horizontal Hierarchies', () => {
   it('applies a general hierarchy model separately at each eligible parent', async () => {
     const config = {
       faf: {
@@ -704,7 +704,7 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'horizontal-hierarchies', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -743,7 +743,7 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'horizontal-hierarchies', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -776,7 +776,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §4'
         ),
       ],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_apis/a/a.api.ts': 'export const a = 1;\n',
         'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
@@ -815,7 +814,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §4'
         ),
       ],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_apis/a/a.api.ts': 'export const a = 1;\n',
         'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
@@ -857,7 +855,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §4'
         ),
       ],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_apis/a/a.api.ts': 'export const a = 1;\n',
         'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
@@ -884,7 +881,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
         },
       },
       expected: [],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_components/btn/btn.component.tsx': 'export const btn = 1;\n',
         'src/_components/btn/index.ts':
@@ -920,7 +916,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
         },
       },
       expected: [],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_network/_types/a.type.ts': 'export type TA = string;\n',
         'src/_network/_utils/u/index.ts': "export { u } from './u.util.js';\n",
@@ -950,7 +945,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
         },
       },
       expected: [],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_apis/a/a.api.ts': 'export const a = 1;\n',
         'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
@@ -982,10 +976,9 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'faf.locals[0].localHorizontalHierarchies[0].hierarchies[1][0]',
           'configuration/duplicate-element',
           'is a duplicate element',
-          'D-14'
+          'FAF §1.2, §6.9'
         ),
       ],
-      responsiblePart: 'prepare-project',
       tree: baseLayerTree,
     },
     {
@@ -1022,7 +1015,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §6.9'
         ),
       ],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_apis/_health/get-ping/get-ping.api.ts':
           'export const getPing = 1;\n',
@@ -1058,7 +1050,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §6.9'
         ),
       ],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_utils/u/_types/a.type.ts': 'export type TA = string;\n',
         'src/_utils/u/index.ts': "export { u } from './u.util.js';\n",
@@ -1093,7 +1084,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §6.9'
         ),
       ],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_src@shared/_types/a.type.ts': 'export type TA = string;\n',
       },
@@ -1126,7 +1116,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §6.9'
         ),
       ],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/_utils/a/a.util.ts': 'export const a = 1;\n',
         'src/_utils/a/index.ts': "export { a } from './a.util.js';\n",
@@ -1171,7 +1160,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §6.9'
         ),
       ],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/app/main.ts': 'export const a = 1;\n',
         'src/docs/main.ts': 'export const d = 1;\n',
@@ -1225,7 +1213,6 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §4'
         ),
       ],
-      responsiblePart: 'horizontal-hierarchies',
       tree: {
         'src/a.ts': 'export const a = 1;\n',
         'src/b.ts': 'export const b = 1;\n',
@@ -1239,7 +1226,7 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
       const fixture = await createProject(item.tree, item.config);
       try {
         const result = await lintScenario(fixture.path);
-        expectScenario(result, item.responsiblePart, item.expected);
+        expectScenario(result, item.expected);
       } finally {
         await fixture.rm();
       }
@@ -1286,7 +1273,7 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §5'
         ),
       ];
-      expectScenario(result, 'peer-separation', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -1323,14 +1310,14 @@ describe('Rule 42: General and local hierarchies order effective sets without pr
           'FAF §6.8'
         ),
       ];
-      expectScenario(result, 'containment-matrix', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
   });
 });
 
-describe('Rule 43: Mimetic declaration determines a single form for all Path Fragments', () => {
+describe('acceptance: Mimetic Path Structure declarations', () => {
   it('distinguishes omission and presence of actions for Path Fragments', async () => {
     const config = {
       faf: {
@@ -1376,7 +1363,7 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
           'FAF §4, §6.3.5, §6.6'
         ),
       ];
-      expectScenario(result, 'nomenclature', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -1387,7 +1374,6 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
     readonly extraMimeticStructures?: readonly Record<string, unknown>[];
     readonly getExpected: () => readonly TScenarioMessage[];
     readonly mimeticStructure: Record<string, unknown>;
-    readonly responsiblePart: string;
     readonly tree: FileTree;
   };
 
@@ -1399,11 +1385,10 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
           'faf.locals[0].mimeticPathStructures[0].paths',
           'configuration/empty-list',
           'cannot be an empty list',
-          'D-14'
+          'FAF §1.2, §6.9'
         ),
       ],
       mimeticStructure: { paths: [] },
-      responsiblePart: 'prepare-project',
       tree: baseLayerTree,
     },
     {
@@ -1413,11 +1398,10 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
           'faf.locals[0].mimeticPathStructures[0].actions',
           'configuration/empty-list',
           'cannot be an empty list',
-          'D-14'
+          'FAF §1.2, §6.9'
         ),
       ],
       mimeticStructure: { actions: [], paths: ['src/_apis'] },
-      responsiblePart: 'prepare-project',
       tree: {
         'src/_apis/a/a.api.ts': 'export const a = 1;\n',
         'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
@@ -1430,11 +1414,10 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
           'faf.locals[0].mimeticPathStructures[0].actions[1]',
           'configuration/duplicate-element',
           'is a duplicate element',
-          'D-14'
+          'FAF §1.2, §6.9'
         ),
       ],
       mimeticStructure: { actions: ['get', 'get'], paths: ['src/_apis'] },
-      responsiblePart: 'prepare-project',
       tree: {
         'src/_apis/a/a.api.ts': 'export const a = 1;\n',
         'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
@@ -1451,7 +1434,6 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
         ),
       ],
       mimeticStructure: { actions: ['get user'], paths: ['src/_apis'] },
-      responsiblePart: 'prepare-project',
       tree: {
         'src/_apis/a/a.api.ts': 'export const a = 1;\n',
         'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
@@ -1468,7 +1450,6 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
         ),
       ],
       mimeticStructure: { paths: ['src/_types'] },
-      responsiblePart: 'classify-taxonomy',
       tree: {
         'src/_types/a.type.ts': 'export type TA = string;\n',
       },
@@ -1484,7 +1465,6 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
         ),
       ],
       mimeticStructure: { paths: ['src/_utils/_sub'] },
-      responsiblePart: 'classify-taxonomy',
       tree: {
         'src/_utils/_sub/a/a.util.ts': 'export const a = 1;\n',
         'src/_utils/_sub/a/index.ts': "export { a } from './a.util.js';\n",
@@ -1502,7 +1482,6 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
         ),
       ],
       mimeticStructure: { paths: ['src/_apis/_health'] },
-      responsiblePart: 'classify-taxonomy',
       tree: {
         'src/_apis/_health/get-ping/get-ping.api.ts':
           'export const getPing = 1;\n',
@@ -1522,7 +1501,6 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
         ),
       ],
       mimeticStructure: { paths: ['src/_apis'] },
-      responsiblePart: 'classify-taxonomy',
       tree: {
         'src/_apis/a/a.api.ts': 'export const a = 1;\n',
         'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
@@ -1553,7 +1531,7 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
       try {
         const result = await lintScenario(fixture.path);
         const expected = item.getExpected();
-        expectScenario(result, item.responsiblePart, expected);
+        expectScenario(result, expected);
       } finally {
         await fixture.rm();
       }
@@ -1585,14 +1563,14 @@ describe('Rule 43: Mimetic declaration determines a single form for all Path Fra
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'nomenclature', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
   });
 });
 
-describe('Rule 44: The alias source is unique and distinct from tool configuration', () => {
+describe('acceptance: Path Alias source exclusivity and validation', () => {
   const aliasSourceCases = [
     {
       aliases: null,
@@ -1704,7 +1682,7 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
       const fixture = await createProject(tree, config);
       try {
         const result = await lintScenario(fixture.path);
-        expectScenario(result, 'prepare-project', expected);
+        expectScenario(result, expected);
       } finally {
         await fixture.rm();
       }
@@ -1737,7 +1715,7 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'prepare-project', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -1791,7 +1769,7 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
     const validFixture = await createProject(validTree, config);
     try {
       const result = await lintScenario(validFixture.path);
-      expectScenario(result, 'prepare-project', []);
+      expectScenario(result, []);
     } finally {
       await validFixture.rm();
     }
@@ -1810,11 +1788,11 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
           'src/_utils/widget/widget.util.ts',
           'unverified/unresolved-import',
           "'src/_utils/widget/widget.util.ts' contains an import that could not be resolved: Cannot find module '#sharedness/something.js'",
-          'D-08',
+          'FAF §4',
           'unverified'
         ),
       ];
-      expectScenario(result, 'unverified', expected);
+      expectScenario(result, expected);
     } finally {
       await mismatchFixture.rm();
     }
@@ -1833,11 +1811,11 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
           'src/_utils/widget/widget.util.ts',
           'unverified/unresolved-import',
           "'src/_utils/widget/widget.util.ts' contains an import that could not be resolved: Cannot find module '#shared'",
-          'D-08',
+          'FAF §4',
           'unverified'
         ),
       ];
-      expectScenario(result, 'unverified', expected);
+      expectScenario(result, expected);
     } finally {
       await exactFixture.rm();
     }
@@ -1883,7 +1861,7 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
           'FAF §7.4'
         ),
       ];
-      expectScenario(result, 'path-alias-anchoring', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -1922,7 +1900,7 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'prepare-project', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -1971,11 +1949,11 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
           'src/_utils/widget/widget.util.ts',
           'unverified/unresolved-import',
           "'src/_utils/widget/widget.util.ts' contains an import that could not be resolved: Path alias resolution falls outside the declared alias targets",
-          'D-08',
+          'FAF §4',
           'unverified'
         ),
       ];
-      expectScenario(result, 'unverified', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -2007,11 +1985,11 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
           'src/nonexistent',
           'configuration/non-existent-path',
           'does not exist',
-          'D-14',
+          'FAF §1.2, §6.9',
           `Alias base "src/nonexistent" does not exist under configuration base "${fixture.path}"`
         ),
       ];
-      expectScenario(result, 'prepare-project', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -2043,11 +2021,11 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
           'src/_utils/widget/widget.util.ts',
           'configuration/expected-directory',
           'must be a directory',
-          'D-14',
+          'FAF §1.2, §6.9',
           'Alias base "src/_utils/widget/widget.util.ts" must be a directory'
         ),
       ];
-      expectScenario(result, 'prepare-project', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -2079,17 +2057,17 @@ describe('Rule 44: The alias source is unique and distinct from tool configurati
           'faf.common.aliases.#shared',
           'configuration/invalid-literal-path',
           'must be a POSIX relative path without empty or parent segments',
-          'D-05'
+          'FAF §1.2, §6.9'
         ),
       ];
-      expectScenario(result, 'prepare-project', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
   });
 });
 
-describe('Rule 45: Frontier properties select nodes and relations without deviating from structure', () => {
+describe('acceptance: frontier declarations and scope filtering', () => {
   it('exposes only enumerated root nodes via publicRootNodes', async () => {
     const config = {
       faf: {
@@ -2123,7 +2101,7 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'tree-frontier', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -2146,7 +2124,7 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
     const fixture = await createProject(baseLayerTree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'tree-frontier', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -2187,7 +2165,7 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'tree-frontier', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -2223,7 +2201,7 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'FAF §7.2'
         ),
       ];
-      expectScenario(result, 'prepare-project', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -2274,7 +2252,7 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'FAF §7.2'
         ),
       ];
-      expectScenario(result, 'prepare-project', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -2307,11 +2285,11 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'nonexistent',
           'configuration/non-existent-path',
           'does not exist',
-          'D-14',
+          'FAF §1.2, §6.9',
           `Tree dependency target "nonexistent" does not exist under configuration base "${fixture.path}"`
         ),
       ];
-      expectScenario(result, 'prepare-project', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -2347,7 +2325,7 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
     const fixture = await createProject(tree, config);
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'external-dependencies', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -2361,7 +2339,6 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
     readonly getExpected: (
       baseDirectory: string
     ) => readonly TScenarioMessage[];
-    readonly responsiblePart: string;
     readonly to: readonly string[];
     readonly tree: FileTree;
   };
@@ -2375,11 +2352,10 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'src/_utils/widget',
           'configuration/expected-file',
           'must be a file',
-          'D-14',
+          'FAF §1.2, §6.9',
           'External dependency source "src/_utils/widget" must be a file'
         ),
       ],
-      responsiblePart: 'prepare-project',
       to: ['legacy/client.ts'],
       tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
     },
@@ -2391,11 +2367,10 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'src/_utils',
           'configuration/expected-file',
           'must be a file',
-          'D-14',
+          'FAF §1.2, §6.9',
           'External dependency source "src/_utils" must be a file'
         ),
       ],
-      responsiblePart: 'prepare-project',
       to: ['legacy/client.ts'],
       tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
     },
@@ -2407,11 +2382,10 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'legacy',
           'configuration/expected-file',
           'must be a file',
-          'D-14',
+          'FAF §1.2, §6.9',
           'External dependency target "legacy" must be a file'
         ),
       ],
-      responsiblePart: 'prepare-project',
       to: ['legacy'],
       tree: {
         ...baseLayerTree,
@@ -2429,7 +2403,6 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'FAF §7.3'
         ),
       ],
-      responsiblePart: 'classify-taxonomy',
       to: ['legacy/client.ts'],
       tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
     },
@@ -2445,7 +2418,6 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'FAF §7.3'
         ),
       ],
-      responsiblePart: 'classify-taxonomy',
       to: ['legacy/client.ts'],
       tree: {
         ...baseLayerTree,
@@ -2465,7 +2437,6 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'External dependency source "outside.ts" must be inside a Fractal Tree of this configuration'
         ),
       ],
-      responsiblePart: 'prepare-project',
       to: ['legacy/client.ts'],
       tree: {
         ...baseLayerTree,
@@ -2484,7 +2455,6 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'FAF §7.3'
         ),
       ],
-      responsiblePart: 'prepare-project',
       to: ['src/_utils/widget/index.ts'],
       tree: baseLayerTree,
     },
@@ -2499,7 +2469,6 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'FAF §7.3'
         ),
       ],
-      responsiblePart: 'prepare-project',
       to: ['node_modules/pkg/index.js'],
       tree: {
         ...baseLayerTree,
@@ -2514,11 +2483,10 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'legacy/missing.ts',
           'configuration/non-existent-path',
           'does not exist',
-          'D-14',
+          'FAF §1.2, §6.9',
           `External dependency target "legacy/missing.ts" does not exist under configuration base "${baseDirectory}"`
         ),
       ],
-      responsiblePart: 'prepare-project',
       to: ['legacy/missing.ts'],
       tree: baseLayerTree,
     },
@@ -2530,11 +2498,10 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'legacy/client',
           'configuration/non-existent-path',
           'does not exist',
-          'D-14',
+          'FAF §1.2, §6.9',
           `External dependency target "legacy/client" does not exist under configuration base "${baseDirectory}"`
         ),
       ],
-      responsiblePart: 'prepare-project',
       to: ['legacy/client'],
       tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
     },
@@ -2550,7 +2517,6 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'FAF §7.3'
         ),
       ],
-      responsiblePart: 'prepare-project',
       to: ['#shared/client.ts'],
       tree: {
         ...baseLayerTree,
@@ -2585,7 +2551,7 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
       try {
         const result = await lintScenario(fixture.path);
         const expected = item.getExpected(fixture.path);
-        expectScenario(result, item.responsiblePart, expected);
+        expectScenario(result, expected);
       } finally {
         await fixture.rm();
       }
@@ -2624,18 +2590,18 @@ describe('Rule 45: Frontier properties select nodes and relations without deviat
           'src/_utils/widget',
           'configuration/expected-file',
           'must be a file',
-          'D-14',
+          'FAF §1.2, §6.9',
           'External dependency source "src/_utils/widget" must be a file'
         ),
       ];
-      expectScenario(result, 'prepare-project', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
   });
 });
 
-describe('Rule 47: Optional properties and structural types do not render validator superfluous', () => {
+describe('acceptance: runtime validation of optional properties and structural types', () => {
   const runtimeValidatorCases = [
     {
       caseName: 'nonexistent punctual path',
@@ -2656,7 +2622,7 @@ describe('Rule 47: Optional properties and structural types do not render valida
           'src/nonexistent.ts',
           'configuration/non-existent-path',
           'does not exist',
-          'D-14',
+          'FAF §1.2, §6.9',
           `Foreign node "src/nonexistent.ts" does not exist under configuration base "${baseDirectory}"`
         ),
       ],
@@ -2686,7 +2652,7 @@ describe('Rule 47: Optional properties and structural types do not render valida
           'src/_utils/widget',
           'configuration/expected-file',
           'must be a file',
-          'D-14',
+          'FAF §1.2, §6.9',
           'External dependency source "src/_utils/widget" must be a file'
         ),
       ],
@@ -2716,7 +2682,7 @@ describe('Rule 47: Optional properties and structural types do not render valida
           'legacy',
           'configuration/expected-file',
           'must be a file',
-          'D-14',
+          'FAF §1.2, §6.9',
           'External dependency target "legacy" must be a file'
         ),
       ],
@@ -2741,7 +2707,7 @@ describe('Rule 47: Optional properties and structural types do not render valida
           'extra',
           'configuration/unknown-property',
           'is not a recognized property',
-          'D-14'
+          'FAF §1.2, §6.9'
         ),
       ],
       tree: baseLayerTree,
@@ -2792,7 +2758,7 @@ describe('Rule 47: Optional properties and structural types do not render valida
           'faf.locals[0].roles[0].allowMultipleSymbols',
           'configuration/explicit-undefined',
           'cannot be explicitly undefined',
-          'D-14'
+          'FAF §1.2, §6.9'
         ),
       ],
       tree: baseLayerTree,
@@ -2815,7 +2781,7 @@ describe('Rule 47: Optional properties and structural types do not render valida
           'faf.locals[0].roles[0].category',
           'configuration/empty-string',
           'cannot be an empty string',
-          'D-14'
+          'FAF §1.2, §6.9'
         ),
       ],
       tree: baseLayerTree,
@@ -2865,7 +2831,7 @@ describe('Rule 47: Optional properties and structural types do not render valida
           'faf.locals[0].rootLayers[0]',
           'configuration/invalid-literal-path',
           'must be a POSIX relative path without empty or parent segments',
-          'D-05'
+          'FAF §1.2, §6.9'
         ),
       ],
       tree: baseLayerTree,
@@ -2879,7 +2845,7 @@ describe('Rule 47: Optional properties and structural types do not render valida
       try {
         const result = await lintScenario(fixture.path);
         const expected = item.getExpected(fixture.path);
-        expectScenario(result, 'prepare-project', expected);
+        expectScenario(result, expected);
       } finally {
         await fixture.rm();
       }
@@ -2887,7 +2853,7 @@ describe('Rule 47: Optional properties and structural types do not render valida
   );
 });
 
-describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inventory and does not configure this repository implicitly', () => {
+describe('acceptance: multi-tree configuration verification on a synthetic inventory', () => {
   it('compiles without asserting that its paths exist and rejects missing path at runtime', async () => {
     const missingTree = { ...fullHypotheticalTree };
     delete missingTree['legacy/client.ts'];
@@ -2900,11 +2866,11 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'legacy/client.ts',
           'configuration/non-existent-path',
           'does not exist',
-          'D-14',
+          'FAF §1.2, §6.9',
           `External dependency target "legacy/client.ts" does not exist under configuration base "${fixture.path}"`
         ),
       ];
-      expectScenario(result, 'prepare-project', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -2913,22 +2879,20 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
   const hypotheticalPropertiesCases = [
     {
       name: 'preserves custom role ranks without imposing reference model and treats src/_configs as foreign',
-      responsiblePart: 'category-role',
     },
     {
       name: 'replaces general hierarchies while preserving the three local hierarchies',
-      responsiblePart: 'horizontal-hierarchies',
     },
   ] as const;
 
-  it.each(hypotheticalPropertiesCases)('$name', async ({ responsiblePart }) => {
+  it.each(hypotheticalPropertiesCases)('$name', async () => {
     const fixture = await createProject(
       fullHypotheticalTree,
       fullHypotheticalConfig
     );
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, responsiblePart, []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -2941,7 +2905,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
     );
     try {
       const result = await lintScenario(positiveFixture.path);
-      expectScenario(result, 'tree-frontier', []);
+      expectScenario(result, []);
     } finally {
       await positiveFixture.rm();
     }
@@ -2967,7 +2931,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §6.2.2'
         ),
       ];
-      expectScenario(result, 'root-node-discipline', expected);
+      expectScenario(result, expected);
     } finally {
       await inverseRootFixture.rm();
     }
@@ -2995,7 +2959,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §7.2, §7.3'
         ),
       ];
-      expectScenario(result, 'tree-authorization', expected);
+      expectScenario(result, expected);
     } finally {
       await inverseTreeFixture.rm();
     }
@@ -3021,7 +2985,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §7.1'
         ),
       ];
-      expectScenario(result, 'tree-opacity', expected);
+      expectScenario(result, expected);
     } finally {
       await deepImportFixture.rm();
     }
@@ -3065,7 +3029,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §7.1'
         ),
       ];
-      expectScenario(result, 'tree-frontier', expected);
+      expectScenario(result, expected);
     } finally {
       await branchImportFixture.rm();
     }
@@ -3099,7 +3063,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §6.1.1'
         ),
       ];
-      expectScenario(result, 'fractal-branch-visibility', expected);
+      expectScenario(result, expected);
     } finally {
       await intraBranchFixture.rm();
     }
@@ -3145,7 +3109,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §6.9'
         ),
       ];
-      expectScenario(result, 'classify-taxonomy', expected);
+      expectScenario(result, expected);
     } finally {
       await fixture.rm();
     }
@@ -3158,7 +3122,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
     );
     try {
       const result = await lintScenario(fixture.path);
-      expectScenario(result, 'external-dependencies', []);
+      expectScenario(result, []);
     } finally {
       await fixture.rm();
     }
@@ -3185,7 +3149,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §7.3'
         ),
       ];
-      expectScenario(directResult, 'external-dependencies', expected);
+      expectScenario(directResult, expected);
     } finally {
       await directFixture.rm();
     }
@@ -3211,7 +3175,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §6.1.1'
         ),
       ];
-      expectScenario(result, 'access-node-sources', expected);
+      expectScenario(result, expected);
     } finally {
       await indexImportFixture.rm();
     }
@@ -3237,7 +3201,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §6.6.2'
         ),
       ];
-      expectScenario(result, 'fractal-branch-visibility', expected);
+      expectScenario(result, expected);
     } finally {
       await branchVisibilityFixture.rm();
     }
@@ -3274,7 +3238,7 @@ describe('Rule 48: The fafconfig.ts example is verified with a hypothetical inve
           'FAF §7.3'
         ),
       ];
-      expectScenario(result, 're-entry-prohibition', expected);
+      expectScenario(result, expected);
     } finally {
       await reEntryFixture.rm();
     }

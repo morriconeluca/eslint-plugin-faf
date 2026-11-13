@@ -22,7 +22,7 @@ describe('inspectOrigin', () => {
           element: 'missing',
           family: 'configuration',
           message: "'missing' must be an existing tree origin directory",
-          normativeReference: 'D-06',
+          normativeReference: 'FAF §3',
           propertyPath: 'faf.locals',
         });
       }
@@ -49,7 +49,7 @@ describe('inspectOrigin', () => {
           element: 'file.ts',
           family: 'configuration',
           message: "'file.ts' must be a directory",
-          normativeReference: 'D-06',
+          normativeReference: 'FAF §3',
           propertyPath: 'faf.locals',
         });
       }
@@ -101,7 +101,7 @@ describe('inspectOrigin', () => {
           element: 'broken-origin',
           family: 'configuration',
           message: "'broken-origin' must be a directory",
-          normativeReference: 'D-06',
+          normativeReference: 'FAF §3',
           propertyPath: 'faf.locals',
         });
       }
@@ -153,7 +153,7 @@ describe('inspectOrigin', () => {
       if (!result.ok) {
         expect(result.outcome.family).toBe('unverified');
         expect(result.outcome.constraint).toBe('unverified/unreadable-origin');
-        expect(result.outcome.normativeReference).toBe('D-06');
+        expect(result.outcome.normativeReference).toBe('FAF §3');
         expect(result.outcome.message).toContain(
           "'locked/child' could not be accessed:"
         );

@@ -144,7 +144,7 @@ const evalForce = (
     plannedMutantsByFile: new Map(plan),
   });
 
-describe('mutation-evaluator (V1 plan comparison & counterexamples)', () => {
+describe('mutation-evaluator plan comparison', () => {
   it('fails binding measurement when independent execution plan is missing', () => {
     expectFailure(
       evaluateMutationReport(buildReport([k1]), {
@@ -159,7 +159,7 @@ describe('mutation-evaluator (V1 plan comparison & counterexamples)', () => {
     expect(evalDiff([k1], [standardPlan]).isPassed).toBe(true);
   });
 
-  it('fails when plan Map is empty but report has a mutant (orchestrator counterexample)', () => {
+  it('fails when plan Map is empty but report contains a mutant', () => {
     const payload = buildReport(
       [
         makeNamedMutant(
@@ -225,7 +225,7 @@ describe('mutation-evaluator (V1 plan comparison & counterexamples)', () => {
   });
 });
 
-describe('mutation-evaluator (V2 historical cache verification)', () => {
+describe('mutation-evaluator historical cache verification', () => {
   it('preserves recognized historical file from cache outside diff score and rejects unknown files', () => {
     const histMutant = makeMutant('h1', 'Survived');
     const histPayload = makeHistPayload(histMutant);
@@ -246,7 +246,7 @@ describe('mutation-evaluator (V2 historical cache verification)', () => {
     expectFailure(unknownResult, 'no independent historical cache evidence');
   });
 
-  it('rejects historical file with same id but altered replacement or operator (orchestrator counterexample)', () => {
+  it('rejects historical file with same id but altered replacement or operator', () => {
     const payload = makeHistPayload(
       makeNamedMutant(
         'old-id',
@@ -280,7 +280,7 @@ describe('mutation-evaluator (V2 historical cache verification)', () => {
     expect(evaluationResult.historicalFiles['src/h.ts']).toBeDefined();
   });
 
-  it('fails when full mode report contains an unplanned file (orchestrator counterexample)', () => {
+  it('fails when full mode report contains an unplanned file', () => {
     const payload = buildMultiReport({
       'src/current.ts': [k1],
       'src/unplanned.ts': [makeMutant('2', 'Killed')],
@@ -303,7 +303,7 @@ describe('mutation-evaluator (V2 historical cache verification)', () => {
   });
 });
 
-describe('mutation-evaluator (V3 scoring & feedback)', () => {
+describe('mutation-evaluator scoring and feedback', () => {
   it('enforces unrounded 80% boundary (79.99% fails, 80.00% passes)', () => {
     const r7999 = evalOffline(
       [

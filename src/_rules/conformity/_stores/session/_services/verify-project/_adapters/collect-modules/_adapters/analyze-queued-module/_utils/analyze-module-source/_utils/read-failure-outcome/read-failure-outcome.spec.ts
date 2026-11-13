@@ -24,7 +24,7 @@ describe('readFailureOutcome', () => {
       expect(outcome.constraint).toBe('unverified/unreadable-entry');
       expect(outcome.family).toBe('unverified');
       expect(outcome.element).toBe('src/file.ts');
-      expect(outcome.normativeReference).toBe('D-06');
+      expect(outcome.normativeReference).toBe('FAF §6.9');
       expect(outcome.reason).toBe('detail');
       expect(outcome.message).toContain('src/file.ts');
     }
@@ -40,7 +40,7 @@ describe('readFailureOutcome', () => {
         relativePath: 'outside/file.ts',
       });
       expect(outcome.constraint).toBe('unverified/unreadable-external-file');
-      expect(outcome.normativeReference).toBe('D-03');
+      expect(outcome.normativeReference).toBe('FAF §7.3');
       expect(outcome.element).toBe('outside/file.ts');
       expect(outcome.family).toBe('unverified');
       expect(outcome.reason).toBe('detail');

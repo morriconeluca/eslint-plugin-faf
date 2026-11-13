@@ -82,7 +82,12 @@ describe('resolveModifiedFiles', () => {
       '--others',
       '--exclude-standard',
     ]);
-    const present = new Set([...readGitLines(['ls-files']), ...untracked]);
+    const deleted = new Set(readGitLines(['ls-files', '--deleted']));
+    const present = new Set(
+      [...readGitLines(['ls-files']), ...untracked].filter(
+        (p) => !deleted.has(p)
+      )
+    );
     const expected = [...new Set([...diff, ...untracked])]
       .map((p) => p.replaceAll('\\', '/').replace(/^\.\//u, ''))
       .filter((p) => present.has(p));
@@ -95,8 +100,11 @@ describe('resolveModifiedFiles', () => {
 });
 
 describe('readRepositoryChanges', () => {
-  it('reads repository changes respecting custom cwd', async () => {
-    const fixture = await createFixture({ 'existing.txt': 'initial' });
+  it('reads repository changes respecting custom cwd and excluding deleted files from presentFiles', async () => {
+    const fixture = await createFixture({
+      'deleted.txt': 'gone',
+      'existing.txt': 'initial',
+    });
     try {
       runGit(['init', '-b', 'main'], fixture.path);
       runGit(['config', 'user.name', 'test'], fixture.path);
@@ -104,12 +112,17 @@ describe('readRepositoryChanges', () => {
       runGit(['add', '.'], fixture.path);
       runGit(['commit', '-m', 'initial'], fixture.path);
       runGit(['checkout', '-b', 'feature'], fixture.path);
+      fs.rmSync(path.join(fixture.path, 'deleted.txt'));
       fs.writeFileSync(path.join(fixture.path, 'existing.txt'), 'modified');
       fs.writeFileSync(path.join(fixture.path, 'untracked.txt'), 'new');
 
       const changes = readRepositoryChanges('main', fixture.path);
+      expect(changes.changedPaths).toContain('deleted.txt');
       expect(changes.changedPaths).toContain('existing.txt');
       expect(changes.changedPaths).toContain('untracked.txt');
+      expect(changes.presentFiles).not.toContain('deleted.txt');
+      expect(changes.presentFiles).toContain('existing.txt');
+      expect(changes.presentFiles).toContain('untracked.txt');
     } finally {
       await fixture.rm();
     }

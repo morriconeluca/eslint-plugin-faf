@@ -19,8 +19,8 @@ import {
   collectPreSpawnContext,
 } from './mutation-manifest.js';
 import {
-  DIFF_INC_FILE,
-  INC_FILE,
+  DIFF_CACHE_FILE,
+  INCREMENTAL_CACHE_FILE,
   type TMutationRunManifest,
   type TMutationRunMode,
   type TMutationRunOptions,
@@ -49,11 +49,16 @@ const resolveStrykerArguments = (
       '--incremental',
       '--force',
       '--incrementalFile',
-      DIFF_INC_FILE,
+      DIFF_CACHE_FILE,
     ];
   }
   if (mode === 'incremental') {
-    return ['run', '--incremental', '--incrementalFile', INC_FILE];
+    return [
+      'run',
+      '--incremental',
+      '--incrementalFile',
+      INCREMENTAL_CACHE_FILE,
+    ];
   }
   return ['run', '--force'];
 };

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TEffectiveTree } from '../../../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
-import { buildTreeAuthGraph } from './build-tree-auth-graph.util.js';
+import { buildTreeAuthorizationGraph } from './build-tree-authorization-graph.util.js';
 
 const createTree = (
   originPath: string,
@@ -28,9 +28,9 @@ const createTree = (
   treeDependencyPairs: pairs,
 });
 
-describe('buildTreeAuthGraph', () => {
+describe('buildTreeAuthorizationGraph', () => {
   it('builds empty auth graph for empty trees', () => {
-    expect(buildTreeAuthGraph([]).treeCount).toBe(0);
+    expect(buildTreeAuthorizationGraph([]).treeCount).toBe(0);
   });
 
   it('indexes tree dependency pairs and skips unknown trees or self-loops', () => {
@@ -43,7 +43,7 @@ describe('buildTreeAuthGraph', () => {
       ]),
       createTree('b'),
     ];
-    const graph = buildTreeAuthGraph(trees);
+    const graph = buildTreeAuthorizationGraph(trees);
     expect(graph.treeCount).toBe(2);
     expect(graph.adjacency[0]).toEqual([1]);
   });

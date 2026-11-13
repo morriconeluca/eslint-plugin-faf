@@ -61,12 +61,11 @@ const configMessage = ({
 const runScenario = async (
   tree: FileTree,
   config: Readonly<Record<string, unknown>>,
-  responsiblePart: string,
   expected: readonly TScenarioMessage[] = []
 ): Promise<void> => {
   const project = await createProject(tree, config);
   try {
-    expectScenario(await lintScenario(project.path), responsiblePart, expected);
+    expectScenario(await lintScenario(project.path), expected);
   } finally {
     await project.rm();
   }
@@ -79,11 +78,7 @@ const runDynamicScenario = async (
 ): Promise<void> => {
   const project = await createProject(tree, config);
   try {
-    expectScenario(
-      await lintScenario(project.path),
-      'prepare-project',
-      getExpected(project.path)
-    );
+    expectScenario(await lintScenario(project.path), getExpected(project.path));
   } finally {
     await project.rm();
   }
@@ -100,17 +95,13 @@ const runRawScenario = async (
     'fafconfig.ts': rawConfig,
   });
   try {
-    expectScenario(
-      await lintScenario(project.path),
-      'prepare-project',
-      getExpected(project.path)
-    );
+    expectScenario(await lintScenario(project.path), getExpected(project.path));
   } finally {
     await project.rm();
   }
 };
 
-describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architetturali', () => {
+describe('acceptance: fafconfig.ts TypeScript module contract', () => {
   const WARMUP_TIMEOUT_MS = 120_000;
 
   beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
@@ -148,7 +139,7 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           constraint: 'configuration/invalid-default-export-function',
           element: nodePath.join(projectPath, 'fafconfig.ts'),
           predicate: 'cannot export a function as its default export',
-          reference: 'D-09',
+          reference: 'FAF §1.2',
         }),
       ]
     );
@@ -165,19 +156,19 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           constraint: 'configuration/invalid-default-export-promise',
           element: nodePath.join(projectPath, 'fafconfig.ts'),
           predicate: 'cannot export a Promise as its default export',
-          reference: 'D-09',
+          reference: 'FAF §1.2',
         }),
       ]
     );
   });
 
   it('rejects missing root property faf', async () => {
-    await runScenario(defaultTree, {}, 'prepare-project', [
+    await runScenario(defaultTree, {}, [
       configMessage({
         constraint: 'configuration/missing-property',
         element: 'faf',
         predicate: 'is required and missing',
-        reference: 'D-14',
+        reference: 'FAF §1.2, §6.9',
       }),
     ]);
   });
@@ -196,13 +187,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
         },
         trees: [],
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'trees',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -222,13 +212,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: '$schema',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -250,13 +239,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.common.layers',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -281,13 +269,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].rootFragments[0].master',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -309,13 +296,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.common.publicNodes',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -335,13 +321,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].namingContracts',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -361,13 +346,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
         },
         severity: 'error',
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'severity',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -384,13 +368,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
         },
         warnings: [],
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'warnings',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -415,13 +398,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].roles[0].extraProperty',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -433,13 +415,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
       {
         faf: null,
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/null-forbidden',
           element: 'faf',
           predicate: 'cannot be null',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -464,7 +445,7 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           constraint: 'configuration/explicit-undefined',
           element: 'faf.common',
           predicate: 'cannot be explicitly undefined',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -483,13 +464,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/empty-string',
           element: 'faf.locals[0].roles[0].name',
           predicate: 'cannot be an empty string',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -514,13 +494,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].roles[0].allowMultipleSymbols',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -540,13 +519,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/empty-list',
           element: 'faf.locals[0].foreignNodes[0].paths',
           predicate: 'cannot be an empty list',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -566,13 +544,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/duplicate-element',
           element: 'faf.locals[0].foreignNodes[0].paths[1]',
           predicate: 'is a duplicate element',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -587,7 +564,6 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           locals: [{ rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       []
     );
     await runRawScenario(
@@ -622,7 +598,6 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           locals: [{ rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       []
     );
     await runScenario(
@@ -637,13 +612,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/empty-list',
           element: 'faf.locals[0].roles[0]',
           predicate: 'cannot be an empty list',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -660,13 +634,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/empty-tier',
           element: 'faf.locals[0].horizontalHierarchies[0][0]',
           predicate: 'cannot be an empty tier',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -683,13 +656,12 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/empty-list',
           element: 'faf.locals[0].mimeticPathStructures[0].actions',
           predicate: 'cannot be an empty list',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -711,27 +683,26 @@ describe('Rule 35: Il formato è un modulo TypeScript che esporta dati architett
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/empty-list',
           element: 'faf.locals[0].roles[0].implicitRoleExtensions',
           predicate: 'cannot be an empty list',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
   });
 });
 
-describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente dalla sua costruzione TypeScript', () => {
+describe('acceptance: closed configuration schema contract', () => {
   it('verifies all mandatory and admitted properties across the 14 configuration object types', async () => {
-    await runScenario(defaultTree, {}, 'prepare-project', [
+    await runScenario(defaultTree, {}, [
       configMessage({
         constraint: 'configuration/missing-property',
         element: 'faf',
         predicate: 'is required and missing',
-        reference: 'D-14',
+        reference: 'FAF §1.2, §6.9',
       }),
     ]);
     await runScenario(
@@ -740,23 +711,22 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
         extra: true,
         faf: { locals: [{ roles: defaultRoles, rootLayers: ['src'] }] },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
 
-    await runScenario(defaultTree, { faf: {} }, 'prepare-project', [
+    await runScenario(defaultTree, { faf: {} }, [
       configMessage({
         constraint: 'configuration/missing-property',
         element: 'faf.locals',
         predicate: 'is required and missing',
-        reference: 'D-14',
+        reference: 'FAF §1.2, §6.9',
       }),
     ]);
     await runScenario(
@@ -767,13 +737,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -790,13 +759,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].roles[0].name',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -812,13 +780,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].roles[0].category',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -840,13 +807,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].roles[0].extraProperty',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -864,13 +830,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].subGraphRoles[0].name',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -887,13 +852,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].subGraphRoles[0].category',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -910,13 +874,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].rootFragments[0].path',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -932,13 +895,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].rootFragments[0].rootNodes',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -960,13 +922,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].rootFragments[0].extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -989,13 +950,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].rootFragments[0].dependencyEdges[0].from',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1017,13 +977,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].rootFragments[0].dependencyEdges[0].to',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1047,13 +1006,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].rootFragments[0].dependencyEdges[0].extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1071,13 +1029,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].foreignNodes[0].paths',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1094,13 +1051,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].foreignNodes[0].patterns',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1119,13 +1075,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].foreignNodes[0].extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1143,13 +1098,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].localHorizontalHierarchies[0].paths',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1166,13 +1120,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].localHorizontalHierarchies[0].hierarchies',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1191,13 +1144,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].localHorizontalHierarchies[0].extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1215,13 +1167,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].mimeticPathStructures[0].paths',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1238,13 +1189,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].mimeticPathStructures[0].extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1262,13 +1212,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].treeDependencies[0].from',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1285,13 +1234,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].treeDependencies[0].to',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1308,13 +1256,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].treeDependencies[0].extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1332,13 +1279,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].externalDependencies[0].from',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1357,13 +1303,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].externalDependencies[0].to',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1386,13 +1331,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].externalDependencies[0].extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1407,13 +1351,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.common.extra',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1428,13 +1371,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/scope-mismatch',
           element: 'faf.common.rootLayers',
           predicate: 'cannot be declared in this configuration scope',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1448,13 +1390,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/scope-mismatch',
           element: 'faf.common.rootFragments',
           predicate: 'cannot be declared in this configuration scope',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1470,13 +1411,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-origin',
           element: 'faf.locals[0]',
           predicate: 'must be an existing tree origin directory',
-          reference: 'D-06',
+          reference: 'FAF §3',
         }),
       ]
     );
@@ -1493,13 +1433,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/scope-mismatch',
           element: 'faf.locals[0].aliases',
           predicate: 'cannot be declared in this configuration scope',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1517,13 +1456,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-origin',
           element: 'faf.locals[0]',
           predicate: 'must be an existing tree origin directory',
-          reference: 'D-06',
+          reference: 'FAF §3',
         }),
       ]
     );
@@ -1541,7 +1479,6 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -1553,7 +1490,6 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: [{ rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       []
     );
     await runScenario(
@@ -1563,7 +1499,6 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: [{ rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-roles',
@@ -1593,13 +1528,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/null-forbidden',
           element: 'faf.locals[0].roles[0].allowMultipleSymbols',
           predicate: 'cannot be null',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1617,7 +1551,6 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       []
     );
   });
@@ -1631,13 +1564,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.common',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1654,13 +1586,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].roles[0].name',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1683,13 +1614,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].roles[0].isCategoryNode',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1706,13 +1636,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].roles',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1729,13 +1658,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].rootFragments[0].rootNodes[0]',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1752,13 +1680,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].rootLayers',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1776,13 +1703,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].subGraphRoles[0]',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1799,13 +1725,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].rootFragments[0]',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1828,13 +1753,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].rootFragments[0].dependencyEdges',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1852,13 +1776,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].foreignNodes',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1876,13 +1799,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].horizontalHierarchies',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1900,13 +1822,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].localHorizontalHierarchies[0]',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1924,13 +1845,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].mimeticPathStructures[0]',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1948,13 +1868,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].treeDependencies',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1972,13 +1891,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].treeDependencies[0].from',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1998,13 +1916,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].mimeticPathStructures[0].actions',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2016,13 +1933,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: 'invalid',
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2037,13 +1953,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.common.aliases',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2068,7 +1983,6 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       []
     );
     await runScenario(
@@ -2084,7 +1998,6 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2101,13 +2014,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/duplicate-element',
           element: 'faf.locals[0].horizontalHierarchies[0][1][0]',
           predicate: 'is a duplicate element',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2125,13 +2037,12 @@ describe('Rule 36: Ogni oggetto del formato ha un contratto chiuso indipendente 
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
 });
 
-describe('Rule 37: Common e locals compongono configurazioni per proprietà intere', () => {
+describe('acceptance: whole-property composition between common and locals', () => {
   it('identifies multiple trees with shared catalog from a single locals element', async () => {
     await runScenario(
       {
@@ -2154,27 +2065,26 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
 
   it('verifies unique local owner for origins across all nine error examples', async () => {
-    await runScenario(defaultTree, { faf: {} }, 'prepare-project', [
+    await runScenario(defaultTree, { faf: {} }, [
       configMessage({
         constraint: 'configuration/missing-property',
         element: 'faf.locals',
         predicate: 'is required and missing',
-        reference: 'D-14',
+        reference: 'FAF §1.2, §6.9',
       }),
     ]);
 
-    await runScenario(defaultTree, { faf: { locals: [] } }, 'prepare-project', [
+    await runScenario(defaultTree, { faf: { locals: [] } }, [
       configMessage({
         constraint: 'configuration/empty-list',
         element: 'faf.locals',
         predicate: 'cannot be an empty list',
-        reference: 'D-14',
+        reference: 'FAF §1.2, §6.9',
       }),
     ]);
 
@@ -2185,13 +2095,12 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           locals: [{ roles: defaultRoles }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-origin',
           element: 'faf.locals[0]',
           predicate: 'must be an existing tree origin directory',
-          reference: 'D-06',
+          reference: 'FAF §3',
         }),
       ]
     );
@@ -2209,13 +2118,12 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-origin',
           element: 'faf.locals[0]',
           predicate: 'must be an existing tree origin directory',
-          reference: 'D-06',
+          reference: 'FAF §3',
         }),
       ]
     );
@@ -2228,13 +2136,12 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/scope-mismatch',
           element: 'faf.common.rootLayers',
           predicate: 'cannot be declared in this configuration scope',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2246,13 +2153,12 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/scope-mismatch',
           element: 'faf.common.rootFragments',
           predicate: 'cannot be declared in this configuration scope',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2270,13 +2176,12 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/scope-mismatch',
           element: 'faf.locals[0].aliases',
           predicate: 'cannot be declared in this configuration scope',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2291,13 +2196,12 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/duplicate-origin',
           element: 'src',
           predicate: 'is declared more than once as a tree origin',
-          reference: 'D-06',
+          reference: 'FAF §3',
         }),
       ]
     );
@@ -2315,14 +2219,13 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/conflicting-origin-kind',
           element: 'src',
           predicate:
             'cannot be declared as both a Root Layer and a Root Fragment',
-          reference: 'D-06',
+          reference: 'FAF §6.5, §6.9',
         }),
       ]
     );
@@ -2342,14 +2245,13 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/overlapping-origins',
           detail: "Origin 'src/sub' is contained within origin 'src'",
           element: 'src/sub',
           predicate: 'overlaps with another declared tree origin',
-          reference: 'D-06',
+          reference: 'FAF §3',
         }),
       ]
     );
@@ -2383,7 +2285,6 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
@@ -2420,7 +2321,6 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'symbol-uniqueness',
       [
         configMessage({
           constraint: 'symbol/symbol-uniqueness',
@@ -2440,7 +2340,6 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           locals: [{ rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-roles',
@@ -2475,7 +2374,6 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2492,13 +2390,12 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/scope-mismatch',
           element: 'faf.locals[0].aliases',
           predicate: 'cannot be declared in this configuration scope',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2511,13 +2408,12 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/scope-mismatch',
           element: 'faf.common.rootLayers',
           predicate: 'cannot be declared in this configuration scope',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2530,13 +2426,12 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/scope-mismatch',
           element: 'faf.common.rootFragments',
           predicate: 'cannot be declared in this configuration scope',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2566,7 +2461,6 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2595,7 +2489,7 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           detail: `Foreign family path "nonexistent" does not exist under configuration base "${projectPath}"`,
           element: 'nonexistent',
           predicate: 'does not exist',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2622,7 +2516,6 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/reference-outside-local-scope',
@@ -2655,7 +2548,6 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2681,7 +2573,6 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/external-dependency-to-inside-tree',
@@ -2695,7 +2586,7 @@ describe('Rule 37: Common e locals compongono configurazioni per proprietà inte
   });
 });
 
-describe('Rule 38: I percorsi della configurazione hanno una base unica e non sono import abbreviati', () => {
+describe('acceptance: configuration base directory and literal paths', () => {
   it('resolves all configuration paths from configuration module directory', async () => {
     await runScenario(
       {
@@ -2724,7 +2615,6 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
@@ -2747,7 +2637,6 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2758,7 +2647,6 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2778,7 +2666,6 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2798,7 +2685,6 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2823,7 +2709,6 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2845,7 +2730,6 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -2856,14 +2740,13 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           locals: [{ roles: defaultRoles, rootLayers: ['/src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-literal-path',
           element: 'faf.locals[0].rootLayers[0]',
           predicate:
             'must be a POSIX relative path without empty or parent segments',
-          reference: 'D-05',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2875,14 +2758,13 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           locals: [{ roles: defaultRoles, rootLayers: ['./src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-literal-path',
           element: 'faf.locals[0].rootLayers[0]',
           predicate:
             'must be a POSIX relative path without empty or parent segments',
-          reference: 'D-05',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2894,14 +2776,13 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           locals: [{ roles: defaultRoles, rootLayers: ['src/'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-literal-path',
           element: 'faf.locals[0].rootLayers[0]',
           predicate:
             'must be a POSIX relative path without empty or parent segments',
-          reference: 'D-05',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2913,14 +2794,13 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           locals: [{ roles: defaultRoles, rootLayers: ['src//app'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-literal-path',
           element: 'faf.locals[0].rootLayers[0]',
           predicate:
             'must be a POSIX relative path without empty or parent segments',
-          reference: 'D-05',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2932,14 +2812,13 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           locals: [{ roles: defaultRoles, rootLayers: ['src/./app'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-literal-path',
           element: 'faf.locals[0].rootLayers[0]',
           predicate:
             'must be a POSIX relative path without empty or parent segments',
-          reference: 'D-05',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2951,14 +2830,13 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           locals: [{ roles: defaultRoles, rootLayers: ['src/../app'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-literal-path',
           element: 'faf.locals[0].rootLayers[0]',
           predicate:
             'must be a POSIX relative path without empty or parent segments',
-          reference: 'D-05',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2970,14 +2848,13 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           locals: [{ roles: defaultRoles, rootLayers: ['src\\app'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-literal-path',
           element: 'faf.locals[0].rootLayers[0]',
           predicate:
             'must be a POSIX relative path without empty or parent segments',
-          reference: 'D-05',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -2989,14 +2866,13 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           locals: [{ roles: defaultRoles, rootLayers: ['../src'] }],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-literal-path',
           element: 'faf.locals[0].rootLayers[0]',
           predicate:
             'must be a POSIX relative path without empty or parent segments',
-          reference: 'D-05',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3022,7 +2898,7 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           detail: `Foreign node "src/missing.ts" does not exist under configuration base "${projectPath}"`,
           element: 'src/missing.ts',
           predicate: 'does not exist',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3040,14 +2916,13 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/expected-file',
           detail: 'Foreign node "src" must be a file',
           element: 'src',
           predicate: 'must be a file',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3065,7 +2940,6 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/expected-directory',
@@ -3073,7 +2947,7 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
             'Foreign domain "src/_utils/widget/widget.util.ts" must be a directory',
           element: 'src/_utils/widget/widget.util.ts',
           predicate: 'must be a directory',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3094,13 +2968,12 @@ describe('Rule 38: I percorsi della configurazione hanno una base unica e non so
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
 });
 
-describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità e Ranks', () => {
+describe('acceptance: positional role and sub-graph role catalogs', () => {
   it('calculates positional ranks from single items and groups', async () => {
     await runScenario(
       {
@@ -3139,7 +3012,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
@@ -3157,13 +3029,12 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/missing-property',
           element: 'faf.locals[0].roles[0].name',
           predicate: 'is required and missing',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3183,7 +3054,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/duplicate-role-name',
@@ -3210,7 +3080,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/duplicate-category',
@@ -3235,7 +3104,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/role-name-conflict',
@@ -3260,7 +3128,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/duplicate-role-name',
@@ -3284,13 +3151,12 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/empty-list',
           element: 'faf.locals[0].roles[0]',
           predicate: 'cannot be an empty list',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3307,13 +3173,12 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-type',
           element: 'faf.locals[0].roles[0][0]',
           predicate: 'has an invalid type',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3331,13 +3196,12 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].subGraphRoles[0].category',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3355,13 +3219,12 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.locals[0].subGraphRoles[0].allowMultipleSymbols',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3384,13 +3247,12 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/empty-list',
           element: 'faf.locals[0].roles[0].implicitRoleExtensions',
           predicate: 'cannot be an empty list',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3414,7 +3276,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-implicit-extension',
@@ -3445,7 +3306,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-implicit-extension',
@@ -3482,7 +3342,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/duplicate-implicit-extension',
@@ -3514,7 +3373,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-implicit-extension',
@@ -3545,7 +3403,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-implicit-extension',
@@ -3576,7 +3433,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/implicit-extension-category-node-mismatch',
@@ -3607,7 +3463,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/implicit-extension-role-name-prefix',
@@ -3639,7 +3494,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -3666,7 +3520,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -3690,7 +3543,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -3714,7 +3566,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -3739,7 +3590,6 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
@@ -3767,13 +3617,12 @@ describe('Rule 39: I cataloghi posizionali determinano Roles, forma delle unità
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
 });
 
-describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale e archi inter-Fragment', () => {
+describe('acceptance: Root Fragment declarations, local hierarchies, and dependency edges', () => {
   it('enumerates direct Root Nodes and Root Fragments without name deductions', async () => {
     await runScenario(
       {
@@ -3799,7 +3648,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
@@ -3820,7 +3668,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'classification/unclassifiable-file',
@@ -3866,7 +3713,7 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           detail: `Root node "app/missing.ts" does not exist under configuration base "${projectPath}"`,
           element: 'app/missing.ts',
           predicate: 'does not exist',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3890,13 +3737,12 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-file-name',
           element: 'faf.locals[0].rootFragments[0].rootNodes[0][0]',
           predicate: 'must be a direct child file name without path separators',
-          reference: 'D-05',
+          reference: 'FAF §6.2.1, §6.2.2',
         }),
       ]
     );
@@ -3920,13 +3766,12 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/duplicate-element',
           element: 'faf.locals[0].rootFragments[0].rootNodes[1][0]',
           predicate: 'is a duplicate element',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3950,13 +3795,12 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/empty-tier',
           element: 'faf.locals[0].rootFragments[0].rootNodes[0]',
           predicate: 'cannot be an empty tier',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -3977,7 +3821,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'classification/horizontal-hierarchy-members',
@@ -4030,7 +3873,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/nested-root-fragment-not-direct-child',
@@ -4056,7 +3898,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'classification/unclassifiable-directory',
@@ -4097,7 +3938,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/origin-designated-foreign-domain',
@@ -4134,7 +3974,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-root-dependency-from',
@@ -4172,7 +4011,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/invalid-root-dependency-to',
@@ -4205,7 +4043,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/root-dependency-same-fragment',
@@ -4248,7 +4085,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'prepare-project',
       [
         configMessage({
           constraint: 'configuration/root-dependency-different-tree',
@@ -4286,7 +4122,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'root-node-discipline',
       []
     );
 
@@ -4310,7 +4145,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'root-node-discipline',
       [
         configMessage({
           constraint: 'dependency/root-node-discipline',
@@ -4359,7 +4193,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'root-node-discipline',
       []
     );
 
@@ -4394,7 +4227,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'root-node-discipline',
       [
         configMessage({
           constraint: 'dependency/root-node-discipline',
@@ -4438,7 +4270,6 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           ],
         },
       },
-      'acyclicity',
       [
         configMessage({
           constraint: 'unverified/cyclic-root-authorization',
@@ -4447,7 +4278,7 @@ describe('Rule 40: Le dichiarazioni Root separano appartenenza, gerarchia locale
           filePath: 'app/a.ts',
           predicate:
             'declares reciprocal root dependency authorizations without physical code cycle',
-          reference: 'D-04',
+          reference: 'FAF §5, §6.2.2',
         }),
       ]
     );

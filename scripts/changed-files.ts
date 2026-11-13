@@ -87,7 +87,10 @@ export const readRepositoryChanges = (
     ['ls-files', '--others', '--exclude-standard'],
     cwd
   );
-  const trackedPresent = readGitLines(['ls-files'], cwd);
+  const deleted = new Set(readGitLines(['ls-files', '--deleted'], cwd));
+  const trackedPresent = readGitLines(['ls-files'], cwd).filter(
+    (filePath) => !deleted.has(filePath)
+  );
   return {
     changedPaths: [...changedTracked, ...untracked],
     presentFiles: [...trackedPresent, ...untracked],

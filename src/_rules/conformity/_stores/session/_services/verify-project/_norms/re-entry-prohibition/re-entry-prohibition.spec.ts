@@ -119,7 +119,7 @@ const buildModel = (parameters: {
 };
 
 describe('verifyReEntryProhibition', () => {
-  it('reports a re-entry through one external file (re-entry table row 1)', () => {
+  it('reports a re-entry through one external file', () => {
     const model = buildModel({
       crossings: [
         {
@@ -159,7 +159,7 @@ describe('verifyReEntryProhibition', () => {
     ]);
   });
 
-  it('reports a re-entry through two external files (re-entry table row 2)', () => {
+  it('reports a re-entry through two external files', () => {
     const model = buildModel({
       crossings: [
         {
@@ -200,7 +200,7 @@ describe('verifyReEntryProhibition', () => {
     ]);
   });
 
-  it('reports a re-entry traversing another Tree (re-entry table row 3)', () => {
+  it('reports a re-entry traversing another Tree', () => {
     const model = buildModel({
       crossings: [
         {

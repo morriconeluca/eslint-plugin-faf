@@ -1,29 +1,28 @@
 import type { TCatalogEntry, TConstraint } from '../_types/outcome.type.js';
 
 import {
-  REFERENCE_D_03,
-  REFERENCE_D_04,
-  REFERENCE_D_05,
-  REFERENCE_D_06,
-  REFERENCE_D_07,
-  REFERENCE_D_08,
-  REFERENCE_D_09,
-  REFERENCE_D_14,
+  REFERENCE_FAF_1_2,
+  REFERENCE_FAF_1_2_6_9,
+  REFERENCE_FAF_3,
+  REFERENCE_FAF_3_6_9,
   REFERENCE_FAF_4,
   REFERENCE_FAF_4_6_3_1,
   REFERENCE_FAF_4_6_3_5_6_6,
   REFERENCE_FAF_4_6_7,
   REFERENCE_FAF_5,
+  REFERENCE_FAF_5_6_2_2,
   REFERENCE_FAF_6,
   REFERENCE_FAF_6_1_1,
   REFERENCE_FAF_6_1_3,
   REFERENCE_FAF_6_2,
   REFERENCE_FAF_6_2_1,
+  REFERENCE_FAF_6_2_1_6_2_2,
   REFERENCE_FAF_6_2_2,
   REFERENCE_FAF_6_3_1,
   REFERENCE_FAF_6_3_2_MULTIPLE,
   REFERENCE_FAF_6_3_3,
   REFERENCE_FAF_6_3_5,
+  REFERENCE_FAF_6_5_6_9,
   REFERENCE_FAF_6_6_2,
   REFERENCE_FAF_6_7,
   REFERENCE_FAF_6_8,
@@ -135,20 +134,20 @@ export const OUTCOME_CATALOG = {
   'configuration/commonjs-package-type': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate:
       'requires nearest package.json not to declare "type": "commonjs"',
   },
   'configuration/config-load-failure': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'failed to load configuration',
   },
   'configuration/conflicting-origin-kind': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_06,
+    normativeReference: REFERENCE_FAF_6_5_6_9,
     predicate: 'cannot be declared as both a Root Layer and a Root Fragment',
   },
   'configuration/contradictory-root-foreign': {
@@ -173,7 +172,7 @@ export const OUTCOME_CATALOG = {
   'configuration/duplicate-element': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'is a duplicate element',
   },
   'configuration/duplicate-implicit-extension': {
@@ -191,7 +190,7 @@ export const OUTCOME_CATALOG = {
   'configuration/duplicate-origin': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_06,
+    normativeReference: REFERENCE_FAF_3,
     predicate: 'is declared more than once as a tree origin',
   },
   'configuration/duplicate-role-name': {
@@ -203,37 +202,37 @@ export const OUTCOME_CATALOG = {
   'configuration/empty-list': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'cannot be an empty list',
   },
   'configuration/empty-string': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'cannot be an empty string',
   },
   'configuration/empty-tier': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'cannot be an empty tier',
   },
   'configuration/expected-directory': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'must be a directory',
   },
   'configuration/expected-file': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'must be a file',
   },
   'configuration/explicit-undefined': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'cannot be explicitly undefined',
   },
   'configuration/external-dependency-to-alias': {
@@ -308,13 +307,13 @@ export const OUTCOME_CATALOG = {
   'configuration/invalid-default-export-function': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'cannot export a function as its default export',
   },
   'configuration/invalid-default-export-promise': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'cannot export a Promise as its default export',
   },
   'configuration/invalid-external-dependency-source': {
@@ -326,13 +325,13 @@ export const OUTCOME_CATALOG = {
   'configuration/invalid-file-name': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_05,
+    normativeReference: REFERENCE_FAF_6_2_1_6_2_2,
     predicate: 'must be a direct child file name without path separators',
   },
   'configuration/invalid-foreign-pattern': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_05,
+    normativeReference: REFERENCE_FAF_6_7,
     predicate: 'must adhere to allowed glob pattern grammar',
   },
   'configuration/invalid-implicit-extension': {
@@ -345,19 +344,19 @@ export const OUTCOME_CATALOG = {
   'configuration/invalid-literal-path': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_05,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'must be a POSIX relative path without empty or parent segments',
   },
   'configuration/invalid-origin': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_06,
+    normativeReference: REFERENCE_FAF_3,
     predicate: 'must be a directory',
   },
   'configuration/invalid-package-json': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'is invalid or unreadable',
   },
   'configuration/invalid-public-root-node': {
@@ -381,31 +380,31 @@ export const OUTCOME_CATALOG = {
   'configuration/invalid-type': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'has an invalid type',
   },
   'configuration/missing-config-file': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'was not found',
   },
   'configuration/missing-default-export': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'must declare a default export',
   },
   'configuration/missing-origin': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_06,
+    normativeReference: REFERENCE_FAF_3,
     predicate: 'must be an existing tree origin directory',
   },
   'configuration/missing-property': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'is required and missing',
   },
   'configuration/missing-roles': {
@@ -423,19 +422,19 @@ export const OUTCOME_CATALOG = {
   'configuration/non-existent-path': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'does not exist',
   },
   'configuration/null-forbidden': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'cannot be null',
   },
   'configuration/origin-contained-in-other-tree': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_06,
+    normativeReference: REFERENCE_FAF_3,
     predicate: 'cannot be contained within another tree',
   },
   'configuration/origin-designated-foreign-domain': {
@@ -447,7 +446,7 @@ export const OUTCOME_CATALOG = {
   'configuration/overlapping-origins': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_06,
+    normativeReference: REFERENCE_FAF_3,
     predicate: 'overlaps with another declared tree origin',
   },
   'configuration/public-root-node-not-enumerated': {
@@ -502,7 +501,7 @@ export const OUTCOME_CATALOG = {
   'configuration/scope-mismatch': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'cannot be declared in this configuration scope',
   },
   'configuration/tree-dependency-from-outside-scope': {
@@ -527,7 +526,7 @@ export const OUTCOME_CATALOG = {
   'configuration/unclonable-config-value': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'exports a default value that cannot be cloned',
   },
   'configuration/undeclared-sub-root-fragment': {
@@ -546,7 +545,7 @@ export const OUTCOME_CATALOG = {
   'configuration/unknown-property': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_14,
+    normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'is not a recognized property',
   },
   'configuration/unresolvable-alias-base': {
@@ -558,13 +557,13 @@ export const OUTCOME_CATALOG = {
   'configuration/unresolved-relative-import': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'requires relative imports to include explicit file extensions',
   },
   'configuration/unsupported-typescript-syntax': {
     family: 'configuration',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'contains unsupported non-strippable TypeScript syntax',
   },
   'dependency/access-node-sources': {
@@ -703,64 +702,64 @@ export const OUTCOME_CATALOG = {
   'unverified/config-loading-timeout': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_09,
+    normativeReference: REFERENCE_FAF_1_2,
     predicate: 'timed out during configuration loading',
   },
   'unverified/cyclic-root-authorization': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_04,
+    normativeReference: REFERENCE_FAF_5_6_2_2,
     predicate:
       'declares reciprocal root dependency authorizations without physical code cycle',
   },
   'unverified/cyclic-tree-authorization': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_04,
+    normativeReference: REFERENCE_FAF_7_2,
     predicate:
       'declares reciprocal tree dependencies without physical code cycle',
   },
   'unverified/non-literal-dynamic-import': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_07,
+    normativeReference: REFERENCE_FAF_4,
     predicate:
       'contains a non-literal dynamic import that cannot be resolved statically',
   },
   'unverified/symbolic-link': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_06,
+    normativeReference: REFERENCE_FAF_3_6_9,
     predicate: 'is a symbolic link within a tree',
   },
   'unverified/unreadable-entry': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_06,
+    normativeReference: REFERENCE_FAF_6_9,
     predicate: 'could not be inspected',
   },
   'unverified/unreadable-external-file': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_03,
+    normativeReference: REFERENCE_FAF_7_3,
     predicate: 'could not be read',
   },
   'unverified/unreadable-origin': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_06,
+    normativeReference: REFERENCE_FAF_3,
     predicate: 'could not be accessed',
   },
   'unverified/unresolved-import': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_08,
+    normativeReference: REFERENCE_FAF_4,
     predicate: 'contains an import that could not be resolved',
   },
   'unverified/unsupported-syntax': {
     family: 'unverified',
     form: 'element',
-    normativeReference: REFERENCE_D_07,
+    normativeReference: REFERENCE_FAF_4,
     predicate: 'contains unsupported syntax',
   },
 } as const satisfies Record<TConstraint, TCatalogEntry>;

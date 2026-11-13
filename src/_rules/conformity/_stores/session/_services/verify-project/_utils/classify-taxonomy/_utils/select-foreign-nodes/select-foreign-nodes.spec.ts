@@ -71,7 +71,7 @@ describe('selectForeignNodes', () => {
     expect(result.foreignDomainPaths.size).toBe(0);
   });
 
-  describe("Scenario: Applicare i pattern ai file nell'ambito src (17 rows)", () => {
+  describe('applies patterns to files within the src scope', () => {
     const rawEntries: TRawInventoryEntry[] = [
       createRawEntry('src', 'directory'),
       createRawEntry('src/README.md', 'file'),
@@ -147,7 +147,7 @@ describe('selectForeignNodes', () => {
     }
   });
 
-  describe('Scenario: Le selezioni Foreign si uniscono senza introdurre nuove classificazioni', () => {
+  describe('unions Foreign selections without introducing new classifications', () => {
     it('unifies foreign domains, individual files, and families without duplicating', () => {
       const rawEntries: TRawInventoryEntry[] = [
         createRawEntry('src', 'directory'),
@@ -221,7 +221,7 @@ describe('selectForeignNodes', () => {
     });
   });
 
-  describe('Scenario: La famiglia Markdown locale viene ripetuta per conservarla dopo la sostituzione', () => {
+  describe('repeats the local Markdown family to preserve it after replacement', () => {
     it('selects markdown files when family is present and deselects when family is absent', () => {
       const rawEntries: TRawInventoryEntry[] = [
         createRawEntry('src', 'directory'),

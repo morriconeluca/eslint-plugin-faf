@@ -1,28 +1,26 @@
-export const REFERENCE_D_03 = 'D-03';
-export const REFERENCE_D_04 = 'D-04';
-export const REFERENCE_D_05 = 'D-05';
-export const REFERENCE_D_06 = 'D-06';
-export const REFERENCE_D_07 = 'D-07';
-export const REFERENCE_D_08 = 'D-08';
-export const REFERENCE_D_09 = 'D-09';
-export const REFERENCE_D_14 = 'D-14';
-
+export const REFERENCE_FAF_1_2 = 'FAF §1.2';
+export const REFERENCE_FAF_1_2_6_9 = 'FAF §1.2, §6.9';
+export const REFERENCE_FAF_3 = 'FAF §3';
+export const REFERENCE_FAF_3_6_9 = 'FAF §3, §6.9';
 export const REFERENCE_FAF_4 = 'FAF §4';
 export const REFERENCE_FAF_4_6_3_1 = 'FAF §4, §6.3.1';
 export const REFERENCE_FAF_4_6_3_5_6_6 = 'FAF §4, §6.3.5, §6.6';
 export const REFERENCE_FAF_4_6_7 = 'FAF §4, §6.7';
 export const REFERENCE_FAF_5 = 'FAF §5';
+export const REFERENCE_FAF_5_6_2_2 = 'FAF §5, §6.2.2';
 export const REFERENCE_FAF_6 = 'FAF §6';
 export const REFERENCE_FAF_6_1_1 = 'FAF §6.1.1';
 export const REFERENCE_FAF_6_1_3 = 'FAF §6.1.3';
 export const REFERENCE_FAF_6_2 = 'FAF §6.2';
 export const REFERENCE_FAF_6_2_1 = 'FAF §6.2.1';
+export const REFERENCE_FAF_6_2_1_6_2_2 = 'FAF §6.2.1, §6.2.2';
 export const REFERENCE_FAF_6_2_2 = 'FAF §6.2.2';
 export const REFERENCE_FAF_6_3_1 = 'FAF §6.3.1';
 export const REFERENCE_FAF_6_3_2_MULTIPLE =
   'FAF §6.3.2, §6.4.1, §6.5.1, §6.6.1';
 export const REFERENCE_FAF_6_3_3 = 'FAF §6.3.3';
 export const REFERENCE_FAF_6_3_5 = 'FAF §6.3.5';
+export const REFERENCE_FAF_6_5_6_9 = 'FAF §6.5, §6.9';
 export const REFERENCE_FAF_6_6_2 = 'FAF §6.6.2';
 export const REFERENCE_FAF_6_7 = 'FAF §6.7';
 export const REFERENCE_FAF_6_8 = 'FAF §6.8';

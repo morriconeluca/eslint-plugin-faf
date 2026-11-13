@@ -1,4 +1,4 @@
-export function isAuthEdgeValid(
+export function isAuthorizationEdgeValid(
   u: number,
   v: number,
   seenEdges: ReadonlySet<string>

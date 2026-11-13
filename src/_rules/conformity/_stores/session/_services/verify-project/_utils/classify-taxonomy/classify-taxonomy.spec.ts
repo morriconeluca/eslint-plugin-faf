@@ -425,8 +425,8 @@ describe('classifyTaxonomy', () => {
     ).toBe(false);
   });
 
-  describe('Il perimetro di FAF è costituito da Fractal Trees autonomi e disgiunti', () => {
-    it('Analizzare più Trees indipendenti', () => {
+  describe('FAF perimeter consists of autonomous and disjoint Fractal Trees', () => {
+    it('analyzes multiple independent Fractal Trees', () => {
       const clientCatalog = catalogOf([
         { category: '_components', name: 'widget' },
       ]);
@@ -470,7 +470,7 @@ describe('classifyTaxonomy', () => {
       ).toBe('handler');
     });
 
-    it('Una rotta annidata è un Root Fragment dello stesso Tree, non una nuova origine', () => {
+    it('classifies a nested route as a Root Fragment of the same Fractal Tree, not a new origin', () => {
       const result = classify(
         ['app/page.tsx', 'app/blog/page.tsx', 'app/blog/article/page.tsx'],
         [
@@ -508,7 +508,7 @@ describe('classifyTaxonomy', () => {
       expect(kindOf(result, 'app/blog/page.tsx').nodeKind).toBe('root-node');
     });
 
-    it('La designazione Root Fragment è necessaria', () => {
+    it('requires a Root Fragment designation', () => {
       const result = classify(
         ['src/blog/page.tsx', 'src/blog/layout.tsx'],
         [
@@ -537,7 +537,7 @@ describe('classifyTaxonomy', () => {
     });
   });
 
-  describe('Un file nominato come un Role non cambia la qualifica di Root Node', () => {
+  describe('a file named after a Role retains its Root Node qualification', () => {
     it('classifies named root files as Root Nodes with absent Role and null rank', () => {
       const result = classify(
         [
@@ -581,7 +581,7 @@ describe('classifyTaxonomy', () => {
     });
   });
 
-  describe('Limitare i Roles impliciti agli Asset Category Nodes', () => {
+  describe('restricts implicit Roles to Asset Category Nodes', () => {
     it.each([
       [
         'theme.css',
@@ -646,7 +646,7 @@ describe('classifyTaxonomy', () => {
     );
   });
 
-  describe('Derivare il Master dalla classificazione senza una scelta separata per Fragment', () => {
+  describe('derives the Master Node from classification without separate per-Fragment choice', () => {
     it.each([
       ['src/_components/button/button.component.tsx', 'component'],
       ['src/_components/button/_utils/normalize/normalize.util.ts', 'util'],
@@ -700,7 +700,7 @@ describe('classifyTaxonomy', () => {
     });
   });
 
-  it('La classificazione del Sub-Fragment non eredita il Role del Parent Fragment', () => {
+  it('does not inherit the Parent Fragment Role when classifying a Sub-Fragment', () => {
     const result = classify(
       [
         'src/_components/button/button.component.tsx',
@@ -722,7 +722,7 @@ describe('classifyTaxonomy', () => {
     ).toBe('util');
   });
 
-  it("Riconoscere l'anatomia completa di un Fragment", () => {
+  it('recognizes the complete anatomy of a Fragment', () => {
     const result = classify(
       [
         'src/_components/button/button.component.tsx',
@@ -772,7 +772,7 @@ describe('classifyTaxonomy', () => {
     ).toBe(standardCatalog.topRank);
   });
 
-  it('Calcolare la relazione di Sub-Fragment senza confonderla con il contenitore diretto', () => {
+  it('computes Sub-Fragment relation without conflating it with the direct container', () => {
     const result = classify(
       [
         'src/_components/a/a.component.tsx',
@@ -802,7 +802,7 @@ describe('classifyTaxonomy', () => {
     );
   });
 
-  it('Il nome _tooling non è da solo una designazione Foreign', () => {
+  it('does not treat the name _tooling alone as a Foreign designation', () => {
     const result = classify(
       ['src/_tooling/setup.ts', 'src/_components/button/_tooling/setup.ts'],
       [treeOf('src', { originKind: 'root-layer', rootFragments: [] })]
@@ -816,7 +816,7 @@ describe('classifyTaxonomy', () => {
     ).toBeNull();
   });
 
-  it('Il Foreign Domain puntuale prevale sul nome di Category', () => {
+  it('prioritizes a punctual Foreign Domain over a Category name', () => {
     const result = classify(
       [
         'src/_configs/secret.ts',
@@ -849,7 +849,7 @@ describe('classifyTaxonomy', () => {
     ).toBe(true);
   });
 
-  it("Il segmento mimetico prevale sull'associazione nominale della Category", () => {
+  it('prioritizes the mimetic segment over the nominal Category association', () => {
     const result = classify(
       [
         'src/_apis/_pages/get-pages/get-pages.api.ts',
@@ -871,7 +871,7 @@ describe('classifyTaxonomy', () => {
     );
   });
 
-  it('I Layers si riconoscono per esclusione nei contenitori idonei', () => {
+  it('recognizes Layers by exclusion within eligible containers', () => {
     const result = classify(
       [
         'src/_domain/readme.ts',
@@ -894,7 +894,7 @@ describe('classifyTaxonomy', () => {
     ).toBeNull();
   });
 
-  it('Sub-Categories e Path Sub-Categories si riconoscono per esclusione e collocazione', () => {
+  it('recognizes Sub-Categories and Path Sub-Categories by exclusion and placement', () => {
     const result = classify(
       ['src/_components/_atoms/readme.ts', 'src/_apis/_todos/readme.ts'],
       [
@@ -913,7 +913,7 @@ describe('classifyTaxonomy', () => {
     );
   });
 
-  it('Il Fractal Branch si riconosce dal nome riservato', () => {
+  it('recognizes a Fractal Branch from its reserved name', () => {
     const result = classify(
       ['src/_apis/_apis@shared/readme.ts', 'src/_apis/_wrong@shared/readme.ts'],
       [treeOf('src', { originKind: 'root-layer', rootFragments: [] })]
@@ -924,7 +924,7 @@ describe('classifyTaxonomy', () => {
     expect(kindOf(result, 'src/_apis/_wrong@shared').domainKind).toBeNull();
   });
 
-  it('Nessun file sfugge alla classificazione perché privo di importazioni', () => {
+  it('classifies files even when they have no imports', () => {
     const result = classify(
       ['src/notes/orphan.ts'],
       [
@@ -1138,7 +1138,7 @@ describe('classifyTaxonomy', () => {
     ]);
   });
 
-  it('Le Path Sub-Categories propagano il Role senza diventare Categories autonome', () => {
+  it('propagates Role through Path Sub-Categories without creating autonomous Categories', () => {
     const result = classify(
       [
         'src/_apis/_todos/_[todo-id]/_status/patch-todo-status/patch-todo-status.api.ts',
@@ -1164,7 +1164,7 @@ describe('classifyTaxonomy', () => {
     ).toBe('master-node');
   });
 
-  it('Le regole mimetiche terminano al confine delle unità e dei Branches organizzati', () => {
+  it('terminates mimetic rules at the boundary of units and organized Branches', () => {
     const result = classify(
       [
         'src/_apis/_todos/_todos@shared/_utils/normalize/normalize.util.ts',
@@ -1195,7 +1195,7 @@ describe('classifyTaxonomy', () => {
     ).toBe('util');
   });
 
-  it('Distinguere routing programmatico e contratti scansionati dal framework', () => {
+  it('distinguishes programmatic routing from contracts scanned by the framework', () => {
     const result = classify(
       [
         'src/_pages/home/home.page.tsx',
@@ -1348,7 +1348,7 @@ describe('classifyTaxonomy', () => {
     ).toBe('src/_components/table');
   });
 
-  it('classifies the repository scaffold described in PLAN.md §5.5', () => {
+  it('classifies the plugin repository Root Fragment architecture', () => {
     const repositoryCatalog = catalogOf(
       [
         { category: '_constants', isCategoryNode: true, name: 'constant' },

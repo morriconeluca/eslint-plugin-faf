@@ -127,7 +127,7 @@ describe('checkCyclicAuthorizations', () => {
         family: 'unverified',
         message:
           "'a' declares reciprocal tree dependencies without physical code cycle",
-        normativeReference: 'D-04',
+        normativeReference: 'FAF §7.2',
         reason: 'cyclic-tree-authorization',
       },
     ]);
@@ -193,7 +193,7 @@ describe('checkCyclicAuthorizations', () => {
         family: 'unverified',
         message:
           "'src/a' declares reciprocal root dependency authorizations without physical code cycle",
-        normativeReference: 'D-04',
+        normativeReference: 'FAF §5, §6.2.2',
         reason: 'cyclic-root-authorization',
       },
     ]);
@@ -230,16 +230,16 @@ describe('checkCyclicAuthorizations', () => {
     expect(checkCyclicAuthorizations(model, [], dependencyCycles)).toEqual([]);
   });
 
-  it('sorts multiple cyclic authorization outcomes deterministically', () => {
+  it('sorts cyclic authorization outcomes by element across tree and root cycles', () => {
     const rootFragmentA: TEffectiveRootFragment = {
-      dependencyPairs: [{ from: 'src/a/main.ts', to: 'src/b/main.ts' }],
-      path: 'src/a',
+      dependencyPairs: [{ from: 'app/a/main.ts', to: 'app/b/main.ts' }],
+      path: 'app/a',
       rootNodes: [{ name: 'main.ts', rank: 0 }],
       subRootFragments: [],
     };
     const rootFragmentB: TEffectiveRootFragment = {
-      dependencyPairs: [{ from: 'src/b/main.ts', to: 'src/a/main.ts' }],
-      path: 'src/b',
+      dependencyPairs: [{ from: 'app/b/main.ts', to: 'app/a/main.ts' }],
+      path: 'app/b',
       rootNodes: [{ name: 'main.ts', rank: 0 }],
       subRootFragments: [],
     };
@@ -247,20 +247,21 @@ describe('checkCyclicAuthorizations', () => {
     const model = createModel({
       trees: [
         createTreeDeclaration({
-          originPath: 'src',
+          originPath: 'app',
           rootFragments: [rootFragmentA, rootFragmentB],
-          treeDependencyPairs: [{ from: 'src', to: 'z' }],
+        }),
+        createTreeDeclaration({
+          originPath: 'y',
+          treeDependencyPairs: [{ from: 'y', to: 'z' }],
         }),
         createTreeDeclaration({
           originPath: 'z',
-          treeDependencyPairs: [{ from: 'z', to: 'src' }],
+          treeDependencyPairs: [{ from: 'z', to: 'y' }],
         }),
       ],
     });
 
     const outcomes = checkCyclicAuthorizations(model, [], []);
-    expect(outcomes).toHaveLength(2);
-    expect(outcomes[0]?.element).toBe('src');
-    expect(outcomes[1]?.element).toBe('src/a');
+    expect(outcomes.map((outcome) => outcome.element)).toEqual(['app/a', 'y']);
   });
 });

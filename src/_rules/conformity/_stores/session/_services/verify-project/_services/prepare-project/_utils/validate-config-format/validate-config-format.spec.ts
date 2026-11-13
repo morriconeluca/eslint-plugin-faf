@@ -179,7 +179,7 @@ describe('validateConfigFormat', () => {
     expect(result.ok).toBe(true);
   });
 
-  it('validates the literal faf_next fafconfig.ts successfully', () => {
+  it('validates a complete multi-tree fafconfig.ts successfully', () => {
     const result = validateConfigFormat(FAF_NEXT_EXAMPLE_CONFIG);
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -322,7 +322,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/null-forbidden',
       description: 'null root object',
       message: 'Configuration value cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: null,
       propertyPath: '',
     },
@@ -330,7 +330,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/invalid-type',
       description: 'primitive root string',
       message: 'Configuration value must be a plain object.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: 'invalid',
       propertyPath: '',
     },
@@ -338,7 +338,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/missing-property',
       description: 'missing faf property',
       message: 'Required property "faf" is missing.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {},
       propertyPath: 'faf',
     },
@@ -347,7 +347,7 @@ describe('validateConfigFormat', () => {
       description: 'root property trees',
       message:
         'Unknown property "trees" is forbidden on root configuration object.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: [{ rootLayers: ['src'] }] }, trees: [] },
       propertyPath: 'trees',
     },
@@ -356,7 +356,7 @@ describe('validateConfigFormat', () => {
       description: 'root property $schema',
       message:
         'Unknown property "$schema" is forbidden on root configuration object.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         $schema: 'https://example.com',
         faf: { locals: [{ rootLayers: ['src'] }] },
@@ -368,7 +368,7 @@ describe('validateConfigFormat', () => {
       description: 'root property severity',
       message:
         'Unknown property "severity" is forbidden on root configuration object.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: { locals: [{ rootLayers: ['src'] }] },
         severity: 'error',
@@ -380,7 +380,7 @@ describe('validateConfigFormat', () => {
       description: 'root property warnings',
       message:
         'Unknown property "warnings" is forbidden on root configuration object.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: [{ rootLayers: ['src'] }] }, warnings: [] },
       propertyPath: 'warnings',
     },
@@ -388,7 +388,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/unknown-property',
       description: 'property layers in common',
       message: 'Unknown property "layers" is forbidden.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: { common: { layers: [] }, locals: [{ rootLayers: ['src'] }] },
       },
@@ -398,7 +398,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/unknown-property',
       description: 'property publicNodes in common',
       message: 'Unknown property "publicNodes" is forbidden.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: { common: { publicNodes: [] }, locals: [{ rootLayers: ['src'] }] },
       },
@@ -408,7 +408,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/unknown-property',
       description: 'property namingContracts in locals',
       message: 'Unknown property "namingContracts" is forbidden.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: { locals: [{ namingContracts: [], rootLayers: ['src'] }] },
       },
@@ -419,7 +419,7 @@ describe('validateConfigFormat', () => {
       description: 'rootLayers in common',
       message:
         'Property "rootLayers" cannot be declared in common; root origins must be declared in locals.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: {
           common: { rootLayers: ['src'] },
@@ -433,7 +433,7 @@ describe('validateConfigFormat', () => {
       description: 'rootFragments in common',
       message:
         'Property "rootFragments" cannot be declared in common; root origins must be declared in locals.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: {
           common: { rootFragments: [] },
@@ -447,7 +447,7 @@ describe('validateConfigFormat', () => {
       description: 'aliases in locals',
       message:
         'Property "aliases" cannot be declared in locals; it must be declared exclusively in common.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: [{ aliases: {}, rootLayers: ['src'] }] } },
       propertyPath: 'faf.locals[0].aliases',
     },
@@ -455,7 +455,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/missing-property',
       description: 'missing locals in faf',
       message: 'Required property "locals" is missing.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: {} },
       propertyPath: 'faf.locals',
     },
@@ -463,7 +463,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/null-forbidden',
       description: 'null locals',
       message: 'Property "locals" cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: null } },
       propertyPath: 'faf.locals',
     },
@@ -471,7 +471,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/invalid-type',
       description: 'non-array locals',
       message: 'Property "locals" must be an array.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: {} } },
       propertyPath: 'faf.locals',
     },
@@ -480,7 +480,7 @@ describe('validateConfigFormat', () => {
       description: 'empty locals',
       message:
         'Property "locals" must contain at least one local configuration.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: [] } },
       propertyPath: 'faf.locals',
     },
@@ -488,7 +488,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/null-forbidden',
       description: 'null element in locals',
       message: 'Local configuration element cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: [null] } },
       propertyPath: 'faf.locals[0]',
     },
@@ -496,7 +496,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/invalid-type',
       description: 'non-object element in locals',
       message: 'Local configuration element must be an object.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: ['invalid'] } },
       propertyPath: 'faf.locals[0]',
     },
@@ -505,7 +505,7 @@ describe('validateConfigFormat', () => {
       description: 'local configuration without any origin',
       message:
         'Local configuration must declare at least one origin via "rootLayers" or "rootFragments".',
-      normativeReference: 'D-06',
+      normativeReference: 'FAF §3',
       payload: { faf: { locals: [{ roles: [] }] } },
       propertyPath: 'faf.locals[0]',
     },
@@ -514,7 +514,7 @@ describe('validateConfigFormat', () => {
       description: 'local configuration with both origins empty',
       message:
         'Both "rootLayers" and "rootFragments" are empty; at least one non-empty origin must be provided.',
-      normativeReference: 'D-06',
+      normativeReference: 'FAF §3',
       payload: { faf: { locals: [{ rootFragments: [], rootLayers: [] }] } },
       propertyPath: 'faf.locals[0]',
     },
@@ -523,7 +523,7 @@ describe('validateConfigFormat', () => {
       description: 'sole origin rootLayers is empty',
       message:
         'Origin list "rootLayers" cannot be empty when it is the sole origin.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: [{ rootLayers: [] }] } },
       propertyPath: 'faf.locals[0].rootLayers',
     },
@@ -532,7 +532,7 @@ describe('validateConfigFormat', () => {
       description: 'sole origin rootFragments is empty',
       message:
         'Origin list "rootFragments" cannot be empty when it is the sole origin.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: [{ rootFragments: [] }] } },
       propertyPath: 'faf.locals[0].rootFragments',
     },
@@ -540,7 +540,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/null-forbidden',
       description: 'null roles in local config',
       message: 'Property "roles" cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { locals: [{ roles: null, rootLayers: ['src'] }] } },
       propertyPath: 'faf.locals[0].roles',
     },
@@ -548,7 +548,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/null-forbidden',
       description: 'null common',
       message: 'Property "common" cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { common: null, locals: [{ rootLayers: ['src'] }] } },
       propertyPath: 'faf.common',
     },
@@ -556,7 +556,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/invalid-type',
       description: 'non-object common',
       message: 'Property "common" must be an object.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: { common: 'invalid', locals: [{ rootLayers: ['src'] }] },
       },
@@ -566,7 +566,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/invalid-foreign-pattern',
       description: 'invalid foreign pattern in common',
       message: 'Invalid foreign pattern "!*.md": negation.',
-      normativeReference: 'D-05',
+      normativeReference: 'FAF §6.7',
       payload: {
         faf: {
           common: { foreignNodes: [{ paths: ['src'], patterns: ['!*.md'] }] },
@@ -592,7 +592,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/missing-property',
       description: 'missing from in common treeDependencies',
       message: 'Required property "from" is missing.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: {
           common: { treeDependencies: [{ to: ['lib'] }] },
@@ -605,7 +605,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/invalid-foreign-pattern',
       description: 'invalid foreign pattern in local',
       message: 'Invalid foreign pattern "!*.md": negation.',
-      normativeReference: 'D-05',
+      normativeReference: 'FAF §6.7',
       payload: {
         faf: {
           locals: [
@@ -639,7 +639,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/empty-list',
       description: 'empty actions in local mimeticPathStructures',
       message: 'Property "actions" cannot be empty when present.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: {
           locals: [
@@ -656,7 +656,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/missing-property',
       description: 'missing to in local treeDependencies',
       message: 'Required property "to" is missing.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: {
           locals: [
@@ -674,7 +674,7 @@ describe('validateConfigFormat', () => {
       description: 'slash in root node in local rootFragments',
       message:
         'Root node file name "app/app.tsx" must be a direct child without "/".',
-      normativeReference: 'D-05',
+      normativeReference: 'FAF §6.2.1, §6.2.2',
       payload: {
         faf: {
           locals: [
@@ -690,7 +690,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/invalid-literal-path',
       description: 'invalid literal path in local rootLayers',
       message: 'Invalid literal config path "./src".',
-      normativeReference: 'D-05',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: {
           locals: [{ rootLayers: ['./src'] }],
@@ -722,7 +722,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/null-forbidden',
       description: 'null faf property',
       message: 'Property "faf" cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: null },
       propertyPath: 'faf',
     },
@@ -730,7 +730,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/invalid-type',
       description: 'non-object faf property',
       message: 'Property "faf" must be an object.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: 123 },
       propertyPath: 'faf',
     },
@@ -738,7 +738,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/unknown-property',
       description: 'unknown property on faf object',
       message: 'Unknown property "severity" is forbidden on faf object.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: {
         faf: { locals: [{ rootLayers: ['src'] }], severity: 'error' },
       },
@@ -748,7 +748,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/null-forbidden',
       description: 'null property on faf object',
       message: 'Property "common" cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: { common: null, locals: [{ rootLayers: ['src'] }] } },
       propertyPath: 'faf.common',
     },
@@ -756,7 +756,7 @@ describe('validateConfigFormat', () => {
       constraint: 'configuration/null-forbidden',
       description: 'null property on root object',
       message: 'Property "faf" cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: { faf: null },
       propertyPath: 'faf',
     },
@@ -818,7 +818,7 @@ describe('validateConfigFormat', () => {
     if (outcome?.family !== 'configuration') {
       return;
     }
-    expect(outcome.normativeReference).toBe('D-14');
+    expect(outcome.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome.propertyPath).toBe('faf.common');
     expect(outcome.element).toBe('faf.common');
     expect(outcome.message).toBe("'faf.common' cannot be explicitly undefined");
@@ -852,7 +852,7 @@ describe('validateConfigFormat', () => {
     if (outcome?.family !== 'configuration') {
       return;
     }
-    expect(outcome.normativeReference).toBe('D-14');
+    expect(outcome.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome.propertyPath).toBe('faf');
     expect(outcome.element).toBe('faf');
     expect(outcome.message).toBe("'faf' cannot be explicitly undefined");
@@ -881,7 +881,7 @@ describe('validateConfigFormat', () => {
       (o) => o.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.message).toBe(
       "'faf.locals[0].roles' cannot be explicitly undefined"
     );
@@ -912,7 +912,7 @@ describe('validateConfigFormat', () => {
       (o) => o.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.message).toBe(
       "'faf.common.roles' cannot be explicitly undefined"
     );
@@ -990,10 +990,7 @@ describe('validateConfigFormat', () => {
 
       expect(outcome.element).toBe(outcome.propertyPath);
       expect(outcome.constraint.startsWith('configuration/')).toBe(true);
-      expect(
-        outcome.normativeReference.startsWith('FAF §') ||
-          outcome.normativeReference.startsWith('D-')
-      ).toBe(true);
+      expect(outcome.normativeReference.startsWith('FAF §')).toBe(true);
     }
   });
 });

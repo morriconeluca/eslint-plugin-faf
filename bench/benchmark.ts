@@ -52,7 +52,7 @@ const printScaleResult = (result: TBenchmarkResult): void => {
     `Estimated per-file overhead:  ${formatMilliseconds(result.overheadPerFileMs)}\n`
   );
 
-  process.stdout.write('\nBudget Verification (PLAN.md §10 targets):\n');
+  process.stdout.write('\nBudget Verification:\n');
   process.stdout.write(
     `${'Metric'.padEnd(30, ' ')} | ${'Observed'.padStart(12, ' ')} | ${'Target Budget'.padStart(14, ' ')} | ${'Status'.padStart(10, ' ')}\n`
   );

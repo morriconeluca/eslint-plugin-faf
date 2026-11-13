@@ -1,13 +1,13 @@
 import type { TEffectiveTree } from '../../../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
-import type { TRootAuthGraph } from './build-root-auth-graph.type.js';
+import type { TRootAuthorizationGraph } from './build-root-authorization-graph.type.js';
 
 import { compareOrdinal } from '../../../../../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 import { flattenRootFragments } from './_utils/flatten-root-fragments/index.js';
-import { populateRootAuthAdjacency } from './_utils/populate-root-auth-adjacency/index.js';
+import { populateRootAuthorizationAdjacency } from './_utils/populate-root-authorization-adjacency/index.js';
 
-export function buildRootAuthGraph(
+export function buildRootAuthorizationGraph(
   trees: readonly TEffectiveTree[]
-): TRootAuthGraph {
+): TRootAuthorizationGraph {
   const allRootFragments = flattenRootFragments(
     trees.flatMap((tree) => tree.rootFragments)
   );
@@ -15,7 +15,7 @@ export function buildRootAuthGraph(
   const rawPaths = [...new Set(allRootFragments.map((f) => f.path))];
   const sortedPaths = [...rawPaths];
   sortedPaths.sort(compareOrdinal);
-  const fragCount = sortedPaths.length;
+  const fragmentCount = sortedPaths.length;
 
   const pathToIndex = new Map<string, number>();
   for (const [index, p] of sortedPaths.entries()) {
@@ -30,10 +30,10 @@ export function buildRootAuthGraph(
     }
   }
 
-  const adjacency: number[][] = Array.from({ length: fragCount }, () => []);
+  const adjacency: number[][] = Array.from({ length: fragmentCount }, () => []);
   const seenEdges = new Set<string>();
 
-  populateRootAuthAdjacency(
+  populateRootAuthorizationAdjacency(
     allRootFragments,
     pathToIndex,
     nodeToFragmentPath,
@@ -44,7 +44,7 @@ export function buildRootAuthGraph(
   return {
     adjacency,
     allRootFragments,
-    fragCount,
+    fragmentCount,
     fragmentPaths: sortedPaths,
     nodeToFragmentPath,
   };

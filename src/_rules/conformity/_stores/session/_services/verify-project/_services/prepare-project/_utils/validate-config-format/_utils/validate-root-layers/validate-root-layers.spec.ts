@@ -14,7 +14,7 @@ describe('validateRootLayers', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.locals[0].rootLayers');
     expect(outcome?.element).toBe('faf.locals[0].rootLayers');
     expect(outcome?.message).toBe("'faf.locals[0].rootLayers' cannot be null");
@@ -26,7 +26,7 @@ describe('validateRootLayers', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.locals[0].rootLayers');
     expect(outcome?.element).toBe('faf.locals[0].rootLayers');
     expect(outcome?.message).toBe(
@@ -46,21 +46,21 @@ describe('validateRootLayers', () => {
     {
       constraint: 'configuration/null-forbidden',
       message: "'faf.locals[0].rootLayers[0]' cannot be null",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [null],
       propertyPath: 'faf.locals[0].rootLayers[0]',
     },
     {
       constraint: 'configuration/invalid-type',
       message: "'faf.locals[0].rootLayers[0]' has an invalid type",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [123],
       propertyPath: 'faf.locals[0].rootLayers[0]',
     },
     {
       constraint: 'configuration/empty-string',
       message: "'faf.locals[0].rootLayers[0]' cannot be an empty string",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [''],
       propertyPath: 'faf.locals[0].rootLayers[0]',
     },
@@ -68,14 +68,14 @@ describe('validateRootLayers', () => {
       constraint: 'configuration/invalid-literal-path',
       message:
         "'faf.locals[0].rootLayers[0]' must be a POSIX relative path without empty or parent segments",
-      normativeReference: 'D-05',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: ['./src'],
       propertyPath: 'faf.locals[0].rootLayers[0]',
     },
     {
       constraint: 'configuration/duplicate-element',
       message: "'faf.locals[0].rootLayers[1]' is a duplicate element",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: ['src', 'src'],
       propertyPath: 'faf.locals[0].rootLayers[1]',
     },

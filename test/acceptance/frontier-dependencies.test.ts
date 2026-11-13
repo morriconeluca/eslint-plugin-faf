@@ -165,7 +165,7 @@ const unresolvedImport = (
   element: filePath,
   filePath,
   line: 1,
-  message: `unverified/unresolved-import: '${filePath}' contains an import that could not be resolved: Cannot find module '${specifier}' (D-08).`,
+  message: `unverified/unresolved-import: '${filePath}' contains an import that could not be resolved: Cannot find module '${specifier}' (FAF §4).`,
   messageId: 'unverified',
   ruleId: 'faf/conformity',
   severity: 2,
@@ -180,7 +180,7 @@ const nonLiteralDynamicImport = (
   element: filePath,
   filePath,
   line,
-  message: `unverified/non-literal-dynamic-import: '${filePath}' contains a non-literal dynamic import that cannot be resolved statically (D-07).`,
+  message: `unverified/non-literal-dynamic-import: '${filePath}' contains a non-literal dynamic import that cannot be resolved statically (FAF §4).`,
   messageId: 'unverified',
   ruleId: 'faf/conformity',
   severity: 2,
@@ -197,12 +197,11 @@ type TAliasBaseCase = {
   readonly suffix: string;
 };
 
-type TScenario = {
+type TScenarioCase = {
   readonly config: Readonly<Record<string, unknown>>;
   readonly expected: readonly TScenarioMessage[];
   readonly files?: readonly string[];
   readonly name: string;
-  readonly responsiblePart: string;
   readonly tree: FileTree;
 };
 
@@ -340,7 +339,7 @@ const build291Expected = (
   return expected;
 };
 
-const create291Scenario = (item: TAliasBaseCase): TScenario => {
+const create291Scenario = (item: TAliasBaseCase): TScenarioCase => {
   const targetFile =
     item.layer === true ? 'src/_utils/source/source.util.ts' : 'src/high.ts';
   const importSpecifier = item.file === true ? '#base' : `#base${item.suffix}`;
@@ -355,8 +354,7 @@ const create291Scenario = (item: TAliasBaseCase): TScenario => {
       resolvedTarget,
       importSpecifier
     ),
-    name: `29.1 alias base classification: ${item.label}`,
-    responsiblePart: 'path-alias-anchoring',
+    name: `alias base classification: ${item.label}`,
     tree: buildAliasTree(item),
   };
 };
@@ -431,7 +429,7 @@ const resolve294Target = (item: T294Case): string => {
   return 'b/_types/a.type.ts';
 };
 
-const create294Scenario = (item: T294Case): TScenario => {
+const create294Scenario = (item: T294Case): TScenarioCase => {
   const specifier = resolve294TargetSpecifier(item.isExternal, item.isHidden);
   const target = resolve294Target(item);
 
@@ -459,10 +457,7 @@ const create294Scenario = (item: T294Case): TScenario => {
       },
     },
     expected: build294Expected(item, target, specifier),
-    name: `29.4 aliases outside the source Tree need only destination authorization: ${item.label}`,
-    responsiblePart: item.isExternal
-      ? 'external-dependencies'
-      : 'tree-frontier',
+    name: `aliases outside the source Tree need only destination authorization: ${item.label}`,
     tree: {
       ...rootTree,
       'b/_b@shared/_types/a.type.ts': 'export type A = string;\n',
@@ -547,7 +542,7 @@ const build297Expected = (item: T297Case): readonly TScenarioMessage[] => {
   return messages;
 };
 
-const scenarios: readonly TScenario[] = [
+const SCENARIOS: readonly TScenarioCase[] = [
   {
     config: {
       faf: {
@@ -562,8 +557,7 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: [],
-    name: '12.1 Root Fragments need no Master or Access Node and allow heterogeneous Symbols',
-    responsiblePart: 'fragment-anatomy',
+    name: 'Root Fragments need no Master or Access Node and allow heterogeneous Symbols',
     tree: {
       'src/layout.tsx':
         'export const layout = 1;\nexport type Layout = string;\n',
@@ -597,8 +591,7 @@ const scenarios: readonly TScenario[] = [
             to: 'src/low.ts',
           }),
         ],
-    name: `12.2 same Root Fragment: ${label}`,
-    responsiblePart: 'root-node-discipline',
+    name: `same Root Fragment: ${label}`,
     tree: {
       ...rootTree,
       'src/high.ts': "import './low.js';\nexport const high = 1;\n",
@@ -661,8 +654,7 @@ const scenarios: readonly TScenario[] = [
               to,
             }),
           ],
-      name: `12.2 ${label}: ${allowed ? 'direct authorization' : 'no authorization'}`,
-      responsiblePart: 'root-node-discipline',
+      name: `inter-Root-Fragment ${label}: ${allowed ? 'direct authorization' : 'no authorization'}`,
       tree: {
         'src/a/main.ts':
           from === 'src/a/main.ts'
@@ -699,8 +691,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/main.css',
       }),
     ],
-    name: '12.3 Root Asset needs authorization',
-    responsiblePart: 'root-node-discipline',
+    name: 'Root Asset needs authorization',
     tree: {
       'src/main.css': 'body {}\n',
       'src/main.tsx': "import './main.css';\n",
@@ -751,8 +742,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/a/main.ts',
       }),
     ],
-    name: '12.4 authorization grants neither inverse nor transitive shortcut',
-    responsiblePart: 'root-node-discipline',
+    name: 'authorization grants neither inverse nor transitive shortcut',
     tree: {
       'src/a/main.ts': "import '../c/main.js';\n",
       'src/b/main.ts': "import '../a/main.js';\n",
@@ -784,8 +774,7 @@ const scenarios: readonly TScenario[] = [
           to: 'src/high.ts',
         }),
       ],
-      name: `12.5 ${label} cannot import a Root Node even when exposed`,
-      responsiblePart: 'root-node-discipline',
+      name: `${label} cannot import a Root Node even when exposed`,
       tree: {
         ...rootTree,
         ...layerTree,
@@ -802,8 +791,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_utils/widget/widget.util.ts',
       }),
     ],
-    name: '12.6 permitted Root re-export does not bypass Fragment encapsulation',
-    responsiblePart: 'fragment-encapsulation',
+    name: 'permitted Root re-export does not bypass Fragment encapsulation',
     tree: {
       ...rootTree,
       ...layerTree,
@@ -873,8 +861,7 @@ const scenarios: readonly TScenario[] = [
           to: target,
         }),
       ],
-      name: `25.1 resolved forbidden dependency: ${label}`,
-      responsiblePart: 'root-node-discipline',
+      name: `resolved forbidden dependency: ${label}`,
       tree: {
         'src/high.ts': `${code}\n`,
         [target]:
@@ -887,8 +874,7 @@ const scenarios: readonly TScenario[] = [
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
     expected: [],
-    name: '25.2 strings and a shadowed require create no dependency',
-    responsiblePart: 'root-node-discipline',
+    name: 'strings and a shadowed require create no dependency',
     tree: {
       ...rootTree,
       'src/high.ts':
@@ -924,8 +910,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_utils/widget/index.ts',
       }),
     ],
-    name: `25.3 equivalent resolved target: ${label}`,
-    responsiblePart: 'tree-frontier',
+    name: `equivalent resolved target: ${label}`,
     tree: {
       ...rootTree,
       ...layerTree,
@@ -958,8 +943,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_utils/widget/widget.util.ts',
       }),
     ],
-    name: '25.4 directory resolving to Master is not an Access Node',
-    responsiblePart: 'fragment-encapsulation',
+    name: 'directory resolving to Master is not an Access Node',
     tree: {
       ...rootTree,
       ...layerTree,
@@ -979,8 +963,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_styles/b.css',
       }),
     ],
-    name: '25.5 CSS sibling import is forbidden while a shared font is visible',
-    responsiblePart: 'peer-separation',
+    name: 'CSS sibling import is forbidden while a shared font is visible',
     tree: {
       'src/_styles/_styles@shared/_fonts/main.woff2': 'font',
       'src/_styles/a.css':
@@ -991,15 +974,13 @@ const scenarios: readonly TScenario[] = [
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
     expected: [unresolvedImport('src/high.ts', './missing.js')],
-    name: '25.6 unresolved imports remain explicitly unverified',
-    responsiblePart: 'collect-modules',
+    name: 'unresolved imports remain explicitly unverified',
     tree: { ...rootTree, 'src/high.ts': "import './missing.js';\n" },
   },
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
     expected: [nonLiteralDynamicImport('src/high.ts', 2)],
-    name: '25.7 runtime dynamic imports remain explicitly unverified',
-    responsiblePart: 'collect-modules',
+    name: 'runtime dynamic imports remain explicitly unverified',
     tree: {
       ...rootTree,
       'src/high.ts': "const destination = './low.js';\nimport(destination);\n",
@@ -1022,8 +1003,7 @@ const scenarios: readonly TScenario[] = [
       }),
     ],
     files: ['fafconfig.ts', 'src/high.ts'],
-    name: '25.8 dependency is checked even when ESLint does not visit the target',
-    responsiblePart: 'root-node-discipline',
+    name: 'dependency is checked even when ESLint does not visit the target',
     tree: { ...rootTree, 'src/high.ts': "import './low.js';\n" },
   },
   ...[
@@ -1092,8 +1072,7 @@ const scenarios: readonly TScenario[] = [
             to: node,
           }),
         ],
-    name: `26.5 external opacity: ${label}`,
-    responsiblePart: 'tree-frontier',
+    name: `external opacity: ${label}`,
     tree: {
       ...layerTree,
       ...(!layer && rootTree),
@@ -1115,8 +1094,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_utils/widget/index.ts',
       }),
     ],
-    name: '26.6 public Root re-export does not transitively publish its private implementation',
-    responsiblePart: 'tree-frontier',
+    name: 'public Root re-export does not transitively publish its private implementation',
     tree: {
       ...rootTree,
       ...layerTree,
@@ -1144,8 +1122,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/high.ts',
       }),
     ],
-    name: '26.7 publication does not permit internal non-Root consumers',
-    responsiblePart: 'root-node-discipline',
+    name: 'publication does not permit internal non-Root consumers',
     tree: {
       ...rootTree,
       ...layerTree,
@@ -1162,8 +1139,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_types/b.type.ts',
       }),
     ],
-    name: '26.8 public Category Nodes retain internal peer separation',
-    responsiblePart: 'peer-separation',
+    name: 'public Category Nodes retain internal peer separation',
     tree: {
       ...layerTree,
       'src/_types/a.type.ts':
@@ -1224,8 +1200,7 @@ const scenarios: readonly TScenario[] = [
             to: 'b/main.ts',
           }),
         ],
-    name: `27.1 conjunctive authorization and publication: ${label}`,
-    responsiblePart: 'tree-frontier',
+    name: `conjunctive authorization and publication: ${label}`,
     tree: {
       'a/main.ts': "import '../b/main.js';\n",
       'b/main.ts': 'export const main = 1;\n',
@@ -1318,8 +1293,7 @@ const scenarios: readonly TScenario[] = [
             }),
           ]
         : [],
-      name: `27.2 inter-Tree source: ${label}`,
-      responsiblePart: access ? 'access-node-contract' : 'tree-frontier',
+      name: `inter-Tree source: ${label}`,
       tree: {
         ...layerTree,
         ...(rootSource && rootTree),
@@ -1342,8 +1316,7 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: [],
-    name: '27.3 inter-Tree Root import and re-export need no internal Root-pair authorization',
-    responsiblePart: 'root-node-discipline',
+    name: 'inter-Tree Root import and re-export need no internal Root-pair authorization',
     tree: {
       ...rootTree,
       'b/main.ts': 'export const main = 1;\n',
@@ -1365,8 +1338,7 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: [reExportProhibition('src/_types/a.type.ts')],
-    name: '27.4 inter-Tree authorization does not permit explicit Role re-exports',
-    responsiblePart: 're-export-prohibition',
+    name: 'inter-Tree authorization does not permit explicit Role re-exports',
     tree: {
       ...layerTree,
       'b/main.ts': 'export type Main = string;\n',
@@ -1388,8 +1360,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/low.ts',
       }),
     ],
-    name: '28.1 local external consumers enter only through Public Surface without Tree authorization',
-    responsiblePart: 'tree-frontier',
+    name: 'local external consumers enter only through Public Surface without Tree authorization',
     tree: {
       ...rootTree,
       'outside.ts': "import './src/high.js';\nimport './src/low.js';\n",
@@ -1410,8 +1381,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/low.ts',
       }),
     ],
-    name: '28.1 local external consumers in subdirectories enter only through Public Surface without Tree authorization',
-    responsiblePart: 'tree-frontier',
+    name: 'local external consumers in subdirectories enter only through Public Surface without Tree authorization',
     tree: {
       ...rootTree,
       'scripts/outside.ts':
@@ -1460,11 +1430,7 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: build282Expected(item),
-    name: `28.2 local exit: ${item.label}`,
-    responsiblePart:
-      item.isAccessNode === true
-        ? 'classify-taxonomy'
-        : 'external-dependencies',
+    name: `local exit: ${item.label}`,
     tree:
       item.isAccessNode === true
         ? {
@@ -1513,8 +1479,7 @@ const scenarios: readonly TScenario[] = [
         to: 'outside.ts',
       }),
     ],
-    name: `28.3 qualified adapter static contract: ${label}`,
-    responsiblePart: 'external-dependencies',
+    name: `qualified adapter static contract: ${label}`,
     tree: {
       'outside.ts': 'export const outside = 1;\n',
       'src/main.ts': `import '${contract}';\nimport '../outside.js';\nexport const main = 1;\n`,
@@ -1538,8 +1503,7 @@ const scenarios: readonly TScenario[] = [
         to: 'outside.ts',
       }),
     ],
-    name: '28.4 package names distinguish workspace local files from external library sinks',
-    responsiblePart: 'external-dependencies',
+    name: 'package names distinguish workspace local files from external library sinks',
     tree: {
       ...rootTree,
       'outside.ts': 'export const outside = 1;\n',
@@ -1694,8 +1658,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_src@shared/_ui/_types/a.type.ts',
       }),
     ],
-    name: '29.2 alias text does not determine its actual base domain',
-    responsiblePart: 'path-alias-anchoring',
+    name: 'alias text does not determine its actual base domain',
     tree: {
       ...rootTree,
       'src/_src@shared/_ui/_types/a.type.ts': 'export type A = string;\n',
@@ -1721,8 +1684,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_src@shared/_types/a.type.ts',
       }),
     ],
-    name: '29.3 every alternative of a used alias must be anchored, not only the selected one',
-    responsiblePart: 'path-alias-anchoring',
+    name: 'every alternative of a used alias must be anchored, not only the selected one',
     tree: {
       ...rootTree,
       ...layerTree,
@@ -1776,8 +1738,7 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: [],
-    name: '29.5 aliases unused for internal imports produce no anchoring violations',
-    responsiblePart: 'path-alias-anchoring',
+    name: 'aliases unused for internal imports produce no anchoring violations',
     tree: { ...rootTree, 'legacy/outside.ts': 'export const outside = 1;\n' },
   },
   {
@@ -1806,8 +1767,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_src@shared/_utils/widget/widget.util.ts',
       }),
     ],
-    name: '29.6 relative and valid alias imports preserve encapsulation of deep details',
-    responsiblePart: 'fragment-encapsulation',
+    name: 'relative and valid alias imports preserve encapsulation of deep details',
     tree: {
       ...rootTree,
       'src/_src@shared/_utils/widget/index.ts':
@@ -1876,7 +1836,7 @@ const scenarios: readonly TScenario[] = [
       target: 'src/_src@shared/_types/a.type.ts',
     },
   ].map((item) => {
-    const { label, owner, source, specifier } = item;
+    const { label, source, specifier } = item;
     return {
       config: {
         faf: {
@@ -1896,8 +1856,7 @@ const scenarios: readonly TScenario[] = [
         },
       },
       expected: build297Expected(item),
-      name: `29.7 valid Branch alias does not widen scope: ${label}`,
-      responsiblePart: owner,
+      name: `valid Branch alias does not widen scope: ${label}`,
       tree: {
         ...rootTree,
         ...layerTree,
@@ -1922,8 +1881,7 @@ const scenarios: readonly TScenario[] = [
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
     expected: [],
-    name: '29.8 aliases remain optional and relative depth has no invented threshold',
-    responsiblePart: 'path-alias-anchoring',
+    name: 'aliases remain optional and relative depth has no invented threshold',
     tree: {
       ...rootTree,
       ...layerTree,
@@ -1947,8 +1905,7 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: [],
-    name: 'F3.1 CSS @import from node_modules package and #/* Path Alias resolves without unverified outcomes',
-    responsiblePart: 'collect-modules',
+    name: 'CSS @import from node_modules package and #/* Path Alias resolves without unverified outcomes',
     tree: {
       'node_modules/pkg/package.json': JSON.stringify({
         exports: { './style.css': { style: './style.css' } },
@@ -1972,8 +1929,7 @@ const scenarios: readonly TScenario[] = [
   {
     config: { faf: { common, locals: [{ rootFragments: [root] }] } },
     expected: [],
-    name: 'F3.2 Asset import with Vite query string in Private Category is permitted from parent Fragment Master Node',
-    responsiblePart: 'collect-modules',
+    name: 'Asset import with Vite query string in Private Category is permitted from parent Fragment Master Node',
     tree: {
       ...rootTree,
       'src/_utils/widget/_images/fatal.png': 'png\n',
@@ -1992,8 +1948,7 @@ const scenarios: readonly TScenario[] = [
         to: 'src/_utils/widget/_images/fatal.png',
       }),
     ],
-    name: 'F3.3 Asset import with Vite query string in Private Category from outside parent Fragment reports private-category-visibility',
-    responsiblePart: 'private-category-visibility',
+    name: 'Asset import with Vite query string in Private Category from outside parent Fragment reports private-category-visibility',
     tree: {
       ...rootTree,
       'src/_utils/widget/_images/fatal.png': 'png\n',
@@ -2017,8 +1972,7 @@ const scenarios: readonly TScenario[] = [
       },
     },
     expected: [],
-    name: 'F3.4 Foreign Domain ambient declarations (declare module and declare global) produce no unsupported-syntax outcomes',
-    responsiblePart: 'collect-modules',
+    name: 'Foreign Domain ambient declarations (declare module and declare global) produce no unsupported-syntax outcomes',
     tree: {
       ...rootTree,
       'src/_tooling/globals.d.ts':
@@ -2031,17 +1985,14 @@ const WARMUP_TIMEOUT_MS = 120_000;
 
 beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
 
-describe('acceptance: P7b frontier edges', () => {
-  it.each(scenarios)(
-    '$name [$responsiblePart]',
-    async ({ config, expected, files, responsiblePart, tree }) => {
-      const fixture = await createProject(tree, config);
-      try {
-        const result = await lintScenario(fixture.path, files);
-        expectScenario(result, responsiblePart, expected);
-      } finally {
-        await fixture.rm();
-      }
+describe('acceptance: frontier dependencies', () => {
+  it.each(SCENARIOS)('$name', async ({ config, expected, files, tree }) => {
+    const fixture = await createProject(tree, config);
+    try {
+      const result = await lintScenario(fixture.path, files);
+      expectScenario(result, expected);
+    } finally {
+      await fixture.rm();
     }
-  );
+  });
 });

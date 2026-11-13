@@ -15,7 +15,7 @@ describe('validateSubGraphRoles', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.subGraphRoles');
     expect(outcome?.element).toBe('faf.common.subGraphRoles');
     expect(outcome?.message).toBe("'faf.common.subGraphRoles' cannot be null");
@@ -27,7 +27,7 @@ describe('validateSubGraphRoles', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.subGraphRoles');
     expect(outcome?.element).toBe('faf.common.subGraphRoles');
     expect(outcome?.message).toBe(
@@ -41,7 +41,7 @@ describe('validateSubGraphRoles', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.subGraphRoles[0]');
     expect(outcome?.element).toBe('faf.common.subGraphRoles[0]');
     expect(outcome?.message).toBe(
@@ -55,7 +55,7 @@ describe('validateSubGraphRoles', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.subGraphRoles[0]');
     expect(outcome?.element).toBe('faf.common.subGraphRoles[0]');
     expect(outcome?.message).toBe(
@@ -81,7 +81,7 @@ describe('validateSubGraphRoles', () => {
       constraint: 'configuration/unknown-property',
       message:
         "'faf.common.subGraphRoles[0].category' is not a recognized property",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ category: '_specs', name: 'spec' }],
       propertyPath: 'faf.common.subGraphRoles[0].category',
     },
@@ -89,35 +89,35 @@ describe('validateSubGraphRoles', () => {
       constraint: 'configuration/unknown-property',
       message:
         "'faf.common.subGraphRoles[0].allowMultipleSymbols' is not a recognized property",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ allowMultipleSymbols: true, name: 'spec' }],
       propertyPath: 'faf.common.subGraphRoles[0].allowMultipleSymbols',
     },
     {
       constraint: 'configuration/null-forbidden',
       message: "'faf.common.subGraphRoles[0].name' cannot be null",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ name: null }],
       propertyPath: 'faf.common.subGraphRoles[0].name',
     },
     {
       constraint: 'configuration/missing-property',
       message: "'faf.common.subGraphRoles[0].name' is required and missing",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{}],
       propertyPath: 'faf.common.subGraphRoles[0].name',
     },
     {
       constraint: 'configuration/invalid-type',
       message: "'faf.common.subGraphRoles[0].name' has an invalid type",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ name: 123 }],
       propertyPath: 'faf.common.subGraphRoles[0].name',
     },
     {
       constraint: 'configuration/empty-string',
       message: "'faf.common.subGraphRoles[0].name' cannot be an empty string",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ name: '' }],
       propertyPath: 'faf.common.subGraphRoles[0].name',
     },
@@ -153,7 +153,7 @@ describe('validateSubGraphRoles', () => {
       (o) => o.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.subGraphRoles[0].name');
     expect(outcome?.message).toBe(
       "'faf.common.subGraphRoles[0].name' cannot be explicitly undefined"

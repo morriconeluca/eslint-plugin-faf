@@ -77,7 +77,7 @@ const configOutcome = (element: string): TOutcome => ({
   element,
   family: 'configuration',
   message: 'Unknown property.',
-  normativeReference: 'D-14',
+  normativeReference: 'FAF §1.2, §6.9',
   propertyPath: 'extra',
 });
 

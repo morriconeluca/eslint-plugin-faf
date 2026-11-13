@@ -19,7 +19,7 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.roles');
     expect(outcome?.element).toBe('faf.common.roles');
     expect(outcome?.message).toBe("'faf.common.roles' cannot be null");
@@ -31,7 +31,7 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.roles');
     expect(outcome?.element).toBe('faf.common.roles');
     expect(outcome?.message).toBe("'faf.common.roles' has an invalid type");
@@ -43,7 +43,7 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0]');
     expect(outcome?.element).toBe('faf.common.roles[0]');
     expect(outcome?.message).toBe("'faf.common.roles[0]' cannot be null");
@@ -55,7 +55,7 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0]');
     expect(outcome?.element).toBe('faf.common.roles[0]');
     expect(outcome?.message).toBe("'faf.common.roles[0]' has an invalid type");
@@ -67,7 +67,7 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/empty-list');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0]');
     expect(outcome?.element).toBe('faf.common.roles[0]');
     expect(outcome?.message).toBe(
@@ -81,7 +81,7 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0][0]');
     expect(outcome?.element).toBe('faf.common.roles[0][0]');
     expect(outcome?.message).toBe("'faf.common.roles[0][0]' cannot be null");
@@ -96,7 +96,7 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0][0]');
     expect(outcome?.element).toBe('faf.common.roles[0][0]');
     expect(outcome?.message).toBe(
@@ -110,7 +110,7 @@ describe('validateRoles', () => {
     const outcome = validation.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.roles[0][0]');
     expect(outcome?.element).toBe('faf.common.roles[0][0]');
     expect(outcome?.message).toBe(
@@ -161,14 +161,14 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/unknown-property',
       message: 'Unknown property "extra" is forbidden.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ category: '_utils', extra: true, name: 'util' }],
       propertyPath: 'faf.common.roles[0].extra',
     },
     {
       constraint: 'configuration/null-forbidden',
       message: 'Property "allowMultipleSymbols" cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [
         { allowMultipleSymbols: null, category: '_utils', name: 'util' },
       ],
@@ -178,63 +178,63 @@ describe('validateRoles', () => {
       constraint: 'configuration/explicit-undefined',
       message:
         'Property "allowMultipleSymbols" cannot be explicitly undefined.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [undefinedRecord],
       propertyPath: 'faf.common.roles[0].allowMultipleSymbols',
     },
     {
       constraint: 'configuration/missing-property',
       message: 'Required property "name" is missing.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ category: '_utils' }],
       propertyPath: 'faf.common.roles[0].name',
     },
     {
       constraint: 'configuration/missing-property',
       message: 'Required property "name" is missing.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ category: '_fonts', implicitRoleExtensions: ['.woff2'] }],
       propertyPath: 'faf.common.roles[0].name',
     },
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "name" must be a string.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ category: '_utils', name: 123 }],
       propertyPath: 'faf.common.roles[0].name',
     },
     {
       constraint: 'configuration/empty-string',
       message: 'Property "name" cannot be empty.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ category: '_utils', name: '' }],
       propertyPath: 'faf.common.roles[0].name',
     },
     {
       constraint: 'configuration/missing-property',
       message: 'Required property "category" is missing.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ name: 'util' }],
       propertyPath: 'faf.common.roles[0].category',
     },
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "category" must be a string.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ category: 123, name: 'util' }],
       propertyPath: 'faf.common.roles[0].category',
     },
     {
       constraint: 'configuration/empty-string',
       message: 'Property "category" cannot be empty.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ category: '', name: 'util' }],
       propertyPath: 'faf.common.roles[0].category',
     },
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "allowMultipleSymbols" must be a boolean.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [
         { allowMultipleSymbols: 'true', category: '_utils', name: 'util' },
       ],
@@ -243,14 +243,14 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "isCategoryNode" must be a boolean.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [{ category: '_utils', isCategoryNode: 'true', name: 'util' }],
       propertyPath: 'faf.common.roles[0].isCategoryNode',
     },
     {
       constraint: 'configuration/invalid-type',
       message: 'Property "implicitRoleExtensions" must be an array.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [
         { category: '_utils', implicitRoleExtensions: '.png', name: 'util' },
       ],
@@ -259,7 +259,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/empty-list',
       message: 'Property "implicitRoleExtensions" cannot be empty.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [
         { category: '_utils', implicitRoleExtensions: [], name: 'util' },
       ],
@@ -283,7 +283,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/null-forbidden',
       message: 'Implicit extension cannot be null.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [
         { category: '_utils', implicitRoleExtensions: [null], name: 'util' },
       ],
@@ -292,7 +292,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/invalid-type',
       message: 'Implicit extension must be a string.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [
         { category: '_utils', implicitRoleExtensions: [123], name: 'util' },
       ],
@@ -301,7 +301,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/empty-string',
       message: 'Implicit extension cannot be empty.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [
         { category: '_utils', implicitRoleExtensions: [''], name: 'util' },
       ],
@@ -459,7 +459,7 @@ describe('validateRoles', () => {
     {
       constraint: 'configuration/duplicate-element',
       message: 'Duplicate implicit extension ".png" in the same role.',
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       payload: [
         {
           category: '_utils',

@@ -14,7 +14,7 @@ function outcome(
     element,
     family: 'configuration',
     message: element,
-    normativeReference: 'D-14',
+    normativeReference: 'FAF §1.2, §6.9',
     propertyPath,
   };
 }

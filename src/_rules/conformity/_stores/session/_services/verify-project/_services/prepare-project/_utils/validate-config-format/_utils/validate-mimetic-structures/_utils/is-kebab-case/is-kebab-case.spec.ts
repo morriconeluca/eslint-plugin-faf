@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { isKebabCase } from './is-kebab-case.util.js';
 
 describe('isKebabCase', () => {
-  describe('brief scenarios', () => {
+  describe('nominal kebab-case grammar', () => {
     it.each([
       { candidate: 'user-profile', expected: true },
       { candidate: 'UserProfile', expected: false },
