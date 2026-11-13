@@ -277,7 +277,7 @@ const unresolvedImportOutcome = (
   element: filePath,
   filePath,
   line: 1,
-  message: `unverified/unresolved-import: '${filePath}' contains an import that could not be resolved: ${detail} (D-08).`,
+  message: `unverified/unresolved-import: '${filePath}' contains an import that could not be resolved: ${detail} (FAF §4).`,
   messageId: 'unverified',
   ruleId: 'faf/conformity',
   severity: 2,
@@ -286,14 +286,13 @@ const unresolvedImportOutcome = (
 const runScenario = async (
   tree: FileTree,
   local: Readonly<Record<string, unknown>>,
-  responsiblePart: string,
   expected: readonly TScenarioMessage[]
 ): Promise<void> => {
   const fixture = await createProject(tree, {
     faf: { locals: [{ roles, subGraphRoles: [{ name: 'spec' }], ...local }] },
   });
   try {
-    expectScenario(await lintScenario(fixture.path), responsiblePart, expected);
+    expectScenario(await lintScenario(fixture.path), expected);
   } finally {
     await fixture.rm();
   }
@@ -386,7 +385,6 @@ describe('acceptance: global graph norms', () => {
       await runScenario(
         { ...branchTree, [branchSource]: source },
         branchConfig,
-        'fractal-branch-unidirectionality',
         [
           branchDirectEdgeOutcome(branchSource, target, specifier),
           ...(isBranchDestination
@@ -422,7 +420,6 @@ describe('acceptance: global graph norms', () => {
         'src/_src@shared/_types/middle.type.ts': "import './last.type.js';\n",
       },
       branchConfig,
-      'fractal-branch-unidirectionality',
       [
         branchDirectEdgeOutcome(
           'src/_src@shared/_types/last.type.ts',
@@ -472,7 +469,6 @@ describe('acceptance: global graph norms', () => {
           "import '../../../../_src@shared/_types/start.type.js';\n",
       },
       branchConfig,
-      'fractal-branch-unidirectionality',
       []
     );
   });
@@ -491,7 +487,6 @@ describe('acceptance: global graph norms', () => {
         roles: [...roles, { category: '_apis', name: 'api' }],
         rootFragments: [root('src', ['main.ts'])],
       },
-      'fractal-branch-unidirectionality',
       []
     );
   });
@@ -560,7 +555,6 @@ describe('acceptance: global graph norms', () => {
           },
         ],
       },
-      'acyclicity',
       forbidden
         ? [cycleOutcome(paths[0] ?? '', 'acyclicity/dependency-cycle', [paths])]
         : []
@@ -591,7 +585,6 @@ describe('acceptance: global graph norms', () => {
           },
         ],
       },
-      'acyclicity',
       [
         cycleOutcome('src/a/main.ts', 'acyclicity/dependency-cycle', [
           ['src/a/main.ts', 'src/b/main.ts', 'src/a/main.ts'],
@@ -623,7 +616,6 @@ describe('acceptance: global graph norms', () => {
           },
         ],
       },
-      'acyclicity',
       [
         {
           column: 1,
@@ -632,7 +624,7 @@ describe('acceptance: global graph norms', () => {
           filePath: 'src/a/main.ts',
           line: 1,
           message:
-            "unverified/cyclic-root-authorization: 'src/a' declares reciprocal root dependency authorizations without physical code cycle (D-04).",
+            "unverified/cyclic-root-authorization: 'src/a' declares reciprocal root dependency authorizations without physical code cycle (FAF §5, §6.2.2).",
           messageId: 'unverified',
           ruleId: 'faf/conformity',
           severity: 2,
@@ -651,7 +643,6 @@ describe('acceptance: global graph norms', () => {
         'src/main.ts': 'export const main = 1;\n',
       },
       { rootFragments: [root('src', ['main.ts'])] },
-      'acyclicity',
       [
         cycleOutcome('src/_types/a.type.ts', 'acyclicity/dependency-cycle', [
           [
@@ -684,7 +675,6 @@ describe('acceptance: global graph norms', () => {
         'src/main.ts': 'export const main = 1;\n',
       },
       { rootFragments: [root('src', ['main.ts'])] },
-      'acyclicity',
       [
         cycleOutcome('src/_types/a.type.ts', 'acyclicity/dependency-cycle', [
           [
@@ -717,7 +707,6 @@ describe('acceptance: global graph norms', () => {
         ),
       ],
       kind: 'Fragment Node',
-      responsiblePart: 'fragment-encapsulation',
       target: 'src/_low/_utils/unit/unit.util.ts',
     },
     {
@@ -729,7 +718,6 @@ describe('acceptance: global graph norms', () => {
         ),
       ],
       kind: 'Sub-Graph Node',
-      responsiblePart: 'sub-graph-node-isolation',
       target: 'src/_low/_utils/unit/unit.spec.ts',
     },
     {
@@ -741,12 +729,11 @@ describe('acceptance: global graph norms', () => {
         ),
       ],
       kind: 'Foreign Node',
-      responsiblePart: 'foreign-node-isolation',
       target: 'src/_low/_utils/unit/data.ts',
     },
   ])(
     'keeps the target prohibition for a descending import to a $kind',
-    async ({ expected, responsiblePart, target }) => {
+    async ({ expected, target }) => {
       await runScenario(
         {
           'src/_high/_utils/source/index.ts':
@@ -764,7 +751,6 @@ describe('acceptance: global graph norms', () => {
           horizontalHierarchies: [[['_low'], ['_high']]],
           rootLayers: ['src'],
         },
-        responsiblePart,
         expected
       );
     }
@@ -841,7 +827,6 @@ describe('acceptance: global graph norms', () => {
             to: [to],
           })),
         },
-        'acyclicity',
         expected
       );
     }
@@ -882,7 +867,6 @@ describe('acceptance: global graph norms', () => {
             { from: ['b'], to: ['a'] },
           ],
         },
-        'acyclicity',
         [
           {
             column: 1,
@@ -891,7 +875,7 @@ describe('acceptance: global graph norms', () => {
             filePath: 'a/source.ts',
             line: 1,
             message:
-              "unverified/cyclic-tree-authorization: 'a' declares reciprocal tree dependencies without physical code cycle (D-04).",
+              "unverified/cyclic-tree-authorization: 'a' declares reciprocal tree dependencies without physical code cycle (FAF §7.2).",
             messageId: 'unverified',
             ruleId: 'faf/conformity',
             severity: 2,
@@ -953,7 +937,6 @@ describe('acceptance: global graph norms', () => {
                 ]
               : [],
         },
-        're-entry-prohibition',
         expected
       );
     }
@@ -963,7 +946,6 @@ describe('acceptance: global graph norms', () => {
     await runScenario(
       { ...externalBase, 'x.ts': "import './y.js';\n" },
       externalConfig,
-      're-entry-prohibition',
       []
     );
   });
@@ -973,7 +955,6 @@ describe('acceptance: global graph norms', () => {
     readonly expected: readonly TScenarioMessage[];
     readonly files: FileTree;
     readonly publicRootNodes: readonly string[];
-    readonly responsiblePart: string;
     readonly rootFragments?: readonly ReturnType<typeof root>[];
     readonly treeDependencies: readonly {
       readonly from: readonly string[];
@@ -987,7 +968,6 @@ describe('acceptance: global graph norms', () => {
       expected: [],
       files: { 'x.ts': "import './b/end.js';\n" },
       publicRootNodes: ['a/end.ts', 'b/end.ts'],
-      responsiblePart: 'tree-frontier',
       treeDependencies: [{ from: ['a'], to: ['b'] }],
     },
     {
@@ -998,7 +978,6 @@ describe('acceptance: global graph norms', () => {
         'y.ts': "import './b/end.js';\n",
       },
       publicRootNodes: ['a/end.ts', 'b/end.ts'],
-      responsiblePart: 'tree-frontier',
       treeDependencies: [{ from: ['a'], to: ['b'] }],
     },
     {
@@ -1008,7 +987,6 @@ describe('acceptance: global graph norms', () => {
       ],
       files: { 'x.ts': "import './b/end.js';\n" },
       publicRootNodes: ['a/end.ts', 'b/end.ts'],
-      responsiblePart: 'tree-frontier',
       treeDependencies: [],
     },
     {
@@ -1018,7 +996,6 @@ describe('acceptance: global graph norms', () => {
       ],
       files: { 'x.ts': "import './b/end.js';\n" },
       publicRootNodes: ['a/end.ts', 'b/end.ts'],
-      responsiblePart: 'tree-frontier',
       treeDependencies: [{ from: ['b'], to: ['a'] }],
     },
     {
@@ -1026,7 +1003,6 @@ describe('acceptance: global graph norms', () => {
       expected: [treeOpacityOutcome('./b/end.js')],
       files: { 'x.ts': "import './b/end.js';\n" },
       publicRootNodes: ['a/end.ts'],
-      responsiblePart: 'tree-frontier',
       treeDependencies: [{ from: ['a'], to: ['b'] }],
     },
     {
@@ -1042,7 +1018,6 @@ describe('acceptance: global graph norms', () => {
         'x.ts': "import './b/end.js';\n",
       },
       publicRootNodes: ['a/end.ts', 'b/end.ts'],
-      responsiblePart: 'acyclicity',
       rootFragments: [
         root('a', ['start.ts', 'end.ts']),
         root('b', ['end.ts', 'back.ts']),
@@ -1060,7 +1035,6 @@ describe('acceptance: global graph norms', () => {
       expected,
       files,
       publicRootNodes,
-      responsiblePart,
       rootFragments,
       treeDependencies,
     }) => {
@@ -1072,7 +1046,6 @@ describe('acceptance: global graph norms', () => {
           rootFragments: rootFragments ?? externalConfig.rootFragments,
           treeDependencies,
         },
-        responsiblePart,
         expected
       );
     }
@@ -1086,7 +1059,6 @@ describe('acceptance: global graph norms', () => {
         'y.ts': "import './x.js';\n",
       },
       externalConfig,
-      'acyclicity',
       []
     );
   });
@@ -1099,7 +1071,6 @@ describe('acceptance: global graph norms', () => {
         'y.ts': "import './x.js';\nimport './a/end.js';\n",
       },
       externalConfig,
-      're-entry-prohibition',
       [reEntryOutcome(['a/start.ts', 'x.ts', 'y.ts', 'a/end.ts'])]
     );
   });
@@ -1117,7 +1088,6 @@ describe('acceptance: global graph norms', () => {
         externalDependencies: [{ from: [branchSource], to: ['x.ts'] }],
         publicRootNodes: ['src/main.ts'],
       },
-      're-entry-prohibition',
       [branchPathOutcome(chain), reEntryOutcome(chain)]
     );
   });
@@ -1126,7 +1096,6 @@ describe('acceptance: global graph norms', () => {
     await runScenario(
       { ...externalBase, 'x.ts': "import './missing.js';\n" },
       externalConfig,
-      'collect-modules',
       [unresolvedImportOutcome('x.ts', "Cannot find module './missing.js'")]
     );
   });

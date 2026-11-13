@@ -89,19 +89,18 @@ const makeDirectEdgeMessage = ({
 const runScenario = async (
   tree: FileTree,
   config: Readonly<Record<string, unknown>>,
-  responsiblePart: string,
   expected: readonly TScenarioMessage[] = []
 ): Promise<void> => {
   const project = await createProject(tree, config);
   try {
     const result = await lintScenario(project.path);
-    expectScenario(result, responsiblePart, expected);
+    expectScenario(result, expected);
   } finally {
     await project.rm();
   }
 };
 
-describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza introdurre convenzioni implicite", () => {
+describe('acceptance: explicit architectural declarations without implicit conventions', () => {
   const WARMUP_TIMEOUT_MS = 120_000;
 
   beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
@@ -148,13 +147,12 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
 
   describe('rejects missing or contradictory classification without arbitrary fallback', () => {
-    it('row 1: rejects when a declaration requires a Layer but path mixes exclusive forms', async () => {
+    it('rejects when a declaration requires a Layer but path mixes exclusive forms', async () => {
       await runScenario(
         {
           'src/_domain/_sub/_types/value.type.ts':
@@ -173,7 +171,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'exclusive-forms',
         [
           makeScenarioMessage({
             constraint: 'classification/exclusive-forms',
@@ -204,7 +201,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'prepare-project',
         [
           makeScenarioMessage({
             constraint: 'configuration/unknown-property',
@@ -212,13 +208,13 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             filePath: 'fafconfig.ts',
             messageId: 'configuration',
             predicate: 'is not a recognized property',
-            reference: 'D-14',
+            reference: 'FAF §1.2, §6.9',
           }),
         ]
       );
     });
 
-    it('row 2: rejects origin designated as both Root Fragment and Root Layer', async () => {
+    it('rejects origin designated as both Root Fragment and Root Layer', async () => {
       await runScenario(
         defaultTree,
         {
@@ -232,7 +228,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'prepare-project',
         [
           makeScenarioMessage({
             constraint: 'configuration/conflicting-origin-kind',
@@ -241,13 +236,13 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             messageId: 'configuration',
             predicate:
               'cannot be declared as both a Root Layer and a Root Fragment',
-            reference: 'D-06',
+            reference: 'FAF §6.5, §6.9',
           }),
         ]
       );
     });
 
-    it('row 3: rejects missing origin type designation in tree', async () => {
+    it('rejects missing origin type designation in tree', async () => {
       await runScenario(
         defaultTree,
         {
@@ -259,7 +254,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'prepare-project',
         [
           makeScenarioMessage({
             constraint: 'configuration/missing-origin',
@@ -267,13 +261,13 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             filePath: 'fafconfig.ts',
             messageId: 'configuration',
             predicate: 'must be an existing tree origin directory',
-            reference: 'D-06',
+            reference: 'FAF §3',
           }),
         ]
       );
     });
 
-    it('row 4: rejects an organizational directory without determinable classification', async () => {
+    it('rejects an organizational directory without determinable classification', async () => {
       await runScenario(
         {
           'src/_utils/widget/_mystery/orphan.ts': 'export const orphan = 1;\n',
@@ -291,7 +285,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'classification-completeness',
         [
           makeScenarioMessage({
             constraint: 'classification/unclassifiable-directory',
@@ -314,7 +307,7 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
       );
     });
 
-    it('row 5: rejects duplicate implicit extension associated with two roles', async () => {
+    it('rejects duplicate implicit extension associated with two roles', async () => {
       await runScenario(
         defaultTree,
         {
@@ -340,7 +333,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'prepare-project',
         [
           makeScenarioMessage({
             constraint: 'configuration/duplicate-implicit-extension',
@@ -356,7 +348,7 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
       );
     });
 
-    it('row 6: rejects category requiring a role outside tree catalog', async () => {
+    it('rejects category requiring a role outside tree catalog', async () => {
       await runScenario(
         {
           'src/_components/button/button.component.tsx':
@@ -372,7 +364,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'classification-completeness',
         [
           makeScenarioMessage({
             constraint: 'classification/unclassifiable-directory',
@@ -395,7 +386,7 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
       );
     });
 
-    it('row 7: rejects conflicting Fragment and Node form assignments for same role', async () => {
+    it('rejects conflicting Fragment and Node form assignments for same role', async () => {
       await runScenario(
         defaultTree,
         {
@@ -411,7 +402,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'prepare-project',
         [
           makeScenarioMessage({
             constraint: 'configuration/duplicate-role-name',
@@ -426,7 +416,7 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
       );
     });
 
-    it('row 8: rejects missing category association for a role', async () => {
+    it('rejects missing category association for a role', async () => {
       await runScenario(
         defaultTree,
         {
@@ -439,7 +429,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'prepare-project',
         [
           makeScenarioMessage({
             constraint: 'configuration/missing-property',
@@ -447,13 +436,13 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             filePath: 'fafconfig.ts',
             messageId: 'configuration',
             predicate: 'is required and missing',
-            reference: 'D-14',
+            reference: 'FAF §1.2, §6.9',
           }),
         ]
       );
     });
 
-    it('row 9: rejects fragment node with Rank not strictly lower than Master', async () => {
+    it('rejects fragment node with Rank not strictly lower than Master', async () => {
       await runScenario(
         {
           'src/_utils/widget/index.ts':
@@ -474,7 +463,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'fragment-anatomy',
         [
           makeScenarioMessage({
             constraint: 'classification/fragment-node-rank',
@@ -489,7 +477,7 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
       );
     });
 
-    it('row 10: rejects implicit extension starting with role name', async () => {
+    it('rejects implicit extension starting with role name', async () => {
       await runScenario(
         defaultTree,
         {
@@ -510,7 +498,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'prepare-project',
         [
           makeScenarioMessage({
             constraint: 'configuration/implicit-extension-role-name-prefix',
@@ -526,7 +513,7 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
       );
     });
 
-    it('row 11: rejects fragments form assigned to role with implicit extensions', async () => {
+    it('rejects fragments form assigned to role with implicit extensions', async () => {
       await runScenario(
         defaultTree,
         {
@@ -546,7 +533,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'prepare-project',
         [
           makeScenarioMessage({
             constraint:
@@ -561,7 +547,7 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
       );
     });
 
-    it('row 12: rejects horizontal hierarchy over elements with different parents', async () => {
+    it('rejects horizontal hierarchy over elements with different parents', async () => {
       await runScenario(
         {
           'src/_utils/widget/_types/widget.type.ts':
@@ -589,7 +575,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'horizontal-hierarchies',
         [
           makeScenarioMessage({
             constraint: 'classification/horizontal-hierarchy-members',
@@ -624,7 +609,6 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'peer-separation',
         [
           makeDirectEdgeMessage({
             constraint: 'dependency/peer-separation',
@@ -668,13 +652,12 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
           ],
         },
       },
-      'classify-taxonomy',
       []
     );
   });
 
   describe('does not emit violations for non-observance of recommendations', () => {
-    it('row 1: allows category with singular name declared in catalog', async () => {
+    it('allows category with singular name declared in catalog', async () => {
       await runScenario(
         {
           'src/_util/widget/index.ts':
@@ -691,12 +674,11 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'nomenclature',
         []
       );
     });
 
-    it('row 2: allows sub-category with singular name', async () => {
+    it('allows sub-category with singular name', async () => {
       await runScenario(
         {
           'src/_utils/_atom/widget/index.ts':
@@ -714,12 +696,11 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'nomenclature',
         []
       );
     });
 
-    it('row 3: allows nested root fragment with underscore prefix', async () => {
+    it('allows nested root fragment with underscore prefix', async () => {
       await runScenario(
         {
           'src/_admin/dashboard.ts': 'export const dashboard = 1;\n',
@@ -746,12 +727,11 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'prepare-project',
         []
       );
     });
 
-    it('row 4: allows foreign domain without underscore prefix and without external contract', async () => {
+    it('allows foreign domain without underscore prefix and without external contract', async () => {
       await runScenario(
         {
           'src/_utils/widget/index.ts':
@@ -770,12 +750,11 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'foreign-node-isolation',
         []
       );
     });
 
-    it('row 5: allows role admitting multiple symbols without correlated declarations', async () => {
+    it('allows role admitting multiple symbols without correlated declarations', async () => {
       await runScenario(
         {
           'src/_types/models.type.ts':
@@ -798,12 +777,11 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'symbol-uniqueness',
         []
       );
     });
 
-    it('row 6: allows placement deviating from proximity and domain relevance guidelines', async () => {
+    it('allows placement deviating from proximity and domain relevance guidelines', async () => {
       await runScenario(
         {
           'src/_src@shared/_utils/helper/helper.util.ts':
@@ -825,12 +803,11 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'fractal-branch-visibility',
         []
       );
     });
 
-    it('row 7: allows Atomic Design pages as Sub-Category of _components', async () => {
+    it('allows Atomic Design pages as Sub-Category of _components', async () => {
       await runScenario(
         {
           'src/_components/_pages/home/home.component.tsx':
@@ -848,14 +825,13 @@ describe("Rule 1: La configurazione esprime le decisioni dell'architetto senza i
             ],
           },
         },
-        'containment-matrix',
         []
       );
     });
   });
 });
 
-describe('Rule 32: La concentrazione delle dipendenze locali esterne in adattatori richiede una valutazione architetturale', () => {
+describe('acceptance: external dependency isolation as an architectural recommendation', () => {
   it('does not emit an isolation violation for validly authorized external dependencies', async () => {
     await runScenario(
       {
@@ -881,7 +857,6 @@ describe('Rule 32: La concentrazione delle dipendenze locali esterne in adattato
           ],
         },
       },
-      'external-dependencies',
       []
     );
   });
@@ -918,7 +893,6 @@ describe('Rule 32: La concentrazione delle dipendenze locali esterne in adattato
           ],
         },
       },
-      'external-dependencies',
       []
     );
   });
@@ -940,13 +914,12 @@ describe('Rule 32: La concentrazione delle dipendenze locali esterne in adattato
           ],
         },
       },
-      'external-dependencies',
       []
     );
   });
 });
 
-describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non diventano norme FAF inventate', () => {
+describe('acceptance: explicit static analysis boundaries without invented FAF norms', () => {
   describe('clarifies whether inter-Tree DAG constrains unexercised authorizations', () => {
     const interTreeConfig = {
       faf: {
@@ -965,7 +938,7 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
       },
     };
 
-    it('row 1: verifies reciprocal authorizations with no actual import between A and B', async () => {
+    it('verifies reciprocal authorizations with no actual import between A and B', async () => {
       await runScenario(
         {
           'treeA/_utils/a/a.util.ts': 'export const a = 1;\n',
@@ -974,7 +947,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           'treeB/_utils/b/index.ts': "export { b } from './b.util.js';\n",
         },
         interTreeConfig,
-        'acyclicity',
         [
           makeScenarioMessage({
             constraint: 'unverified/cyclic-tree-authorization',
@@ -983,13 +955,13 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
             messageId: 'unverified',
             predicate:
               'declares reciprocal tree dependencies without physical code cycle',
-            reference: 'D-04',
+            reference: 'FAF §7.2',
           }),
         ]
       );
     });
 
-    it('row 2: verifies reciprocal authorizations with actual import only from A to B', async () => {
+    it('verifies reciprocal authorizations with actual import only from A to B', async () => {
       await runScenario(
         {
           'treeA/_utils/a/a.util.ts':
@@ -999,7 +971,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           'treeB/_utils/b/index.ts': "export { b } from './b.util.js';\n",
         },
         interTreeConfig,
-        'acyclicity',
         [
           makeScenarioMessage({
             constraint: 'unverified/cyclic-tree-authorization',
@@ -1008,13 +979,13 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
             messageId: 'unverified',
             predicate:
               'declares reciprocal tree dependencies without physical code cycle',
-            reference: 'D-04',
+            reference: 'FAF §7.2',
           }),
         ]
       );
     });
 
-    it('row 3: verifies reciprocal authorizations with actual import only from B to A', async () => {
+    it('verifies reciprocal authorizations with actual import only from B to A', async () => {
       await runScenario(
         {
           'treeA/_utils/a/a.util.ts': 'export const a = 1;\n',
@@ -1024,7 +995,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           'treeB/_utils/b/index.ts': "export { b } from './b.util.js';\n",
         },
         interTreeConfig,
-        'acyclicity',
         [
           makeScenarioMessage({
             constraint: 'unverified/cyclic-tree-authorization',
@@ -1033,7 +1003,7 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
             messageId: 'unverified',
             predicate:
               'declares reciprocal tree dependencies without physical code cycle',
-            reference: 'D-04',
+            reference: 'FAF §7.2',
           }),
         ]
       );
@@ -1068,7 +1038,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           'export const v2Parser = 1;\n',
       },
       config,
-      'nomenclature',
       []
     );
 
@@ -1080,7 +1049,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           "export { httpClient } from './HTTPClient.util.js';\n",
       },
       config,
-      'nomenclature',
       [
         makeScenarioMessage({
           constraint: 'classification/nomenclature',
@@ -1111,7 +1079,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           "export { cafeParser } from './café-parser.util.js';\n",
       },
       config,
-      'nomenclature',
       [
         makeScenarioMessage({
           constraint: 'classification/nomenclature',
@@ -1156,7 +1123,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           ],
         },
       },
-      'nomenclature',
       []
     );
   });
@@ -1188,7 +1154,7 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
         nodePath.join(project.path, 'src/link.ts')
       );
       const result = await lintScenario(project.path);
-      expectScenario(result, 'prepare-project', [
+      expectScenario(result, [
         makeScenarioMessage({
           constraint: 'unverified/symbolic-link',
           detail: 'src/real.ts',
@@ -1196,7 +1162,7 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           filePath: 'src/link.ts',
           messageId: 'unverified',
           predicate: 'is a symbolic link within a tree',
-          reference: 'D-06',
+          reference: 'FAF §3, §6.9',
         }),
       ]);
     } finally {
@@ -1222,7 +1188,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           ],
         },
       },
-      'collect-modules',
       [
         makeScenarioMessage({
           column: 41,
@@ -1232,7 +1197,7 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           messageId: 'unverified',
           predicate:
             'contains a non-literal dynamic import that cannot be resolved statically',
-          reference: 'D-07',
+          reference: 'FAF §4',
         }),
       ]
     );
@@ -1253,7 +1218,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           ],
         },
       },
-      'collect-modules',
       [
         makeScenarioMessage({
           column: 1,
@@ -1263,7 +1227,7 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           messageId: 'unverified',
           predicate:
             'contains unsupported syntax: TypeScript export assignment (export =) is unsupported',
-          reference: 'D-07',
+          reference: 'FAF §4',
         }),
       ]
     );
@@ -1287,7 +1251,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           ],
         },
       },
-      'collect-modules',
       [
         makeScenarioMessage({
           column: 1,
@@ -1297,7 +1260,7 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           messageId: 'unverified',
           predicate:
             'contains unsupported syntax: CommonJS export assignment (module.exports / exports) is unsupported',
-          reference: 'D-07',
+          reference: 'FAF §4',
         }),
         makeScenarioMessage({
           column: 1,
@@ -1307,7 +1270,7 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           messageId: 'unverified',
           predicate:
             'contains unsupported syntax: CommonJS export assignment (module.exports / exports) is unsupported',
-          reference: 'D-07',
+          reference: 'FAF §4',
         }),
       ]
     );
@@ -1331,7 +1294,6 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           ],
         },
       },
-      'collect-modules',
       [
         makeScenarioMessage({
           column: 41,
@@ -1341,14 +1303,14 @@ describe('Rule 33: I dettagli non determinati dalla bozza sono espliciti e non d
           messageId: 'unverified',
           predicate:
             'contains unsupported syntax: Unsupported non-literal require call',
-          reference: 'D-07',
+          reference: 'FAF §4',
         }),
       ]
     );
   });
 });
 
-describe('Rule 49: Le restrizioni del formato e i limiti di verifica producono esiti bloccanti distinti', () => {
+describe('acceptance: distinct blocking outcomes for configuration errors, violations, and unverified checks', () => {
   it('distinguishes configuration errors, demonstrated violations and incomplete checks without warning substitutes', async () => {
     await runScenario(
       defaultTree,
@@ -1363,7 +1325,6 @@ describe('Rule 49: Le restrizioni del formato e i limiti di verifica producono e
           ],
         },
       },
-      'prepare-project',
       [
         makeScenarioMessage({
           constraint: 'configuration/unknown-property',
@@ -1371,7 +1332,7 @@ describe('Rule 49: Le restrizioni del formato e i limiti di verifica producono e
           filePath: 'fafconfig.ts',
           messageId: 'configuration',
           predicate: 'is not a recognized property',
-          reference: 'D-14',
+          reference: 'FAF §1.2, §6.9',
         }),
       ]
     );
@@ -1390,7 +1351,6 @@ describe('Rule 49: Le restrizioni del formato e i limiti di verifica producono e
           ],
         },
       },
-      'fragment-anatomy',
       [
         makeScenarioMessage({
           constraint: 'classification/missing-access-node',
@@ -1420,7 +1380,6 @@ describe('Rule 49: Le restrizioni del formato e i limiti di verifica producono e
           ],
         },
       },
-      'collect-modules',
       [
         makeScenarioMessage({
           column: 41,
@@ -1430,7 +1389,7 @@ describe('Rule 49: Le restrizioni del formato e i limiti di verifica producono e
           messageId: 'unverified',
           predicate:
             'contains a non-literal dynamic import that cannot be resolved statically',
-          reference: 'D-07',
+          reference: 'FAF §4',
         }),
       ]
     );
@@ -1453,13 +1412,12 @@ describe('Rule 49: Le restrizioni del formato e i limiti di verifica producono e
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
 });
 
-describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza prescrivere l'implementazione del plugin", () => {
+describe('acceptance: falsifiable diagnostics, conjunctive norms, and visit-order invariance', () => {
   it('signals structural violation even when a mandatory file is missing without visiting it', async () => {
     await runScenario(
       {
@@ -1475,7 +1433,6 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
           ],
         },
       },
-      'fragment-anatomy',
       [
         makeScenarioMessage({
           constraint: 'classification/missing-access-node',
@@ -1513,7 +1470,6 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
           ],
         },
       },
-      'peer-separation',
       [
         makeDirectEdgeMessage({
           constraint: 'dependency/peer-separation',
@@ -1553,7 +1509,6 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
           ],
         },
       },
-      'fragment-encapsulation',
       [
         makeDirectEdgeMessage({
           constraint: 'dependency/fragment-encapsulation',
@@ -1617,9 +1572,8 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
         'src/main.ts',
         'src/_utils/widget/widget.util.ts',
       ]);
-      expect(orderA.messages.length).toBeGreaterThan(0);
-      expect(orderA.messages).toEqual(orderB.messages);
-      expect(orderA.unimplementedParts).toEqual(orderB.unimplementedParts);
+      expect(orderA.length).toBeGreaterThan(0);
+      expect(orderA).toEqual(orderB);
     } finally {
       await project.rm();
     }
@@ -1648,7 +1602,6 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
           ],
         },
       },
-      'prepare-project',
       []
     );
   });
@@ -1661,7 +1614,6 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
           locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
         },
       },
-      'prepare-project',
       []
     );
 
@@ -1679,7 +1631,6 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
           ],
         },
       },
-      'fragment-anatomy',
       [
         makeScenarioMessage({
           constraint: 'classification/missing-access-node',
@@ -1709,7 +1660,6 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
           ],
         },
       },
-      'collect-modules',
       [
         makeScenarioMessage({
           column: 41,
@@ -1719,7 +1669,7 @@ describe("Rule 50: Le diagnostiche rendono falsificabile la verifica senza presc
           messageId: 'unverified',
           predicate:
             'contains a non-literal dynamic import that cannot be resolved statically',
-          reference: 'D-07',
+          reference: 'FAF §4',
         }),
       ]
     );

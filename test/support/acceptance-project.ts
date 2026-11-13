@@ -123,13 +123,9 @@ const normalizeMessage = (
 export const lintScenario = async (
   cwd: string,
   files: readonly string[] = ['.']
-): Promise<{
-  readonly messages: readonly TScenarioMessage[];
-  readonly unimplementedParts: ReadonlyMap<string, readonly TScenarioMessage[]>;
-}> => {
+): Promise<readonly TScenarioMessage[]> => {
   const results = await lintProject(cwd, files);
   const messages: TScenarioMessage[] = [];
-  const unimplementedParts = new Map<string, TScenarioMessage[]>();
   for (const result of results) {
     const filePath = nodePath
       .relative(cwd, result.filePath)
@@ -139,15 +135,14 @@ export const lintScenario = async (
       messages.push(normalizeMessage(filePath, message));
     }
   }
-  return { messages, unimplementedParts };
+  return messages;
 };
 
 export const expectScenario = (
-  result: Awaited<ReturnType<typeof lintScenario>>,
-  _responsiblePart: string,
+  actual: readonly TScenarioMessage[],
   expected: readonly TScenarioMessage[]
 ): void => {
-  expect(result.messages).toEqual(expected);
+  expect(actual).toEqual(expected);
 };
 
 export const warmupESLint = async (): Promise<void> => {

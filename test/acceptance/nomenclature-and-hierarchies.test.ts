@@ -403,12 +403,11 @@ const treeOpacityViolation = (
 const scenario = async (
   tree: FileTree,
   config: Readonly<Record<string, unknown>>,
-  responsiblePart: string,
   expected: readonly TScenarioMessage[] = []
 ): Promise<void> => {
   const project = await createProject(tree, config);
   try {
-    expectScenario(await lintScenario(project.path), responsiblePart, expected);
+    expectScenario(await lintScenario(project.path), expected);
   } finally {
     await project.rm();
   }
@@ -498,7 +497,6 @@ const surfaceProbe = async (
   await scenario(
     { ...tree, 'consumer.ts': `import './${target}';\n` },
     config,
-    'tree-frontier',
     expected
   );
 };
@@ -509,43 +507,39 @@ beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
 
 describe('acceptance: contextual nomenclature and qualifications', () => {
   it.each([
-    ['Category', 'src/_components', 'nomenclature', []],
+    ['Category', 'src/_components', []],
     [
       'Category without underscore',
       'src/components',
-      'classification-completeness',
       [unclassifiableDirectory('fafconfig.ts', 'src/components')],
     ],
-    ['Sub-Category', 'src/_utils/_atoms', 'nomenclature', []],
+    ['Sub-Category', 'src/_utils/_atoms', []],
     [
       'Sub-Category without underscore',
       'src/atoms',
-      'classification-completeness',
       [unclassifiableDirectory('fafconfig.ts', 'src/atoms')],
     ],
     [
       'Sub-Category with uppercase',
       'src/_utils/_BadSub',
-      'nomenclature',
       [invalidNomenclature('fafconfig.ts', 'src/_utils/_BadSub')],
     ],
-    ['Layer', 'src/_domain', 'nomenclature', []],
+    ['Layer', 'src/_domain', []],
     [
       'Layer without underscore',
       'src/domain',
-      'classification-completeness',
       [unclassifiableDirectory('fafconfig.ts', 'src/domain')],
     ],
   ])(
     'verifies ordinary naming through classification: %s',
-    async (_kind, path, responsiblePart, expected) => {
-      await scenario({ [path]: {} }, rootLayer(), responsiblePart, expected);
+    async (_kind, path, expected) => {
+      await scenario({ [path]: {} }, rootLayer(), expected);
     }
   );
 
   it('does not reinterpret an underscored Fragment as a functional domain', async () => {
     const path = 'src/_utils/_user-profile';
-    await scenario(fragment(path), rootLayer(), 'category-role', [
+    await scenario(fragment(path), rootLayer(), [
       categoryRoleViolation(
         `${path}/_user-profile.util.ts`,
         `${path}/_user-profile.util.ts`
@@ -562,7 +556,6 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
     await scenario(
       fragment(path),
       rootLayer(),
-      'nomenclature',
       valid
         ? []
         : [
@@ -580,8 +573,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
     async (name) => {
       await scenario(
         fragment(`${name}/_utils/widget`),
-        rootLayer({ rootLayers: [name] }),
-        'nomenclature'
+        rootLayer({ rootLayers: [name] })
       );
     }
   );
@@ -594,8 +586,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
           ...fragment('src/_utils/widget'),
           [`src/${name}/arbitrary.ts`]: 'export const x = 1;\n',
         },
-        rootLayer({ foreignDomains: [`src/${name}`] }),
-        'nomenclature'
+        rootLayer({ foreignDomains: [`src/${name}`] })
       );
     }
   );
@@ -608,7 +599,6 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
     await scenario(
       { [path]: 'export type TProfile = string;\n' },
       rootLayer(),
-      'nomenclature',
       valid ? [] : [invalidNomenclature(path, path)]
     );
   });
@@ -616,8 +606,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
   it('accepts singular Categories and Sub-Categories without pluralization', async () => {
     await scenario(
       fragment('src/_component/_atom/button', 'component'),
-      rootLayer({ roles: [{ category: '_component', name: 'component' }] }),
-      'nomenclature'
+      rootLayer({ roles: [{ category: '_component', name: 'component' }] })
     );
   });
 
@@ -652,13 +641,12 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
             'src/_components/button/index.ts':
               "export { value } from './button.component.js';\n",
           };
-      await scenario(tree, rootLayer(), 'category-role');
+      await scenario(tree, rootLayer());
     } else {
       const path = `src/_types/${name}`;
       await scenario(
         { [path]: 'export type TValue = string;\n' },
         rootLayer(),
-        'category-role',
         [categoryRoleViolation(path, path)]
       );
     }
@@ -670,8 +658,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
         ...fragment('src/_components/button', 'component'),
         'src/_components/button/button.module.css': 'body {}\n',
       },
-      rootLayer(),
-      'category-role'
+      rootLayer()
     );
   });
 
@@ -702,7 +689,6 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
             },
           ],
         }),
-        'validate-config-format',
         valid
           ? []
           : [
@@ -738,8 +724,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
                 },
               ],
             },
-          },
-          'nomenclature'
+          }
         );
         return;
       }
@@ -764,7 +749,6 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
             { category: '_fonts', isCategoryNode: true, name: 'font' },
           ],
         }),
-        'category-role',
         expectedViolations()
       );
     }
@@ -779,7 +763,6 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
     await scenario(
       { [path]: 'body {}\n' },
       rootLayer(),
-      'category-role',
       valid ? [] : [categoryRoleViolation('fafconfig.ts', path)]
     );
   });
@@ -798,7 +781,6 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
             },
           ],
         }),
-        'validate-config-format',
         [
           invalidImplicitExtension(
             'faf.locals[0].roles[0].implicitRoleExtensions[0]'
@@ -833,8 +815,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
               },
             ],
           },
-        },
-        'nomenclature'
+        }
       );
     }
   );
@@ -859,7 +840,6 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
           ],
         },
       },
-      'root-node-discipline',
       [
         privateCategoryUnidirectionalityViolation(
           'src/_utils/widget/widget.util.ts',
@@ -904,8 +884,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
             },
           ],
         },
-      },
-      'nomenclature'
+      }
     );
   });
 });
@@ -950,7 +929,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           },
         ],
       }),
-      'horizontal-hierarchies',
       [
         exclusiveFormsViolation('src/_types', 'src/_types/value.type.ts'),
         invalidHierarchyMembers('src/_types/value.type.ts', 'src/_types'),
@@ -966,7 +944,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         '../../../../_right/_b/_utils/target/index.js'
       ),
       rootLayer({ horizontalHierarchies: [[['_a'], ['_b']]] }),
-      'peer-separation',
       [
         peerSeparationViolation(
           'src/_left/_a/_utils/source/source.util.ts',
@@ -997,7 +974,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           ],
         },
       },
-      'horizontal-hierarchies',
       [
         invalidHierarchyMembers('src/a.ts', 'src'),
         ...files.map((file) => hierarchyOverlap(`src/${file}`, `src/${file}`)),
@@ -1031,7 +1007,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           { hierarchies: [[low], [high]], paths: [parent] },
         ],
       }),
-      'horizontal-hierarchies',
       valid
         ? []
         : [
@@ -1058,8 +1033,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
             paths: ['src/_utils/widget/_types'],
           },
         ],
-      }),
-      'horizontal-hierarchies'
+      })
     );
   });
 
@@ -1076,7 +1050,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           { hierarchies: [['_types'], ['_utils']], paths: [parent] },
         ],
       }),
-      'horizontal-hierarchies',
       [invalidHierarchyMembers(`${parent}/widget.util.ts`, parent)]
     );
   });
@@ -1110,7 +1083,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           ],
         },
       },
-      'horizontal-hierarchies',
       [invalidHierarchyMembers('src/main.ts', 'src')]
     );
   });
@@ -1133,8 +1105,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
             },
           ],
         },
-      },
-      'horizontal-hierarchies'
+      }
     );
   });
 
@@ -1152,7 +1123,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
     await scenario(
       linkedFragments(source, target, specifier),
       rootLayer({ horizontalHierarchies: [hierarchy] }),
-      'peer-separation',
       valid
         ? []
         : [
@@ -1174,7 +1144,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_low': {},
       },
       rootLayer({ horizontalHierarchies: [[['_low'], ['_high']]] }),
-      'peer-separation',
       [
         peerSeparationViolation(
           'src/_high/_types/a.type.ts',
@@ -1195,8 +1164,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_ui/_components/view/view.component.ts':
           "import { value } from '../../../_network/_apis/fetch/index.js';\nexport const view = value;\n",
       },
-      rootLayer({ horizontalHierarchies: [[['_network'], ['_ui']]] }),
-      'peer-separation'
+      rootLayer({ horizontalHierarchies: [[['_network'], ['_ui']]] })
     );
   });
 
@@ -1232,10 +1200,9 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         tree,
         rootLayer({
           horizontalHierarchies: [partitions.map((name) => [name])],
-        }),
-        'peer-separation'
+        })
       );
-      await scenario(tree, rootLayer(), 'peer-separation', [
+      await scenario(tree, rootLayer(), [
         peerSeparationViolation(
           `${source}/source.util.ts`,
           `${target}/index.ts`,
@@ -1251,7 +1218,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         rootLayer({
           horizontalHierarchies: [partitions.map((name) => [name])],
         }),
-        'peer-separation',
         [
           peerSeparationViolation(
             `${target}/target.util.ts`,
@@ -1272,7 +1238,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
         ],
       }),
-      'peer-separation',
       [
         peerSeparationViolation(
           'src/_utils/_atoms/a/a.util.ts',
@@ -1289,13 +1254,11 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         ...fragment('src/_components/_templates/layout', 'component'),
         ...fragment('src/_pages/home', 'page'),
       },
-      rootLayer(),
-      'containment-matrix'
+      rootLayer()
     );
     await scenario(
       fragment('src/_components/_pages/home', 'page'),
       rootLayer(),
-      'containment-matrix',
       [containmentViolation('fafconfig.ts', 'src/_components/_pages')]
     );
   });
@@ -1305,7 +1268,6 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
     await scenario(
       linkedFragments('src/_utils/a', 'src/_utils/b', directSpecifier),
       rootLayer(),
-      'peer-separation',
       [
         peerSeparationViolation(
           'src/_utils/a/a.util.ts',
@@ -1320,8 +1282,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_utils/_low/b',
         '../../_low/b/index.js'
       ),
-      rootLayer({ horizontalHierarchies: [[['_low'], ['_high']]] }),
-      'peer-separation'
+      rootLayer({ horizontalHierarchies: [[['_low'], ['_high']]] })
     );
   });
 });
@@ -1333,13 +1294,11 @@ describe('acceptance: Mimetic Path Structures', () => {
         ...fragment('src/_apis/root', 'api'),
         ...fragment('src/_apis/_todos/list', 'api'),
       },
-      mimetic(),
-      'exclusive-forms'
+      mimetic()
     );
     await scenario(
       { 'src/_types/value.type.ts': 'export type TValue = string;\n' },
       rootLayer({ mimeticPathStructures: [{ paths: ['src/_types'] }] }),
-      'classify-taxonomy',
       [incompatibleMimetic('src/_types')]
     );
   });
@@ -1351,7 +1310,6 @@ describe('acceptance: Mimetic Path Structures', () => {
         ...fragment('src/_apis/_todos/list', 'api'),
       },
       rootLayer(),
-      'exclusive-forms',
       [exclusiveFormsViolation('src/_apis')]
     );
   });
@@ -1373,7 +1331,6 @@ describe('acceptance: Mimetic Path Structures', () => {
       await scenario(
         { [`${path}/index.ts`]: 'export {};\n' },
         mimetic(),
-        'fragment-anatomy',
         segment === '[todo-id]'
           ? [
               missingMasterNode(`${path}/index.ts`, path),
@@ -1386,7 +1343,6 @@ describe('acceptance: Mimetic Path Structures', () => {
     await scenario(
       { [path]: {} },
       mimetic(),
-      'nomenclature',
       valid ? [] : [invalidNomenclature('fafconfig.ts', path)]
     );
   });
@@ -1402,15 +1358,11 @@ describe('acceptance: Mimetic Path Structures', () => {
           "import { value } from './patch-todo-status.api.js';\nexport const specValue = value;\n",
         [`${path}/patch-todo-status.util.ts`]: 'export const helper = 1;\n',
       },
-      mimetic(['patch']),
-      'category-role'
+      mimetic(['patch'])
     );
-    await scenario(
-      fragment(path, 'util'),
-      mimetic(['patch']),
-      'fragment-anatomy',
-      [missingMasterNode(`${path}/index.ts`, path)]
-    );
+    await scenario(fragment(path, 'util'), mimetic(['patch']), [
+      missingMasterNode(`${path}/index.ts`, path),
+    ]);
   });
 
   it.each([
@@ -1426,7 +1378,6 @@ describe('acceptance: Mimetic Path Structures', () => {
     await scenario(
       fragment(path, 'api'),
       mimetic(['get', 'post', 'patch']),
-      'nomenclature',
       valid
         ? []
         : [
@@ -1457,7 +1408,6 @@ describe('acceptance: Mimetic Path Structures', () => {
         await scenario(
           fragment(path, 'api'),
           mimetic(actions),
-          'nomenclature',
           valid
             ? []
             : [
@@ -1485,7 +1435,7 @@ describe('acceptance: Mimetic Path Structures', () => {
     async (name, valid) => {
       const path = `src/_pages/${name}`;
       if (name === '_home') {
-        await scenario(fragment(path, 'page'), rootLayer(), 'category-role', [
+        await scenario(fragment(path, 'page'), rootLayer(), [
           categoryRoleViolation(
             `${path}/_home.page.ts`,
             `${path}/_home.page.ts`
@@ -1496,7 +1446,6 @@ describe('acceptance: Mimetic Path Structures', () => {
       await scenario(
         fragment(path, 'page'),
         rootLayer({ mimeticPathStructures: [{ paths: ['src/_pages'] }] }),
-        'nomenclature',
         valid
           ? []
           : [
@@ -1512,15 +1461,10 @@ describe('acceptance: Mimetic Path Structures', () => {
 
   it('applies the Parent Category Action Catalog at every coordinate', async () => {
     const path = 'src/_apis/_todos/_[todo-id]/home';
-    await scenario(
-      fragment(path, 'api'),
-      mimetic(['get', 'post']),
-      'nomenclature',
-      [
-        invalidNomenclature(`${path}/home.api.ts`, path),
-        invalidNomenclature(`${path}/home.api.ts`, `${path}/home.api.ts`),
-      ]
-    );
+    await scenario(fragment(path, 'api'), mimetic(['get', 'post']), [
+      invalidNomenclature(`${path}/home.api.ts`, path),
+      invalidNomenclature(`${path}/home.api.ts`, `${path}/home.api.ts`),
+    ]);
 
     const nestedPath = 'src/_pages/home/_apis/delete-todo';
     await scenario(
@@ -1534,7 +1478,6 @@ describe('acceptance: Mimetic Path Structures', () => {
           { actions: ['get', 'post'], paths: ['src/_pages/home/_apis'] },
         ],
       }),
-      'nomenclature',
       [
         invalidNomenclature(`${nestedPath}/delete-todo.api.ts`, nestedPath),
         invalidNomenclature(
@@ -1556,8 +1499,7 @@ describe('acceptance: Mimetic Path Structures', () => {
           'api'
         ),
       },
-      mimetic(),
-      'nomenclature'
+      mimetic()
     );
   });
 
@@ -1572,8 +1514,7 @@ describe('acceptance: Mimetic Path Structures', () => {
         ...fragment('src/_apis/_blog/blog-feed', 'api'),
         ...fragment('src/_apis/blog', 'api'),
       },
-      mimetic(),
-      'nomenclature'
+      mimetic()
     );
   });
 
@@ -1586,8 +1527,7 @@ describe('acceptance: Mimetic Path Structures', () => {
         rootLayer({
           mimeticPathStructures: [{ paths: [`src/${category}`] }],
           roles: [...roles, { category, name: role }],
-        }),
-        'nomenclature'
+        })
       );
     }
   );
@@ -1609,8 +1549,7 @@ describe('acceptance: Mimetic Path Structures', () => {
             },
           ],
         },
-      },
-      'fragment-anatomy'
+      }
     );
   });
 
@@ -1619,7 +1558,6 @@ describe('acceptance: Mimetic Path Structures', () => {
       'Category Node',
       { 'src/_apis/value.type.ts': 'export type TValue = string;\n' },
       mimetic(),
-      'containment-matrix',
       [
         containmentViolation(
           'src/_apis/value.type.ts',
@@ -1631,7 +1569,6 @@ describe('acceptance: Mimetic Path Structures', () => {
       'Access Node',
       { 'src/_apis/index.ts': 'export {};\n' },
       mimetic(),
-      'containment-matrix',
       [containmentViolation('src/_apis/index.ts', 'src/_apis/index.ts')],
     ],
     [
@@ -1641,7 +1578,6 @@ describe('acceptance: Mimetic Path Structures', () => {
           'export type TValue = string;\n',
       },
       mimetic(),
-      'containment-matrix',
       [
         containmentViolation(
           'src/_apis/_domain/_types/value.type.ts',
@@ -1674,15 +1610,11 @@ describe('acceptance: Mimetic Path Structures', () => {
           ],
         },
       },
-      'validate-config-references',
       [nestedRootFragmentNotDirectChild('src/_apis/sub')],
     ],
-  ])(
-    'rejects direct mimetic %s',
-    async (_kind, tree, config, responsiblePart, expected) => {
-      await scenario(tree, config, responsiblePart, expected);
-    }
-  );
+  ])('rejects direct mimetic %s', async (_kind, tree, config, expected) => {
+    await scenario(tree, config, expected);
+  });
 
   it('allows Path Fragments at the root and at non-leaf coordinates', async () => {
     await scenario(
@@ -1691,8 +1623,7 @@ describe('acceptance: Mimetic Path Structures', () => {
         ...fragment('src/_apis/_todos/list', 'api'),
         ...fragment('src/_apis/_todos/_[todo-id]/detail', 'api'),
       },
-      mimetic(),
-      'exclusive-forms'
+      mimetic()
     );
   });
 
@@ -1707,7 +1638,6 @@ describe('acceptance: Mimetic Path Structures', () => {
           "export { all } from './get-todos.api.js';\n",
       },
       mimetic(['get']),
-      'peer-separation',
       [
         peerSeparationViolation(
           'src/_apis/_todos/get-todos/get-todos.api.ts',
@@ -1725,8 +1655,7 @@ describe('acceptance: Mimetic Path Structures', () => {
         ...fragment('src/_apis/_todos/get-todos/_utils/normalize'),
         ...fragment('src/_apis/_todos/_todos@shared/_utils/serialize'),
       },
-      mimetic(['get']),
-      'nomenclature'
+      mimetic(['get'])
     );
   });
 
@@ -1759,7 +1688,6 @@ describe('acceptance: Mimetic Path Structures', () => {
           ],
         },
       },
-      'private-category-visibility',
       [
         privateCategoryVisibilityViolation(
           'src/route/page.ts',
@@ -1777,8 +1705,7 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
       fragment(
         `src/${Array.from({ length: 40 }, () => '_domain').join('/')}/_utils/widget`
       ),
-      rootLayer(),
-      'containment-matrix'
+      rootLayer()
     );
   });
 
@@ -1788,8 +1715,7 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
         ...fragment('src/_domain/_utils/widget'),
         ...fragment('src/_domain/_utils/widget/_utils/helper'),
       },
-      rootLayer(),
-      'exclusive-forms'
+      rootLayer()
     );
   });
 
@@ -1799,31 +1725,22 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
         ...fragment('src/_components/button', 'component'),
         ...fragment('src/_components/button/_utils/normalize'),
       },
-      rootLayer(),
-      'fragment-anatomy'
+      rootLayer()
     );
   });
 
   it('does not allow converting one Category Node into a Fragment', async () => {
-    await scenario(
-      fragment('src/_types/value', 'type'),
-      rootLayer(),
-      'classification-completeness',
-      [
-        unclassifiableDirectory(
-          'src/_types/value/index.ts',
-          'src/_types/value'
-        ),
-        unclassifiableFile(
-          'src/_types/value/index.ts',
-          'src/_types/value/index.ts'
-        ),
-        unclassifiableFile(
-          'src/_types/value/value.type.ts',
-          'src/_types/value/value.type.ts'
-        ),
-      ]
-    );
+    await scenario(fragment('src/_types/value', 'type'), rootLayer(), [
+      unclassifiableDirectory('src/_types/value/index.ts', 'src/_types/value'),
+      unclassifiableFile(
+        'src/_types/value/index.ts',
+        'src/_types/value/index.ts'
+      ),
+      unclassifiableFile(
+        'src/_types/value/value.type.ts',
+        'src/_types/value/value.type.ts'
+      ),
+    ]);
   });
 
   it('allows extraction of independent Symbols as private Category Nodes', async () => {
@@ -1833,8 +1750,7 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
         'src/_utils/widget/_types/a.type.ts': 'export type TA = string;\n',
         'src/_utils/widget/_types/b.type.ts': 'export type TB = number;\n',
       },
-      rootLayer(),
-      'category-role'
+      rootLayer()
     );
   });
 
@@ -1845,14 +1761,13 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
       ...fragment('src/_components/button/_utils/normalize'),
       'src/_components/button/button.type.ts': `import { value } from '${internalSpecifier}';\nexport type TValue = typeof value;\n`,
     };
-    await scenario(tree, rootLayer(), 'private-category-visibility');
+    await scenario(tree, rootLayer());
     await scenario(
       {
         ...tree,
         'src/_components/button/index.ts': `import '${internalSpecifier}';\nexport { value } from './button.component.js';\n`,
       },
       rootLayer(),
-      'private-category-visibility',
       [
         edgeMessage(
           'src/_components/button/index.ts',
@@ -1883,8 +1798,7 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
         'src/_components/button/index.ts':
           "export { button } from './button.component.js';\n",
       },
-      rootLayer(),
-      'fractal-branch-visibility'
+      rootLayer()
     );
     await scenario(
       {
@@ -1895,7 +1809,6 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
           "export { button } from './button.component.js';\n",
       },
       rootLayer(),
-      'fragment-encapsulation',
       [
         fragmentEncapsulationViolation(
           'src/_components/button/button.component.ts',
@@ -1920,35 +1833,28 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
       [client]:
         "import { value } from './_utils/widget/index.js';\nexport const main = value;\n",
     };
-    await scenario(tree, config, 'fragment-encapsulation');
+    await scenario(tree, config);
     await scenario(
       { ...tree, ...fragment('src/_utils/widget/_utils/helper') },
-      config,
-      'fragment-encapsulation'
+      config
     );
     await scenario(
       {
         ...tree,
         ...fragment('src/_utils/widget/_widget@shared/_utils/helper'),
       },
-      config,
-      'fragment-encapsulation'
+      config
     );
   });
 
   it('allows contraction to direct Categories but rejects residual Layers', async () => {
-    await scenario(
-      fragment('src/_utils/widget'),
-      rootLayer(),
-      'exclusive-forms'
-    );
+    await scenario(fragment('src/_utils/widget'), rootLayer());
     await scenario(
       {
         ...fragment('src/_utils/widget'),
         ...fragment('src/_domain/_utils/other'),
       },
       rootLayer(),
-      'exclusive-forms',
       [exclusiveFormsViolation('src')]
     );
   });
@@ -1959,7 +1865,7 @@ describe('acceptance: proportionality and evolution without arbitrary thresholds
       rootLayer()
     );
     try {
-      expectScenario(await lintScenario(project.path), 'fragment-anatomy', []);
+      expectScenario(await lintScenario(project.path), []);
       const eslint = new ESLint({
         cwd: project.path,
         fix: true,
@@ -2009,16 +1915,14 @@ describe('acceptance: naming of Root Nodes and Foreign Nodes without exception c
             },
           ],
         },
-      },
-      'nomenclature'
+      }
     );
   });
 
   it('accepts a designated Foreign Node without a naming exception catalog and keeps it isolated', async () => {
     await scenario(
       { ...fragment('src/_utils/widget'), 'src/Design.Notes.MD': 'notes' },
-      rootLayer({ foreignNodes: ['src/Design.Notes.MD'] }),
-      'nomenclature'
+      rootLayer({ foreignNodes: ['src/Design.Notes.MD'] })
     );
     const specifier = '../../Design.Notes.js';
     await scenario(
@@ -2028,7 +1932,6 @@ describe('acceptance: naming of Root Nodes and Foreign Nodes without exception c
         'src/Design.Notes.ts': 'export const notes = 1;\n',
       },
       rootLayer({ foreignNodes: ['src/Design.Notes.ts'] }),
-      'foreign-node-isolation',
       [
         foreignNodeIsolationViolation(
           'src/_utils/widget/widget.util.ts',
@@ -2046,7 +1949,6 @@ describe('acceptance: naming of Root Nodes and Foreign Nodes without exception c
       rootLayer({
         localHorizontalHierarchies: [{ hierarchies: [], paths: [path] }],
       }),
-      'nomenclature',
       [invalidNomenclature('fafconfig.ts', path)]
     );
   });
@@ -2097,7 +1999,6 @@ describe('acceptance: Public Surface origin dependence and structural determinat
           ],
         },
       },
-      'classify-taxonomy',
       valid ? [] : [publicRootNodeNotEnumerated(path)]
     );
   });
@@ -2168,14 +2069,13 @@ describe('acceptance: Public Surface origin dependence and structural determinat
               },
             ],
           },
-        },
-        'classify-taxonomy'
+        }
       );
     }
   );
 
   it('changes Root Layer exposure after adding and relocating an entire unit', async () => {
-    await scenario({ src: {} }, rootLayer(), 'classify-taxonomy');
+    await scenario({ src: {} }, rootLayer());
     await surfaceProbe(
       fragment('src/_utils/widget'),
       rootLayer(),

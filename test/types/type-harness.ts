@@ -53,7 +53,6 @@ export const CONFIG_TYPES_IMPORT =
 const DEFAULT_FILE_VERSION = '1';
 const UTF8_ENCODING = 'utf8';
 const ALIAS_SPECIFIERS = new Set([
-  './fafconfig.type',
   './src/main.js',
   './src/main.ts',
   '@morriconeluca/eslint-plugin-faf',

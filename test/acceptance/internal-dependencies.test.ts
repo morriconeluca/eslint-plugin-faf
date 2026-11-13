@@ -467,7 +467,7 @@ const unknownPropertyOutcome = (propertyPath: string): TScenarioMessage => ({
   element: propertyPath,
   filePath: 'fafconfig.ts',
   line: 1,
-  message: `configuration/unknown-property: '${propertyPath}' is not a recognized property (D-14).`,
+  message: `configuration/unknown-property: '${propertyPath}' is not a recognized property (FAF §1.2, §6.9).`,
   messageId: 'configuration',
   ruleId: 'faf/conformity',
   severity: 2,
@@ -599,16 +599,11 @@ const collectInternalRankViolations = (
 const runScenario = async (
   tree: FileTree,
   config: Readonly<Record<string, unknown>>,
-  responsiblePart: string,
   expected: readonly TScenarioMessage[]
 ): Promise<void> => {
   const fixture = await createProject(tree, config);
   try {
-    expectScenario(
-      await lintScenario(fixture.path),
-      responsiblePart,
-      sortMessages(expected)
-    );
+    expectScenario(await lintScenario(fixture.path), sortMessages(expected));
   } finally {
     await fixture.rm();
   }
@@ -732,11 +727,11 @@ const foreignArcs = [
   ['src/foreign.ts', 'src/main.ts', true],
 ] as const;
 
-describe('acceptance: p7a', () => {
+describe('acceptance: internal dependencies', () => {
   const WARMUP_TIMEOUT_MS = 120_000;
   beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
 
-  describe('Rule: The public interface of a Fragment cannot be bypassed by external consumers', () => {
+  describe('The public interface of a Fragment cannot be bypassed by external consumers', () => {
     it.each([
       [
         'Root Node of the parent of the Private Category containing F',
@@ -815,7 +810,7 @@ describe('acceptance: p7a', () => {
               }
             : { faf: { locals: [local] } };
 
-        await runScenario(extraTree, config, 'fragment-encapsulation', [
+        await runScenario(extraTree, config, [
           fragmentEncapsulationOutcome(
             consumer,
             master,
@@ -843,7 +838,6 @@ describe('acceptance: p7a', () => {
           [source]: `\n  import '${specifier(source, destination)}';\n`,
         },
         { faf: { locals: [local] } },
-        'fragment-encapsulation',
         [
           fragmentEncapsulationOutcome(
             source,
@@ -869,7 +863,6 @@ describe('acceptance: p7a', () => {
           'src/_components/second/second.component.ts': value,
         },
         { faf: { locals: [{ roles, rootLayers: ['src'] }] } },
-        'peer-separation',
         [
           peerSeparationOutcome(
             source,
@@ -881,7 +874,7 @@ describe('acceptance: p7a', () => {
     });
   });
 
-  describe('Rule: The internal hierarchy of a Fragment is mandatory and strictly descending', () => {
+  describe('The internal hierarchy of a Fragment is mandatory and strictly descending', () => {
     it('applies the reference Roles model when adopted by the architect', async () => {
       await runScenario(
         {
@@ -904,7 +897,6 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'peer-separation',
         []
       );
     });
@@ -923,17 +915,6 @@ describe('acceptance: p7a', () => {
           destination,
           directory
         );
-
-        const getResponsiblePart = (): string => {
-          if (to === 'spec' || to === 'story') {
-            return 'sub-graph-node-isolation';
-          }
-          if (from === 'index' && !allowed) {
-            return 'access-node-contract';
-          }
-          return 'peer-separation';
-        };
-        const responsiblePart = getResponsiblePart();
 
         const indexExport = "export { value } from './unit.component.js';\n";
         const sourceTail = from === 'index' ? indexExport : value;
@@ -957,7 +938,6 @@ describe('acceptance: p7a', () => {
               ],
             },
           },
-          responsiblePart,
           violations
         );
       }
@@ -976,7 +956,6 @@ describe('acceptance: p7a', () => {
           'src/_components/unit/unit.type.ts': value,
         },
         { faf: { locals: [{ roles, rootLayers: ['src'] }] } },
-        'peer-separation',
         []
       );
 
@@ -993,7 +972,6 @@ describe('acceptance: p7a', () => {
           'src/_components/unit/unit.type.ts': value,
         },
         { faf: { locals: [{ roles, rootLayers: ['src'] }] } },
-        'peer-separation',
         [
           peerSeparationOutcome(
             source,
@@ -1015,7 +993,6 @@ describe('acceptance: p7a', () => {
           [source]: `import '${specifier(source, destination)}';\n${value}`,
         },
         { faf: { locals: [local] } },
-        'peer-separation',
         []
       );
     });
@@ -1030,7 +1007,6 @@ describe('acceptance: p7a', () => {
           'src/_components/unit/unit.component.ts': value,
         },
         { faf: { locals: [{ roles, rootLayers: ['src'] }] } },
-        'fragment-anatomy',
         [fragmentNodeRankOutcome(contextNode)]
       );
     });
@@ -1061,7 +1037,6 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'peer-separation',
         []
       );
     });
@@ -1080,12 +1055,9 @@ describe('acceptance: p7a', () => {
     ] as const)(
       'rejects a declaration that tries to assign a rank to %s',
       async (_name, declaration, propertyPath) => {
-        await runScenario(
-          tableTree,
-          { faf: { locals: [declaration] } },
-          'validate-config-format',
-          [unknownPropertyOutcome(propertyPath)]
-        );
+        await runScenario(tableTree, { faf: { locals: [declaration] } }, [
+          unknownPropertyOutcome(propertyPath),
+        ]);
       }
     );
 
@@ -1103,7 +1075,6 @@ describe('acceptance: p7a', () => {
             "export { value } from './beta.component.js';\nexport { value as typeValue } from './beta.type.js';\n",
         },
         { faf: { locals: [{ roles, rootLayers: ['src'] }] } },
-        'peer-separation',
         [
           peerSeparationOutcome(
             source,
@@ -1138,13 +1109,12 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'peer-separation',
         []
       );
     });
   });
 
-  describe('Rule: Sub-Graph Nodes are non-importable entries, not FAF-exempt zones', () => {
+  describe('Sub-Graph Nodes are non-importable entries, not FAF-exempt zones', () => {
     it('allows a Sub-Graph Node to consume lower Fragment Nodes of the same Fragment', async () => {
       await runScenario(
         {
@@ -1165,7 +1135,6 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'peer-separation',
         []
       );
     });
@@ -1231,7 +1200,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${spec}';\n${tableTree[source] ?? value}`,
           },
           { faf: { locals: [local] } },
-          'sub-graph-node-isolation',
           buildExpected(source, destination, spec)
         );
       }
@@ -1256,7 +1224,6 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'sub-graph-node-isolation',
         []
       );
     });
@@ -1281,13 +1248,12 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'sub-graph-node-isolation',
         []
       );
     });
   });
 
-  describe('Rule: Private Categories are accessible from outside only to enabled direct nodes of the parent', () => {
+  describe('Private Categories are accessible from outside only to enabled direct nodes of the parent', () => {
     it('privacy is automatic and cannot be disabled by label', async () => {
       const propertyPath = 'faf.locals[0].privateCategories';
       await runScenario(
@@ -1302,7 +1268,6 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'validate-config-format',
         [unknownPropertyOutcome(propertyPath)]
       );
     });
@@ -1357,7 +1322,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${spec}';\n${tableTree[source] ?? value}`,
           },
           { faf: { locals: [local] } },
-          'private-category-visibility',
           buildExpected(source, destination, spec)
         );
       }
@@ -1407,7 +1371,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${spec}';\n${tableTree[source] ?? value}`,
           },
           { faf: { locals: [local] } },
-          'private-category-visibility',
           buildExpected(source, destination, spec)
         );
       }
@@ -1437,7 +1400,6 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'private-category-visibility',
         []
       );
     });
@@ -1458,7 +1420,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${specifier(source, access)}';\nimport '${specifier(source, master)}';\nimport '${specifier(source, type)}';\n${value}`,
           },
           { faf: { locals: [local] } },
-          'fragment-encapsulation',
           [
             fragmentEncapsulationOutcome(
               source,
@@ -1488,7 +1449,6 @@ describe('acceptance: p7a', () => {
           [source]: `import '${specifier(source, destination)}';\n${value}`,
         },
         { faf: { locals: [local] } },
-        'private-category-visibility',
         [
           privateCategoryVisibilityOutcome(
             source,
@@ -1526,7 +1486,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${spec}';\n${value}`,
           },
           { faf: { locals: [local] } },
-          'private-category-visibility',
           violations
         );
       }
@@ -1556,7 +1515,6 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'horizontal-hierarchies',
         [
           horizontalHierarchyMembersOutcome('src'),
           peerSeparationOutcome(source, destination, spec),
@@ -1566,7 +1524,7 @@ describe('acceptance: p7a', () => {
     });
   });
 
-  describe('Rule: Visibility of a Fractal Branch descends recursively in the perimeter of its parent', () => {
+  describe('Visibility of a Fractal Branch descends recursively in the perimeter of its parent', () => {
     it.each([
       ['direct Root Node of src', 'src/main.ts', () => []],
       ['nested Root Fragment Root Node', 'src/app/app.ts', () => []],
@@ -1618,7 +1576,6 @@ describe('acceptance: p7a', () => {
               ],
             },
           },
-          'fractal-branch-visibility',
           buildExpected(source, destination, spec)
         );
       }
@@ -1663,7 +1620,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${spec}';\n${tableTree[source] ?? value}`,
           },
           { faf: { locals: [local] } },
-          'fractal-branch-visibility',
           buildExpected(source, destination, spec)
         );
       }
@@ -1692,7 +1648,6 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'peer-separation',
         [
           peerSeparationOutcome(
             source,
@@ -1756,47 +1711,32 @@ describe('acceptance: p7a', () => {
               ],
             },
           },
-          'fractal-branch-visibility',
           []
         );
       }
     );
 
     it.each([
-      [
-        'direct Category Node',
-        '_types/public.type.ts',
-        'fractal-branch-visibility',
-        () => [],
-      ],
-      [
-        'Fragment interface',
-        '_components/unit/index.ts',
-        'fractal-branch-visibility',
-        () => [],
-      ],
+      ['direct Category Node', '_types/public.type.ts', () => []],
+      ['Fragment interface', '_components/unit/index.ts', () => []],
       [
         'Sub-Category Category Node',
         '_domain/_types/_primitives/public.type.ts',
-        'fractal-branch-visibility',
         () => [],
       ],
       [
         'Sub-Layer Category Node',
         '_domain/_nested/_types/public.type.ts',
-        'fractal-branch-visibility',
         () => [],
       ],
       [
         'Path Fragment Access Node',
         '_domain/_pages/get-user/index.ts',
-        'fractal-branch-visibility',
         () => [],
       ],
       [
         'internal Fragment Node',
         '_components/unit/unit.component.ts',
-        'fragment-encapsulation',
         (source: string, destination: string, spec: string) => [
           fragmentEncapsulationOutcome(source, destination, spec),
         ],
@@ -1804,7 +1744,6 @@ describe('acceptance: p7a', () => {
       [
         'internal Sub-Graph Node',
         '_components/unit/unit.spec.ts',
-        'sub-graph-node-isolation',
         (source: string, destination: string, spec: string) => [
           subGraphNodeIsolationOutcome(source, destination, spec),
         ],
@@ -1812,7 +1751,6 @@ describe('acceptance: p7a', () => {
       [
         'unit in Private Category',
         '_components/unit/_utils/detail/index.ts',
-        'private-category-visibility',
         (source: string, destination: string, spec: string) => [
           privateCategoryVisibilityOutcome(source, destination, spec),
         ],
@@ -1820,14 +1758,13 @@ describe('acceptance: p7a', () => {
       [
         'unit in further Branch whose parent does not contain consumer',
         '_components/unit/_unit@shared/_types/shared.type.ts',
-        'fractal-branch-visibility',
         (source: string, destination: string, spec: string) => [
           fractalBranchVisibilityOutcome(source, destination, spec),
         ],
       ],
     ] as const)(
       'does not make Branch visibility transitive: %s',
-      async (_label, target, responsiblePart, buildExpected) => {
+      async (_label, target, buildExpected) => {
         const prefix = 'src/_src@shared';
         const destination = `${prefix}/${target}`;
         const source = 'src/main.ts';
@@ -1892,7 +1829,6 @@ describe('acceptance: p7a', () => {
               ],
             },
           },
-          responsiblePart,
           buildExpected(source, destination, spec)
         );
       }
@@ -1910,7 +1846,6 @@ describe('acceptance: p7a', () => {
           [source]: `import '${specifier(source, destination)}';\n${value}`,
         },
         { faf: { locals: [local] } },
-        'fractal-branch-visibility',
         [
           fractalBranchVisibilityOutcome(
             source,
@@ -1941,7 +1876,6 @@ describe('acceptance: p7a', () => {
             "export { value } from './btn.component.js';\n",
         },
         { faf: { locals: [{ roles, rootLayers: ['src'] }] } },
-        'private-category-visibility',
         [
           cycleOutcome(branchSource, [
             [branchSource, privateDestination, privateSource, branchSource],
@@ -1994,20 +1928,14 @@ describe('acceptance: p7a', () => {
             locals: [local],
           },
         },
-        'private-category-visibility',
         [privateCategoryVisibilityOutcome(source, destination, importSpec)]
       );
     });
   });
 
-  describe('Rule: Compound Component table composes isolated units and shares details through Branches of distinct scopes', () => {
+  describe('Compound Component table composes isolated units and shares details through Branches of distinct scopes', () => {
     it('recognizes the complete Compound Component structure and distinct Branch scopes', async () => {
-      await runScenario(
-        tableTree,
-        { faf: { locals: [local] } },
-        'containment-matrix',
-        []
-      );
+      await runScenario(tableTree, { faf: { locals: [local] } }, []);
     });
 
     it.each(children)(
@@ -2023,7 +1951,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${specifier(source, accessDestination)}';\n${value}`,
           },
           { faf: { locals: [local] } },
-          'private-category-visibility',
           []
         );
 
@@ -2033,7 +1960,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${specifier(source, masterDestination)}';\n${value}`,
           },
           { faf: { locals: [local] } },
-          'fragment-encapsulation',
           [
             fragmentEncapsulationOutcome(
               source,
@@ -2058,7 +1984,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${specifier(source, accessDestination)}';\n${value}`,
           },
           { faf: { locals: [local] } },
-          'peer-separation',
           [
             peerSeparationOutcome(
               source,
@@ -2074,7 +1999,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${specifier(source, masterDestination)}';\n${value}`,
           },
           { faf: { locals: [local] } },
-          'peer-separation',
           [
             fragmentEncapsulationOutcome(
               source,
@@ -2092,67 +2016,41 @@ describe('acceptance: p7a', () => {
     );
 
     it.each([
-      [
-        '_components/table-body/table-body.component.ts',
-        'fractal-branch-visibility',
-        () => [],
-      ],
-      [
-        '_components/table-cell/table-cell.component.ts',
-        'fractal-branch-visibility',
-        () => [],
-      ],
-      [
-        '_components/table-head/table-head.component.ts',
-        'fractal-branch-visibility',
-        () => [],
-      ],
+      ['_components/table-body/table-body.component.ts', () => []],
+      ['_components/table-cell/table-cell.component.ts', () => []],
+      ['_components/table-head/table-head.component.ts', () => []],
       [
         '_components/table-header-cell/table-header-cell.component.ts',
-        'fractal-branch-visibility',
         () => [],
       ],
-      [
-        '_components/table-header-cell/table-header-cell.hook.ts',
-        'fractal-branch-visibility',
-        () => [],
-      ],
-      [
-        '_components/table-row/table-row.component.ts',
-        'fractal-branch-visibility',
-        () => [],
-      ],
+      ['_components/table-header-cell/table-header-cell.hook.ts', () => []],
+      ['_components/table-row/table-row.component.ts', () => []],
       [
         '_components/table-row/index.ts',
-        'access-node-contract',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
         ],
       ],
       [
         'table.component.ts',
-        'fractal-branch-visibility',
         (s: string, d: string, spec: string) => [
           fractalBranchVisibilityOutcome(s, d, spec),
         ],
       ],
       [
         'table.hook.ts',
-        'fractal-branch-visibility',
         (s: string, d: string, spec: string) => [
           fractalBranchVisibilityOutcome(s, d, spec),
         ],
       ],
       [
         'table.spec.ts',
-        'fractal-branch-visibility',
         (s: string, d: string, spec: string) => [
           fractalBranchVisibilityOutcome(s, d, spec),
         ],
       ],
       [
         'index.ts',
-        'access-node-contract',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
           fractalBranchVisibilityOutcome(s, d, spec),
@@ -2161,7 +2059,6 @@ describe('acceptance: p7a', () => {
       ],
       [
         '_utils/sort-table-rows/sort-table-rows.util.ts',
-        'fractal-branch-visibility',
         (s: string, d: string, spec: string) => [
           fractalBranchVisibilityOutcome(s, d, spec),
           peerSeparationOutcome(s, d, spec),
@@ -2170,7 +2067,6 @@ describe('acceptance: p7a', () => {
       ],
       [
         '_table@shared/_contexts/table-context/table-context.context.ts',
-        'fractal-branch-visibility',
         (s: string, d: string, spec: string) => [
           fractalBranchUnidirectionalityOutcome(s, d, spec),
           fractalBranchVisibilityOutcome(s, d, spec),
@@ -2180,7 +2076,7 @@ describe('acceptance: p7a', () => {
       ],
     ] as const)(
       'the reading hook has the scope of the _components Private Category only: %s',
-      async (subSource, responsiblePart, buildExpected) => {
+      async (subSource, buildExpected) => {
         const source = `${table}/${subSource}`;
         const destination = `${reader}/index.ts`;
         const spec = specifier(source, destination);
@@ -2191,65 +2087,23 @@ describe('acceptance: p7a', () => {
             [source]: `import '${spec}';\n${tableTree[source] ?? value}`,
           },
           { faf: { locals: [local] } },
-          responsiblePart,
           buildExpected(source, destination, spec)
         );
       }
     );
 
     it.each([
-      [
-        `${table}/table.component.ts`,
-        `${context}/index.ts`,
-        'peer-separation',
-        () => [],
-      ],
-      [
-        `${table}/table.hook.ts`,
-        `${context}/index.ts`,
-        'peer-separation',
-        () => [],
-      ],
-      [
-        `${body}/table-body.component.ts`,
-        `${context}/index.ts`,
-        'peer-separation',
-        () => [],
-      ],
-      [
-        `${reader}/use-table-context.hook.ts`,
-        `${context}/index.ts`,
-        'peer-separation',
-        () => [],
-      ],
-      [
-        `${sorter}/sort-table-rows.util.ts`,
-        sortType,
-        'peer-separation',
-        () => [],
-      ],
-      [
-        `${sorter}/sort-table-rows.type.ts`,
-        sortType,
-        'peer-separation',
-        () => [],
-      ],
-      [
-        `${context}/table-context.context.ts`,
-        sortType,
-        'peer-separation',
-        () => [],
-      ],
-      [
-        `${context}/table-context.type.ts`,
-        sortType,
-        'peer-separation',
-        () => [],
-      ],
+      [`${table}/table.component.ts`, `${context}/index.ts`, () => []],
+      [`${table}/table.hook.ts`, `${context}/index.ts`, () => []],
+      [`${body}/table-body.component.ts`, `${context}/index.ts`, () => []],
+      [`${reader}/use-table-context.hook.ts`, `${context}/index.ts`, () => []],
+      [`${sorter}/sort-table-rows.util.ts`, sortType, () => []],
+      [`${sorter}/sort-table-rows.type.ts`, sortType, () => []],
+      [`${context}/table-context.context.ts`, sortType, () => []],
+      [`${context}/table-context.type.ts`, sortType, () => []],
       [
         sortType,
         `${context}/index.ts`,
-        'peer-separation',
         (s: string, d: string, spec: string) => [
           peerSeparationOutcome(s, d, spec),
         ],
@@ -2257,7 +2111,6 @@ describe('acceptance: p7a', () => {
       [
         `${table}/index.ts`,
         `${context}/index.ts`,
-        'access-node-contract',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
           fractalBranchVisibilityOutcome(s, d, spec),
@@ -2266,7 +2119,6 @@ describe('acceptance: p7a', () => {
       [
         `${table}/index.ts`,
         sortType,
-        'access-node-contract',
         (s: string, d: string, spec: string) => [
           accessNodeSourcesOutcome(s, d, spec),
           fractalBranchVisibilityOutcome(s, d, spec),
@@ -2274,7 +2126,7 @@ describe('acceptance: p7a', () => {
       ],
     ] as const)(
       'apical Branch exposes context and types within table respecting Category hierarchy: %s to %s',
-      async (source, destination, responsiblePart, buildExpected) => {
+      async (source, destination, buildExpected) => {
         const spec = specifier(source, destination);
         await runScenario(
           {
@@ -2282,7 +2134,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${spec}';\n${tableTree[source] ?? value}`,
           },
           { faf: { locals: [local] } },
-          responsiblePart,
           buildExpected(source, destination, spec)
         );
       }
@@ -2303,7 +2154,6 @@ describe('acceptance: p7a', () => {
           [source]: `import { value as read } from '${specifier(source, hookAccess)}';\nexport const value = () => read();\n`,
         },
         { faf: { locals: [local] } },
-        're-export-prohibition',
         []
       );
     });
@@ -2311,35 +2161,31 @@ describe('acceptance: p7a', () => {
     it.each([
       [
         `${table}/_components/table-header-cell/table-header-cell.hook.ts`,
-        'private-category-visibility',
         (s: string, d: string, spec: string) => [
           privateCategoryUnidirectionalityOutcome(s, d, spec),
         ],
       ],
       [
         `${reader}/use-table-context.hook.ts`,
-        'private-category-visibility',
         (s: string, d: string, spec: string) => [
           privateCategoryUnidirectionalityOutcome(s, d, spec),
         ],
       ],
       [
         `${context}/table-context.context.ts`,
-        'fractal-branch-unidirectionality',
         (s: string, d: string, spec: string) => [
           fractalBranchUnidirectionalityOutcome(s, d, spec),
         ],
       ],
       [
         `${sorter}/sort-table-rows.util.ts`,
-        'private-category-visibility',
         (s: string, d: string, spec: string) => [
           privateCategoryUnidirectionalityOutcome(s, d, spec),
         ],
       ],
     ] as const)(
       'neither private details nor shared context may depend on direct nodes of table: %s',
-      async (source, responsiblePart, buildExpected) => {
+      async (source, buildExpected) => {
         for (const role of ['type', 'hook'] as const) {
           const destination = `${table}/table.${role}.ts`;
           const spec = specifier(source, destination);
@@ -2349,7 +2195,6 @@ describe('acceptance: p7a', () => {
               [source]: `import '${spec}';\n${tableTree[source] ?? value}`,
             },
             { faf: { locals: [local] } },
-            responsiblePart,
             buildExpected(source, destination, spec)
           );
         }
@@ -2428,14 +2273,13 @@ describe('acceptance: p7a', () => {
             [source]: `export { value } from '${spec}';\n`,
           },
           { faf: { locals: [local] } },
-          'access-node-contract',
           buildExpected(source, destination, spec)
         );
       }
     );
   });
 
-  describe('Rule: Foreign Nodes do not participate in the Dependency Graph', () => {
+  describe('Foreign Nodes do not participate in the Dependency Graph', () => {
     it.each([
       'src/Foreign File.ts',
       `${table}/Foreign File.ts`,
@@ -2477,7 +2321,6 @@ describe('acceptance: p7a', () => {
               ],
             },
           },
-          'containment-matrix',
           []
         );
       }
@@ -2516,7 +2359,6 @@ describe('acceptance: p7a', () => {
             'src/main.ts': resolveMainContent(source, operation),
           },
           { faf: { locals: [foreignLocal] } },
-          'foreign-node-isolation',
           expected
         );
       }
@@ -2532,7 +2374,6 @@ describe('acceptance: p7a', () => {
           [source]: `import '${spec}';\n`,
         },
         { faf: { locals: [foreignLocal] } },
-        'foreign-node-isolation',
         [
           foreignNodeIsolationOutcome(source, destination, spec),
           treeOpacityOutcome(source, destination, spec),
@@ -2552,7 +2393,6 @@ describe('acceptance: p7a', () => {
         await runScenario(
           { ...foreignTree, 'src/foreign.ts': content },
           { faf: { locals: [foreignLocal] } },
-          'foreign-node-isolation',
           []
         );
       }
@@ -2574,18 +2414,12 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'foreign-node-isolation',
         []
       );
     });
 
     it('the Foreign Domain exclusively preserves Foreign contents', async () => {
-      await runScenario(
-        foreignTree,
-        { faf: { locals: [foreignLocal] } },
-        'containment-matrix',
-        []
-      );
+      await runScenario(foreignTree, { faf: { locals: [foreignLocal] } }, []);
 
       const logicalUtil = 'src/_tooling/_utils/tool/tool.util.ts';
       const logicalIndex = 'src/_tooling/_utils/tool/index.ts';
@@ -2596,7 +2430,6 @@ describe('acceptance: p7a', () => {
           [logicalUtil]: value,
         },
         { faf: { locals: [foreignLocal] } },
-        'containment-matrix',
         [
           foreignNodeIsolationOutcome(
             logicalIndex,
@@ -2624,7 +2457,6 @@ describe('acceptance: p7a', () => {
             ],
           },
         },
-        'foreign-node-isolation',
         []
       );
     });
@@ -2641,7 +2473,6 @@ describe('acceptance: p7a', () => {
             [source]: `import '${spec}';\n`,
           },
           { faf: { locals: [foreignLocal] } },
-          'foreign-node-isolation',
           [foreignNodeIsolationOutcome(source, destination, spec)]
         );
       }

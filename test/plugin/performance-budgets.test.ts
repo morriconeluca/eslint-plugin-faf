@@ -13,7 +13,7 @@ const SMALL_SCALE = 100;
 const BENCHMARK_SCALE = 100;
 const BENCHMARK_TIMEOUT_MS = 60_000;
 
-describe('performance budgets (G5)', () => {
+describe('performance budgets', () => {
   it(
     'verifies cold and warm performance on a synthetic conforming FAF project',
     async () => {

@@ -216,7 +216,6 @@ const treeOpacityViolation = (
 
 const scenario = (
   name: string,
-  responsiblePart: string,
   tree: FileTree,
   expected: readonly TScenarioMessage[] = [],
   declarations: Readonly<Record<string, unknown>> = local,
@@ -227,11 +226,7 @@ const scenario = (
       faf: { locals: [declarations, ...additionalLocals] },
     });
     try {
-      expectScenario(
-        await lintScenario(fixture.path),
-        responsiblePart,
-        expected
-      );
+      expectScenario(await lintScenario(fixture.path), expected);
     } finally {
       await fixture.rm();
     }
@@ -255,7 +250,6 @@ describe('acceptance: structural norms', () => {
       const path = `${container}/${name}`;
       scenario(
         `derives the Master from ${container} for ${role}`,
-        'fragment-anatomy',
         {
           ...(container?.startsWith('src/_components/_atoms') !== true &&
             button),
@@ -275,7 +269,7 @@ describe('acceptance: structural norms', () => {
       );
     }
 
-    scenario('does not inherit the Parent Fragment Role', 'fragment-anatomy', {
+    scenario('does not inherit the Parent Fragment Role', {
       ...button,
       'src/_components/button/_utils/normalize/index.ts':
         "export { normalize } from './normalize.util.js';\n",
@@ -287,7 +281,6 @@ describe('acceptance: structural norms', () => {
 
     scenario(
       'recognizes every direct Fragment node qualification',
-      'fragment-anatomy',
       {
         ...button,
         'src/_components/button/button.hook.ts': 'export const hook = 1;\n',
@@ -397,7 +390,7 @@ describe('acceptance: structural norms', () => {
         [fragmentRankViolation('src/_components/button/button.context.ts')],
       ],
     ] as const) {
-      scenario(`rejects ${name}`, 'fragment-anatomy', tree, expected);
+      scenario(`rejects ${name}`, tree, expected);
     }
 
     for (const file of [
@@ -409,7 +402,6 @@ describe('acceptance: structural norms', () => {
     ]) {
       scenario(
         `rejects unauthorized Fragment file ${file}`,
-        'fragment-anatomy',
         {
           ...button,
           [`src/_components/button/${file}`]: 'export {};\n',
@@ -420,28 +412,21 @@ describe('acceptance: structural norms', () => {
 
     scenario(
       'a Foreign index is not a logical Access Node',
-      'fragment-anatomy',
       { ...button, 'src/_components/button/index.ts': '' },
       [missingAccessViolation('src/_components/button/button.component.tsx')],
       { ...local, foreignNodes: ['src/_components/button/index.ts'] }
     );
 
-    scenario(
-      'allows the same internal Role in separate Fragments',
-      'fragment-anatomy',
-      {
-        ...button,
-        'src/_components/button/button.type.ts':
-          'export type TValue = number;\n',
-        'src/_components/icon/icon.component.ts': 'export const icon = 1;\n',
-        'src/_components/icon/icon.type.ts': 'export type TValue = number;\n',
-        'src/_components/icon/index.ts':
-          "export { icon } from './icon.component.js';\n",
-      }
-    );
+    scenario('allows the same internal Role in separate Fragments', {
+      ...button,
+      'src/_components/button/button.type.ts': 'export type TValue = number;\n',
+      'src/_components/icon/icon.component.ts': 'export const icon = 1;\n',
+      'src/_components/icon/icon.type.ts': 'export type TValue = number;\n',
+      'src/_components/icon/index.ts':
+        "export { icon } from './icon.component.js';\n",
+    });
     scenario(
       'rejects two type nodes in one Fragment',
-      'fragment-anatomy',
       {
         ...button,
         'src/_components/button/button.type.ts':
@@ -461,7 +446,6 @@ describe('acceptance: structural norms', () => {
       const path = `src/_utils/normalize/normalize.${role}.ts`;
       scenario(
         `requires strict internal Rank for ${role}`,
-        'fragment-anatomy',
         {
           [path]: 'export const value = 1;\n',
           'src/_utils/normalize/index.ts':
@@ -475,7 +459,6 @@ describe('acceptance: structural norms', () => {
 
     scenario(
       'exporting the hook does not select a different Master',
-      'access-node-contract',
       {
         ...button,
         'src/_components/button/button.hook.ts': 'export const hook = 1;\n',
@@ -485,25 +468,21 @@ describe('acceptance: structural norms', () => {
       [masterNotExportedViolation('src/_components/button/index.ts')]
     );
 
-    scenario(
-      'keeps complete anatomy across three Parent Fragment boundaries',
-      'fragment-anatomy',
-      {
-        ...button,
-        'src/_components/button/_components/icon/_utils/normalize/index.ts':
-          "export { normalize } from './normalize.util.js';\n",
-        'src/_components/button/_components/icon/_utils/normalize/normalize.util.ts':
-          'export const normalize = 1;\n',
-        'src/_components/button/_components/icon/icon.component.ts':
-          'export const icon = 1;\n',
-        'src/_components/button/_components/icon/index.ts':
-          "export { icon } from './icon.component.js';\n",
-      }
-    );
+    scenario('keeps complete anatomy across three Parent Fragment boundaries', {
+      ...button,
+      'src/_components/button/_components/icon/_utils/normalize/index.ts':
+        "export { normalize } from './normalize.util.js';\n",
+      'src/_components/button/_components/icon/_utils/normalize/normalize.util.ts':
+        'export const normalize = 1;\n',
+      'src/_components/button/_components/icon/icon.component.ts':
+        'export const icon = 1;\n',
+      'src/_components/button/_components/icon/index.ts':
+        "export { icon } from './icon.component.js';\n",
+    });
   });
 
   describe('Category Role and forms', () => {
-    scenario('imposes the Category Role only on the Master', 'category-role', {
+    scenario('imposes the Category Role only on the Master', {
       ...button,
       'src/_components/button/button.hook.ts': 'export const hook = 1;\n',
       'src/_components/button/button.type.ts': 'export type TValue = number;\n',
@@ -511,7 +490,6 @@ describe('acceptance: structural norms', () => {
 
     scenario(
       'requires the imposed type Master in the Fragments form',
-      'fragment-anatomy',
       {
         'src/_types/user/index.ts': 'export {};\n',
         'src/_types/user/user.schema.ts': 'export const user = 1;\n',
@@ -534,7 +512,6 @@ describe('acceptance: structural norms', () => {
     ] as const) {
       scenario(
         `rejects nonhomogeneous ${file} in ${nodes ? 'Nodes' : 'Fragments'} form`,
-        'category-role',
         {
           [`src/_types/${file}`]: 'export {};\n',
         },
@@ -551,7 +528,6 @@ describe('acceptance: structural norms', () => {
 
     scenario(
       'does not encapsulate a Category Node as a Fragment',
-      'classification-completeness',
       {
         'src/_types/user/index.ts':
           "export type { TUser } from './user.type.js';\n",
@@ -566,7 +542,6 @@ describe('acceptance: structural norms', () => {
 
     scenario(
       'does not mix direct Fragments and Category Nodes',
-      'category-role',
       {
         ...button,
         'src/_components/other.component.ts': 'export const other = 1;\n',
@@ -576,7 +551,6 @@ describe('acceptance: structural norms', () => {
 
     scenario(
       'the Role form cannot be overridden for one occurrence',
-      'classification-completeness',
       {
         'src/_src@shared/_types/other/index.ts':
           "export type { TOther } from './other.type.js';\n",
@@ -597,7 +571,6 @@ describe('acceptance: structural norms', () => {
     for (const role of ['spec', 'story']) {
       scenario(
         `does not give a Category Node a dedicated ${role} node`,
-        'category-role',
         {
           [`src/_types/user.${role}.ts`]: 'export {};\n',
           'src/_types/user.type.ts': 'export type TUser = number;\n',
@@ -608,7 +581,6 @@ describe('acceptance: structural norms', () => {
 
     scenario(
       'allows different Role forms in different Trees',
-      'category-role',
       {
         'lib/_utils/normalize.util.ts': 'export const normalize = 1;\n',
         'src/_utils/normalize/index.ts':
@@ -627,22 +599,13 @@ describe('acceptance: structural norms', () => {
       ]
     );
 
-    scenario(
-      'allows explicit and implicit Category Nodes together',
-      'category-role',
-      {
-        'src/_styles/reset.style.css': '',
-        'src/_styles/theme.css': '',
-      }
-    );
-    scenario(
-      'propagates Role and Nodes form through nested Sub-Categories',
-      'category-role',
-      {
-        'src/_schemas/_dtos/_requests/user.schema.ts':
-          'export const user = 1;\n',
-      }
-    );
+    scenario('allows explicit and implicit Category Nodes together', {
+      'src/_styles/reset.style.css': '',
+      'src/_styles/theme.css': '',
+    });
+    scenario('propagates Role and Nodes form through nested Sub-Categories', {
+      'src/_schemas/_dtos/_requests/user.schema.ts': 'export const user = 1;\n',
+    });
 
     for (const [container, unit, tree, anchor] of [
       [
@@ -701,18 +664,14 @@ describe('acceptance: structural norms', () => {
         'src/_types/_primitives/item.type.ts',
       ],
     ] as const) {
-      scenario(
-        `rejects branching with direct ${unit} in ${container}`,
-        'exclusive-forms',
-        tree,
-        [exclusiveFormsViolation(container, anchor)]
-      );
+      scenario(`rejects branching with direct ${unit} in ${container}`, tree, [
+        exclusiveFormsViolation(container, anchor),
+      ]);
     }
 
     for (const container of ['src/_types', 'src/_types/_primitives']) {
       scenario(
         `does not create a collective barrel in ${container}`,
-        'category-role',
         {
           [`${container}/index.ts`]:
             "export type { TUser } from './user.type.js';\nexport type { TOther } from './other.type.js';\n",
@@ -722,48 +681,36 @@ describe('acceptance: structural norms', () => {
         [categoryRoleViolation(`${container}/index.ts`)]
       );
     }
-    scenario('a Category Branch resets the imposed Role', 'category-role', {
+    scenario('a Category Branch resets the imposed Role', {
       'src/_styles/_styles@shared/_fonts/inter.woff2': '',
       'src/_styles/theme.css': '',
     });
   });
 
   describe('Layer forms', () => {
-    scenario('a Layer accepts heterogeneous Categories', 'category-role', {
+    scenario('a Layer accepts heterogeneous Categories', {
       'src/_domain/_models/value.model.ts': 'export const value = 1;\n',
       'src/_domain/_schemas/value.schema.ts': 'export const value = 1;\n',
       'src/_domain/_types/value.type.ts': 'export type TValue = number;\n',
     });
-    scenario(
-      'Sub-Layers retain the ordinary Layer contract',
-      'exclusive-forms',
-      {
-        'src/_domain/_one/_types/value.type.ts':
-          'export type TValue = number;\n',
-        'src/_domain/_two/_schemas/value.schema.ts':
-          'export const value = 1;\n',
-      }
-    );
+    scenario('Sub-Layers retain the ordinary Layer contract', {
+      'src/_domain/_one/_types/value.type.ts': 'export type TValue = number;\n',
+      'src/_domain/_two/_schemas/value.schema.ts': 'export const value = 1;\n',
+    });
     scenario(
       'rejects direct Categories together with Sub-Layers',
-      'exclusive-forms',
       {
         'src/_domain/_types/value.type.ts': 'export type TValue = number;\n',
         'src/_domain/_ui': {},
       },
       [exclusiveFormsViolation('src/_domain', 'fafconfig.ts')]
     );
-    scenario(
-      'an accessory Branch does not change the Layer form',
-      'exclusive-forms',
-      {
-        'src/_domain/_domain@shared/_utils': {},
-        'src/_domain/_types/value.type.ts': 'export type TValue = number;\n',
-      }
-    );
+    scenario('an accessory Branch does not change the Layer form', {
+      'src/_domain/_domain@shared/_utils': {},
+      'src/_domain/_types/value.type.ts': 'export type TValue = number;\n',
+    });
     scenario(
       'preserves explicit origin designations even without Root Nodes',
-      'containment-matrix',
       {
         'app/_types/value.type.ts': 'export type TValue = number;\n',
         'src/_types/value.type.ts': 'export type TValue = number;\n',
@@ -773,7 +720,6 @@ describe('acceptance: structural norms', () => {
     );
     scenario(
       'a direct module does not convert a Root Layer to a Root Fragment',
-      'containment-matrix',
       {
         'src/main.ts': 'export const main = 1;\n',
       },
@@ -797,7 +743,6 @@ describe('acceptance: structural norms', () => {
     ] as const) {
       scenario(
         `Root Layer form: ${name}`,
-        'exclusive-forms',
         tree,
         valid ? [] : [exclusiveFormsViolation('src', 'fafconfig.ts')],
         {
@@ -812,7 +757,6 @@ describe('acceptance: structural norms', () => {
     for (const file of ['index.ts', 'value.type.ts']) {
       scenario(
         `Root Layer rejects direct ${file}`,
-        'containment-matrix',
         { [`src/${file}`]: 'export {};\n' },
         [containmentViolation(`src/${file}`)]
       );
@@ -970,7 +914,6 @@ describe('acceptance: structural norms', () => {
     ] as const) {
       scenario(
         `matrix row admits contextual children: ${name}`,
-        'containment-matrix',
         {
           [path]: { ...contents, _foreign: {}, 'README.md': '' },
         },
@@ -1024,7 +967,6 @@ describe('acceptance: structural norms', () => {
       }
       scenario(
         `rejects ${name}`,
-        'classification-completeness',
         tree,
         expected,
         name === 'a Layer under a Root Fragment'
@@ -1036,27 +978,22 @@ describe('acceptance: structural norms', () => {
           : local
       );
     }
-    scenario(
-      'allows a Sub-Fragment mediated by a Private Category',
-      'containment-matrix',
-      {
-        ...button,
-        'src/_components/button/_components/icon/icon.component.ts':
-          'export const icon = 1;\n',
-        'src/_components/button/_components/icon/index.ts':
-          "export { icon } from './icon.component.js';\n",
-      }
-    );
+    scenario('allows a Sub-Fragment mediated by a Private Category', {
+      ...button,
+      'src/_components/button/_components/icon/icon.component.ts':
+        'export const icon = 1;\n',
+      'src/_components/button/_components/icon/index.ts':
+        "export { icon } from './icon.component.js';\n",
+    });
     scenario(
       'a nested Root Layer cannot become a Sub-Layer',
-      'prepare-project',
       { 'src/internal': {} },
       [
         diagnostic(
           'configuration/overlapping-origins',
           'src/internal',
           'fafconfig.ts',
-          "'src/internal' overlaps with another declared tree origin: Origin 'src/internal' is contained within origin 'src' (D-06).",
+          "'src/internal' overlaps with another declared tree origin: Origin 'src/internal' is contained within origin 'src' (FAF §3).",
           'configuration'
         ),
       ],
@@ -1064,29 +1001,23 @@ describe('acceptance: structural norms', () => {
     );
     scenario(
       'a Root Fragment cannot be a direct child of a Root Layer',
-      'prepare-project',
       { 'src/app': {} },
       [
         diagnostic(
           'configuration/overlapping-origins',
           'src/app',
           'fafconfig.ts',
-          "'src/app' overlaps with another declared tree origin: Origin 'src/app' is contained within origin 'src' (D-06).",
+          "'src/app' overlaps with another declared tree origin: Origin 'src/app' is contained within origin 'src' (FAF §3).",
           'configuration'
         ),
       ],
       { ...local, rootFragments: [{ path: 'src/app', rootNodes: [] }] }
     );
-    scenario(
-      'allows a Branch nested through an intermediate Category',
-      'containment-matrix',
-      {
-        'src/_src@shared/_utils/_utils@shared/_types': {},
-      }
-    );
+    scenario('allows a Branch nested through an intermediate Category', {
+      'src/_src@shared/_utils/_utils@shared/_types': {},
+    });
     scenario(
       'forbids a direct Branch child of another Branch',
-      'containment-matrix',
       {
         'src/_src@shared/_src@shared@shared': {},
       },
@@ -1117,7 +1048,6 @@ describe('acceptance: structural norms', () => {
     ] as const) {
       scenario(
         `requires the exact Branch scope ${branch}`,
-        'nomenclature',
         {
           ...base,
           [`${path}/${branch}`]: {},
@@ -1135,7 +1065,6 @@ describe('acceptance: structural norms', () => {
     ]) {
       scenario(
         `rejects the Branch name variant ${name}`,
-        'classification-completeness',
         {
           ...button,
           [`src/_components/button/${name}`]: {},
@@ -1150,7 +1079,6 @@ describe('acceptance: structural norms', () => {
     }
     scenario(
       'does not admit a second Branch with an artificial scope',
-      'classification-completeness',
       {
         ...button,
         'src/_components/button/_button@shared': {},
@@ -1198,7 +1126,6 @@ describe('acceptance: structural norms', () => {
     ] as const) {
       scenario(
         `permits a Branch owned by a ${name}`,
-        'containment-matrix',
         {
           ...base,
           [`${path}/_types/value.type.ts`]: 'export type TValue = number;\n',
@@ -1209,10 +1136,9 @@ describe('acceptance: structural norms', () => {
     }
   });
 
-  describe('assigned edge scenarios', () => {
+  describe('Root Layer hierarchies and Branch boundaries', () => {
     scenario(
       'direct Root Layer Categories allow descending edges',
-      'peer-separation',
       {
         ...button,
         'src/_components/button/button.component.tsx':
@@ -1230,7 +1156,6 @@ describe('acceptance: structural norms', () => {
     );
     scenario(
       'direct Root Layer Categories forbid ascending edges',
-      'peer-separation',
       {
         ...button,
         'src/_hooks/use-value/index.ts':
@@ -1256,7 +1181,6 @@ describe('acceptance: structural norms', () => {
       const specifier = `../../${target}/_types/value.type.js`;
       scenario(
         `Root Layer Layers require ${source} to ${target} direction`,
-        'peer-separation',
         {
           [path]: `import type { TValue } from '${specifier}';\nexport type TSource = TValue;\n`,
           [targetPath]: 'export type TValue = number;\n',
@@ -1265,19 +1189,14 @@ describe('acceptance: structural norms', () => {
         { ...local, horizontalHierarchies: [[['_domain'], ['_ui']]] }
       );
     }
-    scenario(
-      'Root Layer partitions consume their accessible Branch details',
-      'fractal-branch-visibility',
-      {
-        'src/_src@shared/_types/shared.type.ts':
-          'export type TShared = number;\n',
-        'src/_types/value.type.ts':
-          "import type { TShared } from '../_src@shared/_types/shared.type.js';\nexport type TValue = TShared;\n",
-      }
-    );
+    scenario('Root Layer partitions consume their accessible Branch details', {
+      'src/_src@shared/_types/shared.type.ts':
+        'export type TShared = number;\n',
+      'src/_types/value.type.ts':
+        "import type { TShared } from '../_src@shared/_types/shared.type.js';\nexport type TValue = TShared;\n",
+    });
     scenario(
       'a Root Layer Branch cannot return to its consumers',
-      'fractal-branch-unidirectionality',
       {
         'src/_src@shared/_types/shared.type.ts':
           "import type { TValue } from '../../_types/value.type.js';\nexport type TShared = TValue;\n",
@@ -1298,7 +1217,6 @@ describe('acceptance: structural norms', () => {
     );
     scenario(
       'Root Layer Branch details are not exposed outside the Tree',
-      'tree-frontier',
       {
         'consumer.ts':
           "import type { TShared } from './src/_src@shared/_types/shared.type.js';\nexport type TValue = TShared;\n",
@@ -1358,7 +1276,6 @@ describe('acceptance: structural norms', () => {
     ] as const) {
       scenario(
         `Branch form: ${name}`,
-        'exclusive-forms',
         tree,
         valid
           ? []
@@ -1382,15 +1299,10 @@ describe('acceptance: structural norms', () => {
       'src',
       'src/_src@shared',
     ]) {
-      scenario(
-        `does not require descendants in empty ${path}`,
-        'containment-matrix',
-        { [path]: {} }
-      );
+      scenario(`does not require descendants in empty ${path}`, { [path]: {} });
     }
     scenario(
       'empty Fragments still need both mandatory nodes',
-      'fragment-anatomy',
       { 'src/_components/button': {} },
       [
         missingAccessViolation('fafconfig.ts'),
@@ -1399,7 +1311,6 @@ describe('acceptance: structural norms', () => {
     );
     scenario(
       'Foreign contents do not mix organizational or taxonomic forms',
-      'exclusive-forms',
       {
         ...button,
         'src/_components/_foreign': {},
