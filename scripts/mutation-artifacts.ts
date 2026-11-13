@@ -6,8 +6,8 @@ import type { TPlannedMutant } from './mutation-types.js';
 
 import { parsePlanPayload } from './mutation-parser.js';
 import {
-  DIFF_INC_FILE,
-  INC_FILE,
+  DIFF_CACHE_FILE,
+  INCREMENTAL_CACHE_FILE,
   type TMutationRunMode,
 } from './mutation-runner-types.js';
 
@@ -104,7 +104,8 @@ export const readHistoricalMutantsFromCache = (
   readonly initialCacheHash: null | string;
   readonly mutantsByFile: ReadonlyMap<string, ReadonlySet<string>>;
 } => {
-  const cacheRelative = mode === 'diff' ? DIFF_INC_FILE : INC_FILE;
+  const cacheRelative =
+    mode === 'diff' ? DIFF_CACHE_FILE : INCREMENTAL_CACHE_FILE;
   const cachePath = path.resolve(root, cacheRelative);
   if (!fs.existsSync(cachePath)) {
     return { initialCacheHash: null, mutantsByFile: new Map() };

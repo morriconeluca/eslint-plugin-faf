@@ -49,13 +49,18 @@ create(context): Rule.RuleModule
   discoverConfig({ configFile: settings.faf?.configFile, workingDirectory: context.cwd })
   session.outcomesFor({ configPath, filename, packageVersion, sourceText, workingDirectory })
     verifyProject({ configPath, fileOverlays?, workingDirectory })
-      loadConfig → validateConfigFormat → readPackageJson → acquirePathAliases
-      → composeDeclarations → listEntries → buildInventory → validateConfigReferences
-      → classifyTaxonomy → verifyClassificationCompleteness → collectModules
-      → collectGraphOutcomes → anchorOutcomes
+      prepareProject(configPath):
+        loadConfig → validateConfigFormat → readPackageJson → acquirePathAliases
+        → composeDeclarations → listEntries → buildInventory → includeExternalTargets
+        → validateConfigReferences
+      verifyProject pipeline:
+        prepareProject → classifyTaxonomy → deriveHorizontalHierarchies
+        → derivePublicSurface → collectModules → buildDependencyGraph
+        → deriveExternalCrossings → _norms/* (23 mutually independent norms)
+        → anchorOutcomes → collectExternalFiles
 ```
 
-Verification stages do not import one another. `verifyProject` composes them in that order and stops on a blocking configuration or inventory failure. Classification outcomes and unverified module outcomes accumulate. `collectGraphOutcomes` is the extension point for later graph and norm stages: it currently returns the unverified outcomes, and later stages are added there without rewriting the earlier calls. `anchorOutcomes` indexes every outcome by one absolute lintable file. The session memoizes that index per `fafconfig.ts`, invalidates it from the `mtime` and size of `fafconfig.ts` and of the local files the loader returned, and from a changed source overlay. It loads the Module Record cache from `node_modules/.cache/eslint-plugin-faf` under the configuration directory, writes the records used by each verification, and clears the in-memory cache when the configuration changes. The pipeline stays synchronous: ESLint discards deferred `context.report()` calls. Disk access uses synchronous `node:fs`, script parsing uses `parseSync`, and module resolution uses synchronous `oxc-resolver`. Loading `fafconfig.ts` runs in a worker thread waited on synchronously.
+Verification stages do not import one another. `verifyProject` composes them in that order and stops on a blocking preparation failure (configuration or inventory defect). Preparation and taxonomy outcomes accumulate alongside module, graph, and norm outcomes. The 23 norm verifications are mutually independent and evaluated against the unified verification model. `anchorOutcomes` indexes every outcome by one absolute lintable file. The session memoizes that index per `fafconfig.ts`, invalidating it upon changes to watched files (`fafconfig.ts`, loaded configuration imports, `package.json`, external files), tree origins, or source overlays. It loads the persistent Module Record cache from `node_modules/.cache/eslint-plugin-faf` under the configuration directory, writes the records used by each verification, and clears the in-memory cache when the active configuration changes. The pipeline stays synchronous: ESLint discards deferred `context.report()` calls. Disk access uses synchronous `node:fs`, script parsing uses `parseSync`, and module resolution uses synchronous `oxc-resolver`. Loading `fafconfig.ts` runs in a worker thread waited on synchronously.
 
 ### 2.3 Placement Criterion
 
@@ -202,7 +207,7 @@ Conventions are mechanically validated by ESLint and TypeScript compiler checks:
 - **Unit tests**: Every Fragment must include a sibling test file `<name>.spec.ts` located in the same directory as the Master Node `<name>.<role>.ts`.
 - **External tests**: Acceptance tests, type assertions, and tooling verification reside in `test/` outside the Fractal Tree and interact exclusively with `src/main.ts`.
 
-Acceptance suites use `test/support/acceptance-project.ts`: `createProject(tree, config)`, `beforeAll(warmupESLint, 120_000)`, `lintScenario(cwd, files)`, and `expectScenario(result, responsiblePart, expected)`; results retain all diagnostics except separately indexed `unimplementedParts`, while `lintProject` exposes every raw diagnostic.
+Acceptance suites use `test/support/acceptance-project.ts`: `createProject(tree, config)`, `beforeAll(warmupESLint, 120_000)`, `lintScenario(cwd, files)`, and `expectScenario(actual, expected)`, while `lintProject` exposes raw per-file diagnostics.
 
 ### 4.2 In-Memory Fixtures for Pure Roles
 
@@ -256,7 +261,7 @@ The codebase enforces five sequential quality gates. All gates must pass in loca
 3. **`gate:3`** (`npm run gate:3`):
    - Testing & Coverage: Runs Vitest test suite with v8 coverage analysis.
    - Strict per-file thresholds: **≥ 95% line coverage** and **≥ 90% branch coverage**.
-   - Fitness tests in `test/fitness/`: Runs `test/fitness/dependency-graph.test.ts` (cycles, reachability from `src/main.ts`, and `dist/` imports). FAF edge laws are now verified by `faf/conformity` in `gate:2`.
+   - Fitness tests in `test/fitness/`: Runs `test/fitness/dependency-graph.test.ts` (cycles, reachability from `src/main.ts`, and `dist/` imports). FAF edge laws are verified by `faf/conformity` in `gate:2`.
 4. **`gate:4:diff`** (`npm run gate:4:diff`):
    - Mutation Testing (Diff): Runs Stryker Mutator on source files in touched `src/` directories with `--incremental --force` and its own cache `.cache/stryker/diff.json`, followed by threshold evaluation (`scripts/check-mutation-threshold.ts`).
    - Strict per-file threshold: **≥ 80% mutation score**.
@@ -267,7 +272,7 @@ The codebase enforces five sequential quality gates. All gates must pass in loca
    - If the base reference is invalid, the command fails immediately without falling back to `HEAD`. An empty diff is an explicit success outcome without reading legacy mutation reports. The git index is never modified.
    - `src/**/*.mock.ts` is excluded from coverage and mutation because those files are test data, not production code. `*.constant.ts` and `*.config.ts` remain covered by line and branch coverage but are excluded from mutation testing. `*.schema.ts` remains covered and mutated. No other exclusions are allowed.
 5. **`gate:4:incremental`** (`npm run gate:4:incremental`):
-   - Centralized Incremental Mutation: Runs Stryker on the entire configured perimeter on `main` with persistent cache `.cache/stryker/incremental.json` without `--force`. Executed by the orchestrator after integration.
+   - Centralized Incremental Mutation: Runs Stryker on the entire configured perimeter on `main` with persistent cache `.cache/stryker/incremental.json` without `--force`, executed post-integration on `main`.
    - Strict per-file threshold: **≥ 80% mutation score**.
 6. **`gate:4:force`** (`npm run gate:4:force`):
    - Full Forced Mutation: Runs full mutation with `--force` on the entire configured perimeter. Executed manually only upon explicit user request.

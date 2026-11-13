@@ -6,8 +6,8 @@ import path from 'node:path';
 import { comparePaths } from './changed-files.js';
 import { readResolvedVersions } from './mutation-artifacts.js';
 import {
-  DIFF_INC_FILE,
-  INC_FILE,
+  DIFF_CACHE_FILE,
+  INCREMENTAL_CACHE_FILE,
   type TMutationRunManifest,
   type TMutationRunMode,
   type TMutationRunOptions,
@@ -212,7 +212,8 @@ export const buildManifest = (
   resolvedVersions: pre.resolvedVersions,
   reuseState: {
     force: pre.options.mode !== 'incremental',
-    incrementalFile: pre.options.mode === 'diff' ? DIFF_INC_FILE : INC_FILE,
+    incrementalFile:
+      pre.options.mode === 'diff' ? DIFF_CACHE_FILE : INCREMENTAL_CACHE_FILE,
     reusedMutantResults:
       pre.options.mode === 'incremental' ? 'not-determined' : 0,
   },

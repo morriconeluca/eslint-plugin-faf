@@ -5,7 +5,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
-  INC_FILE,
+  INCREMENTAL_CACHE_FILE,
   type TMutationRunMode,
   type TSpawnExecutor,
 } from '../../scripts/mutation-runner-types.js';
@@ -130,12 +130,12 @@ const initRepository = (directory: string): void => {
   }
 };
 
-describe('mutation-runner (R1 freshness, E1 plan & E4 modes)', () => {
+describe('mutation-runner execution modes and report freshness', () => {
   it.each([
     ['force' as const, ['run', '--force'], 'npm run gate:4:force', true],
     [
       'incremental' as const,
-      ['run', '--incremental', '--incrementalFile', INC_FILE],
+      ['run', '--incremental', '--incrementalFile', INCREMENTAL_CACHE_FILE],
       'npm run gate:4:incremental',
       false,
     ],
@@ -144,7 +144,7 @@ describe('mutation-runner (R1 freshness, E1 plan & E4 modes)', () => {
     async (mode, expectedArguments, expectedCommand, expectedForce) => {
       await withFixture(
         {
-          [INC_FILE]: JSON.stringify({ files: {} }),
+          [INCREMENTAL_CACHE_FILE]: JSON.stringify({ files: {} }),
           'src/foo/bar.util.ts': 'export const x = 1;\n',
         },
         (fixtureDirectory) => {
@@ -167,7 +167,7 @@ describe('mutation-runner (R1 freshness, E1 plan & E4 modes)', () => {
     }
   );
 
-  it('fails when report exists beforehand and substitute spawn does not write (R1 freshness)', async () => {
+  it('fails when report exists beforehand and substitute spawn does not write a fresh report', async () => {
     await withFixture(
       { 'src/foo/bar.util.ts': 'export const x = 1;\n' },
       (fixtureDirectory) => {
@@ -209,7 +209,7 @@ describe('mutation-runner (R1 freshness, E1 plan & E4 modes)', () => {
     );
   });
 
-  it('runs diff mode in temp git repo with custom cwd, cache and historical files (E4)', async () => {
+  it('runs diff mode in an isolated git repository with custom working directory, cache, and historical files', async () => {
     const oldMutant = {
       id: 'old-1',
       location: { end: { column: 5, line: 1 }, start: { column: 1, line: 1 } },
@@ -256,7 +256,7 @@ describe('mutation-runner (R1 freshness, E1 plan & E4 modes)', () => {
   });
 });
 
-describe('mutation-runner (E1 missing plan failures)', () => {
+describe('mutation-runner missing plan verification', () => {
   it('fails when mutation plan event is missing', async () => {
     await withFixture(
       { 'src/foo/bar.util.ts': 'export const x = 1;\n' },
@@ -279,7 +279,7 @@ describe('mutation-runner (E1 missing plan failures)', () => {
   });
 });
 
-describe('mutation-runner (E2 process failures & R3 input tampering)', () => {
+describe('mutation-runner process failures and input integrity', () => {
   it('fails on process termination signal', async () => {
     await withFixture(
       { 'src/foo/bar.util.ts': 'export const x = 1;\n' },
@@ -294,7 +294,7 @@ describe('mutation-runner (E2 process failures & R3 input tampering)', () => {
     );
   });
 
-  it('detects tampering in test/acceptance files during mutation run (R3 input integrity)', async () => {
+  it('detects tampering in test/acceptance files during a mutation run', async () => {
     await withFixture(
       {
         'src/foo/bar.util.ts': 'export const x = 1;\n',
