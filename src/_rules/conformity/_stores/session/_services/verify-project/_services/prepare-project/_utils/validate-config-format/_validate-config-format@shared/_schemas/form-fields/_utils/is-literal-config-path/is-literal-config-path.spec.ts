@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { isLiteralConfigPath } from './is-literal-config-path.util.js';
 
 describe('isLiteralConfigPath', () => {
-  describe('faf.feature: Verificare la forma dei percorsi letterali', () => {
+  describe('validates literal configuration path syntax', () => {
     it('accepts dot alone identifying base directory', () => {
       expect(isLiteralConfigPath('.')).toBe(true);
     });

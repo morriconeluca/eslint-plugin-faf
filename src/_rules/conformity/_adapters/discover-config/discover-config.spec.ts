@@ -171,7 +171,7 @@ describe('discoverConfig', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/missing-config-file');
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('settings.faf.configFile');
           expect(outcome.message).toContain('was not found');
         }

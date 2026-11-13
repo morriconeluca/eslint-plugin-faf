@@ -15,7 +15,7 @@ describe('extractScriptModuleRecord', () => {
     expect(record.unsupportedSyntaxes).toHaveLength(0);
   });
 
-  describe('FAF §4 normative symbol counting (19 rows)', () => {
+  describe('FAF §4 root-scope Symbol counting', () => {
     it.each([
       {
         code: 'const value = 1;',
@@ -130,7 +130,7 @@ describe('extractScriptModuleRecord', () => {
         expectedSymbols: [],
         title: 'import declarations introduce 0 symbols',
       },
-    ])('Row: $title', ({ code, expectedSymbols }) => {
+    ])('$title', ({ code, expectedSymbols }) => {
       const record = extractScriptModuleRecord('test.ts', code);
       expect(
         record.symbols.map((s) => ({ name: s.name, space: s.space }))
@@ -265,7 +265,7 @@ describe('extractScriptModuleRecord', () => {
     });
   });
 
-  describe('re-export detection (12 rows with imported provenance)', () => {
+  describe('imported Symbol re-export detection', () => {
     it.each([
       {
         code: "export { value } from './source';",
@@ -371,7 +371,7 @@ describe('extractScriptModuleRecord', () => {
         },
         title: 'import type { Value }; export type { Value };',
       },
-    ])('Row: $title', ({ code, expectedExportedName, expectedOrigin }) => {
+    ])('$title', ({ code, expectedExportedName, expectedOrigin }) => {
       const record = extractScriptModuleRecord('test.ts', code);
       expect(record.exports).toHaveLength(1);
       expect(record.exports[0]?.exportedName).toBe(expectedExportedName);

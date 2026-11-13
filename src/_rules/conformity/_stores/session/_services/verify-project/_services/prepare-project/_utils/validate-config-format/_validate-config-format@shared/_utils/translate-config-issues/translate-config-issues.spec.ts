@@ -30,7 +30,7 @@ describe('translateConfigIssues', () => {
         family: 'configuration',
         message:
           "'faf.locals[0].rootLayers[0]' must be a POSIX relative path without empty or parent segments",
-        normativeReference: 'D-05',
+        normativeReference: 'FAF §1.2, §6.9',
         propertyPath: 'faf.locals[0].rootLayers[0]',
       },
     ]);
@@ -55,7 +55,7 @@ describe('translateConfigIssues', () => {
 
     expect(outcomes[0]?.propertyPath).toBe('trees');
     expect(outcomes[0]?.message).toBe("'trees' is not a recognized property");
-    expect(outcomes[0]?.normativeReference).toBe('D-14');
+    expect(outcomes[0]?.normativeReference).toBe('FAF §1.2, §6.9');
   });
 
   it('rejects a key diagnostic that is not an unrecognized-keys issue', () => {

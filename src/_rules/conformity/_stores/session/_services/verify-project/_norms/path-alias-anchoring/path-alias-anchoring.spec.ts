@@ -323,7 +323,7 @@ const baseTableCases: readonly {
 
 describe('verifyPathAliasAnchoring', () => {
   it.each(baseTableCases)(
-    'verifies base classification row: $label (allowed: $allowed)',
+    'verifies base classification: $label (allowed: $allowed)',
     ({ allowed, baseItem }) => {
       const model = createTestModel({
         aliases: [

@@ -181,7 +181,7 @@ const buildFullModel = (options: {
 
 describe('verifyRootNodeDiscipline', () => {
   describe('root node relationships table', () => {
-    it('row 1: stesso Root Fragment, nessuna autorizzazione -> vietare', () => {
+    it('forbids reference within same Root Fragment without authorization', () => {
       const model = buildFullModel({
         edges: [makeEdge('src/high.ts', 'src/low.ts')],
         items: [
@@ -222,7 +222,7 @@ describe('verifyRootNodeDiscipline', () => {
       ]);
     });
 
-    it('row 2: Root Fragments fratelli, nessuna autorizzazione -> vietare', () => {
+    it('forbids reference between sibling Root Fragments without authorization', () => {
       const model = buildFullModel({
         edges: [makeEdge('src/a/main.ts', 'src/b/main.ts')],
         items: [
@@ -266,7 +266,7 @@ describe('verifyRootNodeDiscipline', () => {
       ]);
     });
 
-    it('row 3: Root Fragments antenato e figlio, nessuna autorizzazione -> vietare', () => {
+    it('forbids reference from ancestor to descendant Root Fragment without authorization', () => {
       const model = buildFullModel({
         edges: [makeEdge('src/main.ts', 'src/a/main.ts')],
         items: [
@@ -310,7 +310,7 @@ describe('verifyRootNodeDiscipline', () => {
       ]);
     });
 
-    it('row 4: Root Fragments figlio e antenato, nessuna autorizzazione -> vietare', () => {
+    it('forbids reference from descendant to ancestor Root Fragment without authorization', () => {
       const model = buildFullModel({
         edges: [makeEdge('src/a/main.ts', 'src/main.ts')],
         items: [
@@ -354,7 +354,7 @@ describe('verifyRootNodeDiscipline', () => {
       ]);
     });
 
-    it('row 5: stesso Root Fragment, Horizontal Hierarchy strettamente discendente -> ammettere', () => {
+    it('admits reference within same Root Fragment along strictly descending Horizontal Hierarchy', () => {
       const model = buildFullModel({
         edges: [makeEdge('src/high.ts', 'src/low.ts')],
         items: [
@@ -380,7 +380,7 @@ describe('verifyRootNodeDiscipline', () => {
       expect(verifyRootNodeDiscipline(model)).toEqual([]);
     });
 
-    it('row 6: Root Fragments fratelli, autorizzazione esplicita -> ammettere', () => {
+    it('admits reference between sibling Root Fragments with explicit authorization', () => {
       const model = buildFullModel({
         edges: [makeEdge('src/a/main.ts', 'src/b/main.ts')],
         items: [
@@ -403,7 +403,7 @@ describe('verifyRootNodeDiscipline', () => {
       expect(verifyRootNodeDiscipline(model)).toEqual([]);
     });
 
-    it('row 7: Root Fragments antenato e figlio, autorizzazione esplicita -> ammettere', () => {
+    it('admits reference from ancestor to descendant Root Fragment with explicit authorization', () => {
       const model = buildFullModel({
         edges: [makeEdge('src/main.ts', 'src/a/main.ts')],
         items: [
@@ -432,7 +432,7 @@ describe('verifyRootNodeDiscipline', () => {
       expect(verifyRootNodeDiscipline(model)).toEqual([]);
     });
 
-    it('row 8: Root Fragments figlio e antenato, autorizzazione esplicita -> ammettere', () => {
+    it('admits reference from descendant to ancestor Root Fragment with explicit authorization', () => {
       const model = buildFullModel({
         edges: [makeEdge('src/a/main.ts', 'src/main.ts')],
         items: [

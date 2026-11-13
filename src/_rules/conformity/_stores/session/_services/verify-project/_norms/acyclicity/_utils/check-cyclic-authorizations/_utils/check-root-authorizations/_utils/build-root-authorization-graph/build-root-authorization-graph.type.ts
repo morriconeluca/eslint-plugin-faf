@@ -3,7 +3,7 @@ import type { TEffectiveRootFragment } from '../../../../../../../../_verify-pro
 /**
  * Indexed graph of authorized dependency edges between root fragments.
  */
-export type TRootAuthGraph = {
+export type TRootAuthorizationGraph = {
   /**
    * Adjacency list mapping root fragment index to target root fragment indices.
    */
@@ -17,7 +17,7 @@ export type TRootAuthGraph = {
   /**
    * Total number of indexed root fragments.
    */
-  readonly fragCount: number;
+  readonly fragmentCount: number;
 
   /**
    * Ordered sequence of all unique root fragment directory paths.

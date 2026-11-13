@@ -127,7 +127,7 @@ describe('checkCyclicAuthorizations', () => {
         family: 'unverified',
         message:
           "'a' declares reciprocal tree dependencies without physical code cycle",
-        normativeReference: 'D-04',
+        normativeReference: 'FAF §7.2',
         reason: 'cyclic-tree-authorization',
       },
     ]);
@@ -193,7 +193,7 @@ describe('checkCyclicAuthorizations', () => {
         family: 'unverified',
         message:
           "'src/a' declares reciprocal root dependency authorizations without physical code cycle",
-        normativeReference: 'D-04',
+        normativeReference: 'FAF §5, §6.2.2',
         reason: 'cyclic-root-authorization',
       },
     ]);

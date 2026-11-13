@@ -79,7 +79,7 @@ describe('collectRecordUnverifiedOutcomes', () => {
         family: 'unverified',
         message:
           "'src/app.ts' contains an import that could not be resolved: missing",
-        normativeReference: 'D-08',
+        normativeReference: 'FAF §4',
         position: { column: 1, line: 2 },
         reason: 'missing',
       },
@@ -89,7 +89,7 @@ describe('collectRecordUnverifiedOutcomes', () => {
         family: 'unverified',
         message:
           "'src/app.ts' contains unsupported syntax: export = is unsupported",
-        normativeReference: 'D-07',
+        normativeReference: 'FAF §4',
         position: { column: 1, line: 4 },
         reason: 'export = is unsupported',
       },
@@ -124,7 +124,7 @@ describe('collectRecordUnverifiedOutcomes', () => {
         family: 'unverified',
         message:
           "'src/app.ts' contains a non-literal dynamic import that cannot be resolved statically",
-        normativeReference: 'D-07',
+        normativeReference: 'FAF §4',
         position: { column: 4, line: 2 },
         reason: 'Non-literal dynamic import cannot be resolved statically',
       },
@@ -143,7 +143,7 @@ describe('collectRecordUnverifiedOutcomes', () => {
         family: 'unverified',
         message:
           "'src/app.ts' contains an import that could not be resolved: Cannot resolve module missing",
-        normativeReference: 'D-08',
+        normativeReference: 'FAF §4',
         reason: 'Cannot resolve module missing',
       },
     ]);

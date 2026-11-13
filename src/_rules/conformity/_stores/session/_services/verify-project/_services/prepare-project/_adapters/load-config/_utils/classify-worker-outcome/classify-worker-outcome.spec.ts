@@ -19,7 +19,7 @@ describe('classifyWorkerOutcome', () => {
     expect(outcome?.element).toBe('/test/fafconfig.ts');
     expect(outcome?.family).toBe('configuration');
     if (outcome?.family === 'configuration') {
-      expect(outcome.normativeReference).toBe('D-09');
+      expect(outcome.normativeReference).toBe('FAF §1.2');
       expect(outcome.propertyPath).toBe('default');
     }
     expect(outcome?.message).toBe(

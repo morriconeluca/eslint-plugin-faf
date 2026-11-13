@@ -7,7 +7,7 @@ import type { TVerificationModel } from '../../../../../../_verify-project@share
 import { createOutcome } from '../../../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { compareOrdinal } from '../../../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 import { computeSccs } from '../../../../_acyclicity@shared/_utils/compute-sccs/index.js';
-import { buildTreeAuthGraph } from './_utils/build-tree-auth-graph/index.js';
+import { buildTreeAuthorizationGraph } from './_utils/build-tree-authorization-graph/index.js';
 import { isTreeCycleExercised } from './_utils/is-tree-cycle-exercised/index.js';
 import { selectMinElement } from './_utils/select-min-element/index.js';
 
@@ -15,7 +15,7 @@ export function checkTreeAuthorizations(
   model: TVerificationModel,
   interTreeCycles: readonly TAcyclicityOutcome[]
 ): readonly TUnverifiedOutcome[] {
-  const { adjacency, sortedOrigins, treeCount } = buildTreeAuthGraph(
+  const { adjacency, sortedOrigins, treeCount } = buildTreeAuthorizationGraph(
     model.basis.declarations.trees
   );
   if (treeCount < 2) {

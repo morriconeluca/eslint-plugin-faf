@@ -23,7 +23,7 @@ describe('validateAliases', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/null-forbidden');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.aliases');
     expect(outcome?.element).toBe('faf.common.aliases');
     expect(outcome?.message).toBe("'faf.common.aliases' cannot be null");
@@ -35,7 +35,7 @@ describe('validateAliases', () => {
     const outcome = outcomes[0];
     expect(outcome?.constraint).toBe('configuration/invalid-type');
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.aliases');
     expect(outcome?.element).toBe('faf.common.aliases');
     expect(outcome?.message).toBe("'faf.common.aliases' has an invalid type");

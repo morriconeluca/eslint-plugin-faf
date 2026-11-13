@@ -1,6 +1,6 @@
 import type { TEffectiveRootFragment } from '../../../../../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
-export function populateRootAuthAdjacency(
+export function populateRootAuthorizationAdjacency(
   allRootFragments: readonly TEffectiveRootFragment[],
   pathToIndex: ReadonlyMap<string, number>,
   nodeToFragmentPath: ReadonlyMap<string, string>,
@@ -13,11 +13,11 @@ export function populateRootAuthAdjacency(
       continue;
     }
     for (const pair of fragment.dependencyPairs) {
-      const targetFragPath = nodeToFragmentPath.get(pair.to);
+      const targetFragmentPath = nodeToFragmentPath.get(pair.to);
       const v =
-        targetFragPath === undefined
+        targetFragmentPath === undefined
           ? undefined
-          : pathToIndex.get(targetFragPath);
+          : pathToIndex.get(targetFragmentPath);
       if (v === undefined || u === v || seenEdges.has(`${u}\0${v}`)) {
         continue;
       }

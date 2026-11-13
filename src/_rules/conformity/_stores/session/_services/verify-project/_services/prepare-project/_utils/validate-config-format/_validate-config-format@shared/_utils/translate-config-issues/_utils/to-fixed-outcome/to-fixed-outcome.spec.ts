@@ -17,7 +17,7 @@ describe('toFixedOutcome', () => {
       element: 'faf.common.foreignNodes[0].paths',
       family: 'configuration',
       message: "'faf.common.foreignNodes[0].paths' cannot be an empty list",
-      normativeReference: 'D-14',
+      normativeReference: 'FAF §1.2, §6.9',
       propertyPath: 'faf.common.foreignNodes[0].paths',
     });
   });

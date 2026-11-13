@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { populateRootAuthAdjacency } from './populate-root-auth-adjacency.util.js';
+import { populateRootAuthorizationAdjacency } from './populate-root-authorization-adjacency.util.js';
 
-describe('populateRootAuthAdjacency', () => {
+describe('populateRootAuthorizationAdjacency', () => {
   it('populates adjacency from root fragment dependency pairs and deduplicates correctly', () => {
     const pathToIndex = new Map([
       ['src/a', 0],
@@ -16,7 +16,7 @@ describe('populateRootAuthAdjacency', () => {
     const adjacency: number[][] = [[], [], []];
     const seenEdges = new Set<string>();
 
-    populateRootAuthAdjacency(
+    populateRootAuthorizationAdjacency(
       [
         {
           dependencyPairs: [
@@ -44,7 +44,7 @@ describe('populateRootAuthAdjacency', () => {
     const adjacency: number[][] = [[]];
     const seenEdges = new Set<string>();
 
-    populateRootAuthAdjacency(
+    populateRootAuthorizationAdjacency(
       [
         {
           dependencyPairs: [

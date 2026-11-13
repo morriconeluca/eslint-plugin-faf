@@ -131,7 +131,7 @@ describe('loadConfig', () => {
           expect(outcome.constraint).toBe(
             'configuration/unresolved-relative-import'
           );
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain(
             'Relative import without explicit file extension violates configuration constraints'
@@ -163,7 +163,7 @@ describe('loadConfig', () => {
           expect(outcome.constraint).toBe(
             'configuration/unsupported-typescript-syntax'
           );
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain(
             'Non-strippable TypeScript syntax violates configuration constraints'
@@ -194,7 +194,7 @@ describe('loadConfig', () => {
           expect(outcome.constraint).toBe(
             'configuration/commonjs-package-type'
           );
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain(
             'Package configuration declaring "type": "commonjs" violates configuration constraints'
@@ -224,7 +224,7 @@ describe('loadConfig', () => {
           expect(outcome.constraint).toBe(
             'configuration/missing-default-export'
           );
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain('must declare a default export');
         }
@@ -252,7 +252,7 @@ describe('loadConfig', () => {
           expect(outcome.constraint).toBe(
             'configuration/invalid-default-export-function'
           );
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain(
             'cannot export a function as its default export'
@@ -282,7 +282,7 @@ describe('loadConfig', () => {
           expect(outcome.constraint).toBe(
             'configuration/invalid-default-export-promise'
           );
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain(
             'cannot export a Promise as its default export'
@@ -312,7 +312,7 @@ describe('loadConfig', () => {
           expect(outcome.constraint).toBe(
             'configuration/unclonable-config-value'
           );
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain(
             'Exported configuration default value could not be cloned via structured clone'
@@ -375,7 +375,7 @@ describe('loadConfig', () => {
         expect(outcome?.family).toBe('unverified');
         if (outcome?.family === 'unverified') {
           expect(outcome.constraint).toBe('unverified/config-loading-timeout');
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.message).toContain(
             'timed out during configuration loading'
           );
@@ -405,7 +405,7 @@ describe('loadConfig', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/missing-config-file');
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('faf');
           expect(outcome.message).toContain('was not found');
         }
@@ -429,7 +429,7 @@ describe('loadConfig', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/missing-config-file');
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('faf');
           expect(outcome.message).toContain('was not found');
         }
@@ -455,7 +455,7 @@ describe('loadConfig', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/config-load-failure');
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain('Failed to load fafconfig.ts');
         }
@@ -485,7 +485,7 @@ describe('loadConfig', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/config-load-failure');
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain(
             'Worker terminated without transmitting a valid configuration payload'
@@ -517,7 +517,7 @@ describe('loadConfig', () => {
         expect(outcome?.family).toBe('configuration');
         if (outcome?.family === 'configuration') {
           expect(outcome.constraint).toBe('configuration/config-load-failure');
-          expect(outcome.normativeReference).toBe('D-09');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain(
             'Worker terminated without transmitting a valid configuration payload'

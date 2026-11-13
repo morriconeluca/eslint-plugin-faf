@@ -48,7 +48,7 @@ describe('validateOrigins', () => {
       element: 'src',
       family: 'configuration',
       message: "'src' is declared more than once as a tree origin",
-      normativeReference: 'D-06',
+      normativeReference: 'FAF §3',
       propertyPath: 'faf.locals[1].rootLayers[0]',
     });
   });
@@ -73,7 +73,7 @@ describe('validateOrigins', () => {
       family: 'configuration',
       message:
         "'src' cannot be declared as both a Root Layer and a Root Fragment",
-      normativeReference: 'D-06',
+      normativeReference: 'FAF §6.5, §6.9',
       propertyPath: 'faf.locals[1].rootFragments[0]',
     });
   });
@@ -98,7 +98,7 @@ describe('validateOrigins', () => {
       family: 'configuration',
       message:
         "'src/app' overlaps with another declared tree origin: Origin 'src/app' is contained within origin 'src'",
-      normativeReference: 'D-06',
+      normativeReference: 'FAF §3',
       propertyPath: 'faf.locals[0].rootFragments[1]',
     });
   });
@@ -123,7 +123,7 @@ describe('validateOrigins', () => {
       family: 'configuration',
       message:
         "'src' overlaps with another declared tree origin: Origin 'src' is contained within origin '.'",
-      normativeReference: 'D-06',
+      normativeReference: 'FAF §3',
       propertyPath: 'faf.locals[1].rootFragments[0]',
     });
   });

@@ -220,7 +220,7 @@ describe('scanTreeOrigin', () => {
       expect(outcomes[0]?.family).toBe('unverified');
       expect(outcomes[0]?.constraint).toBe('unverified/unreadable-entry');
       expect(outcomes[0]?.element).toBe('src/locked');
-      expect(outcomes[0]?.normativeReference).toBe('D-06');
+      expect(outcomes[0]?.normativeReference).toBe('FAF §6.9');
       expect(outcomes[0]?.message).toContain(
         "'src/locked' could not be inspected:"
       );

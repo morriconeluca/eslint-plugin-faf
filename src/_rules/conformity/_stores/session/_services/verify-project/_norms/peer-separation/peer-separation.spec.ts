@@ -160,7 +160,7 @@ describe('verifyPeerSeparation', () => {
   ];
 
   it.each(referenceInternalRanks)(
-    'evaluates reference internal rank row: %s (rank %d) to %s (rank %d) -> allowed: %s',
+    'evaluates internal Fragment rank order: %s (rank %d) to %s (rank %d) -> allowed: %s',
     (fromName, fromRank, toName, toRank, allowed) => {
       const fromFile =
         fromName === 'index' ? 'index.ts' : `unit.${fromName}.ts`;

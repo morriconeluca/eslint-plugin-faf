@@ -248,7 +248,7 @@ describe('validateConfigReferences', () => {
     expect(outcomes[0]?.element).toBe('missing-z');
   });
 
-  describe('I riferimenti puntuali devono identificare elementi esistenti del tipo richiesto', () => {
+  describe('punctual references must identify existing elements of the required kind', () => {
     const inventory = createInventory([
       { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
       { kind: 'file', parentId: 0, path: 'src/main.ts', treeOrigin: 'src' },
@@ -366,11 +366,11 @@ describe('validateConfigReferences', () => {
         inventory
       );
       expect(outcome?.message).toContain('C:/project');
-      expect(outcome?.normativeReference).toBe('D-14');
+      expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     });
   });
 
-  describe("L'assenza di un nome potenziale non equivale a un riferimento puntuale inesistente", () => {
+  describe('absence of a potential name is not equivalent to a missing punctual reference', () => {
     it('admits absent category names, absent hierarchy child names, and an empty foreign family', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
@@ -423,7 +423,7 @@ describe('validateConfigReferences', () => {
     });
   });
 
-  describe('Enumerare Root Nodes e Root Fragments diretti senza deduzioni dai nomi', () => {
+  describe('enumerates direct Root Nodes and Root Fragments without deductions from names', () => {
     it('requires a nested path to be a direct child relative to the codebase', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
@@ -517,8 +517,8 @@ describe('validateConfigReferences', () => {
     });
   });
 
-  describe("Rifiutare dichiarazioni Root non coerenti con l'inventario", () => {
-    it('un file enumerato in rootNodes che non esiste', () => {
+  describe('rejects Root declarations inconsistent with the inventory', () => {
+    it('rejects an enumerated file in rootNodes that does not exist', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
       ]);
@@ -597,7 +597,7 @@ describe('validateConfigReferences', () => {
       );
     });
 
-    it("un'origine è designata Foreign Domain", () => {
+    it('rejects an origin designated as a Foreign Domain', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
       ]);
@@ -611,7 +611,7 @@ describe('validateConfigReferences', () => {
       ]);
     });
 
-    it('dependencyEdges.from non identifica un Root Node corrente', () => {
+    it('rejects dependencyEdges.from when it does not identify a current Root Node', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
         { kind: 'file', parentId: 0, path: 'src/main.ts', treeOrigin: 'src' },
@@ -648,7 +648,7 @@ describe('validateConfigReferences', () => {
       ]);
     });
 
-    it('dependencyEdges.to non identifica un Root Node enumerato', () => {
+    it('rejects dependencyEdges.to when it does not identify an enumerated Root Node', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
         { kind: 'file', parentId: 0, path: 'src/main.ts', treeOrigin: 'src' },
@@ -676,7 +676,7 @@ describe('validateConfigReferences', () => {
       );
     });
 
-    it('dependencyEdges.to identifica un Root Node dello stesso Root Fragment', () => {
+    it('rejects dependencyEdges.to when it identifies a Root Node of the same Root Fragment', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
         { kind: 'file', parentId: 0, path: 'src/a.ts', treeOrigin: 'src' },
@@ -702,7 +702,7 @@ describe('validateConfigReferences', () => {
       ]);
     });
 
-    it('dependencyEdges.to identifica un Root Node di un altro Tree', () => {
+    it('rejects dependencyEdges.to when it identifies a Root Node of another Fractal Tree', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
         { kind: 'file', parentId: 0, path: 'src/main.ts', treeOrigin: 'src' },
@@ -758,8 +758,8 @@ describe('validateConfigReferences', () => {
     });
   });
 
-  describe('Rifiutare criteri Foreign fuori dalla grammatica documentata', () => {
-    it('ambito puntuale inesistente', () => {
+  describe('rejects Foreign criteria outside documented grammar', () => {
+    it('rejects a non-existent punctual scope', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
       ]);
@@ -778,7 +778,7 @@ describe('validateConfigReferences', () => {
       );
     });
 
-    it('ambito fuori dai Trees interessati', () => {
+    it('rejects a scope outside relevant Fractal Trees', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
         {
@@ -809,8 +809,8 @@ describe('validateConfigReferences', () => {
     });
   });
 
-  describe('Le selezioni Foreign si uniscono senza introdurre nuove classificazioni', () => {
-    it('un file individuale deve essere un percorso letterale esistente', () => {
+  describe('unions Foreign selections without introducing new classifications', () => {
+    it('requires an individual file to be an existing literal path', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
         { kind: 'file', parentId: 0, path: 'src/notes.md', treeOrigin: 'src' },
@@ -831,7 +831,7 @@ describe('validateConfigReferences', () => {
     });
   });
 
-  describe('Le proprietà di frontiera selezionano nodi e relazioni senza derogare alla struttura', () => {
+  describe('boundary properties select nodes and relations adhering to the structure', () => {
     const inventory = createInventory([
       { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
       { kind: 'directory', parentId: 0, path: 'src/app', treeOrigin: 'src' },
@@ -1048,7 +1048,7 @@ describe('validateConfigReferences', () => {
     });
   });
 
-  describe('I riferimenti comuni si filtrano per appartenenza senza ribasare i percorsi', () => {
+  describe('filters common references by membership without rebasing paths', () => {
     it('accepts a common root node of app and does not require lib/app/main.ts', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'app', treeOrigin: 'app' },
@@ -1158,7 +1158,7 @@ describe('validateConfigReferences', () => {
     });
   });
 
-  describe("Un riferimento locale non può classificare i Trees di un'altra configurazione", () => {
+  describe('forbids a local reference from classifying Fractal Trees of another configuration', () => {
     it('rejects a local classification path or source that belongs to another local tree', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'app', treeOrigin: 'app' },
@@ -1187,8 +1187,8 @@ describe('validateConfigReferences', () => {
     });
   });
 
-  describe('Rifiutare designazioni mimetiche non univoche o non ammissibili', () => {
-    it('due dichiarazioni sullo stesso path anche con azioni uguali', () => {
+  describe('rejects non-unique or inadmissible mimetic designations', () => {
+    it('rejects two declarations on the same path even with identical actions', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
         {

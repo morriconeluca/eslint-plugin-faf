@@ -230,7 +230,7 @@ describe('verifyExternalDependencies', () => {
     { nature: { kind: 'external-local-file' }, path: 'other.ts' },
   ];
 
-  it('adversarial table row 1: no authorization -> forbidden', () => {
+  it('forbids external local import without authorization', () => {
     const model = buildVerificationModel({
       edges: [createEdge('src/high.ts', 'outside.ts')],
       items: commonItems,
@@ -256,7 +256,7 @@ describe('verifyExternalDependencies', () => {
     });
   });
 
-  it('adversarial table row 2: X authorized for N non-Access Node -> admitted', () => {
+  it('admits authorized external local import from a non-Access Node', () => {
     const model = buildVerificationModel({
       edges: [createEdge('src/high.ts', 'outside.ts')],
       items: commonItems,
@@ -269,7 +269,7 @@ describe('verifyExternalDependencies', () => {
     expect(outcomes).toEqual([]);
   });
 
-  it('adversarial table row 3: X authorized for another node only -> forbidden', () => {
+  it('forbids external local import authorized for another node only', () => {
     const model = buildVerificationModel({
       edges: [createEdge('src/high.ts', 'outside.ts')],
       items: commonItems,
@@ -288,7 +288,7 @@ describe('verifyExternalDependencies', () => {
     );
   });
 
-  it('adversarial table row 4: N authorized toward different path only -> forbidden', () => {
+  it('forbids external local import authorized toward a different path only', () => {
     const model = buildVerificationModel({
       edges: [createEdge('src/high.ts', 'outside.ts')],
       items: commonItems,
@@ -307,7 +307,7 @@ describe('verifyExternalDependencies', () => {
     );
   });
 
-  it('adversarial table row 5: Access Node is excluded from external dependencies (FAF §7.3)', () => {
+  it('excludes Access Node from external dependencies (FAF §7.3)', () => {
     const model = buildVerificationModel({
       edges: [createEdge('src/_utils/widget/index.ts', 'outside.ts')],
       items: commonItems,

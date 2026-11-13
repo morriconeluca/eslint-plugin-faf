@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { acquirePathAliases } from './acquire-path-aliases.util.js';
 
 describe('acquirePathAliases', () => {
-  it('produces empty alias array when neither source is present (row 1: campo assente, assente)', () => {
+  it('produces empty alias array when neither source is present', () => {
     const resultFromUndefined = acquirePathAliases({});
     const resultFromMissingKey = acquirePathAliases({
       packageJson: { name: 'my-pkg' },
@@ -16,7 +16,7 @@ describe('acquirePathAliases', () => {
     expect(resultFromMissingKey.ok && resultFromMissingKey.value).toEqual([]);
   });
 
-  it('uses common.aliases when package imports is absent (row 2: campo assente, presente)', () => {
+  it('uses common.aliases when package imports is absent', () => {
     const result = acquirePathAliases({
       commonAliases: {
         '#shared': 'src/_src@shared',
@@ -34,7 +34,7 @@ describe('acquirePathAliases', () => {
     ]);
   });
 
-  it('uses package.json#imports when valid map is present and common aliases is absent (row 3: mappa valida presente, assente)', () => {
+  it('uses package.json#imports when valid map is present and common aliases is absent', () => {
     const result = acquirePathAliases({
       packageJson: {
         imports: {
@@ -53,7 +53,7 @@ describe('acquirePathAliases', () => {
     ]);
   });
 
-  it('produces empty array when package imports is empty object and common aliases is absent (row 4: oggetto vuoto presente, assente)', () => {
+  it('produces empty array when package imports is empty object and common aliases is absent', () => {
     const result = acquirePathAliases({
       packageJson: {
         imports: {},
@@ -64,7 +64,7 @@ describe('acquirePathAliases', () => {
     expect(result.ok && result.value).toEqual([]);
   });
 
-  it('reports duplicate source error when valid imports and common aliases both exist (row 5: mappa valida presente, presente)', () => {
+  it('reports duplicate source error when valid imports and common aliases both exist', () => {
     const result = acquirePathAliases({
       commonAliases: {
         '#shared': 'src/_src@shared',
@@ -88,7 +88,7 @@ describe('acquirePathAliases', () => {
     });
   });
 
-  it('reports duplicate source error when empty imports object and common aliases both exist (row 6: oggetto vuoto presente, presente)', () => {
+  it('reports duplicate source error when empty imports object and common aliases both exist', () => {
     const result = acquirePathAliases({
       commonAliases: {
         '#shared': 'src/_src@shared',
@@ -110,7 +110,7 @@ describe('acquirePathAliases', () => {
     });
   });
 
-  it('reports source error without fallback when invalid imports is present and common aliases is absent (row 7: valore non valido presente, assente)', () => {
+  it('reports source error without fallback when invalid imports is present and common aliases is absent', () => {
     const result = acquirePathAliases({
       packageJson: {
         imports: 'invalid-primitive-string',
@@ -129,7 +129,7 @@ describe('acquirePathAliases', () => {
     });
   });
 
-  it('reports source error without fallback when invalid imports and common aliases both exist (row 8: valore non valido presente, presente)', () => {
+  it('reports source error without fallback when invalid imports and common aliases both exist', () => {
     const result = acquirePathAliases({
       commonAliases: {
         '#shared': 'src/_src@shared',

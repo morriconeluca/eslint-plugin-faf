@@ -252,7 +252,7 @@ describe('validateDependencies', () => {
       (o) => o.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
-    expect(outcome?.normativeReference).toBe('D-14');
+    expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
     expect(outcome?.propertyPath).toBe('faf.common.treeDependencies[0].from');
     expect(outcome?.message).toBe(
       "'faf.common.treeDependencies[0].from' cannot be explicitly undefined"

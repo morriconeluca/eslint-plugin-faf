@@ -1,7 +1,7 @@
 /**
  * Indexed tree authorization graph.
  */
-export type TTreeAuthGraph = {
+export type TTreeAuthorizationGraph = {
   /**
    * Adjacency list mapping tree index to adjacent tree indices.
    */

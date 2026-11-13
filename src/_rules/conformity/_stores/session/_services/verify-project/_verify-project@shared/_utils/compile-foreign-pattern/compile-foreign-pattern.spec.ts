@@ -5,7 +5,7 @@ import type { TForeignPatternRejectReason } from './compile-foreign-pattern.type
 import { compileForeignPattern } from './compile-foreign-pattern.util.js';
 
 describe('compileForeignPattern', () => {
-  describe('faf.feature: Applicare i pattern ai file nell ambito src', () => {
+  describe('applies foreign node patterns within the src scope', () => {
     it.each([
       {
         expected: true,
@@ -100,7 +100,7 @@ describe('compileForeignPattern', () => {
     );
   });
 
-  describe('faf.feature: Rifiutare criteri Foreign fuori dalla grammatica documentata', () => {
+  describe('rejects foreign node patterns outside the documented glob grammar', () => {
     it.each<{
       pattern: string;
       reason: TForeignPatternRejectReason;
@@ -132,7 +132,7 @@ describe('compileForeignPattern', () => {
     );
   });
 
-  describe('additional rejection rules from brief', () => {
+  describe('rejects malformed globstar and path segment forms', () => {
     it.each<{
       pattern: string;
       reason: TForeignPatternRejectReason;

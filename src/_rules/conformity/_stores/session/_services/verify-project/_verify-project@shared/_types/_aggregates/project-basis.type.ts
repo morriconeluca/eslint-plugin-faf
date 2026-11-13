@@ -6,7 +6,7 @@ import type {
 import type { TInventory } from '../_primitives/inventory.type.js';
 
 /**
- * Ready project preparation consumed by classification, collection, and later stages.
+ * Validated project preparation consumed by taxonomy, graph, and norm verification.
  */
 export type TProjectBasis = {
   /**
@@ -40,7 +40,7 @@ export type TProjectBasis = {
   readonly inventoryOutcomes: readonly TOutcome[];
 
   /**
-   * Discriminant of a preparation that later stages may continue.
+   * Discriminant of a validated project preparation ready for verification.
    */
   readonly kind: 'ready';
 
