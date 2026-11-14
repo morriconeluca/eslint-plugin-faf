@@ -9,7 +9,7 @@ export function validateStructuralReferences(
   context: TReferenceContext
 ): readonly TConfigOutcome[] {
   const commonOutcomes = validateStructuralSection(
-    config.faf.common?.localHorizontalHierarchies,
+    undefined,
     config.faf.common?.mimeticPathStructures,
     'faf.common',
     { kind: 'common' },
@@ -17,7 +17,7 @@ export function validateStructuralReferences(
   );
   const localOutcomes = config.faf.locals.flatMap((local, localIndex) =>
     validateStructuralSection(
-      local.localHorizontalHierarchies,
+      local.horizontalHierarchies,
       local.mimeticPathStructures,
       `faf.locals[${localIndex}]`,
       { kind: 'local', localIndex },

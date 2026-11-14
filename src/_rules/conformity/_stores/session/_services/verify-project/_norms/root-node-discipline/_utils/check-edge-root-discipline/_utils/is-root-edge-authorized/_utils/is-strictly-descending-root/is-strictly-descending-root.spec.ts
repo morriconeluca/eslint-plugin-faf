@@ -31,7 +31,7 @@ describe('isStrictlyDescendingRoot', () => {
         {
           id: 0,
           isOrderable: true,
-          origin: 'general',
+          origin: 'domain',
           parentPath: 'src',
           repetitions: [],
           siblings: [
@@ -71,7 +71,7 @@ describe('isStrictlyDescendingRoot', () => {
         {
           id: 0,
           isOrderable: true,
-          origin: 'general',
+          origin: 'domain',
           parentPath: 'src',
           repetitions: [],
           siblings: [

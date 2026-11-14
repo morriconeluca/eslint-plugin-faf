@@ -550,6 +550,8 @@ describe('acceptance: explicit architectural declarations without implicit conve
     it('rejects horizontal hierarchy over elements with different parents', async () => {
       await runScenario(
         {
+          'src/_utils/widget/_constants/widget.constant.ts':
+            'export const widgetConstant = 1;\n',
           'src/_utils/widget/_types/widget.type.ts':
             'export type TWidget = number;\n',
           'src/_utils/widget/index.ts':
@@ -560,13 +562,18 @@ describe('acceptance: explicit architectural declarations without implicit conve
           faf: {
             locals: [
               {
-                localHorizontalHierarchies: [
+                horizontalHierarchies: [
                   {
-                    hierarchies: [['_types']],
-                    paths: ['src/_utils/widget'],
+                    hierarchy: [['_constants'], ['_types']],
+                    path: 'src/_utils/widget',
                   },
                 ],
                 roles: [
+                  {
+                    category: '_constants',
+                    isCategoryNode: true,
+                    name: 'constant',
+                  },
                   { category: '_types', isCategoryNode: true, name: 'type' },
                   { category: '_utils', name: 'util' },
                 ],
@@ -599,12 +606,12 @@ describe('acceptance: explicit architectural declarations without implicit conve
           faf: {
             locals: [
               {
-                horizontalHierarchies: [[['a/_types'], ['b/_utils']]],
                 roles: [
                   { category: '_types', isCategoryNode: true, name: 'type' },
                   { category: '_utils', name: 'util' },
                 ],
                 rootLayers: ['src'],
+                subCategoryHierarchies: [[['_a'], ['_b']]],
               },
             ],
           },
@@ -618,6 +625,53 @@ describe('acceptance: explicit architectural declarations without implicit conve
             reference: 'FAF §5',
             specifier: '../../../_a/_types/a.type.js',
             to: 'src/_a/_types/a.type.ts',
+          }),
+        ]
+      );
+
+      await runScenario(
+        {
+          'src/_a/_types/a.type.ts': 'export type TA = number;\n',
+          'src/_b/_utils/b/b.util.ts': 'export const b = 1;\n',
+          'src/_b/_utils/b/index.ts': "export { b } from './b.util.js';\n",
+        },
+        {
+          faf: {
+            locals: [
+              {
+                horizontalHierarchies: [
+                  {
+                    hierarchy: [['_a/_types'], ['_b/_utils']],
+                    path: 'src',
+                  },
+                ],
+                roles: [
+                  { category: '_types', isCategoryNode: true, name: 'type' },
+                  { category: '_utils', name: 'util' },
+                ],
+                rootLayers: ['src'],
+              },
+            ],
+          },
+        },
+        [
+          makeScenarioMessage({
+            constraint: 'configuration/non-existent-path',
+            detail: 'Direct child "_a/_types" does not exist under "src"',
+            element: 'src/_a/_types',
+            filePath: 'faf.config.ts',
+            messageId: 'configuration',
+            predicate: 'does not exist',
+            reference: 'FAF §1.2, §6.9',
+          }),
+          makeScenarioMessage({
+            constraint: 'configuration/non-existent-path',
+            detail: 'Direct child "_b/_utils" does not exist under "src"',
+            element: 'src/_b/_utils',
+            filePath: 'faf.config.ts',
+            messageId: 'configuration',
+            predicate: 'does not exist',
+            reference: 'FAF §1.2, §6.9',
           }),
         ]
       );

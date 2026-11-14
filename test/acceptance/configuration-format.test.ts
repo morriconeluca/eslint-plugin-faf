@@ -587,11 +587,10 @@ describe('acceptance: faf.config.ts TypeScript module contract', () => {
             externalDependencies: [],
             foreignDomains: [],
             foreignNodes: [],
-            horizontalHierarchies: [],
-            localHorizontalHierarchies: [],
             mimeticPathStructures: [],
             publicRootNodes: [],
             roles: defaultRoles,
+            subCategoryHierarchies: [],
             subGraphRoles: [],
             treeDependencies: [],
           },
@@ -627,9 +626,9 @@ describe('acceptance: faf.config.ts TypeScript module contract', () => {
         faf: {
           locals: [
             {
-              horizontalHierarchies: [[[]]],
               roles: defaultRoles,
               rootLayers: ['src'],
+              subCategoryHierarchies: [[[], ['_atoms']]],
             },
           ],
         },
@@ -637,7 +636,7 @@ describe('acceptance: faf.config.ts TypeScript module contract', () => {
       [
         configMessage({
           constraint: 'configuration/empty-tier',
-          element: 'faf.locals[0].horizontalHierarchies[0][0]',
+          element: 'faf.locals[0].subCategoryHierarchies[0][0]',
           predicate: 'cannot be an empty tier',
           reference: 'FAF §1.2, §6.9',
         }),
@@ -1091,7 +1090,7 @@ describe('acceptance: closed configuration schema contract', () => {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [{ hierarchies: [] }],
+              horizontalHierarchies: [{ hierarchy: [['_a'], ['_b']] }],
               roles: defaultRoles,
               rootLayers: ['src'],
             },
@@ -1101,7 +1100,7 @@ describe('acceptance: closed configuration schema contract', () => {
       [
         configMessage({
           constraint: 'configuration/missing-property',
-          element: 'faf.locals[0].localHorizontalHierarchies[0].paths',
+          element: 'faf.locals[0].horizontalHierarchies[0].path',
           predicate: 'is required and missing',
           reference: 'FAF §1.2, §6.9',
         }),
@@ -1113,7 +1112,7 @@ describe('acceptance: closed configuration schema contract', () => {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [{ paths: ['src'] }],
+              horizontalHierarchies: [{ path: 'src' }],
               roles: defaultRoles,
               rootLayers: ['src'],
             },
@@ -1123,7 +1122,7 @@ describe('acceptance: closed configuration schema contract', () => {
       [
         configMessage({
           constraint: 'configuration/missing-property',
-          element: 'faf.locals[0].localHorizontalHierarchies[0].hierarchies',
+          element: 'faf.locals[0].horizontalHierarchies[0].hierarchy',
           predicate: 'is required and missing',
           reference: 'FAF §1.2, §6.9',
         }),
@@ -1135,8 +1134,12 @@ describe('acceptance: closed configuration schema contract', () => {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
-                { extra: true, hierarchies: [], paths: ['src'] },
+              horizontalHierarchies: [
+                {
+                  extra: true,
+                  hierarchy: [['_a'], ['_b']],
+                  path: 'src',
+                },
               ],
               roles: defaultRoles,
               rootLayers: ['src'],
@@ -1147,7 +1150,7 @@ describe('acceptance: closed configuration schema contract', () => {
       [
         configMessage({
           constraint: 'configuration/unknown-property',
-          element: 'faf.locals[0].localHorizontalHierarchies[0].extra',
+          element: 'faf.locals[0].horizontalHierarchies[0].extra',
           predicate: 'is not a recognized property',
           reference: 'FAF §1.2, §6.9',
         }),
@@ -1815,7 +1818,7 @@ describe('acceptance: closed configuration schema contract', () => {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: ['invalid'],
+              horizontalHierarchies: ['invalid'],
               roles: defaultRoles,
               rootLayers: ['src'],
             },
@@ -1825,7 +1828,53 @@ describe('acceptance: closed configuration schema contract', () => {
       [
         configMessage({
           constraint: 'configuration/invalid-type',
-          element: 'faf.locals[0].localHorizontalHierarchies[0]',
+          element: 'faf.locals[0].horizontalHierarchies[0]',
+          predicate: 'has an invalid type',
+          reference: 'FAF §1.2, §6.9',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              roles: defaultRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: 'invalid',
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/invalid-type',
+          element: 'faf.locals[0].subCategoryHierarchies',
+          predicate: 'has an invalid type',
+          reference: 'FAF §1.2, §6.9',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              roles: defaultRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: ['invalid'],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/invalid-type',
+          element: 'faf.locals[0].subCategoryHierarchies[0]',
           predicate: 'has an invalid type',
           reference: 'FAF §1.2, §6.9',
         }),
@@ -2007,7 +2056,12 @@ describe('acceptance: closed configuration schema contract', () => {
         faf: {
           locals: [
             {
-              horizontalHierarchies: [[['_utils'], ['_utils']]],
+              horizontalHierarchies: [
+                {
+                  hierarchy: [['_utils'], ['_utils']],
+                  path: 'src',
+                },
+              ],
               roles: defaultRoles,
               rootLayers: ['src'],
             },
@@ -2017,7 +2071,30 @@ describe('acceptance: closed configuration schema contract', () => {
       [
         configMessage({
           constraint: 'configuration/duplicate-element',
-          element: 'faf.locals[0].horizontalHierarchies[0][1][0]',
+          element: 'faf.locals[0].horizontalHierarchies[0].hierarchy[1][0]',
+          predicate: 'is a duplicate element',
+          reference: 'FAF §1.2, §6.9',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              roles: defaultRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[['_atoms'], ['_atoms']]],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/duplicate-element',
+          element: 'faf.locals[0].subCategoryHierarchies[0][1][0]',
           predicate: 'is a duplicate element',
           reference: 'FAF §1.2, §6.9',
         }),
@@ -2033,6 +2110,7 @@ describe('acceptance: closed configuration schema contract', () => {
               horizontalHierarchies: [],
               roles: defaultRoles,
               rootLayers: ['src'],
+              subCategoryHierarchies: [],
             },
           ],
         },
@@ -2268,18 +2346,18 @@ describe('acceptance: whole-property composition between common and locals', () 
       {
         faf: {
           common: {
-            horizontalHierarchies: [[['_utils'], ['_types']]],
             roles: [
               { category: '_types', isCategoryNode: true, name: 'type' },
               { category: '_utils', name: 'util' },
             ],
+            subCategoryHierarchies: [[['_atoms'], ['_molecules']]],
             subGraphRoles: [{ name: 'spec' }],
           },
           locals: [
             {
-              horizontalHierarchies: [],
               roles: [{ category: '_queries', name: 'query' }],
               rootLayers: ['src'],
+              subCategoryHierarchies: [],
               subGraphRoles: [],
             },
           ],
@@ -2363,11 +2441,11 @@ describe('acceptance: whole-property composition between common and locals', () 
               foreignDomains: [],
               foreignNodes: [],
               horizontalHierarchies: [],
-              localHorizontalHierarchies: [],
               mimeticPathStructures: [],
               publicRootNodes: [],
               roles: defaultRoles,
               rootLayers: ['src'],
+              subCategoryHierarchies: [],
               subGraphRoles: [],
               treeDependencies: [],
             },
@@ -2961,9 +3039,327 @@ describe('acceptance: configuration base directory and literal paths', () => {
           locals: [
             {
               foreignNodes: [{ paths: ['src'], patterns: ['*.pdf'] }],
-              horizontalHierarchies: [[['_empty1'], ['_empty2']]],
               roles: [...defaultRoles, { category: '_styles', name: 'style' }],
               rootLayers: ['src'],
+              subCategoryHierarchies: [[['_empty1'], ['_empty2']]],
+            },
+          ],
+        },
+      },
+      []
+    );
+  });
+});
+
+describe('acceptance: subCategoryHierarchies and horizontalHierarchies format contract', () => {
+  it('rejects horizontalHierarchies in common with scope-mismatch', async () => {
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          common: {
+            horizontalHierarchies: [],
+            roles: defaultRoles,
+          },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/scope-mismatch',
+          element: 'faf.common.horizontalHierarchies',
+          predicate: 'cannot be declared in this configuration scope',
+          reference: 'FAF §1.2, §6.9',
+        }),
+      ]
+    );
+  });
+
+  it('rejects removed localHorizontalHierarchies in common and locals', async () => {
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          common: {
+            localHorizontalHierarchies: [],
+            roles: defaultRoles,
+          },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/unknown-property',
+          element: 'faf.common.localHorizontalHierarchies',
+          predicate: 'is not a recognized property',
+          reference: 'FAF §1.2, §6.9',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              localHorizontalHierarchies: [],
+              roles: defaultRoles,
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/unknown-property',
+          element: 'faf.locals[0].localHorizontalHierarchies',
+          predicate: 'is not a recognized property',
+          reference: 'FAF §1.2, §6.9',
+        }),
+      ]
+    );
+  });
+
+  it('rejects hierarchies with fewer than two Rank tiers', async () => {
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              roles: defaultRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[]],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/insufficient-hierarchy-tiers',
+          element: 'faf.locals[0].subCategoryHierarchies[0]',
+          predicate: 'must declare at least two Rank tiers',
+          reference: 'FAF §4',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              roles: defaultRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[['_atoms']]],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/insufficient-hierarchy-tiers',
+          element: 'faf.locals[0].subCategoryHierarchies[0]',
+          predicate: 'must declare at least two Rank tiers',
+          reference: 'FAF §4',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [{ hierarchy: [], path: 'src' }],
+              roles: defaultRoles,
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/insufficient-hierarchy-tiers',
+          element: 'faf.locals[0].horizontalHierarchies[0].hierarchy',
+          predicate: 'must declare at least two Rank tiers',
+          reference: 'FAF §4',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [{ hierarchy: [['_utils']], path: 'src' }],
+              roles: defaultRoles,
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/insufficient-hierarchy-tiers',
+          element: 'faf.locals[0].horizontalHierarchies[0].hierarchy',
+          predicate: 'must declare at least two Rank tiers',
+          reference: 'FAF §4',
+        }),
+      ]
+    );
+  });
+
+  it('rejects invalid Sub-Category names and empty strings in subCategoryHierarchies', async () => {
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              roles: defaultRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[['atoms'], ['_BadName']]],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/invalid-sub-category-name',
+          element: 'faf.locals[0].subCategoryHierarchies[0][0][0]',
+          predicate:
+            'must be an underscore-prefixed kebab-case Sub-Category name',
+          reference: 'FAF §4, §6.3.4',
+        }),
+        configMessage({
+          constraint: 'configuration/invalid-sub-category-name',
+          element: 'faf.locals[0].subCategoryHierarchies[0][1][0]',
+          predicate:
+            'must be an underscore-prefixed kebab-case Sub-Category name',
+          reference: 'FAF §4, §6.3.4',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          locals: [
+            {
+              roles: defaultRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[[''], ['_molecules']]],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/empty-string',
+          element: 'faf.locals[0].subCategoryHierarchies[0][0][0]',
+          predicate: 'cannot be an empty string',
+          reference: 'FAF §1.2, §6.9',
+        }),
+      ]
+    );
+  });
+
+  it('rejects subCategoryHierarchies members matching catalog Categories across common and locals scopes', async () => {
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          common: {
+            roles: defaultRoles,
+            subCategoryHierarchies: [[['_types'], ['_molecules']]],
+          },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/sub-category-hierarchy-category-conflict',
+          detail:
+            'Sub-Category "_types" matches Category "_types" in the role catalog',
+          element: 'faf.common.subCategoryHierarchies[0][0][0]',
+          predicate:
+            'cannot match a Category name declared in the role catalog',
+          reference: 'FAF §6.3.4',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          common: {
+            subCategoryHierarchies: [[['_utils'], ['_molecules']]],
+          },
+          locals: [{ roles: defaultRoles, rootLayers: ['src'] }],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/sub-category-hierarchy-category-conflict',
+          detail:
+            'Sub-Category "_utils" matches Category "_utils" in the role catalog',
+          element: 'faf.common.subCategoryHierarchies[0][0][0]',
+          predicate:
+            'cannot match a Category name declared in the role catalog',
+          reference: 'FAF §6.3.4',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          common: {
+            roles: defaultRoles,
+          },
+          locals: [
+            {
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[['_types'], ['_molecules']]],
+            },
+          ],
+        },
+      },
+      [
+        configMessage({
+          constraint: 'configuration/sub-category-hierarchy-category-conflict',
+          detail:
+            'Sub-Category "_types" matches Category "_types" in the role catalog',
+          element: 'faf.locals[0].subCategoryHierarchies[0][0][0]',
+          predicate:
+            'cannot match a Category name declared in the role catalog',
+          reference: 'FAF §6.3.4',
+        }),
+      ]
+    );
+
+    await runScenario(
+      defaultTree,
+      {
+        faf: {
+          common: {
+            roles: [{ category: '_components', name: 'component' }],
+            subCategoryHierarchies: [[['_utils'], ['_molecules']]],
+          },
+          locals: [
+            {
+              roles: defaultRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[['_atoms'], ['_molecules']]],
             },
           ],
         },

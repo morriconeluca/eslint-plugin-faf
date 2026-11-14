@@ -4,6 +4,7 @@ export const REFERENCE_FAF_3 = 'FAF §3';
 export const REFERENCE_FAF_3_6_9 = 'FAF §3, §6.9';
 export const REFERENCE_FAF_4 = 'FAF §4';
 export const REFERENCE_FAF_4_6_3_1 = 'FAF §4, §6.3.1';
+export const REFERENCE_FAF_4_6_3_4 = 'FAF §4, §6.3.4';
 export const REFERENCE_FAF_4_6_3_5_6_6 = 'FAF §4, §6.3.5, §6.6';
 export const REFERENCE_FAF_4_6_7 = 'FAF §4, §6.7';
 export const REFERENCE_FAF_5 = 'FAF §5';
@@ -19,6 +20,7 @@ export const REFERENCE_FAF_6_3_1 = 'FAF §6.3.1';
 export const REFERENCE_FAF_6_3_2_MULTIPLE =
   'FAF §6.3.2, §6.4.1, §6.5.1, §6.6.1';
 export const REFERENCE_FAF_6_3_3 = 'FAF §6.3.3';
+export const REFERENCE_FAF_6_3_4 = 'FAF §6.3.4';
 export const REFERENCE_FAF_6_3_5 = 'FAF §6.3.5';
 export const REFERENCE_FAF_6_5_6_9 = 'FAF §6.5, §6.9';
 export const REFERENCE_FAF_6_6_2 = 'FAF §6.6.2';

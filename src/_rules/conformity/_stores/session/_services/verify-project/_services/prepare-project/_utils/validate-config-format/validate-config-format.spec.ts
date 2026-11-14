@@ -22,16 +22,6 @@ const FAF_NEXT_EXAMPLE_CONFIG = {
           patterns: ['*.md'],
         },
       ],
-      horizontalHierarchies: [
-        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
-        [
-          ['_primitives'],
-          ['_compounds'],
-          ['_aggregates'],
-          ['_systems'],
-          ['_ecosystems'],
-        ],
-      ],
       roles: [
         [
           {
@@ -92,6 +82,16 @@ const FAF_NEXT_EXAMPLE_CONFIG = {
           { category: '_stores', name: 'store' },
         ],
       ],
+      subCategoryHierarchies: [
+        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
+        [
+          ['_primitives'],
+          ['_compounds'],
+          ['_aggregates'],
+          ['_systems'],
+          ['_ecosystems'],
+        ],
+      ],
       subGraphRoles: [{ name: 'spec' }, { name: 'story' }],
     },
     locals: [
@@ -109,17 +109,17 @@ const FAF_NEXT_EXAMPLE_CONFIG = {
           'src/vite-env.d.ts',
           { paths: ['src'], patterns: ['*.md'] },
         ],
-        localHorizontalHierarchies: [
+        horizontalHierarchies: [
           {
-            hierarchies: [['_domain'], ['_network', '_state', '_ui']],
-            paths: ['src/_src@shared'],
+            hierarchy: [['_domain'], ['_network', '_state', '_ui']],
+            path: 'src/_src@shared',
           },
           {
-            hierarchies: [['_types'], ['_classes'], ['_utils'], ['_apis']],
-            paths: ['src/_src@shared/_network'],
+            hierarchy: [['_types'], ['_classes'], ['_utils'], ['_apis']],
+            path: 'src/_src@shared/_network',
           },
           {
-            hierarchies: [
+            hierarchy: [
               ['_constants'],
               ['_types'],
               ['_utils'],
@@ -127,7 +127,7 @@ const FAF_NEXT_EXAMPLE_CONFIG = {
               ['_components'],
               ['_pages'],
             ],
-            paths: ['src/_src@shared/_ui'],
+            path: 'src/_src@shared/_ui',
           },
         ],
         mimeticPathStructures: [
@@ -163,7 +163,12 @@ const FAF_NEXT_EXAMPLE_CONFIG = {
         ],
       },
       {
-        horizontalHierarchies: [[['_types'], ['_utils']]],
+        horizontalHierarchies: [
+          {
+            hierarchy: [['_types'], ['_utils']],
+            path: 'packages/contracts/src',
+          },
+        ],
         rootLayers: ['packages/contracts/src', 'packages/formatters/src'],
       },
     ],
@@ -196,26 +201,22 @@ describe('validateConfigFormat', () => {
               { from: ['src/main.ts'], to: ['package.json'] },
             ],
             horizontalHierarchies: [
-              [
-                ['_constants'],
-                ['_types'],
-                ['_mocks'],
-                ['_configs'],
-                ['_schemas'],
-                ['_utils'],
-                ['_norms'],
-                ['_adapters'],
-                ['_services'],
-                ['_stores'],
-                ['_rules'],
-              ],
-              [
-                ['_primitives'],
-                ['_compounds'],
-                ['_aggregates'],
-                ['_systems'],
-                ['_ecosystems'],
-              ],
+              {
+                hierarchy: [
+                  ['_constants'],
+                  ['_types'],
+                  ['_mocks'],
+                  ['_configs'],
+                  ['_schemas'],
+                  ['_utils'],
+                  ['_norms'],
+                  ['_adapters'],
+                  ['_services'],
+                  ['_stores'],
+                  ['_rules'],
+                ],
+                path: 'src/_src@shared',
+              },
             ],
             publicRootNodes: ['src/main.ts'],
             roles: [
@@ -251,6 +252,15 @@ describe('validateConfigFormat', () => {
               { category: '_rules', name: 'rule' },
             ],
             rootFragments: [{ path: 'src', rootNodes: [['main.ts']] }],
+            subCategoryHierarchies: [
+              [
+                ['_primitives'],
+                ['_compounds'],
+                ['_aggregates'],
+                ['_systems'],
+                ['_ecosystems'],
+              ],
+            ],
             subGraphRoles: [{ name: 'spec' }],
           },
         ],
@@ -415,6 +425,44 @@ describe('validateConfigFormat', () => {
       propertyPath: 'faf.locals[0].namingContracts',
     },
     {
+      constraint: 'configuration/unknown-property',
+      description: 'removed localHorizontalHierarchies in common',
+      message: 'Unknown property "localHorizontalHierarchies" is forbidden.',
+      normativeReference: 'FAF §1.2, §6.9',
+      payload: {
+        faf: {
+          common: { localHorizontalHierarchies: [] },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      },
+      propertyPath: 'faf.common.localHorizontalHierarchies',
+    },
+    {
+      constraint: 'configuration/unknown-property',
+      description: 'removed localHorizontalHierarchies in locals',
+      message: 'Unknown property "localHorizontalHierarchies" is forbidden.',
+      normativeReference: 'FAF §1.2, §6.9',
+      payload: {
+        faf: {
+          locals: [{ localHorizontalHierarchies: [], rootLayers: ['src'] }],
+        },
+      },
+      propertyPath: 'faf.locals[0].localHorizontalHierarchies',
+    },
+    {
+      constraint: 'configuration/scope-mismatch',
+      description: 'horizontalHierarchies in common',
+      message: 'Property "horizontalHierarchies" cannot be declared in common.',
+      normativeReference: 'FAF §1.2, §6.9',
+      payload: {
+        faf: {
+          common: { horizontalHierarchies: [] },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      },
+      propertyPath: 'faf.common.horizontalHierarchies',
+    },
+    {
       constraint: 'configuration/scope-mismatch',
       description: 'rootLayers in common',
       message:
@@ -577,16 +625,43 @@ describe('validateConfigFormat', () => {
     },
     {
       constraint: 'configuration/empty-tier',
-      description: 'empty tier in common horizontalHierarchies',
+      description: 'empty tier in common subCategoryHierarchies',
       message: 'Hierarchy tier cannot be empty.',
       normativeReference: 'FAF §6.2.2',
       payload: {
         faf: {
-          common: { horizontalHierarchies: [[[]]] },
+          common: { subCategoryHierarchies: [[[], ['_molecules']]] },
           locals: [{ rootLayers: ['src'] }],
         },
       },
-      propertyPath: 'faf.common.horizontalHierarchies[0][0]',
+      propertyPath: 'faf.common.subCategoryHierarchies[0][0]',
+    },
+    {
+      constraint: 'configuration/insufficient-hierarchy-tiers',
+      description: 'single tier in common subCategoryHierarchies',
+      message: 'Hierarchy must declare at least two Rank tiers.',
+      normativeReference: 'FAF §4',
+      payload: {
+        faf: {
+          common: { subCategoryHierarchies: [[['_atoms']]] },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      },
+      propertyPath: 'faf.common.subCategoryHierarchies[0]',
+    },
+    {
+      constraint: 'configuration/invalid-sub-category-name',
+      description: 'non-underscore member in common subCategoryHierarchies',
+      message:
+        'Member must be an underscore-prefixed kebab-case Sub-Category name.',
+      normativeReference: 'FAF §4, §6.3.4',
+      payload: {
+        faf: {
+          common: { subCategoryHierarchies: [[['atoms'], ['_molecules']]] },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      },
+      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
     },
     {
       constraint: 'configuration/missing-property',
@@ -627,13 +702,32 @@ describe('validateConfigFormat', () => {
         faf: {
           locals: [
             {
-              horizontalHierarchies: [[[]]],
+              horizontalHierarchies: [
+                { hierarchy: [[], ['_utils']], path: 'src' },
+              ],
               rootLayers: ['src'],
             },
           ],
         },
       },
-      propertyPath: 'faf.locals[0].horizontalHierarchies[0][0]',
+      propertyPath: 'faf.locals[0].horizontalHierarchies[0].hierarchy[0]',
+    },
+    {
+      constraint: 'configuration/insufficient-hierarchy-tiers',
+      description: 'single tier in local horizontalHierarchies',
+      message: 'Hierarchy must declare at least two Rank tiers.',
+      normativeReference: 'FAF §4',
+      payload: {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [{ hierarchy: [['_types']], path: 'src' }],
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      },
+      propertyPath: 'faf.locals[0].horizontalHierarchies[0].hierarchy',
     },
     {
       constraint: 'configuration/empty-list',
@@ -992,5 +1086,147 @@ describe('validateConfigFormat', () => {
       expect(outcome.constraint.startsWith('configuration/')).toBe(true);
       expect(outcome.normativeReference.startsWith('FAF §')).toBe(true);
     }
+  });
+
+  describe('subCategoryHierarchies Category name conflict validation', () => {
+    it('rejects common subCategoryHierarchies member matching common role category without duplication', () => {
+      const result = validateConfigFormat({
+        faf: {
+          common: {
+            roles: [{ category: '_types', name: 'type' }],
+            subCategoryHierarchies: [[['_types'], ['_molecules']]],
+          },
+          locals: [{ rootLayers: ['src'] }, { rootLayers: ['lib'] }],
+        },
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        return;
+      }
+      const conflicts = result.outcomes.filter(
+        (o) =>
+          o.constraint ===
+          'configuration/sub-category-hierarchy-category-conflict'
+      );
+      expect(conflicts).toHaveLength(1);
+      expect(conflicts[0]).toMatchObject({
+        constraint: 'configuration/sub-category-hierarchy-category-conflict',
+        element: 'faf.common.subCategoryHierarchies[0][0][0]',
+        family: 'configuration',
+        normativeReference: 'FAF §6.3.4',
+        propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      });
+      expect(conflicts[0]?.message).toContain('_types');
+    });
+
+    it('checks inherited common subCategoryHierarchies against each local roles and deduplicates by propertyPath', () => {
+      const result = validateConfigFormat({
+        faf: {
+          common: {
+            subCategoryHierarchies: [[['_types'], ['_utils']]],
+          },
+          locals: [
+            {
+              roles: [{ category: '_types', name: 'type' }],
+              rootLayers: ['src'],
+            },
+            {
+              roles: [{ category: '_types', name: 'type' }],
+              rootLayers: ['app'],
+            },
+            {
+              roles: [[{ category: '_utils', name: 'util' }]],
+              rootLayers: ['lib'],
+            },
+          ],
+        },
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        return;
+      }
+      const conflicts = result.outcomes.filter(
+        (o) =>
+          o.family === 'configuration' &&
+          o.constraint ===
+            'configuration/sub-category-hierarchy-category-conflict'
+      );
+      expect(
+        conflicts.map((c) =>
+          c.family === 'configuration' ? c.propertyPath : ''
+        )
+      ).toEqual([
+        'faf.common.subCategoryHierarchies[0][0][0]',
+        'faf.common.subCategoryHierarchies[0][1][0]',
+      ]);
+    });
+
+    it('checks local subCategoryHierarchies against inherited common roles and respects local role overrides', () => {
+      const inheritedRolesConflict = validateConfigFormat({
+        faf: {
+          common: {
+            roles: [{ category: '_hooks', name: 'hook' }],
+          },
+          locals: [
+            {
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[['_atoms'], ['_hooks']]],
+            },
+          ],
+        },
+      });
+      expect(inheritedRolesConflict.ok).toBe(false);
+      if (!inheritedRolesConflict.ok) {
+        expect(
+          inheritedRolesConflict.outcomes.map((o) =>
+            o.family === 'configuration' ? o.propertyPath : ''
+          )
+        ).toEqual(['faf.locals[0].subCategoryHierarchies[0][1][0]']);
+      }
+
+      const overriddenRolesValid = validateConfigFormat({
+        faf: {
+          common: {
+            roles: [{ category: '_hooks', name: 'hook' }],
+          },
+          locals: [
+            {
+              roles: [{ category: '_utils', name: 'util' }],
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[['_atoms'], ['_hooks']]],
+            },
+          ],
+        },
+      });
+      expect(overriddenRolesValid.ok).toBe(true);
+    });
+
+    it('handles malformed subCategoryHierarchies and explicit undefined horizontalHierarchies in common', () => {
+      const commonRecord: Record<string, unknown> = {
+        roles: [{ category: '_types', name: 'type' }],
+        subCategoryHierarchies: ['not-an-array', ['not-a-tier']],
+      };
+      Object.defineProperty(commonRecord, 'horizontalHierarchies', {
+        enumerable: true,
+        value: void 0,
+      });
+      const result = validateConfigFormat({
+        faf: {
+          common: commonRecord,
+          locals: [{ rootLayers: ['src'] }],
+        },
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        return;
+      }
+      expect(
+        result.outcomes.some(
+          (o) =>
+            o.constraint === 'configuration/scope-mismatch' &&
+            o.propertyPath === 'faf.common.horizontalHierarchies'
+        )
+      ).toBe(true);
+    });
   });
 });

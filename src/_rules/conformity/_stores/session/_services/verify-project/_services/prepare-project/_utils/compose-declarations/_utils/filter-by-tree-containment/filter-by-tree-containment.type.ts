@@ -1,7 +1,7 @@
-import type { TFAFHierarchy } from '../../../../../../../../../../../../_src@shared/_types/faf-config.type.js';
+import type { TFAFDomainHierarchy } from '../../../../../../../../../../../../_src@shared/_types/faf-config.type.js';
 import type {
   TEffectiveForeignNodes,
-  TEffectiveLocalHierarchy,
+  TEffectiveHorizontalHierarchy,
   TEffectiveMimeticStructure,
   TEffectiveOrientedPair,
 } from '../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
@@ -26,14 +26,9 @@ export type TTreeScopedDeclarations = {
   readonly foreignNodes: TEffectiveForeignNodes;
 
   /**
-   * General descending rank tiers applied to matching sibling organizational folders.
+   * Domain-scoped horizontal hierarchy definitions bound to explicit folder locations in this tree.
    */
-  readonly horizontalHierarchies: readonly TFAFHierarchy[];
-
-  /**
-   * Local hierarchy definitions bound to explicit folder locations in this tree.
-   */
-  readonly localHorizontalHierarchies: readonly TEffectiveLocalHierarchy[];
+  readonly horizontalHierarchies: readonly TEffectiveHorizontalHierarchy[];
 
   /**
    * Designated organizational folders mirroring external HTTP or command structures.
@@ -44,6 +39,11 @@ export type TTreeScopedDeclarations = {
    * Exposed entry files accessible to external consumers across tree boundaries.
    */
   readonly publicRootNodes: readonly string[];
+
+  /**
+   * Tree-wide descending rank tiers applied to matching sibling sub-categories.
+   */
+  readonly subCategoryHierarchies: readonly TFAFDomainHierarchy[];
 
   /**
    * Authorized unidirectional dependency pairs linking this tree to other trees.

@@ -10,11 +10,10 @@ export const configShape = (() => {
     'externalDependencies',
     'foreignDomains',
     'foreignNodes',
-    'horizontalHierarchies',
-    'localHorizontalHierarchies',
     'mimeticPathStructures',
     'publicRootNodes',
     'roles',
+    'subCategoryHierarchies',
     'subGraphRoles',
     'treeDependencies',
   ] as const;
@@ -77,6 +76,7 @@ export const configShape = (() => {
       {
         ...shapeOf(SHARED_KEYS),
         aliases: z.any().optional(),
+        horizontalHierarchies: formFields.optionalProperty(),
         rootFragments: z.any().optional(),
         rootLayers: z.any().optional(),
       },
@@ -101,6 +101,7 @@ export const configShape = (() => {
   const commonObject = z.strictObject(
     {
       ...shapeOf(['aliases', ...SHARED_KEYS]),
+      horizontalHierarchies: z.any().optional(),
       rootFragments: z.any().optional(),
       rootLayers: z.any().optional(),
     },

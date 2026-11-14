@@ -8,6 +8,11 @@ export type TFAFCommonConfig = TFAFSharedConfig & {
   readonly aliases?: Readonly<Record<string, string>>;
 
   /**
+   * Domain-scoped horizontal hierarchies must be declared exclusively in local configurations.
+   */
+  readonly horizontalHierarchies?: never;
+
+  /**
    * Root fragment origins must be declared exclusively in local configurations.
    */
   readonly rootFragments?: never;
@@ -54,6 +59,17 @@ export type TFAFConfig = {
 };
 
 /**
+ * Tiered hierarchy requiring at least two rank levels where each non-empty
+ * group occupies the positional rank matching its index starting from zero.
+ * Only strictly descending dependencies are authorized.
+ */
+export type TFAFDomainHierarchy = readonly [
+  TFAFNonEmptyArray<string>,
+  TFAFNonEmptyArray<string>,
+  ...TFAFNonEmptyArray<string>[],
+];
+
+/**
  * Authorized egress dependency from internal logical nodes to external local modules.
  */
 export type TFAFExternalDependency = {
@@ -94,6 +110,22 @@ export type TFAFForeignNodeFamily = {
 export type TFAFHierarchy = readonly TFAFNonEmptyArray<string>[];
 
 /**
+ * Domain-scoped horizontal hierarchy applied to direct children of a single
+ * parent directory.
+ */
+export type TFAFHorizontalHierarchy = {
+  /**
+   * Tiered ordering applied to direct children of the designated parent directory.
+   */
+  readonly hierarchy: TFAFDomainHierarchy;
+
+  /**
+   * Parent directory path relative to configuration file where ordering applies.
+   */
+  readonly path: string;
+};
+
+/**
  * Local configuration defining one or more fractal trees via root origins.
  */
 export type TFAFLocalConfig = TFAFSharedConfig &
@@ -117,6 +149,13 @@ export type TFAFLocalConfig = TFAFSharedConfig &
     readonly aliases?: never;
 
     /**
+     * Domain-scoped horizontal hierarchies applied to direct children of designated parent directories.
+     *
+     * @default [] Defaults to an empty list.
+     */
+    readonly horizontalHierarchies?: readonly TFAFHorizontalHierarchy[];
+
+    /**
      * Apical root fragments originating distinct fractal trees.
      */
     readonly rootFragments?: readonly TFAFRootFragment[];
@@ -126,21 +165,6 @@ export type TFAFLocalConfig = TFAFSharedConfig &
      */
     readonly rootLayers?: readonly string[];
   };
-
-/**
- * Local horizontal hierarchy applied exclusively to designated parent directories.
- */
-export type TFAFLocalHorizontalHierarchy = {
-  /**
-   * Tiered ordering applied to direct children of designated parent directories.
-   */
-  readonly hierarchies: TFAFHierarchy;
-
-  /**
-   * Parent directory paths relative to configuration file where ordering applies.
-   */
-  readonly paths: TFAFNonEmptyArray<string>;
-};
 
 /**
  * Mimetic path structure mapping an external hierarchical address space.
@@ -293,20 +317,6 @@ export type TFAFSharedConfig = {
   readonly foreignNodes?: readonly (string | TFAFForeignNodeFamily)[];
 
   /**
-   * Default descending rank specifications applied across matching sibling directories.
-   *
-   * @default [] Defaults to an empty list.
-   */
-  readonly horizontalHierarchies?: readonly TFAFHierarchy[];
-
-  /**
-   * Targeted descending rank definitions bound to explicit folder locations.
-   *
-   * @default [] Defaults to an empty list.
-   */
-  readonly localHorizontalHierarchies?: readonly TFAFLocalHorizontalHierarchy[];
-
-  /**
    * Designated organizational folders mirroring external HTTP or command address spaces.
    *
    * @default [] Defaults to an empty list.
@@ -324,6 +334,13 @@ export type TFAFSharedConfig = {
    * Ordered catalog of architectural roles and internal fragment hierarchies.
    */
   readonly roles?: TFAFRoles;
+
+  /**
+   * Tree-wide horizontal hierarchy models applied to matching sibling sub-categories.
+   *
+   * @default [] Defaults to an empty list.
+   */
+  readonly subCategoryHierarchies?: readonly TFAFDomainHierarchy[];
 
   /**
    * Specialized responsibilities reserved for entry files in test and auxiliary sub-graphs.

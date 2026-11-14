@@ -1,4 +1,4 @@
-import type { TFAFHierarchy } from '../../../../../../../../../_src@shared/_types/faf-config.type.js';
+import type { TFAFDomainHierarchy } from '../../../../../../../../../_src@shared/_types/faf-config.type.js';
 
 /**
  * Configuration source from which path alias definitions were retrieved.
@@ -86,18 +86,18 @@ export type TEffectiveForeignNodes = {
 };
 
 /**
- * Local horizontal hierarchy applied to specific parent directory paths.
+ * Domain-scoped horizontal hierarchy applied to a specific parent directory path.
  */
-export type TEffectiveLocalHierarchy = {
+export type TEffectiveHorizontalHierarchy = {
   /**
-   * Tiered descending rank tiers where each tier lists allowed child names.
+   * Tiered descending rank tiers where each tier lists allowed direct child names.
    */
-  readonly hierarchy: TFAFHierarchy;
+  readonly hierarchy: TFAFDomainHierarchy;
 
   /**
-   * Explicit parent folder locations governed by this ordering structure.
+   * Explicit parent folder location governed by this ordering structure.
    */
-  readonly paths: readonly string[];
+  readonly path: string;
 };
 
 /**
@@ -250,14 +250,9 @@ export type TEffectiveTree = {
   readonly foreignNodes: TEffectiveForeignNodes;
 
   /**
-   * General descending rank tiers applied to matching sibling organizational folders.
+   * Domain-scoped horizontal hierarchy definitions bound to explicit folder locations in this tree.
    */
-  readonly horizontalHierarchies: readonly TFAFHierarchy[];
-
-  /**
-   * Local hierarchy definitions bound to explicit folder locations in this tree.
-   */
-  readonly localHorizontalHierarchies: readonly TEffectiveLocalHierarchy[];
+  readonly horizontalHierarchies: readonly TEffectiveHorizontalHierarchy[];
 
   /**
    * Designated organizational folders mirroring external HTTP or command structures.
@@ -283,6 +278,11 @@ export type TEffectiveTree = {
    * Hierarchical root fragments comprising the entry boundary of this tree.
    */
   readonly rootFragments: readonly TEffectiveRootFragment[];
+
+  /**
+   * Tree-wide descending rank tiers applied to matching sibling sub-categories.
+   */
+  readonly subCategoryHierarchies: readonly TFAFDomainHierarchy[];
 
   /**
    * Authorized unidirectional dependency pairs linking this tree to other trees.

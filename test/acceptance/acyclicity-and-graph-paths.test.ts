@@ -483,7 +483,9 @@ describe('acceptance: global graph norms', () => {
         'src/main.ts': 'export const main = 1;\n',
       },
       {
-        horizontalHierarchies: [[['_domain'], ['_network']]],
+        horizontalHierarchies: [
+          { hierarchy: [['_domain'], ['_network']], path: 'src/_src@shared' },
+        ],
         roles: [...roles, { category: '_apis', name: 'api' }],
         rootFragments: [root('src', ['main.ts'])],
       },
@@ -748,7 +750,9 @@ describe('acceptance: global graph norms', () => {
         },
         {
           foreignNodes: target.endsWith('/data.ts') ? [target] : [],
-          horizontalHierarchies: [[['_low'], ['_high']]],
+          horizontalHierarchies: [
+            { hierarchy: [['_low'], ['_high']], path: 'src' },
+          ],
           rootLayers: ['src'],
         },
         expected

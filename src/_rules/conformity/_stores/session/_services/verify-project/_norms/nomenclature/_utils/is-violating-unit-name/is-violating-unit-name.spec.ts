@@ -64,7 +64,6 @@ const defaultTree: TEffectiveTree = {
   foreignDomains: [],
   foreignNodes: { families: [], individualPaths: [] },
   horizontalHierarchies: [],
-  localHorizontalHierarchies: [],
   mimeticPathStructures: [
     { actions: ['get', 'post'], paths: ['src/_apis'] },
     { actions: null, paths: ['src/_pages'] },
@@ -73,6 +72,7 @@ const defaultTree: TEffectiveTree = {
   originPath: 'src',
   publicRootNodes: [],
   rootFragments: [],
+  subCategoryHierarchies: [],
   treeDependencyPairs: [],
 };
 

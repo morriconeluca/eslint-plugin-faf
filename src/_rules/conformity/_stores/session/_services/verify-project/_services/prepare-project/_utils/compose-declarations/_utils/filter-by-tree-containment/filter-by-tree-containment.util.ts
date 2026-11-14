@@ -6,7 +6,7 @@ import type {
 import type {
   TEffectiveForeignFamily,
   TEffectiveForeignNodes,
-  TEffectiveLocalHierarchy,
+  TEffectiveHorizontalHierarchy,
   TEffectiveMimeticStructure,
   TEffectiveOrientedPair,
 } from '../../../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
@@ -59,30 +59,14 @@ export const filterByTreeContainment = (
     return { families, individualPaths };
   };
 
-  const buildLocalHierarchies = (): readonly TEffectiveLocalHierarchy[] => {
-    if (local.localHorizontalHierarchies !== undefined) {
-      return local.localHorizontalHierarchies.map((h) => ({
-        hierarchy: h.hierarchies,
-        paths: [...h.paths],
-      }));
-    }
-
-    if (common?.localHorizontalHierarchies === undefined) {
-      return [];
-    }
-
-    const result: TEffectiveLocalHierarchy[] = [];
-    for (const h of common.localHorizontalHierarchies) {
-      const filteredPaths = h.paths.filter((p: string) => isPathInTree(p));
-      if (filteredPaths.length > 0) {
-        result.push({
-          hierarchy: h.hierarchies,
-          paths: filteredPaths,
-        });
-      }
-    }
-    return result;
-  };
+  const buildHorizontalHierarchies =
+    (): readonly TEffectiveHorizontalHierarchy[] =>
+      (local.horizontalHierarchies ?? [])
+        .filter((entry) => isPathInTree(entry.path))
+        .map((entry) => ({
+          hierarchy: entry.hierarchy,
+          path: entry.path,
+        }));
 
   const buildMimeticStructures = (): readonly TEffectiveMimeticStructure[] => {
     if (local.mimeticPathStructures !== undefined) {
@@ -205,14 +189,14 @@ export const filterByTreeContainment = (
       local.foreignDomains === undefined
     ),
     foreignNodes: buildForeignNodes(),
-    horizontalHierarchies:
-      local.horizontalHierarchies ?? common?.horizontalHierarchies ?? [],
-    localHorizontalHierarchies: buildLocalHierarchies(),
+    horizontalHierarchies: buildHorizontalHierarchies(),
     mimeticPathStructures: buildMimeticStructures(),
     publicRootNodes: buildSortedPaths(
       local.publicRootNodes ?? common?.publicRootNodes,
       local.publicRootNodes === undefined
     ),
+    subCategoryHierarchies:
+      local.subCategoryHierarchies ?? common?.subCategoryHierarchies ?? [],
     treeDependencyPairs: buildTreeDependencyPairs(),
   };
 };

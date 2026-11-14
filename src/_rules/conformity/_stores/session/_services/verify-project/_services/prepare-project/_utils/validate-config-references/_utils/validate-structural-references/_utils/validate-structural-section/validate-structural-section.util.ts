@@ -1,5 +1,5 @@
 import type {
-  TFAFLocalHorizontalHierarchy,
+  TFAFHorizontalHierarchy,
   TFAFMimeticPathStructure,
 } from '../../../../../../../../../../../../../../_src@shared/_types/faf-config.type.js';
 import type { TConfigOutcome } from '../../../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
@@ -12,7 +12,7 @@ import { rejectHierarchyPaths } from './_utils/reject-hierarchy-paths/index.js';
 import { rejectMimeticStructures } from './_utils/reject-mimetic-structures/index.js';
 
 export function validateStructuralSection(
-  hierarchies: readonly TFAFLocalHorizontalHierarchy[] | undefined,
+  hierarchies: readonly TFAFHorizontalHierarchy[] | undefined,
   structures: readonly TFAFMimeticPathStructure[] | undefined,
   basePath: string,
   scope: TScopeBinding,
@@ -21,7 +21,7 @@ export function validateStructuralSection(
   return [
     ...rejectHierarchyPaths(
       hierarchies ?? [],
-      `${basePath}.localHorizontalHierarchies`,
+      `${basePath}.horizontalHierarchies`,
       scope,
       context
     ),

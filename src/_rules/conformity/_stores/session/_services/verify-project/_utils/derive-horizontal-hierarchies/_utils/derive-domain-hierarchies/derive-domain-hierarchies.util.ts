@@ -1,60 +1,94 @@
-import type { THorizontalHierarchySet } from '../../../../_verify-project@shared/_types/_compounds/horizontal-hierarchies.type.js';
+import type { TFAFDomainHierarchy } from '../../../../../../../../../../_src@shared/_types/faf-config.type.js';
+import type { TLogicalDomainKind } from '../../../../_verify-project@shared/_types/_compounds/classification.type.js';
+import type {
+  THorizontalHierarchySet,
+  TSiblingRank,
+} from '../../../../_verify-project@shared/_types/_compounds/horizontal-hierarchies.type.js';
 import type { THierarchyContext } from '../../_derive-horizontal-hierarchies@shared/_types/hierarchy-context.type.js';
 
 import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 import { isOrderableSiblingSet } from './_utils/is-orderable-sibling-set/index.js';
 
-export function deriveDomainHierarchies({
-  children,
-  parent,
-  taxonomy,
-  tree,
-}: THierarchyContext): readonly Omit<THorizontalHierarchySet, 'id'>[] {
-  const classification = taxonomy.byItemId.get(parent.id);
-  const declarations = [
-    ...(classification?.domainKind === 'foreign-domain'
-      ? []
-      : tree.horizontalHierarchies
-    ).map((hierarchy) => ({
-      hierarchy,
-      origin: 'general' as const,
-    })),
-    ...tree.localHorizontalHierarchies
-      .filter((local) => local.paths.includes(parent.path))
-      .map((local) => ({
-        hierarchy: local.hierarchy,
-        origin: 'local' as const,
-      })),
-  ];
-  const sets: Omit<THorizontalHierarchySet, 'id'>[] = [];
-  for (const { hierarchy, origin } of declarations) {
+export const deriveDomainHierarchies = (() => {
+  const SUB_CATEGORY = 'sub-category' as const;
+
+  const isSubCategoryEligibleParent = (
+    domainKind: null | TLogicalDomainKind | undefined
+  ): boolean => domainKind === 'category' || domainKind === SUB_CATEGORY;
+
+  const collectRepetitions = (
+    hierarchy: TFAFDomainHierarchy
+  ): readonly string[] => {
     const names = hierarchy.flat();
     const repetitions = [
       ...new Set(names.filter((name, index) => names.indexOf(name) !== index)),
     ];
     repetitions.sort(compareOrdinal);
-    const siblings = hierarchy.flatMap((tier, rank) => {
+    return repetitions;
+  };
+
+  const collectSiblings = (
+    hierarchy: TFAFDomainHierarchy,
+    context: THierarchyContext,
+    isSubCategoryOnly: boolean
+  ): readonly TSiblingRank[] =>
+    hierarchy.flatMap((tier, rank) => {
       const orderedNames = [...tier];
       orderedNames.sort(compareOrdinal);
       return orderedNames.flatMap((name) =>
-        children
-          .filter((child) => child.path.split('/').at(-1) === name)
+        context.children
+          .filter(
+            (child) =>
+              child.path.split('/').at(-1) === name &&
+              (!isSubCategoryOnly ||
+                context.taxonomy.byItemId.get(child.id)?.domainKind ===
+                  SUB_CATEGORY)
+          )
           .map((child) => ({ itemId: child.id, rank }))
       );
     });
-    if (origin === 'general' && siblings.length === 0) {
-      continue;
+
+  return function deriveDomainHierarchies(
+    context: THierarchyContext
+  ): readonly Omit<THorizontalHierarchySet, 'id'>[] {
+    const classification = context.taxonomy.byItemId.get(context.parent.id);
+    const sets: Omit<THorizontalHierarchySet, 'id'>[] = [];
+
+    if (isSubCategoryEligibleParent(classification?.domainKind)) {
+      for (const hierarchy of context.tree.subCategoryHierarchies) {
+        const siblings = collectSiblings(hierarchy, context, true);
+        if (siblings.length === 0) {
+          continue;
+        }
+        sets.push({
+          isOrderable: true,
+          origin: SUB_CATEGORY,
+          parentPath: context.parent.path,
+          repetitions: collectRepetitions(hierarchy),
+          siblings,
+        });
+      }
     }
-    sets.push({
-      isOrderable: isOrderableSiblingSet(
-        classification,
-        siblings.map((sibling) => taxonomy.byItemId.get(sibling.itemId))
-      ),
-      origin,
-      parentPath: parent.path,
-      repetitions,
-      siblings,
-    });
-  }
-  return sets;
-}
+
+    for (const entry of context.tree.horizontalHierarchies) {
+      if (entry.path !== context.parent.path) {
+        continue;
+      }
+      const siblings = collectSiblings(entry.hierarchy, context, false);
+      sets.push({
+        isOrderable: isOrderableSiblingSet(
+          classification,
+          siblings.map((sibling) =>
+            context.taxonomy.byItemId.get(sibling.itemId)
+          )
+        ),
+        origin: 'domain',
+        parentPath: context.parent.path,
+        repetitions: collectRepetitions(entry.hierarchy),
+        siblings,
+      });
+    }
+
+    return sets;
+  };
+})();

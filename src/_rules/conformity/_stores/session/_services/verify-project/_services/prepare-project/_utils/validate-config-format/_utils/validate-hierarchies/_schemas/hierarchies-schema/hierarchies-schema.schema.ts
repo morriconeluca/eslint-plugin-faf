@@ -3,39 +3,66 @@ import { z } from 'zod';
 import { formFields } from '../../../../_validate-config-format@shared/_schemas/form-fields/index.js';
 
 export const hierarchiesSchema = (() => {
-  const EMPTY_LIST = 'configuration/empty-list';
   const EMPTY_TIER = 'configuration/empty-tier';
+  const INSUFFICIENT_TIERS = 'configuration/insufficient-hierarchy-tiers';
   const INVALID_PATH = 'configuration/invalid-literal-path';
+  const INVALID_SUB_CATEGORY = 'configuration/invalid-sub-category-name';
+  const SUB_CATEGORY_NAME_PATTERN = /^_[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
-  const hierarchyItemSchema = formFields.textValue();
+  const subCategoryItemSchema = formFields
+    .textValue()
+    .superRefine((value, context) => {
+      if (value.length > 0 && !SUB_CATEGORY_NAME_PATTERN.test(value)) {
+        context.addIssue({
+          code: 'custom',
+          message: formFields.fixed(INVALID_SUB_CATEGORY),
+        });
+      }
+    });
 
-  const tierSchema = z
-    .array(hierarchyItemSchema, {
+  const subCategoryTierSchema = z
+    .array(subCategoryItemSchema, {
       error: (issue) => formFields.nullOrType(issue.input),
     })
     .min(1, {
       error: () => formFields.fixed(EMPTY_TIER),
     });
 
-  const hierarchySchema = z.array(tierSchema, {
+  const subCategoryHierarchySchema = z
+    .array(subCategoryTierSchema, {
+      error: (issue) => formFields.nullOrType(issue.input),
+    })
+    .min(2, {
+      error: () => formFields.fixed(INSUFFICIENT_TIERS),
+    });
+
+  const subCategoryHierarchiesSchema = z.array(subCategoryHierarchySchema, {
     error: (issue) => formFields.nullOrType(issue.input),
   });
 
-  const requiredHierarchySchema = z.array(tierSchema, {
-    error: (issue) =>
-      issue.input === undefined
-        ? formFields.requiredAbsence()
-        : formFields.nullOrType(issue.input),
-  });
+  const domainTierSchema = z
+    .array(formFields.textValue(), {
+      error: (issue) => formFields.nullOrType(issue.input),
+    })
+    .min(1, {
+      error: () => formFields.fixed(EMPTY_TIER),
+    });
 
-  const horizontalHierarchiesSchema = z.array(hierarchySchema, {
-    error: (issue) => formFields.nullOrType(issue.input),
-  });
+  const requiredDomainHierarchySchema = z
+    .array(domainTierSchema, {
+      error: (issue) =>
+        issue.input === undefined
+          ? formFields.requiredAbsence()
+          : formFields.nullOrType(issue.input),
+    })
+    .min(2, {
+      error: () => formFields.fixed(INSUFFICIENT_TIERS),
+    });
 
-  const pathItemSchema = formFields
-    .textValue()
+  const requiredPathSchema = formFields
+    .requiredText()
     .superRefine((value, context) => {
-      if (!formFields.isLiteralPath(value)) {
+      if (value.length > 0 && !formFields.isLiteralPath(value)) {
         context.addIssue({
           code: 'custom',
           message: formFields.fixed(INVALID_PATH),
@@ -43,21 +70,10 @@ export const hierarchiesSchema = (() => {
       }
     });
 
-  const requiredPaths = z
-    .array(pathItemSchema, {
-      error: (issue) =>
-        issue.input === undefined
-          ? formFields.requiredAbsence()
-          : formFields.nullOrType(issue.input),
-    })
-    .min(1, {
-      error: () => formFields.fixed(EMPTY_LIST),
-    });
-
-  const localHierarchySchema = z.strictObject(
+  const horizontalHierarchyEntrySchema = z.strictObject(
     {
-      hierarchies: requiredHierarchySchema,
-      paths: requiredPaths,
+      hierarchy: requiredDomainHierarchySchema,
+      path: requiredPathSchema,
     },
     {
       error: (issue) =>
@@ -70,12 +86,12 @@ export const hierarchiesSchema = (() => {
     }
   );
 
-  const localHorizontalHierarchiesSchema = z.array(localHierarchySchema, {
+  const horizontalHierarchiesSchema = z.array(horizontalHierarchyEntrySchema, {
     error: (issue) => formFields.nullOrType(issue.input),
   });
 
   return {
     horizontal: horizontalHierarchiesSchema,
-    local: localHorizontalHierarchiesSchema,
+    subCategory: subCategoryHierarchiesSchema,
   };
 })();

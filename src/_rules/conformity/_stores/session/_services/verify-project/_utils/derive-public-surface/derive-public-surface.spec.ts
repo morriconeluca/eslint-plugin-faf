@@ -95,12 +95,12 @@ const treeOf = (
   foreignDomains: [],
   foreignNodes: { families: [], individualPaths: [] },
   horizontalHierarchies: [],
-  localHorizontalHierarchies: [],
   mimeticPathStructures: [],
   originKind,
   originPath,
   publicRootNodes,
   rootFragments: [],
+  subCategoryHierarchies: [],
   treeDependencyPairs: [],
 });
 

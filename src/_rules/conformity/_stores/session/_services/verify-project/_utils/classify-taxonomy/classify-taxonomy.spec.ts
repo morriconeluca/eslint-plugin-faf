@@ -89,7 +89,6 @@ const treeOf = (
     individualPaths: [],
   },
   horizontalHierarchies: [],
-  localHorizontalHierarchies: [],
   mimeticPathStructures: overrides.mimeticPathStructures ?? [],
   originKind: overrides.originKind ?? 'root-fragment',
   originPath,
@@ -102,6 +101,7 @@ const treeOf = (
       subRootFragments: [],
     },
   ],
+  subCategoryHierarchies: [],
   treeDependencyPairs: [],
 });
 
@@ -457,6 +457,7 @@ describe('classifyTaxonomy', () => {
             catalog: serverCatalog,
             originKind: 'root-layer',
             rootFragments: [],
+            subCategoryHierarchies: [],
           }),
         ]
       );
@@ -684,6 +685,7 @@ describe('classifyTaxonomy', () => {
             ],
             originKind: 'root-layer',
             rootFragments: [],
+            subCategoryHierarchies: [],
           }),
         ]
       );
@@ -742,6 +744,7 @@ describe('classifyTaxonomy', () => {
           },
           originKind: 'root-layer',
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
       ]
     );
@@ -829,6 +832,7 @@ describe('classifyTaxonomy', () => {
           mimeticPathStructures: [{ actions: null, paths: ['src/_configs'] }],
           originKind: 'root-layer',
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
       ]
     );
@@ -860,6 +864,7 @@ describe('classifyTaxonomy', () => {
           mimeticPathStructures: [{ actions: ['get'], paths: ['src/_apis'] }],
           originKind: 'root-layer',
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
       ]
     );
@@ -902,6 +907,7 @@ describe('classifyTaxonomy', () => {
           mimeticPathStructures: [{ actions: ['get'], paths: ['src/_apis'] }],
           originKind: 'root-layer',
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
       ]
     );
@@ -1005,6 +1011,7 @@ describe('classifyTaxonomy', () => {
           ],
           originKind: 'root-layer',
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
       ]
     );
@@ -1045,6 +1052,7 @@ describe('classifyTaxonomy', () => {
           },
           originKind: 'root-layer',
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
       ]
     );
@@ -1149,6 +1157,7 @@ describe('classifyTaxonomy', () => {
           mimeticPathStructures: [{ actions: ['patch'], paths: ['src/_apis'] }],
           originKind: 'root-layer',
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
       ]
     );
@@ -1179,6 +1188,7 @@ describe('classifyTaxonomy', () => {
           mimeticPathStructures: [{ actions: ['get'], paths: ['src/_apis'] }],
           originKind: 'root-layer',
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
       ]
     );
@@ -1207,6 +1217,7 @@ describe('classifyTaxonomy', () => {
           mimeticPathStructures: [{ actions: null, paths: ['src/_pages'] }],
           originKind: 'root-layer',
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
         treeOf('app', {
           catalog: standardCatalog,
@@ -1486,6 +1497,7 @@ describe('classifyTaxonomy', () => {
           originKind: 'root-layer',
           publicRootNodes: ['absent.ts'],
           rootFragments: [],
+          subCategoryHierarchies: [],
         }),
       ]
     );

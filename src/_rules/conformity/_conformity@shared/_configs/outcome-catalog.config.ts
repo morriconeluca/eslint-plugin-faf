@@ -7,6 +7,7 @@ import {
   REFERENCE_FAF_3_6_9,
   REFERENCE_FAF_4,
   REFERENCE_FAF_4_6_3_1,
+  REFERENCE_FAF_4_6_3_4,
   REFERENCE_FAF_4_6_3_5_6_6,
   REFERENCE_FAF_4_6_7,
   REFERENCE_FAF_5,
@@ -21,6 +22,7 @@ import {
   REFERENCE_FAF_6_3_1,
   REFERENCE_FAF_6_3_2_MULTIPLE,
   REFERENCE_FAF_6_3_3,
+  REFERENCE_FAF_6_3_4,
   REFERENCE_FAF_6_3_5,
   REFERENCE_FAF_6_5_6_9,
   REFERENCE_FAF_6_6_2,
@@ -286,6 +288,12 @@ export const OUTCOME_CATALOG = {
     normativeReference: REFERENCE_FAF_6_7,
     predicate: 'cannot be designated inside a foreign domain',
   },
+  'configuration/insufficient-hierarchy-tiers': {
+    family: 'configuration',
+    form: 'element',
+    normativeReference: REFERENCE_FAF_4,
+    predicate: 'must declare at least two Rank tiers',
+  },
   'configuration/invalid-action-name': {
     family: 'configuration',
     form: 'element',
@@ -376,6 +384,12 @@ export const OUTCOME_CATALOG = {
     form: 'element',
     normativeReference: REFERENCE_FAF_6_2_2,
     predicate: 'must be an enumerated root node as a root dependency target',
+  },
+  'configuration/invalid-sub-category-name': {
+    family: 'configuration',
+    form: 'element',
+    normativeReference: REFERENCE_FAF_4_6_3_4,
+    predicate: 'must be an underscore-prefixed kebab-case Sub-Category name',
   },
   'configuration/invalid-type': {
     family: 'configuration',
@@ -503,6 +517,12 @@ export const OUTCOME_CATALOG = {
     form: 'element',
     normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'cannot be declared in this configuration scope',
+  },
+  'configuration/sub-category-hierarchy-category-conflict': {
+    family: 'configuration',
+    form: 'element',
+    normativeReference: REFERENCE_FAF_6_3_4,
+    predicate: 'cannot match a Category name declared in the role catalog',
   },
   'configuration/tree-dependency-from-outside-scope': {
     family: 'configuration',

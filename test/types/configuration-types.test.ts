@@ -71,6 +71,23 @@ const NEGATIVE_LITERAL_CASES = [
     description: 'rejects removed property namingContracts in TFAFCommonConfig',
     snippet: '({ namingContracts: [] }) satisfies TFAFCommonConfig;',
   },
+  {
+    description:
+      'rejects horizontalHierarchies declared inside TFAFCommonConfig',
+    snippet:
+      "({ horizontalHierarchies: [{ hierarchy: [['_a'], ['_b']], path: 'src' }] }) satisfies TFAFCommonConfig;",
+  },
+  {
+    description:
+      'rejects removed property localHorizontalHierarchies in TFAFCommonConfig',
+    snippet: '({ localHorizontalHierarchies: [] }) satisfies TFAFCommonConfig;',
+  },
+  {
+    description:
+      'rejects removed property localHorizontalHierarchies in TFAFLocalConfig',
+    snippet:
+      "({ rootLayers: ['src'], localHorizontalHierarchies: [] }) satisfies TFAFLocalConfig;",
+  },
 ] as const;
 
 const POSITIVE_AUXILIARY_CASES = [
@@ -107,10 +124,30 @@ const POSITIVE_AUXILIARY_CASES = [
       "({ paths: ['src'], patterns: ['*.md'] }) as const satisfies TFAFForeignNodeFamily;",
   },
   {
-    description:
-      'accepts TFAFLocalHorizontalHierarchy with valid paths and hierarchy',
+    description: 'accepts two-tier string array for TFAFDomainHierarchy',
+    snippet: "[['_a'], ['_b']] as const satisfies TFAFDomainHierarchy;",
+  },
+  {
+    description: 'accepts three-tier string array for TFAFDomainHierarchy',
     snippet:
-      "({ paths: ['src'], hierarchies: [] }) as const satisfies TFAFLocalHorizontalHierarchy;",
+      "[['_atoms'], ['_molecules'], ['_organisms']] as const satisfies TFAFDomainHierarchy;",
+  },
+  {
+    description:
+      'accepts TFAFHorizontalHierarchy with valid path and hierarchy',
+    snippet:
+      "({ hierarchy: [['_types'], ['_utils']], path: 'src' }) as const satisfies TFAFHorizontalHierarchy;",
+  },
+  {
+    description: 'accepts TFAFCommonConfig with subCategoryHierarchies',
+    snippet:
+      "({ subCategoryHierarchies: [[['_atoms'], ['_molecules']]] }) as const satisfies TFAFCommonConfig;",
+  },
+  {
+    description:
+      'accepts TFAFLocalConfig with subCategoryHierarchies and horizontalHierarchies',
+    snippet:
+      "({ rootLayers: ['src'], subCategoryHierarchies: [[['_primitives'], ['_compounds']]], horizontalHierarchies: [{ hierarchy: [['_types'], ['_utils']], path: 'src' }] }) as const satisfies TFAFLocalConfig;",
   },
   {
     description: 'accepts TFAFMimeticPathStructure with parent category paths',
@@ -188,15 +225,30 @@ const NEGATIVE_AUXILIARY_CASES = [
       "({ paths: ['src'], patterns: [] }) satisfies TFAFForeignNodeFamily;",
   },
   {
-    description: 'rejects empty paths array in TFAFLocalHorizontalHierarchy',
-    snippet:
-      '({ paths: [], hierarchies: [] }) satisfies TFAFLocalHorizontalHierarchy;',
+    description: 'rejects empty array for TFAFDomainHierarchy',
+    snippet: '[] satisfies TFAFDomainHierarchy;',
   },
   {
-    description:
-      'rejects nested hierarchy list in TFAFLocalHorizontalHierarchy hierarchies',
+    description: 'rejects single-tier array for TFAFDomainHierarchy',
+    snippet: "[['_only']] satisfies TFAFDomainHierarchy;",
+  },
+  {
+    description: 'rejects empty tier inside TFAFDomainHierarchy',
+    snippet: "[['_a'], []] satisfies TFAFDomainHierarchy;",
+  },
+  {
+    description: 'rejects missing path in TFAFHorizontalHierarchy',
     snippet:
-      "({ paths: ['src'], hierarchies: [[['_types']]] }) satisfies TFAFLocalHorizontalHierarchy;",
+      "({ hierarchy: [['_a'], ['_b']] }) satisfies TFAFHorizontalHierarchy;",
+  },
+  {
+    description: 'rejects missing hierarchy in TFAFHorizontalHierarchy',
+    snippet: "({ path: 'src' }) satisfies TFAFHorizontalHierarchy;",
+  },
+  {
+    description: 'rejects single-tier hierarchy in TFAFHorizontalHierarchy',
+    snippet:
+      "({ hierarchy: [['_a']], path: 'src' }) satisfies TFAFHorizontalHierarchy;",
   },
   {
     description: 'rejects empty actions array in TFAFMimeticPathStructure',
@@ -334,6 +386,7 @@ describe('static type contracts of public configuration', () => {
       const completions = compilerStrict.getCompletions(code, marker);
       const names = getEntryNames(completions);
       expect(names).toContain('roles');
+      expect(names).toContain('subCategoryHierarchies');
       expect(names).toContain('subGraphRoles');
       expect(names).toContain('aliases');
       expect(names).toContain('treeDependencies');
@@ -365,8 +418,24 @@ describe('static type contracts of public configuration', () => {
       const names = getEntryNames(completions);
       expect(names).toContain('rootLayers');
       expect(names).toContain('rootFragments');
+      expect(names).toContain('horizontalHierarchies');
+      expect(names).toContain('subCategoryHierarchies');
       expect(names).toContain('treeDependencies');
       expect(names).toContain('externalDependencies');
+    });
+
+    it('provides completions and JSDoc for TFAFHorizontalHierarchy properties', () => {
+      const code = `
+        import type { TFAFHorizontalHierarchy } from './src/main.js';
+        const entry: TFAFHorizontalHierarchy = {
+          
+        };
+      `;
+      const marker = 'entry: TFAFHorizontalHierarchy = {\n          ';
+      const completions = compilerStrict.getCompletions(code, marker);
+      const names = getEntryNames(completions);
+      expect(names).toContain('hierarchy');
+      expect(names).toContain('path');
     });
 
     it('provides completions and JSDoc for role properties within roles definition', () => {
@@ -438,6 +507,7 @@ describe('static type contracts of public configuration', () => {
       );
       expect(commonCompletions).not.toContain('publicNodes');
       expect(commonCompletions).not.toContain('namingContracts');
+      expect(commonCompletions).not.toContain('localHorizontalHierarchies');
 
       const localMarker = 'locals: [\n              {\n                ';
       const localCompletions = getEntryNames(
@@ -445,6 +515,7 @@ describe('static type contracts of public configuration', () => {
       );
       expect(localCompletions).not.toContain('publicNodes');
       expect(localCompletions).not.toContain('namingContracts');
+      expect(localCompletions).not.toContain('localHorizontalHierarchies');
     });
 
     it('exports type aliases with T prefix and no interfaces', () => {

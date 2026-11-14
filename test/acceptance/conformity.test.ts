@@ -277,7 +277,9 @@ describe('acceptance: faf/conformity', () => {
           faf: {
             locals: [
               {
-                horizontalHierarchies: [[['_utils'], ['_services']]],
+                horizontalHierarchies: [
+                  { hierarchy: [['_utils'], ['_services']], path: 'src' },
+                ],
                 roles: [
                   { category: '_utils', name: 'util' },
                   { category: '_services', name: 'service' },
@@ -359,7 +361,9 @@ describe('acceptance: faf/conformity', () => {
           faf: {
             locals: [
               {
-                horizontalHierarchies: [[['_utils'], ['_services']]],
+                horizontalHierarchies: [
+                  { hierarchy: [['_utils'], ['_services']], path: 'src' },
+                ],
                 roles: [
                   { category: '_utils', name: 'util' },
                   { category: '_services', name: 'service' },
@@ -394,7 +398,9 @@ describe('acceptance: faf/conformity', () => {
             faf: {
               locals: [
                 {
-                  horizontalHierarchies: [[['_services'], ['_utils']]],
+                  horizontalHierarchies: [
+                    { hierarchy: [['_services'], ['_utils']], path: 'src' },
+                  ],
                   roles: [
                     { category: '_utils', name: 'util' },
                     { category: '_services', name: 'service' },

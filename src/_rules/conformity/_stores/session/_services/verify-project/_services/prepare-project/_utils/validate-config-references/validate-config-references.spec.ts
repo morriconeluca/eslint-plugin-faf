@@ -88,12 +88,12 @@ function createTree(originPath: string): TEffectiveTree {
     foreignDomains: [],
     foreignNodes: { families: [], individualPaths: [] },
     horizontalHierarchies: [],
-    localHorizontalHierarchies: [],
     mimeticPathStructures: [],
     originKind: 'root-layer',
     originPath,
     publicRootNodes: [],
     rootFragments: [],
+    subCategoryHierarchies: [],
     treeDependencyPairs: [],
   };
 }
@@ -145,8 +145,10 @@ function phraseFor(propertyPath: string): string {
       ? 'Foreign family path'
       : 'Foreign node';
   }
-  if (propertyPath.includes('localHorizontalHierarchies')) {
-    return 'Hierarchy directory';
+  if (propertyPath.includes('horizontalHierarchies')) {
+    return propertyPath.includes('.hierarchy[')
+      ? 'Direct child'
+      : 'Hierarchy directory';
   }
   if (propertyPath.includes('mimeticPathStructures')) {
     return 'Mimetic path';
@@ -175,6 +177,18 @@ describe('validateConfigReferences', () => {
         path: 'src/_domain',
         treeOrigin: 'src',
       },
+      {
+        kind: 'directory',
+        parentId: 7,
+        path: 'src/_domain/_primitives',
+        treeOrigin: 'src',
+      },
+      {
+        kind: 'directory',
+        parentId: 7,
+        path: 'src/_domain/_compounds',
+        treeOrigin: 'src',
+      },
       { kind: 'directory', parentId: null, path: 'lib', treeOrigin: 'lib' },
       { kind: 'file', parentId: null, path: 'package.json', treeOrigin: null },
     ]);
@@ -186,17 +200,21 @@ describe('validateConfigReferences', () => {
             'src/README.md',
             { paths: ['src'], patterns: ['*.missing'] },
           ],
-          localHorizontalHierarchies: [
-            { hierarchies: [['_absent']], paths: ['src/_domain'] },
-          ],
           mimeticPathStructures: [{ actions: ['get'], paths: ['src/_apis'] }],
           publicRootNodes: ['src/app/app.tsx'],
           roles: [{ category: '_missing', name: 'missing' }],
+          subCategoryHierarchies: [[['_absent-a'], ['_absent-b']]],
         },
         locals: [
           {
             externalDependencies: [
               { from: ['src/main.ts'], to: ['package.json'] },
+            ],
+            horizontalHierarchies: [
+              {
+                hierarchy: [['_primitives'], ['_compounds']],
+                path: 'src/_domain',
+              },
             ],
             rootFragments: [
               {
@@ -371,7 +389,7 @@ describe('validateConfigReferences', () => {
   });
 
   describe('absence of a potential name is not equivalent to a missing punctual reference', () => {
-    it('admits absent category names, absent hierarchy child names, and an empty foreign family', () => {
+    it('admits absent category names, absent tree-wide sub-category names, and an empty foreign family', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
         {
@@ -385,11 +403,8 @@ describe('validateConfigReferences', () => {
         faf: {
           common: {
             foreignNodes: [{ paths: ['src'], patterns: ['*.md'] }],
-            horizontalHierarchies: [[['_not-present']]],
-            localHorizontalHierarchies: [
-              { hierarchies: [['_also-absent']], paths: ['src/_domain'] },
-            ],
             roles: [{ category: '_never-created', name: 'ghost' }],
+            subCategoryHierarchies: [[['_not-present'], ['_also-absent']]],
           },
           locals: [localLayer('src')],
         },
@@ -399,7 +414,7 @@ describe('validateConfigReferences', () => {
       ).toEqual([]);
     });
 
-    it('still requires the punctual parent and family scope to exist', () => {
+    it('still requires the punctual parent, direct hierarchy members, and family scope to exist', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
       ]);
@@ -408,8 +423,11 @@ describe('validateConfigReferences', () => {
           locals: [
             {
               foreignNodes: [{ paths: ['src/missing'], patterns: ['*.md'] }],
-              localHorizontalHierarchies: [
-                { hierarchies: [['_types']], paths: ['src/gone'] },
+              horizontalHierarchies: [
+                {
+                  hierarchy: [['_types'], ['_utils']],
+                  path: 'src/gone',
+                },
               ],
               rootLayers: ['src'],
             },
@@ -418,7 +436,7 @@ describe('validateConfigReferences', () => {
       };
       expect(constraintsOf(config, inventory)).toEqual([
         'faf.locals[0].foreignNodes[0].paths[0]|configuration/non-existent-path|src/missing',
-        'faf.locals[0].localHorizontalHierarchies[0].paths[0]|configuration/non-existent-path|src/gone',
+        'faf.locals[0].horizontalHierarchies[0].path|configuration/non-existent-path|src/gone',
       ]);
     });
   });
@@ -1242,22 +1260,20 @@ describe('validateConfigReferences', () => {
       ).toEqual([]);
     });
 
-    it('reports a missing common hierarchy directory on the common property path', () => {
+    it('reports a missing mimetic path in common on the common property path', () => {
       const inventory = createInventory([
         { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
       ]);
       const config: TFAFConfig = {
         faf: {
           common: {
-            localHorizontalHierarchies: [
-              { hierarchies: [['_types']], paths: ['src/missing'] },
-            ],
+            mimeticPathStructures: [{ paths: ['src/missing'] }],
           },
           locals: [localLayer('src')],
         },
       };
       expect(constraintsOf(config, inventory)).toEqual([
-        'faf.common.localHorizontalHierarchies[0].paths[0]|configuration/non-existent-path|src/missing',
+        'faf.common.mimeticPathStructures[0].paths[0]|configuration/non-existent-path|src/missing',
       ]);
     });
 
@@ -1270,8 +1286,8 @@ describe('validateConfigReferences', () => {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
-                { hierarchies: [['_types']], paths: ['src/main.ts'] },
+              horizontalHierarchies: [
+                { hierarchy: [['_types'], ['_utils']], path: 'src/main.ts' },
               ],
               mimeticPathStructures: [{ paths: ['src/main.ts'] }],
               rootLayers: ['src'],
@@ -1284,6 +1300,132 @@ describe('validateConfigReferences', () => {
           entry.includes('expected-directory')
         )
       ).toBe(true);
+    });
+
+    it('rejects horizontalHierarchies pointing outside trees or outside local scope', () => {
+      const inventory = createInventory([
+        { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
+        { kind: 'directory', parentId: null, path: 'lib', treeOrigin: 'lib' },
+        {
+          kind: 'directory',
+          parentId: null,
+          path: 'outside',
+          treeOrigin: null,
+        },
+      ]);
+      const declarations = createDeclarations([
+        createTree('src'),
+        createTree('lib'),
+      ]);
+      const config: TFAFConfig = {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                { hierarchy: [['_a'], ['_b']], path: 'outside' },
+                { hierarchy: [['_a'], ['_b']], path: 'lib' },
+              ],
+              rootLayers: ['src'],
+            },
+            { rootLayers: ['lib'] },
+          ],
+        },
+      };
+      expect(constraintsOf(config, inventory, declarations)).toEqual([
+        'faf.locals[0].horizontalHierarchies[0].path|configuration/reference-outside-trees|outside',
+        'faf.locals[0].horizontalHierarchies[1].path|configuration/reference-outside-local-scope|lib',
+      ]);
+    });
+
+    it('validates direct-child members of horizontalHierarchies including dot root and rejects missing, nested, or slashed members', () => {
+      const inventory = createInventory([
+        { kind: 'directory', parentId: null, path: '.', treeOrigin: '.' },
+        { kind: 'directory', parentId: 0, path: '_types', treeOrigin: '.' },
+        { kind: 'directory', parentId: 0, path: '_utils', treeOrigin: '.' },
+        {
+          kind: 'directory',
+          parentId: 1,
+          path: '_types/nested',
+          treeOrigin: '.',
+        },
+        {
+          kind: 'file',
+          parentId: 0,
+          path: '_types\\backslash',
+          treeOrigin: '.',
+        },
+      ]);
+      const pathToId = new Map(inventory.pathToId);
+      pathToId.set('_types/nested-direct', 4);
+      const customInventory = { ...inventory, pathToId };
+      const config: TFAFConfig = {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                {
+                  hierarchy: [
+                    ['_types', '_missing'],
+                    ['_utils', 'nested', '_types/nested', '_types\\backslash'],
+                  ],
+                  path: '.',
+                },
+              ],
+              rootLayers: ['.'],
+            },
+          ],
+        },
+      };
+      const outcomes = validateConfigReferences(
+        config,
+        createDeclarations([createTree('.')]),
+        customInventory
+      );
+      expect(
+        outcomes.map((o) => `${o.propertyPath}|${o.constraint}|${o.element}`)
+      ).toEqual([
+        'faf.locals[0].horizontalHierarchies[0].hierarchy[0][1]|configuration/non-existent-path|_missing',
+        'faf.locals[0].horizontalHierarchies[0].hierarchy[1][1]|configuration/non-existent-path|nested',
+        'faf.locals[0].horizontalHierarchies[0].hierarchy[1][2]|configuration/non-existent-path|_types/nested',
+        'faf.locals[0].horizontalHierarchies[0].hierarchy[1][3]|configuration/non-existent-path|_types\\backslash',
+      ]);
+      expect(outcomes[0]?.message).toBe(
+        '\'_missing\' does not exist: Direct child "_missing" does not exist under "."'
+      );
+    });
+
+    it('rejects horizontalHierarchies member with slash or backslash even if synthetic inventory has parentId match', () => {
+      const inventory = createInventory([
+        { kind: 'directory', parentId: null, path: 'src', treeOrigin: 'src' },
+        {
+          kind: 'directory',
+          parentId: 0,
+          path: 'src/_a/_b',
+          treeOrigin: 'src',
+        },
+        {
+          kind: 'directory',
+          parentId: 0,
+          path: 'src/_a\\_b',
+          treeOrigin: 'src',
+        },
+      ]);
+      const config: TFAFConfig = {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                { hierarchy: [['_a/_b'], ['_a\\_b']], path: 'src' },
+              ],
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      };
+      expect(constraintsOf(config, inventory)).toEqual([
+        'faf.locals[0].horizontalHierarchies[0].hierarchy[0][0]|configuration/non-existent-path|src/_a/_b',
+        'faf.locals[0].horizontalHierarchies[0].hierarchy[1][0]|configuration/non-existent-path|src/_a\\_b',
+      ]);
     });
   });
 
