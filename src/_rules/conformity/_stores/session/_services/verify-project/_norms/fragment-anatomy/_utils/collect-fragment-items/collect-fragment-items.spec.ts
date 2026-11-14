@@ -220,4 +220,74 @@ describe('collectFragmentItems', () => {
       'src/_components/button/index.ts',
     ]);
   });
+
+  it('handles missing tree, unknown role rank, unclassified child, and null nodeKind child', () => {
+    const orphanTreeFragment: TInventoryItem = {
+      ...mockItem(10, 0, 'directory', 'other/_widgets/card'),
+      treeOrigin: 'other',
+    };
+    const items: readonly TInventoryItem[] = [
+      mockItem(0, null, 'directory', 'src'),
+      mockItem(1, 0, 'directory', 'src/_unknown/box'),
+      mockItem(2, 1, 'file', 'src/_unknown/box/unclassified.ts'),
+      mockItem(3, 1, 'file', 'src/_unknown/box/null-kind.ts'),
+      orphanTreeFragment,
+    ];
+
+    const classifications: readonly TItemClassification[] = [
+      mockClassification(
+        1,
+        'src/_unknown/box',
+        'directory',
+        'fragment',
+        'missing-role'
+      ),
+      mockClassification(
+        3,
+        'src/_unknown/box/null-kind.ts',
+        'file',
+        null,
+        null
+      ),
+      mockClassification(
+        10,
+        'other/_widgets/card',
+        'directory',
+        'fragment',
+        'component'
+      ),
+    ];
+
+    const taxonomy: TTaxonomyModel = {
+      byItemId: new Map(classifications.map((item) => [item.itemId, item])),
+      byPath: new Map(classifications.map((item) => [item.path, item])),
+      classifications,
+    };
+
+    const base = verificationModel();
+    const model: TVerificationModel = {
+      ...base,
+      basis: {
+        ...base.basis,
+        declarations: {
+          ...base.basis.declarations,
+          trees: [mockTree('src'), mockTree('packages/app')],
+        },
+        inventory: {
+          items,
+          pathToId: new Map(items.map((item) => [item.path, item.id])),
+          realPathToId: new Map(items.map((item) => [item.realPath, item.id])),
+        },
+      },
+      taxonomy,
+    };
+
+    const result = collectFragmentItems(model);
+
+    expect(result).toHaveLength(2);
+    expect(result[0]?.masterRank).toBeNull();
+    expect(result[0]?.logicalChildren).toEqual([]);
+    expect(result[1]?.masterRank).toBeNull();
+    expect(result[1]?.logicalChildren).toEqual([]);
+  });
 });

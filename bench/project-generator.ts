@@ -7,7 +7,7 @@ import type {
   TGenerateProjectOptions,
 } from './benchmark.type.js';
 
-const CONFIG_FILE_NAME = 'fafconfig.ts';
+const CONFIG_FILE_NAME = 'faf.config.ts';
 const MANIFEST_FILE_NAME = 'package.json';
 const UTF8_ENCODING = 'utf8';
 

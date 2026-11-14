@@ -15,12 +15,12 @@ export type TProjectBasis = {
   readonly aliases: readonly TEffectivePathAlias[];
 
   /**
-   * Absolute directory that hosts fafconfig.ts.
+   * Absolute directory that hosts faf.config.ts.
    */
   readonly baseDirectory: string;
 
   /**
-   * Absolute path of fafconfig.ts.
+   * Absolute path of faf.config.ts.
    */
   readonly configPath: string;
 
@@ -45,7 +45,7 @@ export type TProjectBasis = {
   readonly kind: 'ready';
 
   /**
-   * Absolute paths of local files loaded while evaluating fafconfig.ts.
+   * Absolute paths of local files loaded while evaluating faf.config.ts.
    */
   readonly loadedFiles: readonly string[];
 };

@@ -11,12 +11,12 @@ import type { TInventory } from '../../_verify-project@shared/_types/_primitives
 export type TPrepareProjectResult =
   | {
       /**
-       * Absolute directory hosting fafconfig.ts.
+       * Absolute directory hosting faf.config.ts.
        */
       readonly baseDirectory: string;
 
       /**
-       * Absolute path of fafconfig.ts.
+       * Absolute path of faf.config.ts.
        */
       readonly configPath: string;
 
@@ -26,7 +26,7 @@ export type TPrepareProjectResult =
       readonly kind: 'blocked';
 
       /**
-       * Local files loaded while evaluating fafconfig.ts, empty when loading failed.
+       * Local files loaded while evaluating faf.config.ts, empty when loading failed.
        */
       readonly loadedFiles: readonly string[];
 
@@ -42,12 +42,12 @@ export type TPrepareProjectResult =
       readonly aliases: readonly TEffectivePathAlias[];
 
       /**
-       * Absolute directory hosting fafconfig.ts.
+       * Absolute directory hosting faf.config.ts.
        */
       readonly baseDirectory: string;
 
       /**
-       * Absolute path of fafconfig.ts.
+       * Absolute path of faf.config.ts.
        */
       readonly configPath: string;
 
@@ -72,7 +72,7 @@ export type TPrepareProjectResult =
       readonly kind: 'ready';
 
       /**
-       * Local files loaded while evaluating fafconfig.ts.
+       * Local files loaded while evaluating faf.config.ts.
        */
       readonly loadedFiles: readonly string[];
     };

@@ -175,7 +175,7 @@ describe('acceptance: explicit architectural declarations without implicit conve
           makeScenarioMessage({
             constraint: 'classification/exclusive-forms',
             element: 'src',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'classification',
             predicate:
               'mixes mutually exclusive forms among its direct children',
@@ -205,7 +205,7 @@ describe('acceptance: explicit architectural declarations without implicit conve
           makeScenarioMessage({
             constraint: 'configuration/unknown-property',
             element: 'faf.locals[0].layers',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'configuration',
             predicate: 'is not a recognized property',
             reference: 'FAF §1.2, §6.9',
@@ -232,7 +232,7 @@ describe('acceptance: explicit architectural declarations without implicit conve
           makeScenarioMessage({
             constraint: 'configuration/conflicting-origin-kind',
             element: 'src',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'configuration',
             predicate:
               'cannot be declared as both a Root Layer and a Root Fragment',
@@ -258,7 +258,7 @@ describe('acceptance: explicit architectural declarations without implicit conve
           makeScenarioMessage({
             constraint: 'configuration/missing-origin',
             element: 'faf.locals[0]',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'configuration',
             predicate: 'must be an existing tree origin directory',
             reference: 'FAF §3',
@@ -339,7 +339,7 @@ describe('acceptance: explicit architectural declarations without implicit conve
             detail:
               'Implicit extension ".woff2" is already associated with role "font"',
             element: 'faf.locals[0].roles[1].implicitRoleExtensions[0]',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'configuration',
             predicate: 'is declared more than once across roles',
             reference: 'FAF §6.3.1',
@@ -407,7 +407,7 @@ describe('acceptance: explicit architectural declarations without implicit conve
             constraint: 'configuration/duplicate-role-name',
             detail: 'Duplicate role name "util"',
             element: 'faf.locals[0].roles[1].name',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'configuration',
             predicate: 'is declared more than once in the role catalog',
             reference: 'FAF §6.3.1',
@@ -433,7 +433,7 @@ describe('acceptance: explicit architectural declarations without implicit conve
           makeScenarioMessage({
             constraint: 'configuration/missing-property',
             element: 'faf.locals[0].roles[0].category',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'configuration',
             predicate: 'is required and missing',
             reference: 'FAF §1.2, §6.9',
@@ -504,7 +504,7 @@ describe('acceptance: explicit architectural declarations without implicit conve
             detail:
               'First segment "util" of implicit extension ".util.woff" cannot match a role name',
             element: 'faf.locals[0].roles[1].implicitRoleExtensions[0]',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'configuration',
             predicate: 'cannot start with a segment matching a role name',
             reference: 'FAF §6.3.1',
@@ -538,7 +538,7 @@ describe('acceptance: explicit architectural declarations without implicit conve
             constraint:
               'configuration/implicit-extension-category-node-mismatch',
             element: 'faf.locals[0].roles[0].isCategoryNode',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'configuration',
             predicate: 'must be true for a role with implicit extensions',
             reference: 'FAF §6.3.1',
@@ -951,7 +951,7 @@ describe('acceptance: explicit static analysis boundaries without invented FAF n
           makeScenarioMessage({
             constraint: 'unverified/cyclic-tree-authorization',
             element: 'treeA',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'unverified',
             predicate:
               'declares reciprocal tree dependencies without physical code cycle',
@@ -975,7 +975,7 @@ describe('acceptance: explicit static analysis boundaries without invented FAF n
           makeScenarioMessage({
             constraint: 'unverified/cyclic-tree-authorization',
             element: 'treeA',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'unverified',
             predicate:
               'declares reciprocal tree dependencies without physical code cycle',
@@ -999,7 +999,7 @@ describe('acceptance: explicit static analysis boundaries without invented FAF n
           makeScenarioMessage({
             constraint: 'unverified/cyclic-tree-authorization',
             element: 'treeA',
-            filePath: 'fafconfig.ts',
+            filePath: 'faf.config.ts',
             messageId: 'unverified',
             predicate:
               'declares reciprocal tree dependencies without physical code cycle',
@@ -1329,7 +1329,7 @@ describe('acceptance: distinct blocking outcomes for configuration errors, viola
         makeScenarioMessage({
           constraint: 'configuration/unknown-property',
           element: 'faf.extraUnknownProperty',
-          filePath: 'fafconfig.ts',
+          filePath: 'faf.config.ts',
           messageId: 'configuration',
           predicate: 'is not a recognized property',
           reference: 'FAF §1.2, §6.9',

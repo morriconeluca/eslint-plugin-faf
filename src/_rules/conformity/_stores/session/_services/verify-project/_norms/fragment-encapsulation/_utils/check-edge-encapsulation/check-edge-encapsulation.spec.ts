@@ -187,7 +187,10 @@ describe('checkEdgeEncapsulation', () => {
     const items = [rootFile, orphanFile];
     const inventory: TInventory = {
       items,
-      pathToId: new Map(items.map((item) => [item.path, item.id])),
+      pathToId: new Map([
+        ...items.map((item) => [item.path, item.id] as const),
+        ['src/unindexed-item.ts', 50],
+      ]),
       realPathToId: new Map(items.map((item) => [item.realPath, item.id])),
     };
     const masterClassRoot = createClassification(
@@ -202,16 +205,28 @@ describe('checkEdgeEncapsulation', () => {
       null,
       'master-node'
     );
+    const masterClassMissingItem = createClassification(
+      50,
+      'src/unindexed-item.ts',
+      null,
+      'master-node'
+    );
     const taxonomy: TTaxonomyModel = {
       byItemId: new Map([
         [0, masterClassRoot],
         [1, masterClassOrphan],
+        [50, masterClassMissingItem],
       ]),
       byPath: new Map([
         ['src/main.ts', masterClassRoot],
         ['src/orphan.ts', masterClassOrphan],
+        ['src/unindexed-item.ts', masterClassMissingItem],
       ]),
-      classifications: [masterClassRoot, masterClassOrphan],
+      classifications: [
+        masterClassRoot,
+        masterClassOrphan,
+        masterClassMissingItem,
+      ],
     };
 
     expect(
@@ -228,50 +243,81 @@ describe('checkEdgeEncapsulation', () => {
         taxonomy
       )
     ).toBeUndefined();
+    expect(
+      checkEdgeEncapsulation(
+        createEdge('src/other.ts', 'src/unindexed-item.ts'),
+        inventory,
+        taxonomy
+      )
+    ).toBeUndefined();
   });
 
-  it('returns undefined when destination parent is not a fragment domain', () => {
-    const category: TInventoryItem = {
+  it('returns undefined when destination parent is not a fragment domain or unclassified', () => {
+    const root: TInventoryItem = {
       depth: 0,
       id: 0,
       isSymlink: false,
       kind: 'directory',
       parentId: null,
-      path: 'src/_utils',
-      preorderEnd: 1,
+      path: 'src',
+      preorderEnd: 3,
       preorderStart: 0,
-      realPath: 'src/_utils',
+      realPath: 'src',
       treeOrigin: 'src',
     };
-    const file: TInventoryItem = {
+    const consumer: TInventoryItem = {
       depth: 1,
       id: 1,
       isSymlink: false,
       kind: 'file',
       parentId: 0,
-      path: 'src/_utils/file.ts',
+      path: 'src/main.ts',
       preorderEnd: 1,
       preorderStart: 1,
+      realPath: 'src/main.ts',
+      treeOrigin: 'src',
+    };
+    const category: TInventoryItem = {
+      depth: 1,
+      id: 2,
+      isSymlink: false,
+      kind: 'directory',
+      parentId: 0,
+      path: 'src/_utils',
+      preorderEnd: 3,
+      preorderStart: 2,
+      realPath: 'src/_utils',
+      treeOrigin: 'src',
+    };
+    const file: TInventoryItem = {
+      depth: 2,
+      id: 3,
+      isSymlink: false,
+      kind: 'file',
+      parentId: 2,
+      path: 'src/_utils/file.ts',
+      preorderEnd: 3,
+      preorderStart: 3,
       realPath: 'src/_utils/file.ts',
       treeOrigin: 'src',
     };
-    const items = [category, file];
+    const items = [root, consumer, category, file];
     const inventory: TInventory = {
       items,
       pathToId: new Map(items.map((item) => [item.path, item.id])),
       realPathToId: new Map(items.map((item) => [item.realPath, item.id])),
     };
-    const catClass = createClassification(0, 'src/_utils', 'category', null);
+    const catClass = createClassification(2, 'src/_utils', 'category', null);
     const masterClass = createClassification(
-      1,
+      3,
       'src/_utils/file.ts',
       null,
       'master-node'
     );
-    const taxonomy: TTaxonomyModel = {
+    const taxonomyWithCategory: TTaxonomyModel = {
       byItemId: new Map([
-        [0, catClass],
-        [1, masterClass],
+        [2, catClass],
+        [3, masterClass],
       ]),
       byPath: new Map([
         ['src/_utils', catClass],
@@ -279,12 +325,24 @@ describe('checkEdgeEncapsulation', () => {
       ]),
       classifications: [catClass, masterClass],
     };
+    const taxonomyWithoutParent: TTaxonomyModel = {
+      byItemId: new Map([[3, masterClass]]),
+      byPath: new Map([['src/_utils/file.ts', masterClass]]),
+      classifications: [masterClass],
+    };
 
     expect(
       checkEdgeEncapsulation(
         createEdge('src/main.ts', 'src/_utils/file.ts'),
         inventory,
-        taxonomy
+        taxonomyWithCategory
+      )
+    ).toBeUndefined();
+    expect(
+      checkEdgeEncapsulation(
+        createEdge('src/main.ts', 'src/_utils/file.ts'),
+        inventory,
+        taxonomyWithoutParent
       )
     ).toBeUndefined();
   });

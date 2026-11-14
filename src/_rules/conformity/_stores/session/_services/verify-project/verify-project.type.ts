@@ -5,7 +5,7 @@ import type { TAnchorOutcomesResult } from './_utils/anchor-outcomes/index.js';
  */
 export type TVerifyProjectInput = {
   /**
-   * Path to the fafconfig.ts configuration file governing the workspace.
+   * Path to the faf.config.ts configuration file governing the workspace.
    */
   readonly configPath: string;
 
@@ -26,7 +26,7 @@ export type TVerifyProjectInput = {
  */
 export type TVerifyProjectResult = TAnchorOutcomesResult & {
   /**
-   * Absolute path of the directory hosting fafconfig.ts.
+   * Absolute path of the directory hosting faf.config.ts.
    */
   readonly baseDirectory: string;
 
@@ -41,7 +41,7 @@ export type TVerifyProjectResult = TAnchorOutcomesResult & {
   readonly externalFiles: readonly string[];
 
   /**
-   * Absolute paths of local files loaded while evaluating fafconfig.ts.
+   * Absolute paths of local files loaded while evaluating faf.config.ts.
    */
   readonly loadedFiles: readonly string[];
 

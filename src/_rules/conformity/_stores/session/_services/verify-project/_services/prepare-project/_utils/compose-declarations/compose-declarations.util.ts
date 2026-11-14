@@ -8,6 +8,7 @@ import type {
   TEffectiveTree,
 } from '../../../../_verify-project@shared/_types/_primitives/declarations.type.js';
 
+import { CONFIG_FILE_NAME } from '../../../../../../../../../../_src@shared/_constants/faf.constant.js';
 import { createOutcome } from '../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { composeCatalog } from './_utils/compose-catalog/index.js';
 import { composeRootFragments } from './_utils/compose-root-fragments/index.js';
@@ -56,7 +57,7 @@ export const composeDeclarations = (
       ) {
         outcomes.push(
           createOutcome('configuration/missing-roles', {
-            element: 'fafconfig.ts',
+            element: CONFIG_FILE_NAME,
             propertyPath: `faf.locals[${localIndex}]`,
           })
         );

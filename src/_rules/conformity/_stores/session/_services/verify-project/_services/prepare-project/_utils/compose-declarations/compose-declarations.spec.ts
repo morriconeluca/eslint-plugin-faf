@@ -285,10 +285,10 @@ describe('composeDeclarations', () => {
     expect(result.outcomes).toHaveLength(1);
     expect(result.outcomes[0]).toEqual({
       constraint: 'configuration/missing-roles',
-      element: 'fafconfig.ts',
+      element: 'faf.config.ts',
       family: 'configuration',
       message:
-        "'fafconfig.ts' must declare a roles catalog in local or common configuration",
+        "'faf.config.ts' must declare a roles catalog in local or common configuration",
       normativeReference: 'FAF §6.3.1',
       propertyPath: 'faf.locals[0]',
     });
@@ -730,7 +730,7 @@ describe('composeDeclarations', () => {
     ]);
   });
 
-  it('preserves custom ranks from integrated example fafconfig without imposing reference model', () => {
+  it('preserves custom ranks from integrated example faf.config.ts without imposing reference model', () => {
     const result = composeDeclarations(EXAMPLE_CONFIG, '/project');
     expect(result.ok).toBe(true);
     if (!result.ok) {

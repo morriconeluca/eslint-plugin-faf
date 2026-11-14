@@ -2,7 +2,7 @@ import type { TAnchoredOutcome } from './_session@shared/_types/anchored-outcome
 import type { TFileFingerprint } from './_session@shared/_types/file-fingerprint.type.js';
 
 /**
- * Memoized verification for one fafconfig.ts path.
+ * Memoized verification for one faf.config.ts path.
  */
 export type TSessionMemo = {
   /**
@@ -11,7 +11,7 @@ export type TSessionMemo = {
   readonly byFile: ReadonlyMap<string, readonly TAnchoredOutcome[]>;
 
   /**
-   * Fingerprints of fafconfig.ts and the local files loaded with it.
+   * Fingerprints of faf.config.ts and the local files loaded with it.
    */
   readonly fingerprints: ReadonlyMap<string, TFileFingerprint>;
 
@@ -36,7 +36,7 @@ export type TSessionMemo = {
  */
 export type TSessionQuery = {
   /**
-   * Absolute or working-directory-relative path of fafconfig.ts.
+   * Absolute or working-directory-relative path of faf.config.ts.
    */
   readonly configPath: string;
 

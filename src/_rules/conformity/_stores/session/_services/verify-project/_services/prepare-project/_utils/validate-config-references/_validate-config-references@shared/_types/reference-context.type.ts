@@ -16,7 +16,7 @@ export type TDirectoryReferenceCheck = {
   readonly label: string;
 
   /**
-   * Configured path, relative to the directory of `fafconfig.ts`.
+   * Configured path, relative to the directory of `faf.config.ts`.
    */
   readonly path: string;
 
@@ -61,7 +61,7 @@ export type TFileReferenceCheck = {
   readonly label: string;
 
   /**
-   * Configured path, relative to the directory of `fafconfig.ts`.
+   * Configured path, relative to the directory of `faf.config.ts`.
    */
   readonly path: string;
 
@@ -91,7 +91,7 @@ export type TOriginDirectoryCheck = {
   readonly label: string;
 
   /**
-   * Declared origin path relative to the directory of `fafconfig.ts`.
+   * Declared origin path relative to the directory of `faf.config.ts`.
    */
   readonly path: string;
 
@@ -126,7 +126,7 @@ export type TReferenceContext = {
   readonly aliasPrefixes: readonly string[];
 
   /**
-   * POSIX directory of `fafconfig.ts`, the sole base of relative references.
+   * POSIX directory of `faf.config.ts`, the sole base of relative references.
    */
   readonly baseDirectory: string;
 

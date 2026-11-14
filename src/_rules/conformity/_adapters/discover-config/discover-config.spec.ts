@@ -5,9 +5,9 @@ import { describe, expect, it } from 'vitest';
 import { discoverConfig } from './discover-config.adapter.js';
 
 describe('discoverConfig', () => {
-  it('discovers fafconfig.ts in the current working directory', async () => {
+  it('discovers faf.config.ts in the current working directory', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};',
+      'faf.config.ts': 'export default {};',
     });
 
     try {
@@ -19,7 +19,7 @@ describe('discoverConfig', () => {
       if (result.ok) {
         expect(result.value.configDirectory).toBe(fixture.path);
         expect(result.value.configPath).toBe(
-          nodePath.join(fixture.path, 'fafconfig.ts')
+          nodePath.join(fixture.path, 'faf.config.ts')
         );
       }
     } finally {
@@ -27,9 +27,9 @@ describe('discoverConfig', () => {
     }
   });
 
-  it('discovers fafconfig.ts by upward traversal from a nested directory', async () => {
+  it('discovers faf.config.ts by upward traversal from a nested directory', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};',
+      'faf.config.ts': 'export default {};',
       'src/nested/sub': {},
     });
 
@@ -48,7 +48,7 @@ describe('discoverConfig', () => {
       if (result.ok) {
         expect(result.value.configDirectory).toBe(fixture.path);
         expect(result.value.configPath).toBe(
-          nodePath.join(fixture.path, 'fafconfig.ts')
+          nodePath.join(fixture.path, 'faf.config.ts')
         );
       }
     } finally {
@@ -56,7 +56,7 @@ describe('discoverConfig', () => {
     }
   });
 
-  it('returns configuration outcome when upward search finds no fafconfig.ts', async () => {
+  it('returns configuration outcome when upward search finds no faf.config.ts', async () => {
     const fixture = await createFixture({
       'src/sub': {},
     });
@@ -81,7 +81,7 @@ describe('discoverConfig', () => {
     }
   });
 
-  it('discovers fafconfig.ts using an explicit relative path', async () => {
+  it('discovers faf.config.ts using an explicit relative path', async () => {
     const fixture = await createFixture({
       'configs/custom-faf.ts': 'export default {};',
     });
@@ -106,7 +106,7 @@ describe('discoverConfig', () => {
     }
   });
 
-  it('discovers fafconfig.ts using an explicit absolute path', async () => {
+  it('discovers faf.config.ts using an explicit absolute path', async () => {
     const fixture = await createFixture({
       'custom-faf.ts': 'export default {};',
     });
@@ -181,11 +181,11 @@ describe('discoverConfig', () => {
     }
   });
 
-  it('skips directories named fafconfig.ts during upward traversal', async () => {
+  it('skips directories named faf.config.ts during upward traversal', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': {},
+      'faf.config.ts': {},
       'parent/child': {},
-      'parent/fafconfig.ts': 'export default {};',
+      'parent/faf.config.ts': 'export default {};',
     });
 
     try {

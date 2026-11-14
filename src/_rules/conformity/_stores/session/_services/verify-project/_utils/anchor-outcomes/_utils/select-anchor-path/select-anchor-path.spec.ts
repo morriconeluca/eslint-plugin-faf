@@ -11,7 +11,7 @@ import type {
 import { selectAnchorPath } from './select-anchor-path.util.js';
 
 const baseDirectory = '/repo';
-const configPath = '/repo/fafconfig.ts';
+const configPath = '/repo/faf.config.ts';
 
 const inventoryItem = (
   id: number,
@@ -111,7 +111,7 @@ describe('selectAnchorPath', () => {
     classification(earlier, null, null),
   ]);
 
-  it('anchors configuration outcomes to fafconfig.ts', () => {
+  it('anchors configuration outcomes to faf.config.ts', () => {
     expect(
       selectAnchorPath({
         baseDirectory,
@@ -206,7 +206,7 @@ describe('selectAnchorPath', () => {
     expect(anchor).toBe(nodePath.resolve(baseDirectory, 'src/a.ts'));
   });
 
-  it('falls back to fafconfig.ts for a non-lintable file with no parent', () => {
+  it('falls back to faf.config.ts for a non-lintable file with no parent', () => {
     const asset = inventoryItem(0, 'logo.png', 'file', null);
     const anchor = selectAnchorPath({
       baseDirectory,
@@ -218,7 +218,7 @@ describe('selectAnchorPath', () => {
     expect(anchor).toBe(configPath);
   });
 
-  it('falls back to fafconfig.ts when the domain has no lintable descendant', () => {
+  it('falls back to faf.config.ts when the domain has no lintable descendant', () => {
     const empty = inventoryItem(0, 'src/empty', 'directory', null);
     const anchor = selectAnchorPath({
       baseDirectory,
@@ -230,7 +230,7 @@ describe('selectAnchorPath', () => {
     expect(anchor).toBe(configPath);
   });
 
-  it('falls back to fafconfig.ts when no lintable file exists', () => {
+  it('falls back to faf.config.ts when no lintable file exists', () => {
     expect(
       selectAnchorPath({
         baseDirectory,
