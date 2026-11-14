@@ -1,6 +1,6 @@
 {
   "name": "@morriconeluca/eslint-plugin-faf",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "An ESLint plugin for FAF projects.",
   "repository": {
     "type": "git",
