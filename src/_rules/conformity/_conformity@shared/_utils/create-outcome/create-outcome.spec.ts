@@ -160,5 +160,38 @@ describe('createOutcome', () => {
       expect(outcome.element).toBe('custom-element');
       expect(outcome.position).toEqual(pos);
     });
+
+    it('formats the new horizontal hierarchy configuration catalog constraints', () => {
+      const insufficient = createOutcome(
+        'configuration/insufficient-hierarchy-tiers',
+        { propertyPath: 'faf.common.subCategoryHierarchies[0]' }
+      );
+      expect(insufficient.normativeReference).toBe('FAF §4');
+      expect(insufficient.message).toBe(
+        "'faf.common.subCategoryHierarchies[0]' must declare at least two Rank tiers"
+      );
+
+      const invalidSubCategory = createOutcome(
+        'configuration/invalid-sub-category-name',
+        { propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]' }
+      );
+      expect(invalidSubCategory.normativeReference).toBe('FAF §4, §6.3.4');
+      expect(invalidSubCategory.message).toBe(
+        "'faf.common.subCategoryHierarchies[0][0][0]' must be an underscore-prefixed kebab-case Sub-Category name"
+      );
+
+      const categoryConflict = createOutcome(
+        'configuration/sub-category-hierarchy-category-conflict',
+        {
+          detail:
+            'Sub-Category "_types" matches a Category in the role catalog.',
+          propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+        }
+      );
+      expect(categoryConflict.normativeReference).toBe('FAF §6.3.4');
+      expect(categoryConflict.message).toBe(
+        '\'faf.common.subCategoryHierarchies[0][0][0]\' cannot match a Category name declared in the role catalog: Sub-Category "_types" matches a Category in the role catalog'
+      );
+    });
   });
 });

@@ -3,6 +3,7 @@ import type {
   TConfigOutcome,
   TResult,
 } from '../../../../../../../../_conformity@shared/_types/outcome.type.js';
+import type { TRolesValidationResult } from './_validate-config-format@shared/_types/validate-config-format.type.js';
 
 import { createOutcome } from '../../../../../../../../_conformity@shared/_utils/create-outcome/index.js';
 import { isPlainRecord } from '../../../../../../_session@shared/_utils/is-plain-record/index.js';
@@ -19,19 +20,104 @@ import { validateRootFragments } from './_utils/validate-root-fragments/index.js
 import { validateRootLayers } from './_utils/validate-root-layers/index.js';
 import { validateSubGraphRoles } from './_utils/validate-sub-graph-roles/index.js';
 import { translateConfigIssues } from './_validate-config-format@shared/_utils/translate-config-issues/index.js';
-import { CONSTRAINT_SCOPE_MISMATCH } from './validate-config-format.constant.js';
+import {
+  CONSTRAINT_SCOPE_MISMATCH,
+  CONSTRAINT_SUB_CATEGORY_CONFLICT,
+} from './validate-config-format.constant.js';
 
 export const validateConfigFormat = (() => {
+  type TCommonSubCategoryInfo = {
+    readonly categoryNames: null | ReadonlySet<string>;
+    readonly subCategoryHierarchies: unknown;
+  };
+
+  const hasDefined = (record: Record<string, unknown>, key: string): boolean =>
+    Object.hasOwn(record, key) && record[key] !== undefined;
+
+  const extractCategoryNames = (
+    roles: TRolesValidationResult
+  ): ReadonlySet<string> =>
+    new Set(roles.roleEntries.map((entry) => entry.category));
+
   const scopeOutcome = (propertyPath: string): TConfigOutcome =>
     createOutcome(CONSTRAINT_SCOPE_MISMATCH, {
       propertyPath,
     });
 
+  const collectTierConflicts = (
+    tier: readonly unknown[],
+    tierPath: string,
+    categoryNames: ReadonlySet<string>,
+    seenPaths: Set<string>,
+    outcomes: TConfigOutcome[]
+  ): void => {
+    for (const [memberIndex, member] of tier.entries()) {
+      const propertyPath = `${tierPath}[${memberIndex}]`;
+      if (
+        typeof member !== 'string' ||
+        !categoryNames.has(member) ||
+        seenPaths.has(propertyPath)
+      ) {
+        continue;
+      }
+      seenPaths.add(propertyPath);
+      outcomes.push(
+        createOutcome(CONSTRAINT_SUB_CATEGORY_CONFLICT, {
+          detail: `Sub-Category "${member}" matches Category "${member}" in the role catalog.`,
+          propertyPath,
+        })
+      );
+    }
+  };
+
+  const collectHierarchyConflicts = (
+    hierarchy: readonly unknown[],
+    hierarchyPath: string,
+    categoryNames: ReadonlySet<string>,
+    seenPaths: Set<string>,
+    outcomes: TConfigOutcome[]
+  ): void => {
+    for (const [tierIndex, tier] of hierarchy.entries()) {
+      if (Array.isArray(tier)) {
+        collectTierConflicts(
+          tier,
+          `${hierarchyPath}[${tierIndex}]`,
+          categoryNames,
+          seenPaths,
+          outcomes
+        );
+      }
+    }
+  };
+
+  const collectSubCategoryConflicts = (
+    hierarchies: unknown,
+    categoryNames: ReadonlySet<string>,
+    basePropertyPath: string,
+    seenPaths: Set<string>,
+    outcomes: TConfigOutcome[]
+  ): void => {
+    if (!Array.isArray(hierarchies) || categoryNames.size === 0) {
+      return;
+    }
+    for (const [hierarchyIndex, hierarchy] of hierarchies.entries()) {
+      if (Array.isArray(hierarchy)) {
+        collectHierarchyConflicts(
+          hierarchy,
+          `${basePropertyPath}[${hierarchyIndex}]`,
+          categoryNames,
+          seenPaths,
+          outcomes
+        );
+      }
+    }
+  };
+
   const pushShared = (
     record: Record<string, unknown>,
     basePath: string,
     outcomes: TConfigOutcome[]
-  ): void => {
+  ): null | ReadonlySet<string> => {
     const roles = validateRoles(record['roles'], basePath);
     const subGraphs = validateSubGraphRoles(record['subGraphRoles'], basePath);
     outcomes.push(
@@ -43,13 +129,22 @@ export const validateConfigFormat = (() => {
       ...validateDependencies(record, basePath),
       ...validateMimeticStructures(record['mimeticPathStructures'], basePath)
     );
+    return hasDefined(record, 'roles') ? extractCategoryNames(roles) : null;
   };
 
-  const collectCommon = (common: unknown, outcomes: TConfigOutcome[]): void => {
+  const collectCommon = (
+    common: unknown,
+    seenConflictPaths: Set<string>,
+    outcomes: TConfigOutcome[]
+  ): TCommonSubCategoryInfo => {
     if (!isPlainRecord(common)) {
-      return;
+      return { categoryNames: null, subCategoryHierarchies: null };
     }
-    for (const key of ['rootLayers', 'rootFragments']) {
+    for (const key of [
+      'horizontalHierarchies',
+      'rootLayers',
+      'rootFragments',
+    ]) {
       if (Object.hasOwn(common, key)) {
         outcomes.push(scopeOutcome(`faf.common.${key}`));
       }
@@ -57,12 +152,27 @@ export const validateConfigFormat = (() => {
     if (common['aliases'] !== undefined) {
       outcomes.push(...validateAliases(common['aliases'], 'faf.common'));
     }
-    pushShared(common, 'faf.common', outcomes);
+    const categoryNames = pushShared(common, 'faf.common', outcomes);
+    const subCategoryHierarchies = hasDefined(common, 'subCategoryHierarchies')
+      ? common['subCategoryHierarchies']
+      : null;
+    if (categoryNames !== null && subCategoryHierarchies !== null) {
+      collectSubCategoryConflicts(
+        subCategoryHierarchies,
+        categoryNames,
+        'faf.common.subCategoryHierarchies',
+        seenConflictPaths,
+        outcomes
+      );
+    }
+    return { categoryNames, subCategoryHierarchies };
   };
 
   const collectLocal = (
     local: unknown,
     localPath: string,
+    commonInfo: TCommonSubCategoryInfo,
+    seenConflictPaths: Set<string>,
     outcomes: TConfigOutcome[]
   ): void => {
     if (!isPlainRecord(local)) {
@@ -75,7 +185,25 @@ export const validateConfigFormat = (() => {
       ...validateRootLayers(local['rootLayers'], localPath),
       ...validateRootFragments(local['rootFragments'], localPath)
     );
-    pushShared(local, localPath, outcomes);
+    const localCategories = pushShared(local, localPath, outcomes);
+    const effectiveCategories = localCategories ?? commonInfo.categoryNames;
+    if (effectiveCategories === null) {
+      return;
+    }
+    const hasLocalSubCategory = hasDefined(local, 'subCategoryHierarchies');
+    const subCategoryHierarchies = hasLocalSubCategory
+      ? local['subCategoryHierarchies']
+      : commonInfo.subCategoryHierarchies;
+    const subCategoryPath = hasLocalSubCategory
+      ? `${localPath}.subCategoryHierarchies`
+      : 'faf.common.subCategoryHierarchies';
+    collectSubCategoryConflicts(
+      subCategoryHierarchies,
+      effectiveCategories,
+      subCategoryPath,
+      seenConflictPaths,
+      outcomes
+    );
   };
 
   const collectBody = (
@@ -86,13 +214,24 @@ export const validateConfigFormat = (() => {
       return;
     }
     const faf = raw['faf'];
-    collectCommon(faf['common'], outcomes);
+    const seenConflictPaths = new Set<string>();
+    const commonInfo = collectCommon(
+      faf['common'],
+      seenConflictPaths,
+      outcomes
+    );
     const locals = faf['locals'];
     if (!Array.isArray(locals)) {
       return;
     }
     for (const [index, local] of locals.entries()) {
-      collectLocal(local, `faf.locals[${index}]`, outcomes);
+      collectLocal(
+        local,
+        `faf.locals[${index}]`,
+        commonInfo,
+        seenConflictPaths,
+        outcomes
+      );
     }
   };
 

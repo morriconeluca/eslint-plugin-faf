@@ -99,12 +99,12 @@ export const composeDeclarations = (
             foreignDomains: scoped.foreignDomains,
             foreignNodes: scoped.foreignNodes,
             horizontalHierarchies: scoped.horizontalHierarchies,
-            localHorizontalHierarchies: scoped.localHorizontalHierarchies,
             mimeticPathStructures: scoped.mimeticPathStructures,
             originKind: 'root-layer',
             originPath,
             publicRootNodes: scoped.publicRootNodes,
             rootFragments: [],
+            subCategoryHierarchies: scoped.subCategoryHierarchies,
             treeDependencyPairs: scoped.treeDependencyPairs,
           });
         }
@@ -124,12 +124,12 @@ export const composeDeclarations = (
             foreignDomains: scoped.foreignDomains,
             foreignNodes: scoped.foreignNodes,
             horizontalHierarchies: scoped.horizontalHierarchies,
-            localHorizontalHierarchies: scoped.localHorizontalHierarchies,
             mimeticPathStructures: scoped.mimeticPathStructures,
             originKind: 'root-fragment',
             originPath,
             publicRootNodes: scoped.publicRootNodes,
             rootFragments: composeRootFragments([rootFragment]),
+            subCategoryHierarchies: scoped.subCategoryHierarchies,
             treeDependencyPairs: scoped.treeDependencyPairs,
           });
         }

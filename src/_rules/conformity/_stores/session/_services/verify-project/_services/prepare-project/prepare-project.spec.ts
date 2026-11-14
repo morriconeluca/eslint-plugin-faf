@@ -146,4 +146,48 @@ describe('prepareProject', () => {
       await fixture.rm();
     }
   });
+
+  it('composes subCategoryHierarchies and horizontalHierarchies when direct children exist, and blocks when a member is missing', async () => {
+    const validFixture = await createFixture({
+      'faf.config.ts': `export default { faf: { common: { subCategoryHierarchies: [[['_atoms'], ['_molecules']]] }, locals: [{ ${roles} horizontalHierarchies: [{ hierarchy: [['_domain'], ['_ui']], path: 'src' }], rootLayers: ['src'] }] } };`,
+      'package.json': JSON.stringify({ type: 'module' }),
+      'src/_domain/.keep': '',
+      'src/_ui/.keep': '',
+    });
+    try {
+      const ready = prepareProject(
+        nodePath.join(validFixture.path, 'faf.config.ts')
+      );
+      expect(ready.kind).toBe('ready');
+      if (ready.kind === 'ready') {
+        expect(ready.declarations.trees[0]?.subCategoryHierarchies).toEqual([
+          [['_atoms'], ['_molecules']],
+        ]);
+        expect(ready.declarations.trees[0]?.horizontalHierarchies).toEqual([
+          { hierarchy: [['_domain'], ['_ui']], path: 'src' },
+        ]);
+      }
+    } finally {
+      await validFixture.rm();
+    }
+
+    const missingChildFixture = await createFixture({
+      'faf.config.ts': `export default { faf: { locals: [{ ${roles} horizontalHierarchies: [{ hierarchy: [['_domain'], ['_missing']], path: 'src' }], rootLayers: ['src'] }] } };`,
+      'package.json': JSON.stringify({ type: 'module' }),
+      'src/_domain/.keep': '',
+    });
+    try {
+      const blocked = prepareProject(
+        nodePath.join(missingChildFixture.path, 'faf.config.ts')
+      );
+      expect(blocked.kind).toBe('blocked');
+      if (blocked.kind === 'blocked') {
+        expect(blocked.outcomes[0]?.constraint).toBe(
+          'configuration/non-existent-path'
+        );
+      }
+    } finally {
+      await missingChildFixture.rm();
+    }
+  });
 });

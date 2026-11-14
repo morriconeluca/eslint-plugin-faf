@@ -46,47 +46,59 @@ export const validateHierarchies = (() => {
     return outcomes;
   };
 
-  const pathDuplicates = (
-    paths: unknown,
-    pathsPath: string
-  ): readonly TConfigOutcome[] =>
-    Array.isArray(paths)
-      ? collectStringDuplicates(
-          paths,
-          new Set<string>(),
-          (index) => `${pathsPath}[${index}]`,
-          'configuration/duplicate-element'
-        )
-      : [];
-
   const present = (record: Record<string, unknown>, key: string): unknown =>
     Object.hasOwn(record, key) && record[key] !== undefined
       ? record[key]
       : undefined;
 
-  const localOutcomes = (
-    local: unknown,
+  const subCategoryOutcomes = (
+    subCategory: unknown,
     basePath: string
   ): readonly TConfigOutcome[] => {
-    if (local === undefined) {
+    if (subCategory === undefined) {
       return [];
     }
-    const propertyPath = `${basePath}.localHorizontalHierarchies`;
+    const propertyPath = `${basePath}.subCategoryHierarchies`;
     const outcomes: TConfigOutcome[] = [
-      ...parseProperty(hierarchiesSchema.local, local, propertyPath),
+      ...parseProperty(
+        hierarchiesSchema.subCategory,
+        subCategory,
+        propertyPath
+      ),
     ];
-    if (!Array.isArray(local)) {
+    if (Array.isArray(subCategory)) {
+      for (const [index, hierarchy] of subCategory.entries()) {
+        outcomes.push(
+          ...hierarchyDuplicates(hierarchy, `${propertyPath}[${index}]`)
+        );
+      }
+    }
+    return outcomes;
+  };
+
+  const horizontalOutcomes = (
+    horizontal: unknown,
+    basePath: string
+  ): readonly TConfigOutcome[] => {
+    if (horizontal === undefined || basePath === 'faf.common') {
+      return [];
+    }
+    const propertyPath = `${basePath}.horizontalHierarchies`;
+    const outcomes: TConfigOutcome[] = [
+      ...parseProperty(hierarchiesSchema.horizontal, horizontal, propertyPath),
+    ];
+    if (!Array.isArray(horizontal)) {
       return outcomes;
     }
-    for (const [index, item] of local.entries()) {
+    for (const [index, item] of horizontal.entries()) {
       if (!isRecord(item)) {
         continue;
       }
-
-      const itemPath = `${propertyPath}[${index}]`;
       outcomes.push(
-        ...pathDuplicates(item['paths'], `${itemPath}.paths`),
-        ...hierarchyDuplicates(item['hierarchies'], `${itemPath}.hierarchies`)
+        ...hierarchyDuplicates(
+          item['hierarchy'],
+          `${propertyPath}[${index}].hierarchy`
+        )
       );
     }
     return outcomes;
@@ -96,24 +108,12 @@ export const validateHierarchies = (() => {
     config: Record<string, unknown>,
     basePath: string
   ): readonly TConfigOutcome[] {
-    const outcomes: TConfigOutcome[] = [];
-    const horizontal = present(config, 'horizontalHierarchies');
-    if (horizontal !== undefined) {
-      const propertyPath = `${basePath}.horizontalHierarchies`;
-      outcomes.push(
-        ...parseProperty(hierarchiesSchema.horizontal, horizontal, propertyPath)
-      );
-      if (Array.isArray(horizontal)) {
-        for (const [index, hierarchy] of horizontal.entries()) {
-          outcomes.push(
-            ...hierarchyDuplicates(hierarchy, `${propertyPath}[${index}]`)
-          );
-        }
-      }
-    }
-    outcomes.push(
-      ...localOutcomes(present(config, 'localHorizontalHierarchies'), basePath)
-    );
-    return outcomes;
+    return [
+      ...subCategoryOutcomes(
+        present(config, 'subCategoryHierarchies'),
+        basePath
+      ),
+      ...horizontalOutcomes(present(config, 'horizontalHierarchies'), basePath),
+    ];
   };
 })();

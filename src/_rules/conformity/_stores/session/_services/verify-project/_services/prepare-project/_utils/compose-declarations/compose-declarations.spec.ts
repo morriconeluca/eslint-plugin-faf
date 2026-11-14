@@ -17,16 +17,6 @@ const EXAMPLE_CONFIG: TFAFConfig = {
           patterns: ['*.md'],
         },
       ],
-      horizontalHierarchies: [
-        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
-        [
-          ['_primitives'],
-          ['_compounds'],
-          ['_aggregates'],
-          ['_systems'],
-          ['_ecosystems'],
-        ],
-      ],
       roles: [
         [
           {
@@ -87,6 +77,16 @@ const EXAMPLE_CONFIG: TFAFConfig = {
           { category: '_stores', name: 'store' },
         ],
       ],
+      subCategoryHierarchies: [
+        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
+        [
+          ['_primitives'],
+          ['_compounds'],
+          ['_aggregates'],
+          ['_systems'],
+          ['_ecosystems'],
+        ],
+      ],
       subGraphRoles: [{ name: 'spec' }, { name: 'story' }],
     },
     locals: [
@@ -104,17 +104,17 @@ const EXAMPLE_CONFIG: TFAFConfig = {
           'src/vite-env.d.ts',
           { paths: ['src'], patterns: ['*.md'] },
         ],
-        localHorizontalHierarchies: [
+        horizontalHierarchies: [
           {
-            hierarchies: [['_domain'], ['_network', '_state', '_ui']],
-            paths: ['src/_src@shared'],
+            hierarchy: [['_domain'], ['_network', '_state', '_ui']],
+            path: 'src/_src@shared',
           },
           {
-            hierarchies: [['_types'], ['_classes'], ['_utils'], ['_apis']],
-            paths: ['src/_src@shared/_network'],
+            hierarchy: [['_types'], ['_classes'], ['_utils'], ['_apis']],
+            path: 'src/_src@shared/_network',
           },
           {
-            hierarchies: [
+            hierarchy: [
               ['_constants'],
               ['_types'],
               ['_utils'],
@@ -122,7 +122,7 @@ const EXAMPLE_CONFIG: TFAFConfig = {
               ['_components'],
               ['_pages'],
             ],
-            paths: ['src/_src@shared/_ui'],
+            path: 'src/_src@shared/_ui',
           },
         ],
         mimeticPathStructures: [
@@ -158,8 +158,14 @@ const EXAMPLE_CONFIG: TFAFConfig = {
         ],
       },
       {
-        horizontalHierarchies: [[['_types'], ['_utils']]],
+        horizontalHierarchies: [
+          {
+            hierarchy: [['_types'], ['_utils']],
+            path: 'packages/contracts/src',
+          },
+        ],
         rootLayers: ['packages/contracts/src', 'packages/formatters/src'],
+        subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
       },
     ],
   },
@@ -202,18 +208,18 @@ describe('composeDeclarations', () => {
     const config: TFAFConfig = {
       faf: {
         common: {
-          horizontalHierarchies: [[['_domain'], ['_ui']]],
           roles: [
             { category: '_types', isCategoryNode: true, name: 'type' },
             { category: '_utils', name: 'util' },
           ],
+          subCategoryHierarchies: [[['_domain'], ['_ui']]],
           subGraphRoles: [{ name: 'spec' }],
         },
         locals: [
           {
-            horizontalHierarchies: [[['_queries']]],
             roles: [{ category: '_queries', name: 'query' }],
             rootLayers: ['src'],
+            subCategoryHierarchies: [[['_queries'], ['_handlers']]],
             subGraphRoles: [],
           },
         ],
@@ -230,7 +236,9 @@ describe('composeDeclarations', () => {
     expect(tree?.catalog.roles).toHaveLength(1);
     expect(tree?.catalog.roles[0]?.name).toBe('query');
     expect(tree?.catalog.subGraphRoles).toEqual([]);
-    expect(tree?.horizontalHierarchies).toEqual([[['_queries']]]);
+    expect(tree?.subCategoryHierarchies).toEqual([
+      [['_queries'], ['_handlers']],
+    ]);
   });
 
   it('applies default values after replacement', () => {
@@ -343,9 +351,9 @@ describe('composeDeclarations', () => {
     expect(tree?.foreignDomains).toEqual([]);
     expect(tree?.foreignNodes).toEqual({ families: [], individualPaths: [] });
     expect(tree?.horizontalHierarchies).toEqual([]);
-    expect(tree?.localHorizontalHierarchies).toEqual([]);
     expect(tree?.mimeticPathStructures).toEqual([]);
     expect(tree?.publicRootNodes).toEqual([]);
+    expect(tree?.subCategoryHierarchies).toEqual([]);
     expect(tree?.treeDependencyPairs).toEqual([]);
     expect(tree?.externalDependencyPairs).toEqual([]);
     expect(tree?.rootFragments).toEqual([]);
@@ -792,7 +800,7 @@ describe('composeDeclarations', () => {
       (t) => t.originPath === 'packages/formatters/src'
     );
 
-    expect(srcTree?.horizontalHierarchies).toEqual([
+    expect(srcTree?.subCategoryHierarchies).toEqual([
       [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
       [
         ['_primitives'],
@@ -803,14 +811,14 @@ describe('composeDeclarations', () => {
       ],
     ]);
 
-    expect(srcTree?.localHorizontalHierarchies).toEqual([
+    expect(srcTree?.horizontalHierarchies).toEqual([
       {
         hierarchy: [['_domain'], ['_network', '_state', '_ui']],
-        paths: ['src/_src@shared'],
+        path: 'src/_src@shared',
       },
       {
         hierarchy: [['_types'], ['_classes'], ['_utils'], ['_apis']],
-        paths: ['src/_src@shared/_network'],
+        path: 'src/_src@shared/_network',
       },
       {
         hierarchy: [
@@ -821,7 +829,7 @@ describe('composeDeclarations', () => {
           ['_components'],
           ['_pages'],
         ],
-        paths: ['src/_src@shared/_ui'],
+        path: 'src/_src@shared/_ui',
       },
     ]);
 
@@ -832,15 +840,20 @@ describe('composeDeclarations', () => {
       },
     ]);
 
-    expect(contractsTree?.horizontalHierarchies).toEqual([
-      [['_types'], ['_utils']],
+    expect(contractsTree?.subCategoryHierarchies).toEqual([
+      [['_primitives'], ['_compounds']],
     ]);
-    expect(formattersTree?.horizontalHierarchies).toEqual([
-      [['_types'], ['_utils']],
+    expect(formattersTree?.subCategoryHierarchies).toEqual([
+      [['_primitives'], ['_compounds']],
     ]);
 
-    expect(contractsTree?.localHorizontalHierarchies).toEqual([]);
-    expect(formattersTree?.localHorizontalHierarchies).toEqual([]);
+    expect(contractsTree?.horizontalHierarchies).toEqual([
+      {
+        hierarchy: [['_types'], ['_utils']],
+        path: 'packages/contracts/src',
+      },
+    ]);
+    expect(formattersTree?.horizontalHierarchies).toEqual([]);
   });
 
   it('produces identical deterministic result when properties are declared in different order', () => {
