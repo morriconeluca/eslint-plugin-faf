@@ -19,7 +19,7 @@ export type TFAFCommonConfig = TFAFSharedConfig & {
 };
 
 /**
- * Root configuration object exported as default from fafconfig.ts.
+ * Root configuration object exported as default from faf.config.ts.
  *
  * @example
  * import type { TFAFConfig } from '@morriconeluca/eslint-plugin-faf';

@@ -179,7 +179,7 @@ describe('validateConfigFormat', () => {
     expect(result.ok).toBe(true);
   });
 
-  it('validates a complete multi-tree fafconfig.ts successfully', () => {
+  it('validates a complete multi-tree faf.config.ts successfully', () => {
     const result = validateConfigFormat(FAF_NEXT_EXAMPLE_CONFIG);
     expect(result.ok).toBe(true);
     if (result.ok) {

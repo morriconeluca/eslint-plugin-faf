@@ -39,7 +39,7 @@
     "test/**/*",
     "scripts/**/*",
     "bench/**/*",
-    "fafconfig.ts",
+    "faf.config.ts",
     "eslint.config.ts",
     "commitlint.config.ts",
     "tsup.config.ts",

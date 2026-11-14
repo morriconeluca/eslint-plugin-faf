@@ -7,7 +7,7 @@ import type { TInventory } from '../../../../_verify-project@shared/_types/_prim
  */
 export type TSelectAnchorPathInput = {
   /**
-   * Absolute directory that hosts fafconfig.ts and anchors relative inventory paths.
+   * Absolute directory that hosts faf.config.ts and anchors relative inventory paths.
    */
   readonly baseDirectory: string;
 

@@ -29,7 +29,7 @@ const configMessage = ({
   detail,
   element,
   family = 'configuration',
-  filePath = 'fafconfig.ts',
+  filePath = 'faf.config.ts',
   predicate,
   reference,
 }: {
@@ -92,7 +92,7 @@ const runRawScenario = async (
   const project = await createFixture({
     'package.json': JSON.stringify({ type: 'module' }),
     ...tree,
-    'fafconfig.ts': rawConfig,
+    'faf.config.ts': rawConfig,
   });
   try {
     expectScenario(await lintScenario(project.path), getExpected(project.path));
@@ -101,7 +101,7 @@ const runRawScenario = async (
   }
 };
 
-describe('acceptance: fafconfig.ts TypeScript module contract', () => {
+describe('acceptance: faf.config.ts TypeScript module contract', () => {
   const WARMUP_TIMEOUT_MS = 120_000;
 
   beforeAll(warmupESLint, WARMUP_TIMEOUT_MS);
@@ -137,7 +137,7 @@ describe('acceptance: fafconfig.ts TypeScript module contract', () => {
       (projectPath) => [
         configMessage({
           constraint: 'configuration/invalid-default-export-function',
-          element: nodePath.join(projectPath, 'fafconfig.ts'),
+          element: nodePath.join(projectPath, 'faf.config.ts'),
           predicate: 'cannot export a function as its default export',
           reference: 'FAF §1.2',
         }),
@@ -154,7 +154,7 @@ describe('acceptance: fafconfig.ts TypeScript module contract', () => {
       (projectPath) => [
         configMessage({
           constraint: 'configuration/invalid-default-export-promise',
-          element: nodePath.join(projectPath, 'fafconfig.ts'),
+          element: nodePath.join(projectPath, 'faf.config.ts'),
           predicate: 'cannot export a Promise as its default export',
           reference: 'FAF §1.2',
         }),
@@ -1502,7 +1502,7 @@ describe('acceptance: closed configuration schema contract', () => {
       [
         configMessage({
           constraint: 'configuration/missing-roles',
-          element: 'fafconfig.ts',
+          element: 'faf.config.ts',
           predicate:
             'must declare a roles catalog in local or common configuration',
           reference: 'FAF §6.3.1',
@@ -2343,7 +2343,7 @@ describe('acceptance: whole-property composition between common and locals', () 
       [
         configMessage({
           constraint: 'configuration/missing-roles',
-          element: 'fafconfig.ts',
+          element: 'faf.config.ts',
           predicate:
             'must declare a roles catalog in local or common configuration',
           reference: 'FAF §6.3.1',
@@ -2630,7 +2630,7 @@ describe('acceptance: configuration base directory and literal paths', () => {
               rootFragments: [
                 {
                   path: '.',
-                  rootNodes: [['fafconfig.ts', 'package.json']],
+                  rootNodes: [['faf.config.ts', 'package.json']],
                 },
               ],
             },

@@ -7,11 +7,11 @@ import { readFileSnapshot } from './read-file-snapshot.adapter.js';
 describe('readFileSnapshot', () => {
   it('returns mtime, size, and text for a regular file', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default { faf: { locals: [] } };',
+      'faf.config.ts': 'export default { faf: { locals: [] } };',
     });
 
     try {
-      const filePath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const filePath = nodePath.join(fixture.path, 'faf.config.ts');
       const snapshot = readFileSnapshot(filePath);
       expect(snapshot.present).toBe(true);
       if (snapshot.present) {

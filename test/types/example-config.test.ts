@@ -184,7 +184,7 @@ describe('example configuration compilation', () => {
     warmupTypeHarness();
   }, WARMUP_TIMEOUT_MS);
 
-  it('compiles multi-tree example fafconfig.ts in both exactOptionalPropertyTypes modes', () => {
+  it('compiles multi-tree example faf.config.ts in both exactOptionalPropertyTypes modes', () => {
     const result = compileInBothModes(EXAMPLE_CONFIG_SOURCE);
     expect(result.strictErrors).toHaveLength(0);
     expect(result.looseErrors).toHaveLength(0);

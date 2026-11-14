@@ -1,11 +1,11 @@
 import type { TResult } from '../../../../../../../../../../_conformity@shared/_types/outcome.type.js';
 
 /**
- * Input arguments for loading fafconfig.ts including config path and optional timeout budget.
+ * Input arguments for loading faf.config.ts including config path and optional timeout budget.
  */
 export type TLoadConfigInput = {
   /**
-   * Absolute or relative path to the fafconfig.ts configuration file to evaluate.
+   * Absolute or relative path to the faf.config.ts configuration file to evaluate.
    */
   readonly configPath: string;
 
@@ -25,17 +25,17 @@ export type TLoadConfigResult = TResult<TLoadedConfig>;
  */
 export type TLoadedConfig = {
   /**
-   * Exported default configuration value parsed from fafconfig.ts.
+   * Exported default configuration value parsed from faf.config.ts.
    */
   readonly config: unknown;
 
   /**
-   * Absolute path to the directory hosting the loaded fafconfig.ts file.
+   * Absolute path to the directory hosting the loaded faf.config.ts file.
    */
   readonly configDirectory: string;
 
   /**
-   * Absolute file path to the loaded fafconfig.ts configuration file.
+   * Absolute file path to the loaded faf.config.ts configuration file.
    */
   readonly configPath: string;
 

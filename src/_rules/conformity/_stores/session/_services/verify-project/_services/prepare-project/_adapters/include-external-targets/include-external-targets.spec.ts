@@ -151,13 +151,13 @@ describe('includeExternalTargets', () => {
     }
   });
 
-  it('discovers lintable files in nested external subdirectories while skipping root fafconfig.ts', async () => {
+  it('discovers lintable files in nested external subdirectories while skipping root faf.config.ts', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};\n',
+      'faf.config.ts': 'export default {};\n',
       'root-tool.ts': 'export const rootTool = 1;\n',
       'scripts/tool.ts': 'export const tool = 1;\n',
       'tools/nested/deep/action.mjs': 'export const action = 1;\n',
-      'tools/nested/fafconfig.ts': 'export default {};\n',
+      'tools/nested/faf.config.ts': 'export default {};\n',
       'tools/nested/helper.js': 'export const helper = 1;\n',
     });
 
@@ -174,20 +174,22 @@ describe('includeExternalTargets', () => {
         ['src']
       );
 
-      expect(inventory.pathToId.has('fafconfig.ts')).toBe(false);
+      expect(inventory.pathToId.has('faf.config.ts')).toBe(false);
       expect(inventory.pathToId.get('root-tool.ts')).toBeDefined();
       expect(inventory.pathToId.get('scripts/tool.ts')).toBeDefined();
       expect(inventory.pathToId.get('tools/nested/helper.js')).toBeDefined();
       expect(
         inventory.pathToId.get('tools/nested/deep/action.mjs')
       ).toBeDefined();
-      expect(inventory.pathToId.get('tools/nested/fafconfig.ts')).toBeDefined();
+      expect(
+        inventory.pathToId.get('tools/nested/faf.config.ts')
+      ).toBeDefined();
 
       expect(inventory.items.map((item) => item.path)).toEqual([
         'root-tool.ts',
         'scripts/tool.ts',
         'tools/nested/deep/action.mjs',
-        'tools/nested/fafconfig.ts',
+        'tools/nested/faf.config.ts',
         'tools/nested/helper.js',
       ]);
 

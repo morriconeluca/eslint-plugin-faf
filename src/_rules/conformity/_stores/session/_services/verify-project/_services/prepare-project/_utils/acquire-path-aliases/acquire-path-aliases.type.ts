@@ -6,12 +6,12 @@ import type { TEffectivePathAlias } from '../../../../_verify-project@shared/_ty
  */
 export type TAcquirePathAliasesInput = {
   /**
-   * Direct path alias map from fafconfig.ts common configuration.
+   * Direct path alias map from faf.config.ts common configuration.
    */
   readonly commonAliases?: Readonly<Record<string, string>>;
 
   /**
-   * Parsed payload of package.json residing adjacent to fafconfig.ts.
+   * Parsed payload of package.json residing adjacent to faf.config.ts.
    */
   readonly packageJson?: Record<string, unknown>;
 };

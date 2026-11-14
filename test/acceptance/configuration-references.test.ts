@@ -65,7 +65,7 @@ const configMessage = (
       ? `'${element}' ${predicate}`
       : `'${element}' ${predicate}: ${detail.replace(/\.$/, '')}`;
   return createScenarioMessage(
-    'fafconfig.ts',
+    'faf.config.ts',
     element,
     constraint,
     messageText,
@@ -1008,7 +1008,7 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       },
       expected: [
         classificationMessage(
-          'fafconfig.ts',
+          'faf.config.ts',
           'src/_apis',
           'classification/horizontal-hierarchy-members',
           'has a Horizontal Hierarchy over children that FAF does not allow to be ordered',
@@ -1077,7 +1077,7 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       },
       expected: [
         classificationMessage(
-          'fafconfig.ts',
+          'faf.config.ts',
           'src',
           'classification/horizontal-hierarchy-members',
           'has a Horizontal Hierarchy over children that FAF does not allow to be ordered',
@@ -1109,7 +1109,7 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       },
       expected: [
         classificationMessage(
-          'fafconfig.ts',
+          'faf.config.ts',
           'src/_utils',
           'classification/horizontal-hierarchy-members',
           'has a Horizontal Hierarchy over children that FAF does not allow to be ordered',
@@ -1303,7 +1303,7 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       const result = await lintScenario(fixture.path);
       const expected = [
         classificationMessage(
-          'fafconfig.ts',
+          'faf.config.ts',
           'src/_components/_pages',
           'classification/containment-matrix',
           'is a child type that its parent Logical Domain does not admit',
@@ -1601,7 +1601,7 @@ describe('acceptance: Path Alias source exclusivity and validation', () => {
       caseName: 'valid imports map present, aliases present',
       expected: [
         configMessage(
-          'fafconfig.ts',
+          'faf.config.ts',
           'configuration/duplicate-alias-source',
           'cannot declare path aliases when package.json imports are present',
           'FAF §7.4'
@@ -1614,7 +1614,7 @@ describe('acceptance: Path Alias source exclusivity and validation', () => {
       caseName: 'empty object imports present, aliases present',
       expected: [
         configMessage(
-          'fafconfig.ts',
+          'faf.config.ts',
           'configuration/duplicate-alias-source',
           'cannot declare path aliases when package.json imports are present',
           'FAF §7.4'
@@ -2726,7 +2726,7 @@ describe('acceptance: runtime validation of optional properties and structural t
       },
       getExpected: () => [
         configMessage(
-          'fafconfig.ts',
+          'faf.config.ts',
           'configuration/missing-roles',
           'must declare a roles catalog in local or common configuration',
           'FAF §6.3.1'
