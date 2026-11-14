@@ -34,12 +34,12 @@ const createMinimalTree = (
     individualPaths: [],
   },
   horizontalHierarchies: [],
-  localHorizontalHierarchies: [],
   mimeticPathStructures: [],
   originKind: 'root-fragment',
   originPath,
   publicRootNodes: [],
   rootFragments: [],
+  subCategoryHierarchies: [],
   treeDependencyPairs: [],
   ...overrides,
 });

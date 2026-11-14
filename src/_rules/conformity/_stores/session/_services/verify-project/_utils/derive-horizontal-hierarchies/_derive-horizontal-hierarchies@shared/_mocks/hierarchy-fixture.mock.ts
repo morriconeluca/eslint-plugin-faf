@@ -34,12 +34,12 @@ export function hierarchyFixture(
     foreignDomains: [],
     foreignNodes: { families: [], individualPaths: [] },
     horizontalHierarchies: [],
-    localHorizontalHierarchies: [],
     mimeticPathStructures: [],
     originKind: 'root-layer',
     originPath: 'src',
     publicRootNodes: [],
     rootFragments: [],
+    subCategoryHierarchies: [],
     treeDependencyPairs: [],
     ...overrides,
   };

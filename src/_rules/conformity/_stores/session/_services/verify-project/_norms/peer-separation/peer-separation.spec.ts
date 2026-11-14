@@ -265,7 +265,7 @@ describe('verifyPeerSeparation', () => {
           {
             id: 1,
             isOrderable: true,
-            origin: 'general' as const,
+            origin: 'domain' as const,
             parentPath: 'src',
             repetitions: [],
             siblings: [
@@ -285,7 +285,7 @@ describe('verifyPeerSeparation', () => {
           {
             id: 1,
             isOrderable: true,
-            origin: 'general' as const,
+            origin: 'domain' as const,
             parentPath: 'src',
             repetitions: [],
             siblings: [
@@ -305,7 +305,7 @@ describe('verifyPeerSeparation', () => {
           {
             id: 1,
             isOrderable: true,
-            origin: 'general' as const,
+            origin: 'domain' as const,
             parentPath: 'src',
             repetitions: [],
             siblings: [{ itemId: 1, rank: 1 }],
@@ -467,7 +467,7 @@ describe('verifyPeerSeparation', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'general',
+          origin: 'domain',
           parentPath: 'src',
           repetitions: [],
           siblings: [
@@ -478,7 +478,7 @@ describe('verifyPeerSeparation', () => {
         {
           id: 2,
           isOrderable: true,
-          origin: 'general',
+          origin: 'domain',
           parentPath: 'src',
           repetitions: [],
           siblings: [
@@ -571,7 +571,7 @@ describe('verifyPeerSeparation', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'general',
+          origin: 'domain',
           parentPath: 'src',
           repetitions: [],
           siblings: [

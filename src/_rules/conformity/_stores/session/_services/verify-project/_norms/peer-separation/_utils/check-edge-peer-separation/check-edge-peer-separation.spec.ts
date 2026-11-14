@@ -751,7 +751,7 @@ describe('checkEdgePeerSeparation', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'general',
+          origin: 'domain',
           parentPath: 'src',
           repetitions: [],
           siblings: [
@@ -861,7 +861,7 @@ describe('checkEdgePeerSeparation', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'general',
+          origin: 'domain',
           parentPath: 'src',
           repetitions: [],
           siblings: [

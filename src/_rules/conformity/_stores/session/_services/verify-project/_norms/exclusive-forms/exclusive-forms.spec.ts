@@ -98,7 +98,6 @@ const buildModel = (
         foreignDomains: [],
         foreignNodes: { families: [], individualPaths: [] },
         horizontalHierarchies: [],
-        localHorizontalHierarchies: [],
         mimeticPathStructures:
           mimeticPaths.length > 0
             ? [{ actions: null, paths: mimeticPaths }]
@@ -107,6 +106,7 @@ const buildModel = (
         originPath: 'src',
         publicRootNodes: [],
         rootFragments: [],
+        subCategoryHierarchies: [],
         treeDependencyPairs: [],
       },
     ],
@@ -1409,7 +1409,7 @@ describe('verifyExclusiveForms', () => {
             {
               id: 0,
               isOrderable: true,
-              origin: 'general',
+              origin: 'domain',
               parentPath: 'src',
               repetitions: [],
               siblings: [

@@ -43,9 +43,13 @@ export type THorizontalHierarchySet = {
   readonly isOrderable: boolean;
 
   /**
-   * Declaration source, without precedence between general and local applications.
+   * Declaration source: domain-scoped entry, fragment internal roles, root-node tiers, or tree-wide sub-category model.
    */
-  readonly origin: 'fragment-internal' | 'general' | 'local' | 'root-nodes';
+  readonly origin:
+    | 'domain'
+    | 'fragment-internal'
+    | 'root-nodes'
+    | 'sub-category';
 
   /**
    * POSIX path of the parent whose direct children are selected.

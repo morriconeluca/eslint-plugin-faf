@@ -35,9 +35,9 @@ function createContext(entries: readonly TSimpleEntry[]): TReferenceContext {
     realPathToId: new Map(items.map((item) => [item.realPath, item.id])),
   };
   return {
-    aliases: [],
+    aliasPrefixes: [],
     baseDirectory: '/project',
-    enumeratedRootNodesByFragment: new Map(),
+    enumeratedRootNodes: new Map(),
     inventory,
     ownedOrigins: new Map([
       ['.', { localIndex: 0, originKind: 'root-layer' }],
