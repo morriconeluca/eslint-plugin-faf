@@ -140,15 +140,21 @@ export default {
       // Optional declarations shared across all locals entries
     },
     locals: [
-      // Required non-empty array of Fractal Tree declarations
+      {
+        rootLayers: ['src'],
+      },
     ],
   },
 } satisfies TFAFConfig;
 ```
 
-- **`faf.locals`** _(required)_: Non-empty array. Each entry declares one or more Fractal Trees via `rootLayers` and/or `rootFragments`.
-- **`faf.common`** _(optional)_: Shared declarations (`roles`, `subGraphRoles`, hierarchies, foreign rules, frontier rules, and `aliases`) inherited by every `locals` entry.
-- **Override semantics**: When a `locals` entry defines a property also present in `common`, the local property **replaces** the `common` property in full (no shallow or deep merging).
+- **`faf.locals`** _(required)_: Non-empty array. Each entry declares one or more Fractal Trees and tree-specific declarations:
+  - **`locals` only**: `rootLayers`, `rootFragments`, and domain-scoped `horizontalHierarchies` (`{ path, hierarchy }`).
+  - **Shared properties** (inherited from `common` if omitted): `roles`, `subGraphRoles`, `subCategoryHierarchies`, `mimeticPathStructures`, `foreignDomains`, `foreignNodes`, `publicRootNodes`, `treeDependencies`, `externalDependencies`.
+- **`faf.common`** _(optional)_: Shared declarations inherited by every `locals` entry:
+  - **`common` only**: `aliases`.
+  - **Shared properties**: `roles`, `subGraphRoles`, `subCategoryHierarchies`, `mimeticPathStructures`, `foreignDomains`, `foreignNodes`, `publicRootNodes`, `treeDependencies`, `externalDependencies`.
+- **Override semantics**: When a `locals` entry defines a shared property also present in `common`, the local property **replaces** the `common` property in full (no shallow or deep merging).
 
 ### Tree Origins (`locals` only)
 
@@ -196,13 +202,13 @@ Every Fractal Tree requires a `roles` catalog (defined in `locals` or inherited 
   - `implicitRoleExtensions` _(optional)_: Non-empty array of dot-prefixed Asset extensions (e.g., `['.css']`, `['.png', '.svg']`). Requires Category Nodes form (`isCategoryNode` defaults to `true` and cannot be `false`).
 - **`subGraphRoles`** _(optional, default `[]`)_: Auxiliary entry-point Roles at top Rank that cannot be imported by any Logical Node (e.g., `[{ name: 'spec' }, { name: 'story' }]`).
 
-### Horizontal Hierarchies and Mimetic Paths (`common` or `locals`)
+### Horizontal Hierarchies and Mimetic Paths
 
-Hierarchies are arrays of Rank tiers (`string[][]`) ordered from Rank `0` upward (`[['lowest'], ['higher']]`), authorizing dependencies strictly from higher Rank to lower Rank:
+Hierarchies are arrays of Rank tiers (`[['lowest'], ['higher']]`) ordered from Rank `0` upward, authorizing dependencies strictly from higher Rank to lower Rank:
 
-- **`horizontalHierarchies`**: General hierarchies applied automatically to matching sibling Sub-Categories (e.g., Atomic Design or Systemic Design):
+- **`subCategoryHierarchies`** (`common` or `locals`, `readonly TFAFDomainHierarchy[]`): Tree-wide Horizontal Hierarchy models exclusively for **Sub-Categories** (e.g., Atomic Design or Systemic Design). Must declare at least two non-empty Rank tiers (`[['_atoms'], ['_molecules'], ...]`) of `_kebab-case` Sub-Category names distinct from every `category` name in the `roles` catalog. Automatically instantiates in every Category (including Private Categories) or ordinary Sub-Category where matching direct-child Sub-Categories exist:
   ```ts
-  horizontalHierarchies: [
+  subCategoryHierarchies: [
     [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
     [
       ['_primitives'],
@@ -213,16 +219,16 @@ Hierarchies are arrays of Rank tiers (`string[][]`) ordered from Rank `0` upward
     ],
   ];
   ```
-- **`localHorizontalHierarchies`**: Hierarchies bound to explicit parent directories (e.g., ordering Layers or Categories inside a Root Layer or Fractal Branch):
+- **`horizontalHierarchies`** (`locals` only, `readonly TFAFHorizontalHierarchy[]`): Domain-scoped Horizontal Hierarchies (`{ path, hierarchy }`) targeting a **single** parent Logical Domain `path` (e.g., ordering sibling Layers/Sub-Layers or non-private Categories inside a Root Layer, Layer, or Fractal Branch, or ordering domain-specific sibling Sub-Categories inside a Category or Sub-Category). `hierarchy` must declare at least two non-empty Rank tiers, every listed child name must physically exist on disk as a direct child of `path`, and multiple Horizontal Hierarchies (including `subCategoryHierarchies`) may coexist under the same parent only on disjoint sets of direct children:
   ```ts
-  localHorizontalHierarchies: [
+  horizontalHierarchies: [
     {
-      paths: ['src/_src@shared'],
-      hierarchies: [['_domain'], ['_network', '_state', '_ui']],
+      path: 'src/_src@shared',
+      hierarchy: [['_domain'], ['_network', '_state', '_ui']],
     },
   ];
   ```
-- **`mimeticPathStructures`**: Designates Categories of Fragments that mirror external address spaces (REST routes, URL trees, CLI commands):
+- **`mimeticPathStructures`** (`common` or `locals`, `readonly TFAFMimeticPathStructure[]`): Designates Categories of Fragments that mirror external address spaces (REST routes, URL trees, CLI commands):
   ```ts
   mimeticPathStructures: [
     {
@@ -296,11 +302,12 @@ All configuration types are exported from the package root:
 import type {
   TFAFCommonConfig,
   TFAFConfig,
+  TFAFDomainHierarchy,
   TFAFExternalDependency,
   TFAFForeignNodeFamily,
   TFAFHierarchy,
+  TFAFHorizontalHierarchy,
   TFAFLocalConfig,
-  TFAFLocalHorizontalHierarchy,
   TFAFMimeticPathStructure,
   TFAFNonEmptyArray,
   TFAFRole,
