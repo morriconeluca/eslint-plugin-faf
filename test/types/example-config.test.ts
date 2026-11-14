@@ -23,7 +23,7 @@ export default {
           patterns: ['*.md'],
         },
       ],
-      horizontalHierarchies: [
+      subCategoryHierarchies: [
         [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
         [
           ['_primitives'],
@@ -102,17 +102,17 @@ export default {
           'src/vite-env.d.ts',
           { paths: ['src'], patterns: ['*.md'] },
         ],
-        localHorizontalHierarchies: [
+        horizontalHierarchies: [
           {
-            hierarchies: [['_domain'], ['_network', '_state', '_ui']],
-            paths: ['src/_src@shared'],
+            hierarchy: [['_domain'], ['_network', '_state', '_ui']],
+            path: 'src/_src@shared',
           },
           {
-            hierarchies: [['_types'], ['_classes'], ['_utils'], ['_apis']],
-            paths: ['src/_src@shared/_network'],
+            hierarchy: [['_types'], ['_classes'], ['_utils'], ['_apis']],
+            path: 'src/_src@shared/_network',
           },
           {
-            hierarchies: [
+            hierarchy: [
               ['_constants'],
               ['_types'],
               ['_utils'],
@@ -120,7 +120,7 @@ export default {
               ['_components'],
               ['_pages'],
             ],
-            paths: ['src/_src@shared/_ui'],
+            path: 'src/_src@shared/_ui',
           },
         ],
         mimeticPathStructures: [
@@ -165,7 +165,9 @@ export default {
       },
       {
         rootLayers: ['packages/contracts/src', 'packages/formatters/src'],
-        horizontalHierarchies: [[['_types'], ['_utils']]],
+        horizontalHierarchies: [
+          { hierarchy: [['_types'], ['_utils']], path: 'packages/contracts/src' },
+        ],
       },
     ],
   },

@@ -172,16 +172,6 @@ const fullHypotheticalConfig = {
           patterns: ['*.md'],
         },
       ],
-      horizontalHierarchies: [
-        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
-        [
-          ['_primitives'],
-          ['_compounds'],
-          ['_aggregates'],
-          ['_systems'],
-          ['_ecosystems'],
-        ],
-      ],
       roles: [
         [
           {
@@ -242,6 +232,16 @@ const fullHypotheticalConfig = {
           { category: '_stores', name: 'store' },
         ],
       ],
+      subCategoryHierarchies: [
+        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
+        [
+          ['_primitives'],
+          ['_compounds'],
+          ['_aggregates'],
+          ['_systems'],
+          ['_ecosystems'],
+        ],
+      ],
       subGraphRoles,
     },
     locals: [
@@ -259,17 +259,17 @@ const fullHypotheticalConfig = {
           'src/vite-env.d.ts',
           { paths: ['src'], patterns: ['*.md'] },
         ],
-        localHorizontalHierarchies: [
+        horizontalHierarchies: [
           {
-            hierarchies: [['_domain'], ['_network', '_state', '_ui']],
-            paths: ['src/_src@shared'],
+            hierarchy: [['_domain'], ['_network', '_state', '_ui']],
+            path: 'src/_src@shared',
           },
           {
-            hierarchies: [['_types'], ['_classes'], ['_utils'], ['_apis']],
-            paths: ['src/_src@shared/_network'],
+            hierarchy: [['_types'], ['_classes'], ['_utils'], ['_apis']],
+            path: 'src/_src@shared/_network',
           },
           {
-            hierarchies: [
+            hierarchy: [
               ['_constants'],
               ['_types'],
               ['_utils'],
@@ -277,7 +277,7 @@ const fullHypotheticalConfig = {
               ['_components'],
               ['_pages'],
             ],
-            paths: ['src/_src@shared/_ui'],
+            path: 'src/_src@shared/_ui',
           },
         ],
         mimeticPathStructures: [
@@ -313,7 +313,16 @@ const fullHypotheticalConfig = {
         ],
       },
       {
-        horizontalHierarchies: [[['_types'], ['_utils']]],
+        horizontalHierarchies: [
+          {
+            hierarchy: [['_types'], ['_utils']],
+            path: 'packages/contracts/src',
+          },
+          {
+            hierarchy: [['_types'], ['_utils']],
+            path: 'packages/formatters/src',
+          },
+        ],
         rootLayers: ['packages/contracts/src', 'packages/formatters/src'],
       },
     ],
@@ -323,6 +332,8 @@ const fullHypotheticalConfig = {
 const fullHypotheticalTree: FileTree = {
   'legacy/client.ts': 'export const legacyClient = 1;\n',
   'packages/contracts/src/_types/todo.type.ts': 'export type TTodo = string;\n',
+  'packages/contracts/src/_utils': {},
+  'packages/formatters/src/_types': {},
   'packages/formatters/src/_utils/format-label/format-label.util.ts':
     'export const formatLabel = 1;\n',
   'packages/formatters/src/_utils/format-label/index.ts':
@@ -339,9 +350,17 @@ const fullHypotheticalTree: FileTree = {
     "import { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport type { TTodo } from '../../../../../../packages/contracts/src/_types/todo.type.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientAdapter() });\n",
   'src/_src@shared/_network/_apis/_health/get-health/index.ts':
     "export { getHealth } from './get-health.api.js';\n",
+  'src/_src@shared/_network/_classes': {},
+  'src/_src@shared/_network/_types': {},
+  'src/_src@shared/_network/_utils': {},
   'src/_src@shared/_state/_utils/st/index.ts':
     "export { st } from './st.util.js';\n",
   'src/_src@shared/_state/_utils/st/st.util.ts': 'export const st = 1;\n',
+  'src/_src@shared/_ui/_components': {},
+  'src/_src@shared/_ui/_constants': {},
+  'src/_src@shared/_ui/_pages': {},
+  'src/_src@shared/_ui/_recipes': {},
+  'src/_src@shared/_ui/_types': {},
   'src/_src@shared/_ui/_utils/u/index.ts': "export { u } from './u.util.js';\n",
   'src/_src@shared/_ui/_utils/u/u.util.ts': 'export const u = 1;\n',
   'src/app/app.tsx': 'export const App = 1;\n',
@@ -674,15 +693,23 @@ describe('acceptance: Foreign Node families and scopes', () => {
   );
 });
 
-describe('acceptance: general and local Horizontal Hierarchies', () => {
-  it('applies a general hierarchy model separately at each eligible parent', async () => {
+describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', () => {
+  const baseRoles = [
+    { category: '_types', isCategoryNode: true, name: 'type' },
+    { category: '_utils', name: 'util' },
+    { category: '_apis', name: 'api' },
+    { category: '_components', name: 'component' },
+    { category: '_pages', name: 'page' },
+  ];
+
+  it('applies subCategoryHierarchies across Categories, Private Categories, and nested Sub-Categories', async () => {
     const config = {
       faf: {
         locals: [
           {
-            horizontalHierarchies: [[['_types'], ['_utils'], ['_apis']]],
-            roles,
+            roles: baseRoles,
             rootLayers: ['src'],
+            subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
             subGraphRoles,
           },
         ],
@@ -690,15 +717,29 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
     };
 
     const tree: FileTree = {
-      'src/_layer-a/_types/a.type.ts': 'export type TA = string;\n',
-      'src/_layer-a/_utils/u/index.ts': "export { u } from './u.util.js';\n",
-      'src/_layer-a/_utils/u/u.util.ts':
-        "import type { TA } from '../../_types/a.type.js';\nexport const u = 1;\n",
-      'src/_layer-b/_apis/a/a.api.ts':
-        "import { u } from '../../_utils/u/index.js';\nexport const a = u;\n",
-      'src/_layer-b/_apis/a/index.ts': "export { a } from './a.api.js';\n",
-      'src/_layer-b/_utils/u/index.ts': "export { u } from './u.util.js';\n",
-      'src/_layer-b/_utils/u/u.util.ts': 'export const u = 1;\n',
+      'src/_components/btn/_components/_compounds/card/card.component.tsx':
+        "import { prim } from '../../_primitives/atom/index.js';\nexport const card = prim;\n",
+      'src/_components/btn/_components/_compounds/card/index.ts':
+        "export { card } from './card.component.js';\n",
+      'src/_components/btn/_components/_primitives/atom/atom.component.tsx':
+        'export const prim = 1;\n',
+      'src/_components/btn/_components/_primitives/atom/index.ts':
+        "export { prim } from './atom.component.js';\n",
+      'src/_components/btn/btn.component.tsx': 'export const btn = 1;\n',
+      'src/_components/btn/index.ts':
+        "export { btn } from './btn.component.js';\n",
+      'src/_utils/_compounds/a/a.util.ts':
+        "import { p } from '../../_primitives/p/index.js';\nexport const a = p;\n",
+      'src/_utils/_compounds/a/index.ts': "export { a } from './a.util.js';\n",
+      'src/_utils/_nested/_compounds/c/c.util.ts':
+        "import { n } from '../../_primitives/n/index.js';\nexport const c = n;\n",
+      'src/_utils/_nested/_compounds/c/index.ts':
+        "export { c } from './c.util.js';\n",
+      'src/_utils/_nested/_primitives/n/index.ts':
+        "export { n } from './n.util.js';\n",
+      'src/_utils/_nested/_primitives/n/n.util.ts': 'export const n = 1;\n',
+      'src/_utils/_primitives/p/index.ts': "export { p } from './p.util.js';\n",
+      'src/_utils/_primitives/p/p.util.ts': 'export const p = 1;\n',
     };
 
     const fixture = await createProject(tree, config);
@@ -710,16 +751,162 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
     }
   });
 
-  it('applies a local hierarchy to exact parents without recursive descent', async () => {
+  it('rejects upward and same-tier imports under subCategoryHierarchies', async () => {
     const config = {
       faf: {
         locals: [
           {
-            localHorizontalHierarchies: [
-              {
-                hierarchies: [['_types'], ['_utils']],
-                paths: ['src/_layer-a', 'src/_layer-b'],
-              },
+            roles: baseRoles,
+            rootLayers: ['src'],
+            subCategoryHierarchies: [
+              [['_primitives'], ['_compounds', '_aggregates']],
+            ],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const upwardTree: FileTree = {
+      'src/_utils/_compounds/c/c.util.ts': 'export const c = 1;\n',
+      'src/_utils/_compounds/c/index.ts': "export { c } from './c.util.js';\n",
+      'src/_utils/_primitives/p/index.ts': "export { p } from './p.util.js';\n",
+      'src/_utils/_primitives/p/p.util.ts':
+        "import { c } from '../../_compounds/c/index.js';\nexport const p = c;\n",
+    };
+
+    const upwardFixture = await createProject(upwardTree, config);
+    try {
+      const result = await lintScenario(upwardFixture.path);
+      expectScenario(result, [
+        dependencyMessage(
+          'src/_utils/_primitives/p/p.util.ts',
+          'src/_utils/_compounds/c/index.ts',
+          '../../_compounds/c/index.js',
+          'dependency/peer-separation',
+          'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
+          'FAF §5'
+        ),
+      ]);
+    } finally {
+      await upwardFixture.rm();
+    }
+
+    const sameTierTree: FileTree = {
+      'src/_utils/_aggregates/a/a.util.ts':
+        "import { c } from '../../_compounds/c/index.js';\nexport const a = c;\n",
+      'src/_utils/_aggregates/a/index.ts': "export { a } from './a.util.js';\n",
+      'src/_utils/_compounds/c/c.util.ts': 'export const c = 1;\n',
+      'src/_utils/_compounds/c/index.ts': "export { c } from './c.util.js';\n",
+    };
+
+    const sameTierFixture = await createProject(sameTierTree, config);
+    try {
+      const result = await lintScenario(sameTierFixture.path);
+      expectScenario(result, [
+        dependencyMessage(
+          'src/_utils/_aggregates/a/a.util.ts',
+          'src/_utils/_compounds/c/index.ts',
+          '../../_compounds/c/index.js',
+          'dependency/peer-separation',
+          'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
+          'FAF §5'
+        ),
+      ]);
+    } finally {
+      await sameTierFixture.rm();
+    }
+  });
+
+  it('does not activate subCategoryHierarchies on Layers or Path Sub-Categories', async () => {
+    const layersConfig = {
+      faf: {
+        locals: [
+          {
+            roles: baseRoles,
+            rootLayers: ['src'],
+            subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const layersTree: FileTree = {
+      'src/_compounds/_utils/c/c.util.ts':
+        "import { p } from '../../../_primitives/_utils/p/index.js';\nexport const c = p;\n",
+      'src/_compounds/_utils/c/index.ts': "export { c } from './c.util.js';\n",
+      'src/_primitives/_utils/p/index.ts': "export { p } from './p.util.js';\n",
+      'src/_primitives/_utils/p/p.util.ts': 'export const p = 1;\n',
+    };
+
+    const layersFixture = await createProject(layersTree, layersConfig);
+    try {
+      const result = await lintScenario(layersFixture.path);
+      expectScenario(result, [
+        dependencyMessage(
+          'src/_compounds/_utils/c/c.util.ts',
+          'src/_primitives/_utils/p/index.ts',
+          '../../../_primitives/_utils/p/index.js',
+          'dependency/peer-separation',
+          'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
+          'FAF §5'
+        ),
+      ]);
+    } finally {
+      await layersFixture.rm();
+    }
+
+    const mimeticConfig = {
+      faf: {
+        locals: [
+          {
+            mimeticPathStructures: [{ actions: ['get'], paths: ['src/_apis'] }],
+            roles: baseRoles,
+            rootLayers: ['src'],
+            subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const mimeticTree: FileTree = {
+      'src/_apis/_compounds/get-c/get-c.api.ts':
+        "import { p } from '../../_primitives/get-p/index.js';\nexport const getC = p;\n",
+      'src/_apis/_compounds/get-c/index.ts':
+        "export { getC } from './get-c.api.js';\n",
+      'src/_apis/_primitives/get-p/get-p.api.ts': 'export const p = 1;\n',
+      'src/_apis/_primitives/get-p/index.ts':
+        "export { p } from './get-p.api.js';\n",
+    };
+
+    const mimeticFixture = await createProject(mimeticTree, mimeticConfig);
+    try {
+      const result = await lintScenario(mimeticFixture.path);
+      expectScenario(result, [
+        dependencyMessage(
+          'src/_apis/_compounds/get-c/get-c.api.ts',
+          'src/_apis/_primitives/get-p/index.ts',
+          '../../_primitives/get-p/index.js',
+          'dependency/peer-separation',
+          'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
+          'FAF §5'
+        ),
+      ]);
+    } finally {
+      await mimeticFixture.rm();
+    }
+  });
+
+  it('applies horizontalHierarchies to exact parents without recursive descent', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            horizontalHierarchies: [
+              { hierarchy: [['_types'], ['_utils']], path: 'src/_layer-a' },
+              { hierarchy: [['_types'], ['_utils']], path: 'src/_layer-b' },
             ],
             roles,
             rootLayers: ['src'],
@@ -747,18 +934,384 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
     } finally {
       await fixture.rm();
     }
+
+    const nestedConfig = {
+      faf: {
+        locals: [
+          {
+            horizontalHierarchies: [
+              { hierarchy: [['_sub-a'], ['_sub-b']], path: 'src/_layer-a' },
+            ],
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+    const nestedTree: FileTree = {
+      'src/_layer-a/_sub-a/_sub-a/_types/a.type.ts':
+        'export type TA = string;\n',
+      'src/_layer-a/_sub-a/_sub-b/_utils/u/index.ts':
+        "export { u } from './u.util.js';\n",
+      'src/_layer-a/_sub-a/_sub-b/_utils/u/u.util.ts':
+        "import type { TA } from '../../../_sub-a/_types/a.type.js';\nexport const u = 1;\n",
+      'src/_layer-a/_sub-b/_utils/u/index.ts':
+        "export { u } from './u.util.js';\n",
+      'src/_layer-a/_sub-b/_utils/u/u.util.ts': 'export const u = 1;\n',
+    };
+    const nestedFixture = await createProject(nestedTree, nestedConfig);
+    try {
+      const result = await lintScenario(nestedFixture.path);
+      expectScenario(result, [
+        dependencyMessage(
+          'src/_layer-a/_sub-a/_sub-b/_utils/u/u.util.ts',
+          'src/_layer-a/_sub-a/_sub-a/_types/a.type.ts',
+          '../../../_sub-a/_types/a.type.js',
+          'dependency/peer-separation',
+          'sibling subtrees may depend on each other only downward along a Horizontal Hierarchy',
+          'FAF §5'
+        ),
+      ]);
+    } finally {
+      await nestedFixture.rm();
+    }
   });
+
+  const referenceCases = [
+    {
+      caseName: 'absent parent path directory',
+      config: {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                { hierarchy: [['_a'], ['_b']], path: 'src/missing' },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      getExpected: (baseDirectory: string) => [
+        configMessage(
+          'src/missing',
+          'configuration/non-existent-path',
+          'does not exist',
+          'FAF §1.2, §6.9',
+          `Hierarchy directory "src/missing" does not exist under configuration base "${baseDirectory}"`
+        ),
+      ],
+      tree: baseLayerTree,
+    },
+    {
+      caseName: 'parent path points to a file instead of directory',
+      config: {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                {
+                  hierarchy: [['_a'], ['_b']],
+                  path: 'src/_utils/widget/widget.util.ts',
+                },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      getExpected: () => [
+        configMessage(
+          'src/_utils/widget/widget.util.ts',
+          'configuration/expected-directory',
+          'must be a directory',
+          'FAF §1.2, §6.9',
+          'Hierarchy directory "src/_utils/widget/widget.util.ts" must be a directory'
+        ),
+      ],
+      tree: baseLayerTree,
+    },
+    {
+      caseName: 'parent path outside all Fractal Trees',
+      config: {
+        faf: {
+          common: {
+            aliases: { '#outside': 'outside' },
+          },
+          locals: [
+            {
+              horizontalHierarchies: [
+                { hierarchy: [['_a'], ['_b']], path: 'outside' },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      getExpected: () => [
+        configMessage(
+          'outside',
+          'configuration/reference-outside-trees',
+          'must be inside a Fractal Tree of this configuration',
+          'FAF §6',
+          'Hierarchy directory "outside" must be inside a Fractal Tree of this configuration'
+        ),
+      ],
+      tree: {
+        ...baseLayerTree,
+        'outside/_a': {},
+        'outside/_b': {},
+      },
+    },
+    {
+      caseName: 'parent path owned by another local configuration',
+      config: {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                { hierarchy: [['_utils'], ['_types']], path: 'other' },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+            {
+              roles,
+              rootLayers: ['other'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      getExpected: () => [
+        configMessage(
+          'other',
+          'configuration/reference-outside-local-scope',
+          'must belong to a tree within this local configuration',
+          'FAF §6',
+          'Hierarchy directory "other" belongs to tree "other" outside this local configuration'
+        ),
+      ],
+      tree: {
+        ...baseLayerTree,
+        'other/_types/a.type.ts': 'export type TA = string;\n',
+        'other/_utils/w/index.ts': "export { w } from './w.util.js';\n",
+        'other/_utils/w/w.util.ts': 'export const w = 1;\n',
+      },
+    },
+    {
+      caseName: 'absent direct child in hierarchy',
+      config: {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                { hierarchy: [['_types'], ['_utils']], path: 'src' },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      getExpected: () => [
+        configMessage(
+          'src/_types',
+          'configuration/non-existent-path',
+          'does not exist',
+          'FAF §1.2, §6.9',
+          'Direct child "_types" does not exist under "src"'
+        ),
+      ],
+      tree: baseLayerTree,
+    },
+    {
+      caseName: 'grandchild listed as member instead of direct child',
+      config: {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                { hierarchy: [['_types'], ['_utils']], path: 'src' },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      getExpected: () => [
+        configMessage(
+          'src/_types',
+          'configuration/non-existent-path',
+          'does not exist',
+          'FAF §1.2, §6.9',
+          'Direct child "_types" does not exist under "src"'
+        ),
+        configMessage(
+          'src/_utils',
+          'configuration/non-existent-path',
+          'does not exist',
+          'FAF §1.2, §6.9',
+          'Direct child "_utils" does not exist under "src"'
+        ),
+      ],
+      tree: {
+        'src/_domain/_types/a.type.ts': 'export type TA = string;\n',
+        'src/_domain/_utils/w/index.ts': "export { w } from './w.util.js';\n",
+        'src/_domain/_utils/w/w.util.ts': 'export const w = 1;\n',
+      },
+    },
+    {
+      caseName: 'member path containing slash separator',
+      config: {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                {
+                  hierarchy: [['_domain/_types'], ['_domain/_utils']],
+                  path: 'src',
+                },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      getExpected: () => [
+        configMessage(
+          'src/_domain/_types',
+          'configuration/non-existent-path',
+          'does not exist',
+          'FAF §1.2, §6.9',
+          'Direct child "_domain/_types" does not exist under "src"'
+        ),
+        configMessage(
+          'src/_domain/_utils',
+          'configuration/non-existent-path',
+          'does not exist',
+          'FAF §1.2, §6.9',
+          'Direct child "_domain/_utils" does not exist under "src"'
+        ),
+      ],
+      tree: {
+        'src/_domain/_types/a.type.ts': 'export type TA = string;\n',
+        'src/_domain/_utils/w/index.ts': "export { w } from './w.util.js';\n",
+        'src/_domain/_utils/w/w.util.ts': 'export const w = 1;\n',
+      },
+    },
+  ] as const;
+
+  it.each(referenceCases)(
+    'validates horizontalHierarchies reference constraints: $caseName',
+    async (item) => {
+      const fixture = await createProject(item.tree, item.config);
+      try {
+        const result = await lintScenario(fixture.path);
+        expectScenario(result, item.getExpected(fixture.path));
+      } finally {
+        await fixture.rm();
+      }
+    }
+  );
 
   const conflictCases = [
     {
-      caseName: 'two general hierarchies select the same direct child',
+      caseName:
+        'two subCategoryHierarchies select the same direct sub-category',
+      config: {
+        faf: {
+          locals: [
+            {
+              roles: baseRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: [
+                [['_low'], ['_mid']],
+                [['_low'], ['_high']],
+              ],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      expected: [
+        classificationMessage(
+          'faf.config.ts',
+          'src/_utils/_low',
+          'classification/horizontal-hierarchy-overlap',
+          'is selected by more than one Horizontal Hierarchy',
+          'FAF §4'
+        ),
+      ],
+      tree: {
+        'src/_utils/_high/c/c.util.ts': 'export const c = 1;\n',
+        'src/_utils/_high/c/index.ts': "export { c } from './c.util.js';\n",
+        'src/_utils/_low/a/a.util.ts': 'export const a = 1;\n',
+        'src/_utils/_low/a/index.ts': "export { a } from './a.util.js';\n",
+        'src/_utils/_mid/b/b.util.ts': 'export const b = 1;\n',
+        'src/_utils/_mid/b/index.ts': "export { b } from './b.util.js';\n",
+      },
+    },
+    {
+      caseName:
+        'subCategoryHierarchies (even with 1 matching child) and horizontalHierarchies select the same child',
       config: {
         faf: {
           locals: [
             {
               horizontalHierarchies: [
-                [['_types'], ['_utils']],
-                [['_types'], ['_apis']],
+                {
+                  hierarchy: [['_low'], ['_high']],
+                  path: 'src/_utils',
+                },
+              ],
+              roles: baseRoles,
+              rootLayers: ['src'],
+              subCategoryHierarchies: [[['_low'], ['_absent']]],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      expected: [
+        classificationMessage(
+          'faf.config.ts',
+          'src/_utils/_low',
+          'classification/horizontal-hierarchy-overlap',
+          'is selected by more than one Horizontal Hierarchy',
+          'FAF §4'
+        ),
+      ],
+      tree: {
+        'src/_utils/_high/b/b.util.ts': 'export const b = 1;\n',
+        'src/_utils/_high/b/index.ts': "export { b } from './b.util.js';\n",
+        'src/_utils/_low/a/a.util.ts': 'export const a = 1;\n',
+        'src/_utils/_low/a/index.ts': "export { a } from './a.util.js';\n",
+      },
+    },
+    {
+      caseName:
+        'two horizontalHierarchies on the same path select the same direct child',
+      config: {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                { hierarchy: [['_types'], ['_utils']], path: 'src' },
+                { hierarchy: [['_types'], ['_apis']], path: 'src' },
               ],
               roles,
               rootLayers: ['src'],
@@ -786,92 +1339,14 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
     },
     {
       caseName:
-        'one general and one local hierarchy select the same direct child',
-      config: {
-        faf: {
-          locals: [
-            {
-              horizontalHierarchies: [[['_types'], ['_utils']]],
-              localHorizontalHierarchies: [
-                {
-                  hierarchies: [['_types'], ['_apis']],
-                  paths: ['src'],
-                },
-              ],
-              roles,
-              rootLayers: ['src'],
-              subGraphRoles,
-            },
-          ],
-        },
-      },
-      expected: [
-        classificationMessage(
-          'src/_types/a.type.ts',
-          'src/_types',
-          'classification/horizontal-hierarchy-overlap',
-          'is selected by more than one Horizontal Hierarchy',
-          'FAF §4'
-        ),
-      ],
-      tree: {
-        'src/_apis/a/a.api.ts': 'export const a = 1;\n',
-        'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
-        'src/_types/a.type.ts': 'export type TA = string;\n',
-        'src/_utils/u/index.ts': "export { u } from './u.util.js';\n",
-        'src/_utils/u/u.util.ts': 'export const u = 1;\n',
-      },
-    },
-    {
-      caseName:
-        'two local hierarchies select the same child with identical rank',
-      config: {
-        faf: {
-          locals: [
-            {
-              localHorizontalHierarchies: [
-                {
-                  hierarchies: [['_types'], ['_utils']],
-                  paths: ['src'],
-                },
-                {
-                  hierarchies: [['_types'], ['_apis']],
-                  paths: ['src'],
-                },
-              ],
-              roles,
-              rootLayers: ['src'],
-              subGraphRoles,
-            },
-          ],
-        },
-      },
-      expected: [
-        classificationMessage(
-          'src/_types/a.type.ts',
-          'src/_types',
-          'classification/horizontal-hierarchy-overlap',
-          'is selected by more than one Horizontal Hierarchy',
-          'FAF §4'
-        ),
-      ],
-      tree: {
-        'src/_apis/a/a.api.ts': 'export const a = 1;\n',
-        'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
-        'src/_types/a.type.ts': 'export type TA = string;\n',
-        'src/_utils/u/index.ts': "export { u } from './u.util.js';\n",
-        'src/_utils/u/u.util.ts': 'export const u = 1;\n',
-      },
-    },
-    {
-      caseName: 'two hierarchies select disjoint subsets under the same parent',
+        'two horizontalHierarchies select disjoint subsets under the same parent',
       config: {
         faf: {
           locals: [
             {
               horizontalHierarchies: [
-                [['_types'], ['_utils']],
-                [['_components'], ['_pages']],
+                { hierarchy: [['_types'], ['_utils']], path: 'src' },
+                { hierarchy: [['_components'], ['_pages']], path: 'src' },
               ],
               roles,
               rootLayers: ['src'],
@@ -893,19 +1368,16 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       },
     },
     {
-      caseName: '_types appears in local hierarchies of distinct parents',
+      caseName: '_types appears in horizontalHierarchies of distinct parents',
       config: {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
+              horizontalHierarchies: [
+                { hierarchy: [['_types'], ['_utils']], path: 'src/_network' },
                 {
-                  hierarchies: [['_types'], ['_utils']],
-                  paths: ['src/_network'],
-                },
-                {
-                  hierarchies: [['_types'], ['_components']],
-                  paths: ['src/_ui'],
+                  hierarchy: [['_types'], ['_components']],
+                  path: 'src/_ui',
                 },
               ],
               roles,
@@ -928,17 +1400,17 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
     },
     {
       caseName:
-        'two models share only absent names and select no common children',
+        'two subCategoryHierarchies share only absent names and select no common children',
       config: {
         faf: {
           locals: [
             {
-              horizontalHierarchies: [
-                [['_types'], ['_utils']],
-                [['_types'], ['_apis']],
-              ],
-              roles,
+              roles: baseRoles,
               rootLayers: ['src'],
+              subCategoryHierarchies: [
+                [['_low'], ['_mid']],
+                [['_low'], ['_high']],
+              ],
               subGraphRoles,
             },
           ],
@@ -946,10 +1418,10 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       },
       expected: [],
       tree: {
-        'src/_apis/a/a.api.ts': 'export const a = 1;\n',
-        'src/_apis/a/index.ts': "export { a } from './a.api.js';\n",
-        'src/_utils/u/index.ts': "export { u } from './u.util.js';\n",
-        'src/_utils/u/u.util.ts': 'export const u = 1;\n',
+        'src/_utils/_high/b/b.util.ts': 'export const b = 1;\n',
+        'src/_utils/_high/b/index.ts': "export { b } from './b.util.js';\n",
+        'src/_utils/_mid/a/a.util.ts': 'export const a = 1;\n',
+        'src/_utils/_mid/a/index.ts': "export { a } from './a.util.js';\n",
       },
     },
     {
@@ -958,11 +1430,8 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
-                {
-                  hierarchies: [['_types'], ['_types']],
-                  paths: ['src'],
-                },
+              horizontalHierarchies: [
+                { hierarchy: [['_types'], ['_types']], path: 'src' },
               ],
               roles,
               rootLayers: ['src'],
@@ -973,7 +1442,7 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       },
       expected: [
         configMessage(
-          'faf.locals[0].localHorizontalHierarchies[0].hierarchies[1][0]',
+          'faf.locals[0].horizontalHierarchies[0].hierarchy[1][0]',
           'configuration/duplicate-element',
           'is a duplicate element',
           'FAF §1.2, §6.9'
@@ -982,16 +1451,13 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       tree: baseLayerTree,
     },
     {
-      caseName: 'a model selects a Path Sub-Category as child',
+      caseName: 'a model selects Path Sub-Categories as children',
       config: {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
-                {
-                  hierarchies: [['_health']],
-                  paths: ['src/_apis'],
-                },
+              horizontalHierarchies: [
+                { hierarchy: [['_health'], ['_users']], path: 'src/_apis' },
               ],
               mimeticPathStructures: [
                 {
@@ -1020,19 +1486,20 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
           'export const getPing = 1;\n',
         'src/_apis/_health/get-ping/index.ts':
           "export { getPing } from './get-ping.api.js';\n",
+        'src/_apis/_users/get-user/get-user.api.ts':
+          'export const getUser = 1;\n',
+        'src/_apis/_users/get-user/index.ts':
+          "export { getUser } from './get-user.api.js';\n",
       },
     },
     {
-      caseName: 'a model selects a Private Category or Foreign Domain',
+      caseName: 'a model selects Private Categories inside a Fragment',
       config: {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
-                {
-                  hierarchies: [['_types']],
-                  paths: ['src/_utils/u'],
-                },
+              horizontalHierarchies: [
+                { hierarchy: [['_types'], ['_apis']], path: 'src/_utils/u' },
               ],
               roles,
               rootLayers: ['src'],
@@ -1051,6 +1518,8 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
         ),
       ],
       tree: {
+        'src/_utils/u/_apis/a/a.api.ts': 'export const a = 1;\n',
+        'src/_utils/u/_apis/a/index.ts': "export { a } from './a.api.js';\n",
         'src/_utils/u/_types/a.type.ts': 'export type TA = string;\n',
         'src/_utils/u/index.ts': "export { u } from './u.util.js';\n",
         'src/_utils/u/u.util.ts': 'export const u = 1;\n',
@@ -1062,10 +1531,10 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
+              horizontalHierarchies: [
                 {
-                  hierarchies: [['_src@shared']],
-                  paths: ['src'],
+                  hierarchy: [['_src@shared'], ['_types']],
+                  path: 'src',
                 },
               ],
               roles,
@@ -1086,6 +1555,7 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       ],
       tree: {
         'src/_src@shared/_types/a.type.ts': 'export type TA = string;\n',
+        'src/_types/b.type.ts': 'export type TB = string;\n',
       },
     },
     {
@@ -1094,11 +1564,8 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
-                {
-                  hierarchies: [['a'], ['b']],
-                  paths: ['src/_utils'],
-                },
+              horizontalHierarchies: [
+                { hierarchy: [['a'], ['b']], path: 'src/_utils' },
               ],
               roles,
               rootLayers: ['src'],
@@ -1124,16 +1591,46 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       },
     },
     {
+      caseName: 'a model attempts to order sibling Category Nodes',
+      config: {
+        faf: {
+          locals: [
+            {
+              horizontalHierarchies: [
+                {
+                  hierarchy: [['a.type.ts'], ['b.type.ts']],
+                  path: 'src/_types',
+                },
+              ],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      expected: [
+        classificationMessage(
+          'src/_types/a.type.ts',
+          'src/_types',
+          'classification/horizontal-hierarchy-members',
+          'has a Horizontal Hierarchy over children that FAF does not allow to be ordered',
+          'FAF §6.9'
+        ),
+      ],
+      tree: {
+        'src/_types/a.type.ts': 'export type TA = string;\n',
+        'src/_types/b.type.ts': 'export type TB = string;\n',
+      },
+    },
+    {
       caseName: 'a model selects sibling Root Fragments',
       config: {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
-                {
-                  hierarchies: [['app'], ['docs']],
-                  paths: ['src'],
-                },
+              horizontalHierarchies: [
+                { hierarchy: [['app'], ['docs']], path: 'src' },
               ],
               roles,
               rootFragments: [
@@ -1167,16 +1664,13 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
       },
     },
     {
-      caseName: 'a local hierarchy selects files of a Root Fragment',
+      caseName: 'a domain hierarchy selects files of a Root Fragment',
       config: {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
-                {
-                  hierarchies: [['a.ts'], ['b.ts']],
-                  paths: ['src'],
-                },
+              horizontalHierarchies: [
+                { hierarchy: [['a.ts'], ['b.ts']], path: 'src' },
               ],
               roles,
               rootFragments: [
@@ -1239,8 +1733,8 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
         locals: [
           {
             horizontalHierarchies: [
-              [['_atoms'], ['_molecules']],
-              [['_primitives'], ['_compounds']],
+              { hierarchy: [['_atoms'], ['_molecules']], path: 'src' },
+              { hierarchy: [['_primitives'], ['_compounds']], path: 'src' },
             ],
             roles,
             rootLayers: ['src'],
@@ -1251,6 +1745,11 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
     };
 
     const tree: FileTree = {
+      'src/_atoms/at/at.atom.tsx': 'export const at = 1;\n',
+      'src/_atoms/at/index.ts': "export { at } from './at.atom.js';\n",
+      'src/_compounds/comp/comp.compound.ts': 'export const comp = 1;\n',
+      'src/_compounds/comp/index.ts':
+        "export { comp } from './comp.compound.js';\n",
       'src/_molecules/mol/index.ts':
         "export { mol } from './mol.molecule.js';\n",
       'src/_molecules/mol/mol.molecule.tsx':
@@ -1274,6 +1773,62 @@ describe('acceptance: general and local Horizontal Hierarchies', () => {
         ),
       ];
       expectScenario(result, expected);
+    } finally {
+      await fixture.rm();
+    }
+
+    const withinSetTree: FileTree = {
+      'src/_atoms/at/at.atom.tsx': 'export const at = 1;\n',
+      'src/_atoms/at/index.ts': "export { at } from './at.atom.js';\n",
+      'src/_compounds/comp/comp.compound.ts':
+        "import { prim } from '../../_primitives/prim/index.js';\nexport const comp = prim;\n",
+      'src/_compounds/comp/index.ts':
+        "export { comp } from './comp.compound.js';\n",
+      'src/_molecules/mol/index.ts':
+        "export { mol } from './mol.molecule.js';\n",
+      'src/_molecules/mol/mol.molecule.tsx':
+        "import { at } from '../../_atoms/at/index.js';\nexport const mol = at;\n",
+      'src/_primitives/prim/index.ts':
+        "export { prim } from './prim.primitive.js';\n",
+      'src/_primitives/prim/prim.primitive.ts': 'export const prim = 1;\n',
+    };
+
+    const withinSetFixture = await createProject(withinSetTree, config);
+    try {
+      const result = await lintScenario(withinSetFixture.path);
+      expectScenario(result, []);
+    } finally {
+      await withinSetFixture.rm();
+    }
+  });
+
+  it('rejects invalid literal paths in horizontalHierarchies[i].path', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            horizontalHierarchies: [
+              { hierarchy: [['_types'], ['_utils']], path: 'src/../src' },
+            ],
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const fixture = await createProject(baseLayerTree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      expectScenario(result, [
+        configMessage(
+          'faf.locals[0].horizontalHierarchies[0].path',
+          'configuration/invalid-literal-path',
+          'must be a POSIX relative path without empty or parent segments',
+          'FAF §1.2, §6.9'
+        ),
+      ]);
     } finally {
       await fixture.rm();
     }

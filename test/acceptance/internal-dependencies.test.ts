@@ -128,10 +128,10 @@ const tableTree: Readonly<Record<string, string>> = {
 };
 
 const local: TFAFLocalConfig = {
-  localHorizontalHierarchies: [
+  horizontalHierarchies: [
     {
-      hierarchies: [['_types'], ['_contexts']],
-      paths: [`${table}/_table@shared`],
+      hierarchy: [['_types'], ['_contexts']],
+      path: `${table}/_table@shared`,
     },
   ],
   roles,
@@ -797,11 +797,17 @@ describe('acceptance: internal dependencies', () => {
                 faf: {
                   locals: [
                     {
-                      horizontalHierarchies: [
-                        isMolecules
-                          ? [['_atoms'], ['_molecules']]
-                          : [['_low'], ['_high']],
-                      ],
+                      ...(isMolecules
+                        ? {
+                            subCategoryHierarchies: [
+                              [['_atoms'], ['_molecules']],
+                            ],
+                          }
+                        : {
+                            horizontalHierarchies: [
+                              { hierarchy: [['_low'], ['_high']], path: 'src' },
+                            ],
+                          }),
                       roles,
                       rootLayers: ['src'],
                     },
@@ -1102,9 +1108,9 @@ describe('acceptance: internal dependencies', () => {
           faf: {
             locals: [
               {
-                horizontalHierarchies: [[['_atoms'], ['_molecules']]],
                 roles,
                 rootFragments: [{ path: 'src', rootNodes: [] }],
+                subCategoryHierarchies: [[['_atoms'], ['_molecules']]],
               },
             ],
           },
@@ -1393,9 +1399,9 @@ describe('acceptance: internal dependencies', () => {
           faf: {
             locals: [
               {
-                horizontalHierarchies: [[['_atoms'], ['_molecules']]],
                 roles,
                 rootFragments: [{ path: 'src', rootNodes: [] }],
+                subCategoryHierarchies: [[['_atoms'], ['_molecules']]],
               },
             ],
           },
@@ -1508,7 +1514,9 @@ describe('acceptance: internal dependencies', () => {
           faf: {
             locals: [
               {
-                horizontalHierarchies: [[['_hooks'], ['_components']]],
+                horizontalHierarchies: [
+                  { hierarchy: [['_hooks'], ['_components']], path: 'src' },
+                ],
                 roles,
                 rootFragments: [{ path: 'src', rootNodes: [] }],
               },
@@ -1696,7 +1704,9 @@ describe('acceptance: internal dependencies', () => {
             faf: {
               locals: [
                 {
-                  horizontalHierarchies: [[['_domain'], ['_ui']]],
+                  horizontalHierarchies: [
+                    { hierarchy: [['_domain'], ['_ui']], path: prefix },
+                  ],
                   mimeticPathStructures: isPages
                     ? [
                         {

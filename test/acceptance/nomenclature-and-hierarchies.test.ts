@@ -922,10 +922,10 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_types/value.type.ts': 'export type TValue = string;\n',
       },
       rootLayer({
-        localHorizontalHierarchies: [
+        horizontalHierarchies: [
           {
-            hierarchies: [['value.type.ts'], ['_low']],
-            paths: ['src/_types'],
+            hierarchy: [['value.type.ts'], ['_low']],
+            path: 'src/_types',
           },
         ],
       }),
@@ -939,16 +939,16 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
   it('does not compare ranks from different parents as one sibling hierarchy', async () => {
     await scenario(
       linkedFragments(
-        'src/_left/_a/_utils/source',
-        'src/_right/_b/_utils/target',
-        '../../../../_right/_b/_utils/target/index.js'
+        'src/_utils/_left/_a/source',
+        'src/_utils/_right/_b/target',
+        '../../../_right/_b/target/index.js'
       ),
-      rootLayer({ horizontalHierarchies: [[['_a'], ['_b']]] }),
+      rootLayer({ subCategoryHierarchies: [[['_b'], ['_a']]] }),
       [
         peerSeparationViolation(
-          'src/_left/_a/_utils/source/source.util.ts',
-          'src/_right/_b/_utils/target/index.ts',
-          '../../../../_right/_b/_utils/target/index.js'
+          'src/_utils/_left/_a/source/source.util.ts',
+          'src/_utils/_right/_b/target/index.ts',
+          '../../../_right/_b/target/index.js'
         ),
       ]
     );
@@ -965,8 +965,8 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           locals: [
             {
               horizontalHierarchies: [
-                [['a.ts'], ['b.ts']],
-                [['c.ts'], ['d.ts']],
+                { hierarchy: [['a.ts'], ['b.ts']], path: 'src' },
+                { hierarchy: [['c.ts'], ['d.ts']], path: 'src' },
               ],
               roles,
               rootFragments: [{ path: 'src', rootNodes: [files] }],
@@ -1003,9 +1003,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           mimeticPathStructures: [{ paths: ['src/_apis'] }],
         }),
         ...(kind === 'Foreign Domain' && { foreignDomains: ['src/_foreign'] }),
-        localHorizontalHierarchies: [
-          { hierarchies: [[low], [high]], paths: [parent] },
-        ],
+        horizontalHierarchies: [{ hierarchy: [[low], [high]], path: parent }],
       }),
       valid
         ? []
@@ -1027,10 +1025,10 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_utils/widget/_types/_low/b.type.ts': 'export type TB = string;\n',
       },
       rootLayer({
-        localHorizontalHierarchies: [
+        horizontalHierarchies: [
           {
-            hierarchies: [['_low'], ['_high']],
-            paths: ['src/_utils/widget/_types'],
+            hierarchy: [['_low'], ['_high']],
+            path: 'src/_utils/widget/_types',
           },
         ],
       })
@@ -1046,8 +1044,8 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         [`${parent}/_types/value.type.ts`]: 'export type TValue = string;\n',
       },
       rootLayer({
-        localHorizontalHierarchies: [
-          { hierarchies: [['_types'], ['_utils']], paths: [parent] },
+        horizontalHierarchies: [
+          { hierarchy: [['_types'], ['_utils']], path: parent },
         ],
       }),
       [invalidHierarchyMembers(`${parent}/widget.util.ts`, parent)]
@@ -1065,8 +1063,8 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         faf: {
           locals: [
             {
-              localHorizontalHierarchies: [
-                { hierarchies: [['a'], ['b']], paths: ['src'] },
+              horizontalHierarchies: [
+                { hierarchy: [['a'], ['b']], path: 'src' },
               ],
               roles,
               rootFragments: [
@@ -1115,14 +1113,20 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
     ['two-to-zero', [['_low'], ['_unused'], ['_high']], true],
     ['equal-ranks', [['_unused'], ['_low', '_high']], false],
     ['ascending', [['_high'], ['_unused'], ['_low']], false],
-    ['unselected-target', [['_high']], false],
+    ['unselected-target', [['_unused'], ['_high']], false],
   ])('enforces strict local rank for %s', async (_name, hierarchy, valid) => {
     const source = 'src/_high/_utils/source';
     const target = 'src/_low/_utils/target';
     const specifier = '../../../_low/_utils/target/index.js';
     await scenario(
-      linkedFragments(source, target, specifier),
-      rootLayer({ horizontalHierarchies: [hierarchy] }),
+      {
+        ...linkedFragments(source, target, specifier),
+        'src/_unused': {},
+      },
+      rootLayer({
+        horizontalHierarchies:
+          hierarchy.length === 0 ? [] : [{ hierarchy, path: 'src' }],
+      }),
       valid
         ? []
         : [
@@ -1143,7 +1147,11 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_high/_types/b.type.ts': 'export type TB = string;\n',
         'src/_low': {},
       },
-      rootLayer({ horizontalHierarchies: [[['_low'], ['_high']]] }),
+      rootLayer({
+        horizontalHierarchies: [
+          { hierarchy: [['_low'], ['_high']], path: 'src' },
+        ],
+      }),
       [
         peerSeparationViolation(
           'src/_high/_types/a.type.ts',
@@ -1164,7 +1172,11 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_ui/_components/view/view.component.ts':
           "import { value } from '../../../_network/_apis/fetch/index.js';\nexport const view = value;\n",
       },
-      rootLayer({ horizontalHierarchies: [[['_network'], ['_ui']]] })
+      rootLayer({
+        horizontalHierarchies: [
+          { hierarchy: [['_network'], ['_ui']], path: 'src' },
+        ],
+      })
     );
   });
 
@@ -1199,7 +1211,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
       await scenario(
         tree,
         rootLayer({
-          horizontalHierarchies: [partitions.map((name) => [name])],
+          subCategoryHierarchies: [partitions.map((name) => [name])],
         })
       );
       await scenario(tree, rootLayer(), [
@@ -1216,7 +1228,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           reverseSpecifier
         ),
         rootLayer({
-          horizontalHierarchies: [partitions.map((name) => [name])],
+          subCategoryHierarchies: [partitions.map((name) => [name])],
         }),
         [
           peerSeparationViolation(
@@ -1234,7 +1246,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
     await scenario(
       linkedFragments('src/_utils/_atoms/a', 'src/_utils/_atoms/b', specifier),
       rootLayer({
-        horizontalHierarchies: [
+        subCategoryHierarchies: [
           [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
         ],
       }),
@@ -1282,7 +1294,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_utils/_low/b',
         '../../_low/b/index.js'
       ),
-      rootLayer({ horizontalHierarchies: [[['_low'], ['_high']]] })
+      rootLayer({ subCategoryHierarchies: [[['_low'], ['_high']]] })
     );
   });
 });
@@ -1945,9 +1957,12 @@ describe('acceptance: naming of Root Nodes and Foreign Nodes without exception c
   it('does not treat a configured hierarchy path as a naming exemption', async () => {
     const path = 'src/_BadLayer';
     await scenario(
-      fragment(`${path}/_utils/widget`),
+      {
+        ...fragment(`${path}/_utils/widget`),
+        [`${path}/_types/a.type.ts`]: 'export type TA = string;\n',
+      },
       rootLayer({
-        localHorizontalHierarchies: [{ hierarchies: [], paths: [path] }],
+        horizontalHierarchies: [{ hierarchy: [['_types'], ['_utils']], path }],
       }),
       [invalidNomenclature('faf.config.ts', path)]
     );

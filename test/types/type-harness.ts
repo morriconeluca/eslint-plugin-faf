@@ -48,7 +48,7 @@ export type TVirtualCompiler = {
 };
 
 export const CONFIG_TYPES_IMPORT =
-  "import type { TFAFCommonConfig, TFAFConfig, TFAFExternalDependency, TFAFForeignNodeFamily, TFAFHierarchy, TFAFLocalConfig, TFAFLocalHorizontalHierarchy, TFAFMimeticPathStructure, TFAFNonEmptyArray, TFAFRole, TFAFRoles, TFAFRootDependencyEdge, TFAFRootFragment, TFAFSharedConfig, TFAFSubGraphRole, TFAFTreeDependency } from './src/main.js';";
+  "import type { TFAFCommonConfig, TFAFConfig, TFAFDomainHierarchy, TFAFExternalDependency, TFAFForeignNodeFamily, TFAFHierarchy, TFAFHorizontalHierarchy, TFAFLocalConfig, TFAFMimeticPathStructure, TFAFNonEmptyArray, TFAFRole, TFAFRoles, TFAFRootDependencyEdge, TFAFRootFragment, TFAFSharedConfig, TFAFSubGraphRole, TFAFTreeDependency } from './src/main.js';";
 
 const DEFAULT_FILE_VERSION = '1';
 const UTF8_ENCODING = 'utf8';

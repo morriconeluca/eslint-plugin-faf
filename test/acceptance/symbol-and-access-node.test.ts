@@ -668,7 +668,9 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
         [],
         {
           ...declarations,
-          horizontalHierarchies: [[['_types'], ['_components']]],
+          horizontalHierarchies: [
+            { hierarchy: [['_types'], ['_components']], path: 'src' },
+          ],
         }
       );
     }
@@ -689,7 +691,9 @@ describe('acceptance: Symbol laws and Access Node contract', () => {
       [],
       {
         ...declarations,
-        horizontalHierarchies: [[['_types'], ['_components']]],
+        horizontalHierarchies: [
+          { hierarchy: [['_types'], ['_components']], path: 'src' },
+        ],
       }
     );
   });

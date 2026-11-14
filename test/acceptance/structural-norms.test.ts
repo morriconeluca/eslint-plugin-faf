@@ -1151,7 +1151,12 @@ describe('acceptance: structural norms', () => {
       [],
       {
         ...local,
-        horizontalHierarchies: [[['_types'], ['_hooks'], ['_components']]],
+        horizontalHierarchies: [
+          {
+            hierarchy: [['_types'], ['_hooks'], ['_components']],
+            path: 'src',
+          },
+        ],
       }
     );
     scenario(
@@ -1170,7 +1175,12 @@ describe('acceptance: structural norms', () => {
           '../../_components/button/index.js'
         ),
       ],
-      { ...local, horizontalHierarchies: [[['_hooks'], ['_components']]] }
+      {
+        ...local,
+        horizontalHierarchies: [
+          { hierarchy: [['_hooks'], ['_components']], path: 'src' },
+        ],
+      }
     );
     for (const [source, target, accepted] of [
       ['_ui', '_domain', true],
@@ -1186,7 +1196,12 @@ describe('acceptance: structural norms', () => {
           [targetPath]: 'export type TValue = number;\n',
         },
         accepted ? [] : [peerSeparationViolation(path, targetPath, specifier)],
-        { ...local, horizontalHierarchies: [[['_domain'], ['_ui']]] }
+        {
+          ...local,
+          horizontalHierarchies: [
+            { hierarchy: [['_domain'], ['_ui']], path: 'src' },
+          ],
+        }
       );
     }
     scenario('Root Layer partitions consume their accessible Branch details', {
@@ -1288,7 +1303,6 @@ describe('acceptance: structural norms', () => {
           foreignNodes: name.includes('Foreign')
             ? ['src/_src@shared/README.md']
             : [],
-          horizontalHierarchies: [[['_utils'], ['_types']]],
         }
       );
     }
