@@ -1,4 +1,4 @@
-export const CONFIG_FILE_NAME = 'fafconfig.ts';
+export const CONFIG_FILE_NAME = 'faf.config.ts';
 
 export const LINTABLE_EXTENSIONS = [
   '.cjs',

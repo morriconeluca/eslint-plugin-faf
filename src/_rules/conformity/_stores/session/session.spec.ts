@@ -11,7 +11,7 @@ import { session } from './session.store.js';
 const configSource = `export default { faf: { locals: [{ roles: [{ name: "util", category: "_utils" }], rootLayers: ["src"] }] } };`;
 
 const conformingTree = {
-  'fafconfig.ts': configSource,
+  'faf.config.ts': configSource,
   'package.json': JSON.stringify({ type: 'module' }),
   'src/_utils/widget/index.ts': "export { widget } from './widget.util.js';\n",
   'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
@@ -85,7 +85,7 @@ describe('session', () => {
     const fixture = await createFixture(conformingTree);
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const filename = nodePath.join(
         fixture.path,
         'src/_utils/widget/index.ts'
@@ -123,9 +123,9 @@ describe('session', () => {
     const fixture = await createFixture(conformingTree);
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const files = [
-        'fafconfig.ts',
+        'faf.config.ts',
         'src/_utils/widget/index.ts',
         'src/_utils/widget/widget.util.ts',
       ];
@@ -149,15 +149,15 @@ describe('session', () => {
     }
   });
 
-  it('invalidates the memo when fafconfig.ts or a loaded file changes', async () => {
+  it('invalidates the memo when faf.config.ts or a loaded file changes', async () => {
     const fixture = await createFixture({
       ...conformingTree,
-      'fafconfig.ts': `import './shared.js';\n${configSource}`,
+      'faf.config.ts': `import './shared.js';\n${configSource}`,
       'shared.js': 'export const shared = 1;\n',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const filename = nodePath.join(
         fixture.path,
         'src/_utils/widget/index.ts'
@@ -202,7 +202,7 @@ describe('session', () => {
     const fixture = await createFixture(conformingTree);
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const filename = nodePath.join(
         fixture.path,
         'src/_utils/widget/index.ts'
@@ -237,7 +237,7 @@ describe('session', () => {
 
     try {
       const queryFor = (directory: string) => ({
-        configPath: nodePath.join(directory, 'fafconfig.ts'),
+        configPath: nodePath.join(directory, 'faf.config.ts'),
         filename: nodePath.join(directory, 'src/_utils/widget/index.ts'),
         packageVersion: '0.5.0',
         sourceText: "export { widget } from './widget.util.js';\n",
@@ -259,7 +259,7 @@ describe('session', () => {
     const fixture = await createFixture(conformingTree);
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const filename = nodePath.join(
         fixture.path,
         'src/_utils/widget/index.ts'
@@ -310,7 +310,7 @@ describe('session', () => {
     const fixture = await createFixture(conformingTree);
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const filename = nodePath.join(
         fixture.path,
         'src/_utils/widget/index.ts'

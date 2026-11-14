@@ -31,7 +31,7 @@ const CONFIGS = [
   'package.json',
   'tsconfig.json',
   'vitest.config.ts',
-  'fafconfig.ts',
+  'faf.config.ts',
   'eslint.config.ts',
 ] as const;
 const EXTENSIONS = ['.cjs', '.js', '.json', '.mjs', '.ts'] as const;

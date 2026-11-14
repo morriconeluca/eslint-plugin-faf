@@ -90,7 +90,7 @@ const containmentViolation = (
 
 const exclusiveFormsViolation = (
   element: string,
-  filePath = 'fafconfig.ts'
+  filePath = 'faf.config.ts'
 ): TScenarioMessage =>
   diagnostic(
     'classification/exclusive-forms',
@@ -617,7 +617,7 @@ describe('acceptance: structural norms', () => {
             "export { item } from './item.component.js';\n",
           'src/_components/item/item.component.ts': 'export const item = 1;\n',
         },
-        'fafconfig.ts',
+        'faf.config.ts',
       ],
       [
         'src/_types',
@@ -651,7 +651,7 @@ describe('acceptance: structural norms', () => {
           'src/_components/_atoms/item/item.component.ts':
             'export const item = 1;\n',
         },
-        'fafconfig.ts',
+        'faf.config.ts',
       ],
       [
         'src/_types/_primitives',
@@ -703,7 +703,7 @@ describe('acceptance: structural norms', () => {
         'src/_domain/_types/value.type.ts': 'export type TValue = number;\n',
         'src/_domain/_ui': {},
       },
-      [exclusiveFormsViolation('src/_domain', 'fafconfig.ts')]
+      [exclusiveFormsViolation('src/_domain', 'faf.config.ts')]
     );
     scenario('an accessory Branch does not change the Layer form', {
       'src/_domain/_domain@shared/_utils': {},
@@ -744,7 +744,7 @@ describe('acceptance: structural norms', () => {
       scenario(
         `Root Layer form: ${name}`,
         tree,
-        valid ? [] : [exclusiveFormsViolation('src', 'fafconfig.ts')],
+        valid ? [] : [exclusiveFormsViolation('src', 'faf.config.ts')],
         {
           ...local,
           foreignDomains: name.includes('Foreign Domain')
@@ -946,7 +946,7 @@ describe('acceptance: structural norms', () => {
         'a direct Fragment under a Layer',
         { 'src/_ui/button': {} },
         'src/_ui/button',
-        'fafconfig.ts',
+        'faf.config.ts',
       ],
       [
         'a Layer under a Fragment',
@@ -958,7 +958,7 @@ describe('acceptance: structural norms', () => {
         'a Layer under a Root Fragment',
         { 'src/_domain': {} },
         'src/_domain',
-        'fafconfig.ts',
+        'faf.config.ts',
       ],
     ] as const) {
       const expected = [unclassifiableDomain(path, anchor)];
@@ -992,7 +992,7 @@ describe('acceptance: structural norms', () => {
         diagnostic(
           'configuration/overlapping-origins',
           'src/internal',
-          'fafconfig.ts',
+          'faf.config.ts',
           "'src/internal' overlaps with another declared tree origin: Origin 'src/internal' is contained within origin 'src' (FAF §3).",
           'configuration'
         ),
@@ -1006,7 +1006,7 @@ describe('acceptance: structural norms', () => {
         diagnostic(
           'configuration/overlapping-origins',
           'src/app',
-          'fafconfig.ts',
+          'faf.config.ts',
           "'src/app' overlaps with another declared tree origin: Origin 'src/app' is contained within origin 'src' (FAF §3).",
           'configuration'
         ),
@@ -1024,7 +1024,7 @@ describe('acceptance: structural norms', () => {
       [
         containmentViolation(
           'src/_src@shared/_src@shared@shared',
-          'fafconfig.ts'
+          'faf.config.ts'
         ),
       ]
     );
@@ -1279,7 +1279,7 @@ describe('acceptance: structural norms', () => {
         tree,
         valid
           ? []
-          : [exclusiveFormsViolation('src/_src@shared', 'fafconfig.ts')],
+          : [exclusiveFormsViolation('src/_src@shared', 'faf.config.ts')],
         {
           ...local,
           foreignDomains: name.includes('Foreign')
@@ -1305,8 +1305,8 @@ describe('acceptance: structural norms', () => {
       'empty Fragments still need both mandatory nodes',
       { 'src/_components/button': {} },
       [
-        missingAccessViolation('fafconfig.ts'),
-        missingMasterViolation('src/_components/button', 'fafconfig.ts'),
+        missingAccessViolation('faf.config.ts'),
+        missingMasterViolation('src/_components/button', 'faf.config.ts'),
       ]
     );
     scenario(

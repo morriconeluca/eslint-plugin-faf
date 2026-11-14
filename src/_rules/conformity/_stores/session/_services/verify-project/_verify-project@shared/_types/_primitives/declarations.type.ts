@@ -45,7 +45,7 @@ export type TEffectiveDeclarations = {
   readonly aliases: readonly TEffectivePathAlias[];
 
   /**
-   * Directory hosting the fafconfig.ts file, anchoring relative paths.
+   * Directory hosting the faf.config.ts file, anchoring relative paths.
    */
   readonly baseDirectory: string;
 

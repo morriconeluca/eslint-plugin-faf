@@ -1,17 +1,13 @@
 # @morriconeluca/eslint-plugin-faf
 
-Official ESLint plugin for validating codebases against the **Fractal Architecture Framework (FAF)** specification.
+ESLint plugin that validates TypeScript and JavaScript codebases against the **[Fractal Architecture Framework (FAF)](https://github.com/morriconeluca/fractal-architecture-framework)** specification ([`FAF.md`](https://github.com/morriconeluca/fractal-architecture-framework/blob/main/FAF.md)).
 
-`eslint-plugin-faf` enforces strict structural, classification, symbol, dependency, and acyclicity invariants across codebases using deterministic static analysis.
-
----
+It enforces FAF's directory taxonomy, file naming, symbol uniqueness, encapsulation boundaries, horizontal hierarchies, and dependency graph acyclicity through a single zero-option rule: `faf/conformity`.
 
 ## Requirements
 
-- **Node.js**: `>= 24.0.0` (required for native TypeScript type stripping)
-- **ESLint**: `^9.0.0 || ^10.0.0` (flat configuration)
-
----
+- **Node.js**: `>= 24.0.0`
+- **ESLint**: `^9.0.0 || ^10.0.0` (Flat Config)
 
 ## Installation
 
@@ -19,59 +15,50 @@ Official ESLint plugin for validating codebases against the **Fractal Architectu
 npm install --save-dev @morriconeluca/eslint-plugin-faf eslint
 ```
 
----
+## Quick Start
 
-## ESLint Flat Configuration
+### 1. Configure ESLint
 
-`eslint-plugin-faf` exposes a single, unified, zero-option rule: `faf/conformity`. FAF architectural constraints are non-negotiable and conjunctive: a codebase is either conformant or non-conformant. Granular rule toggles and severity demotions are not supported.
+Add `faf.configs.recommended` to your `eslint.config.js` or `eslint.config.ts`:
 
-### Recommended Setup
-
-Add the plugin to your `eslint.config.js` or `eslint.config.ts`:
-
-```javascript
+```ts
 import faf from '@morriconeluca/eslint-plugin-faf';
 
 export default [
   faf.configs.recommended,
-  // ...your other flat configs
+  // ...other ESLint configs
 ];
 ```
 
-The `recommended` configuration automatically:
+`faf.configs.recommended` registers the `faf` plugin, targets `.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, and `.cts` files, and enables `faf/conformity` as `'error'`.
 
-- Registers the `faf` plugin.
-- Targets all lintable script and module extensions (`.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, `.cts`).
-- Enables `faf/conformity` with severity `error` (2).
+#### Manual Setup and Custom Config Path
 
-### Manual Configuration
+By default, the plugin searches upward from ESLint's working directory for `faf.config.ts`. To specify a custom path, set `settings.faf.configFile`:
 
-If you prefer to configure rules manually:
-
-```javascript
+```ts
 import faf from '@morriconeluca/eslint-plugin-faf';
 
 export default [
   {
-    plugins: {
-      faf,
-    },
+    plugins: { faf },
     rules: {
       'faf/conformity': 'error',
+    },
+    settings: {
+      faf: {
+        configFile: 'configs/faf.config.ts',
+      },
     },
   },
 ];
 ```
 
----
+### 2. Create `faf.config.ts`
 
-## The Configuration Contract: `fafconfig.ts`
+Create a `faf.config.ts` file at the root of your project to declare your Fractal Trees, Role catalog, and architectural rules:
 
-Every project governed by `eslint-plugin-faf` requires a configuration module named `fafconfig.ts` located at the root of the project.
-
-### Example Configuration
-
-```typescript
+```ts
 import type { TFAFConfig } from '@morriconeluca/eslint-plugin-faf';
 
 export default {
@@ -92,238 +79,267 @@ export default {
             allowMultipleSymbols: true,
           },
           {
-            name: 'mock',
-            category: '_mocks',
-            isCategoryNode: true,
+            name: 'util',
+            category: '_utils',
             allowMultipleSymbols: true,
           },
-          {
-            name: 'config',
-            category: '_configs',
-            isCategoryNode: true,
-            allowMultipleSymbols: true,
-          },
-          { name: 'util', category: '_utils' },
-          { name: 'service', category: '_services' },
-          { name: 'component', category: '_components' },
-        ],
-        subGraphRoles: [{ name: 'spec' }],
-        horizontalHierarchies: [
           [
-            ['_constants'],
-            ['_types'],
-            ['_mocks'],
-            ['_configs'],
-            ['_utils'],
-            ['_services'],
-            ['_components'],
+            { name: 'component', category: '_components' },
+            { name: 'page', category: '_pages' },
+            { name: 'service', category: '_services' },
           ],
         ],
-        rootFragments: [{ path: 'src', rootNodes: [['main.ts']] }],
-        publicRootNodes: ['src/main.ts'],
-        externalDependencies: [{ from: ['src/main.ts'], to: ['package.json'] }],
+        subGraphRoles: [{ name: 'spec' }, { name: 'story' }],
+        rootFragments: [
+          {
+            path: 'src',
+            rootNodes: [['main.tsx']],
+          },
+        ],
+        publicRootNodes: ['src/main.tsx'],
       },
     ],
   },
 } satisfies TFAFConfig;
 ```
 
-### Configuration Structure: `common` and `locals`
+### 3. Run ESLint
 
-The configuration object defines:
+Run ESLint across the whole project:
 
-- **`locals`** (_required_, non-empty array): Declarations specific to each Fractal Tree within the workspace. Each element must designate either a `rootFragments` array or a `rootLayers` array defining tree origins.
-- **`common`** (_optional_): Shared declarations (such as roles, sub-graph roles, foreign families, or aliases) inherited by all local trees unless explicitly overridden.
-- **Whole-property replacement**: When a local tree defines a property that also exists in `common`, the local property completely replaces the common definition without shallow or deep merging. Defaults apply strictly after replacement.
-
-### Native Type-Stripping and Execution Constraints
-
-`fafconfig.ts` is evaluated synchronously within an isolated Node.js worker thread leveraging Node's native type stripping. Because native type stripping strips type annotations without full AST transformation, configuration files must adhere to the following rules:
-
-1. **Explicit File Extensions on Relative Value Imports**:
-   Any relative value import inside `fafconfig.ts` or helper modules must specify an explicit extension (for example, `./roles.js` or `./roles.ts`). Type-only imports (`import type ...`) are erased during stripping and are exempt.
-2. **Prohibition of Non-Strippable TypeScript Constructs**:
-   `enum`, runtime `namespace` declarations with executable values, and constructor parameter properties are forbidden in `fafconfig.ts` and its imported dependencies. Use union types and standard property definitions.
-3. **Module Packaging in `package.json`**:
-   The nearest `package.json` must not declare `"type": "commonjs"`. It should specify `"type": "module"` or omit the field.
-4. **Synchronous, Clonable Default Export**:
-   `fafconfig.ts` must export its configuration as a synchronous `export default`. It cannot be a function, cannot return a `Promise` (no top-level asynchronous configuration), and must produce a plain data object serializable via `structuredClone`.
-
-### Configuration Discovery and Automatic Invalidation
-
-- **Discovery**: The plugin inspects `settings.faf.configFile` if provided in ESLint settings. If unset, it searches upward from the linter's current working directory for `fafconfig.ts`. If not found, it reports `configuration/missing-config-file` on all linted files.
-- **Freshness & Invalidation**: During worker evaluation, the loader tracks all local files loaded by `fafconfig.ts`. On subsequent lint passes, the plugin compares `mtimeMs` and `size` for all tracked files. If any file changes, the configuration cache is immediately invalidated and reloaded in a fresh worker without restarting your editor or language server.
-
----
-
-## Diagnostic Outcomes & Enforcement Model
-
-### Uniform Blocking Severity
-
-In `eslint-plugin-faf`, all diagnostic outcomes have severity **`error` (2)**. There are no warnings, hints, or demoted diagnostics.
-
-### The 6 Outcome Families
-
-Diagnostics belong to one of six discriminated outcome families, corresponding to message identifiers in the ESLint rule:
-
-1. **`configuration`**: Errors in `fafconfig.ts` loading, package configuration, schema validation, literal path grammar, foreign glob syntax, or declaration inconsistencies.
-2. **`classification`**: Violations of the FAF classification model, including containment matrix violations, fragment anatomy defects, missing master or access nodes, invalid horizontal hierarchies, and nomenclature non-conformities.
-3. **`symbol`**: Root-scope symbol violations, such as exceeding the single-symbol rule in strict nodes, missing master exports in access nodes, or illegal re-export of imported symbols.
-4. **`dependency`**: Prohibited edges or paths in the Dependency Graph, including peer separation violations, fragment encapsulation bypasses, private category or fractal branch leakage, tree opacity breaches, and unauthorized external or cross-tree dependencies.
-5. **`acyclicity`**: Cycle violations detected in the logical module dependency DAG or across the inter-tree authorization DAG.
-6. **`unverified`**: Incomplete checks that static analysis cannot conclusively prove (such as encountering symbolic links inside trees, unreadable origins or files, non-literal dynamic imports, unsupported syntax, or unexercised reciprocal cyclic authorizations).
-
-### Diagnostic Message Format
-
-Every diagnostic outcome adheres to the canonical structure:
-
-```text
-{{constraint}}: {{message}} ({{reference}}).
+```json
+{
+  "scripts": {
+    "lint": "eslint ."
+  }
+}
 ```
 
-For example:
+> **Important — Do not pass `--cache` to ESLint**: ESLint's `--cache` flag skips unchanged files, which misses cross-file architectural violations when an imported neighbor changes or moves. `eslint-plugin-faf` maintains its own graph-aware cache in `node_modules/.cache/eslint-plugin-faf`. Running `eslint --fix` remains supported: `faf/conformity` is diagnostic-only while other ESLint plugins apply their autofixes normally.
 
-```text
-dependency/fragment-encapsulation: 'src/main.ts' imports 'src/_components/button/button.component.ts' through './_components/button/button.component.js': a Fragment is importable from outside only through its index.ts (FAF §6.1.1).
+---
+
+## `faf.config.ts` Configuration Reference
+
+### Module Requirements
+
+`faf.config.ts` is evaluated synchronously in an isolated worker using Node.js native TypeScript type stripping:
+
+- Must expose a synchronous **`export default`** returning a plain serializable object (no functions, class instances, or `Promise` exports).
+- The nearest `package.json` must use ESM (`"type": "module"` or omitted `"type"` — not `"type": "commonjs"`).
+- Relative value imports inside `faf.config.ts` must include explicit file extensions (e.g., `./roles.ts` or `./roles.js`). `import type` statements are exempt.
+- Only erasable TypeScript syntax is allowed in `faf.config.ts` and its imports (no `enum`, runtime `namespace`, or parameter properties).
+- All configured paths are **POSIX relative paths** resolved from the directory containing `faf.config.ts` (e.g., `'src/main.ts'`, or `'.'` for the root directory itself — without leading `./`, `/`, trailing `/`, `..`, or `\`).
+
+### `common` and `locals`
+
+```ts
+export default {
+  faf: {
+    common: {
+      // Optional declarations shared across all locals entries
+    },
+    locals: [
+      // Required non-empty array of Fractal Tree declarations
+    ],
+  },
+} satisfies TFAFConfig;
 ```
 
-### Deterministic Outcome Anchoring
+- **`faf.locals`** _(required)_: Non-empty array. Each entry declares one or more Fractal Trees via `rootLayers` and/or `rootFragments`.
+- **`faf.common`** _(optional)_: Shared declarations (`roles`, `subGraphRoles`, hierarchies, foreign rules, frontier rules, and `aliases`) inherited by every `locals` entry.
+- **Override semantics**: When a `locals` entry defines a property also present in `common`, the local property **replaces** the `common` property in full (no shallow or deep merging).
 
-Because ESLint can only report diagnostics on files it is currently visiting, the plugin deterministically anchors outcomes to specific files:
+### Tree Origins (`locals` only)
 
-- **Module-Level Outcomes**: Reported directly on the affected TypeScript/JavaScript file at the exact statement or import declaration location.
-- **Domain-Level & Missing-File Outcomes**: If an outcome pertains to an entire directory, a missing mandatory file (such as a missing `index.ts`), or a non-lintable asset, it is deterministically anchored to the first lintable file in lexicographical order among direct children (anchoring to the Master Node if present). If no direct child is lintable, it ascends to the nearest ancestor domain containing a lintable file.
-- **Global Configuration Outcomes**: Global format errors or catalog conflicts are anchored to `fafconfig.ts`.
-- **Missing Configuration File**: If `fafconfig.ts` cannot be discovered, `configuration/missing-config-file` is anchored to every file ESLint visits.
-- **Partial Linting Scope Limitation**: ESLint only presents diagnostics for files included in its current invocation. Linting a single file opened in an editor might not display architectural errors anchored to other files. Comprehensive architectural conformity requires running ESLint across the entire project (e.g., in CI via `eslint .`).
+Each `locals` entry must declare `rootLayers`, `rootFragments`, or both:
+
+- **`rootLayers`**: Non-empty array of Root Layer origin paths. Their Public Surface is determined structurally.
+  ```ts
+  rootLayers: ['packages/ui/src', 'packages/utils/src'];
+  ```
+- **`rootFragments`**: Non-empty array of Root Fragment definitions (`TFAFRootFragment`):
+  ```ts
+  rootFragments: [
+    {
+      path: 'src',
+      // Tiered Rank order from Rank 0 upward; direct child file names only
+      rootNodes: [['env.ts'], ['app.tsx'], ['main.tsx']],
+      // Optional nested child Root Fragments
+      subRootFragments: [
+        {
+          path: 'src/routes',
+          rootNodes: [['home.tsx', 'settings.tsx']],
+        },
+      ],
+      // Optional directed edges from this Root Fragment's rootNodes to another's
+      dependencyEdges: [
+        {
+          from: ['app.tsx'],
+          to: ['src/routes/home.tsx', 'src/routes/settings.tsx'],
+        },
+      ],
+    },
+  ];
+  ```
+  Every direct child file of a Root Fragment must be either listed in `rootNodes` or excluded via `foreignNodes`.
+
+### Roles Catalog (`common` or `locals`)
+
+Every Fractal Tree requires a `roles` catalog (defined in `locals` or inherited from `common`):
+
+- **`roles`** (`TFAFRoles`): Array ordered from **Rank `0`** upward. Each element is either a single `TFAFRole` or a non-empty array `TFAFRole[]` of co-ranked Roles sharing the same Rank:
+  - `name`: Role identifier used in `<name>.<role>.<ext>` (e.g., `'component'`).
+  - `category`: Exact Category directory name with leading `_` (e.g., `'_components'`).
+  - `isCategoryNode` _(optional, default `false`)_: `false` for a Category of Fragments; `true` for a Category of Category Nodes.
+  - `allowMultipleSymbols` _(optional, default `false`)_: Permits multiple root-scope Symbols in explicit-Role Logical Nodes (Master Nodes still export exactly one Symbol).
+  - `implicitRoleExtensions` _(optional)_: Non-empty array of dot-prefixed Asset extensions (e.g., `['.css']`, `['.png', '.svg']`). Requires Category Nodes form (`isCategoryNode` defaults to `true` and cannot be `false`).
+- **`subGraphRoles`** _(optional, default `[]`)_: Auxiliary entry-point Roles at top Rank that cannot be imported by any Logical Node (e.g., `[{ name: 'spec' }, { name: 'story' }]`).
+
+### Horizontal Hierarchies and Mimetic Paths (`common` or `locals`)
+
+Hierarchies are arrays of Rank tiers (`string[][]`) ordered from Rank `0` upward (`[['lowest'], ['higher']]`), authorizing dependencies strictly from higher Rank to lower Rank:
+
+- **`horizontalHierarchies`**: General hierarchies applied automatically to matching sibling Sub-Categories (e.g., Atomic Design or Systemic Design):
+  ```ts
+  horizontalHierarchies: [
+    [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
+    [
+      ['_primitives'],
+      ['_compounds'],
+      ['_aggregates'],
+      ['_systems'],
+      ['_ecosystems'],
+    ],
+  ];
+  ```
+- **`localHorizontalHierarchies`**: Hierarchies bound to explicit parent directories (e.g., ordering Layers or Categories inside a Root Layer or Fractal Branch):
+  ```ts
+  localHorizontalHierarchies: [
+    {
+      paths: ['src/_src@shared'],
+      hierarchies: [['_domain'], ['_network', '_state', '_ui']],
+    },
+  ];
+  ```
+- **`mimeticPathStructures`**: Designates Categories of Fragments that mirror external address spaces (REST routes, URL trees, CLI commands):
+  ```ts
+  mimeticPathStructures: [
+    {
+      paths: ['src/_apis'],
+      // Optional closed catalog of <action>-<target> prefixes
+      actions: ['get', 'list', 'post', 'put', 'patch', 'delete'],
+    },
+  ];
+  ```
+
+### Foreign Domains and Foreign Nodes (`common` or `locals`)
+
+Exclude non-architectural files (documentation, tooling, environment declarations) from the Dependency Graph:
+
+- **`foreignDomains`**: Directory paths excluded together with their entire subtree:
+  ```ts
+  foreignDomains: ['src/_tooling'];
+  ```
+- **`foreignNodes`**: Individual file paths or scoped glob families (`*` and `**`, case-sensitive, no negation `!` or brace expansion `{}`):
+  ```ts
+  foreignNodes: [
+    'src/vite-env.d.ts',
+    {
+      paths: ['src'],
+      patterns: ['*.md', '**/*.snap'],
+    },
+  ];
+  ```
+
+### Public Surface, Multi-Tree Relations, External Files, and Path Aliases
+
+- **`publicRootNodes`** (`common` or `locals`): Root Node paths exposed to external consumers for Root Fragment trees (default `[]`):
+  ```ts
+  publicRootNodes: ['src/main.ts'];
+  ```
+- **`treeDependencies`** (`common` or `locals`): Directed dependencies authorized between distinct Fractal Trees (must form a DAG):
+  ```ts
+  treeDependencies: [
+    {
+      from: ['apps/web/src'],
+      to: ['packages/design-system/src', 'packages/contracts/src'],
+    },
+  ];
+  ```
+- **`externalDependencies`** (`common` or `locals`): Authorizes specific internal Logical Nodes to import local codebase files located outside all Fractal Trees:
+  ```ts
+  externalDependencies: [
+    {
+      from: ['src/_adapters/legacy-client/legacy-client.adapter.ts'],
+      to: ['legacy/client.ts'],
+    },
+  ];
+  ```
+- **Path Aliases** (`package.json#imports` or `faf.common.aliases`):
+  - **Preferred**: Define subpath imports in `package.json` `"imports"` (e.g., `{ "#shared/*": "./src/_src@shared/*" }`) and omit `faf.common.aliases`.
+  - **Alternative**: When `package.json` has no `"imports"` field, declare prefix-to-directory mappings in `faf.common.aliases` (keys without trailing `/` or `*`, values pointing to existing directories):
+    ```ts
+    common: {
+      aliases: {
+        '#shared': 'src/_src@shared',
+      },
+    }
+    ```
+  - Any `tsconfig.json` `paths` alias used inside a Fractal Tree must also be declared in one of those two sources, and intra-tree aliases must anchor to a Fractal Branch (`_<scope>@shared`).
+
+### Exported TypeScript Types
+
+All configuration types are exported from the package root:
+
+```ts
+import type {
+  TFAFCommonConfig,
+  TFAFConfig,
+  TFAFExternalDependency,
+  TFAFForeignNodeFamily,
+  TFAFHierarchy,
+  TFAFLocalConfig,
+  TFAFLocalHorizontalHierarchy,
+  TFAFMimeticPathStructure,
+  TFAFNonEmptyArray,
+  TFAFRole,
+  TFAFRoles,
+  TFAFRootDependencyEdge,
+  TFAFRootFragment,
+  TFAFSharedConfig,
+  TFAFSubGraphRole,
+  TFAFTreeDependency,
+} from '@morriconeluca/eslint-plugin-faf';
+```
 
 ---
 
-## Scope of Verification
+## Diagnostics and Editor Behavior
 
-FAF defines both formal structural laws and qualitative design recommendations. Automated static analysis operates exclusively on deterministic source representations (ASTs, file inventories, and resolved import graphs).
+Every `faf/conformity` violation is reported as an ESLint error (`severity: 2`) using the format:
 
-The following five properties are explicitly **out of scope** for automated verification:
+```text
+<family>/<constraint>: <message> (<FAF section>).
+```
 
-1. **Symbol Coherence with Role** (FAF §5): Whether the semantic responsibility of an exported function or constant truthfully matches its declared Role (e.g., distinguishing a pure `util` from a `service` when syntax alone is identical).
-2. **Indivisibility of Symbols and Separation of Concerns** (FAF §6.1.2): Whether multiple Symbols grouped under an allowed multi-symbol catalog exemption are truly indivisible or constitute distinct architectural concerns.
-3. **Semantic Cohesion of a Fragment** (FAF §6.1): Whether all internal files of a Fragment conceptually collaborate toward a single cohesive business responsibility.
-4. **Semantic Fidelity of Mimetic Path Structures to External Addresses** (FAF §6.3.5): Whether declared Path Sub-Categories faithfully mirror real external HTTP routes or resource endpoints beyond syntactic validity.
-5. **Architectural Recommendations Introduced by _"it is recommended"_ / _"è raccomandato"_** (FAF §1.2, §8): Qualitative recommendations such as placing pages next to components, placing private details as close as possible to consumers, or avoiding singleton layers.
+Diagnostics are grouped into six families:
 
-The plugin emits **no diagnostic outcomes** and applies **no heuristics** for out-of-scope properties or recommendations.
+- **`configuration`**: Invalid `faf.config.ts` module, schema, path syntax, or contradictory Declarations.
+- **`classification`**: Unclassified entries, containment violations, missing Master/Access Nodes, invalid hierarchies, or naming violations (`kebab-case` matching `^[a-z0-9]+(?:-[a-z0-9]+)*$` is required except on Tree origins, Root Fragments, Root Nodes, Foreign Domains, and Foreign Nodes).
+- **`symbol`**: Symbol uniqueness, Master Node single-export, Access Node contract, or re-export violations.
+- **`dependency`**: Peer separation, Fragment/Private Category/Fractal Branch encapsulation, Root Node discipline, Tree opacity, external file, or path alias violations.
+- **`acyclicity`**: Dependency cycles within a Fractal Tree or across Fractal Trees.
+- **`unverified`**: Constructs that static analysis cannot verify (e.g., non-literal dynamic `import(expr)`, CommonJS `module.exports`, unresolved specifiers, or symlinks inside a Fractal Tree).
 
-**Conformity Certification**: The absence of diagnostic outcomes certifies architectural conformity for the entire verified scope.
+### Editor vs. Full-Project Linting
 
----
-
-## Operational Boundaries and Limitations
-
-### Incompatibility with `eslint --cache`
-
-`eslint-plugin-faf` is **fundamentally incompatible with `eslint --cache`**.
-
-ESLint's native `--cache` flag operates on per-file timestamps. It assumes that if file `A` has not changed on disk, its lint status remains identical to the previous run. However, architectural invariants are whole-graph properties: if file `B` changes its exports or moves to another directory, file `A` (which imports file `B`) may suddenly become non-conformant even though file `A` was never modified.
-
-**Do not run ESLint with `--cache` when validating FAF rules.**
-
-The plugin maintains its own internal, sound caching mechanisms (memoizing module records and dependency graphs based on directory fingerprinting, `package.json`, and `fafconfig.ts`), ensuring high performance on full project runs.
-
-### Purely Diagnostic Paradigm — Prohibition of Autofix
-
-`eslint-plugin-faf` is strictly **diagnostic-only**:
-
-- It provides **zero automated fixes** (`fix` functions) and zero automated refactorings.
-- It will never automatically move files, create directories, rewrite imports, or synthesize barrel files.
-
-Architectural corrections require intentional engineering judgment: deciding whether a private helper should be moved into a Private Category, extracted into a Sub-Fragment, or promoted to a Fractal Branch requires domain understanding that automated tools cannot possess.
-
-### Static Analysis Capabilities
-
-The plugin analyzes codebases using high-performance, deterministic static tooling:
-
-- **TypeScript & JavaScript**: Parsed exclusively using `oxc-parser`. The plugin analyzes ESM static imports, dynamic imports with string literals (`import('...')`), CommonJS top-level `require()`, and TypeScript external references (`import x = require('...')`).
-- **CSS Stylesheets**: Scanned with a dedicated parser for `@import` and `url()` references, establishing dependency edges to other stylesheets and static assets.
-- **Binary Assets**: Recognized as terminal leaf nodes (sinks) with incoming edges but zero outgoing edges.
-- **Boundary Resolution (`oxc-resolver`)**: Resolves module specifiers against your project's `tsconfig.json` (`paths`, `baseUrl`) and `package.json` (`imports`, `exports`). Workspace packages inside a monorepo are classified as local codebase files; external `node_modules` packages and Node.js built-ins (`node:*`) act as terminal sinks.
-- **Incomplete Checks (`unverified`)**: Any unanalyzable construct (such as non-literal dynamic imports `import(variable)`, unreadable files, or symbolic links inside trees) emits a blocking `unverified/*` outcome. Non-literal `require(...)` calls, TypeScript `export =` assignments, and CommonJS `module.exports` / `exports.*` assignments are unsupported constructs that emit `unverified/unsupported-syntax`. Incomplete checks are never treated as proof of conformity.
-
-### Nominal Kebab-Case Grammar
-
-The lexical policy enforced by the plugin requires standard architectural element names to match the ASCII regular expression `^[a-z0-9]+(?:-[a-z0-9]+)*$`:
-
-- **Permitted Characters**: Lowercase ASCII letters `a-z` and digits `0-9` separated by single hyphens.
-- **Initial Digits**: Permitted, such as `2fa-service` or `v2-parser`.
-- **Acronyms**: Must be lowercase, such as `http-client`.
-- **Rejected Forms**: Uppercase letters (e.g. `HTTPClient`), consecutive, leading, or trailing hyphens, non-prefix underscores, and non-ASCII Unicode characters (e.g. `café-parser`).
-- **Free Naming**: Free naming applies to designated Tree origins, Root Fragments, Root Nodes, Foreign Domains, and Foreign Nodes.
+- **Deterministic anchoring**: File-level issues are reported at the offending statement; directory-level, asset, and global configuration issues are deterministically anchored to a lintable child file or `faf.config.ts`. Linting a single file in an editor shows diagnostics anchored to that file; always run `eslint .` in CI to check the entire project.
+- **Automatic hot-reload**: Changes to `faf.config.ts` (or any local helper module it imports) automatically invalidate the in-memory session cache on the next lint pass without restarting your editor's ESLint server.
 
 ---
 
-## Migration from 0.5.x (Breaking Changes)
+## Specification and License
 
-Version `0.6.0` is a **complete ground-up rewrite** of `@morriconeluca/eslint-plugin-faf` centered around the normative Fractal Architecture Framework specification and `fafconfig.ts`. Nothing from version `0.5.x` is compatible.
-
-### What Changed
-
-- **Removed `settings.faf.trees`**: Tree origins, catalog roles, and hierarchies are no longer declared inside `eslint.config.js` settings. They are declared in `fafconfig.ts`.
-- **Removed `faf.config.ts`**: Replaced by the standardized `fafconfig.ts` specification module.
-- **Removed Granular Rules**: All legacy individual rules (`faf/no-cross-imports`, `faf/enforce-hierarchy`, `faf/symbol-rules`, etc.) have been removed. The plugin now exposes exactly one rule: `faf/conformity`.
-- **Removed Legacy Configs**: Previous configurations (such as `faf.configs['flat/recommended']`) are replaced by `faf.configs.recommended`.
-
-### Step-by-Step Migration Guide
-
-1. **Upgrade Dependencies**:
-
-   ```bash
-   npm install --save-dev @morriconeluca/eslint-plugin-faf@^0.6.0 eslint@^9.0.0
-   ```
-
-   Ensure Node.js is `>= 24.0.0`.
-
-2. **Create `fafconfig.ts`**:
-   In your repository root, create `fafconfig.ts` implementing `TFAFConfig`:
-
-   ```typescript
-   import type { TFAFConfig } from '@morriconeluca/eslint-plugin-faf';
-
-   export default {
-     faf: {
-       locals: [
-         {
-           roles: [
-             { name: 'util', category: '_utils' },
-             { name: 'component', category: '_components' },
-           ],
-           subGraphRoles: [{ name: 'spec' }],
-           rootLayers: ['src'],
-         },
-       ],
-     },
-   } satisfies TFAFConfig;
-   ```
-
-3. **Update `eslint.config.js`**:
-   Remove any legacy rules and settings. Use the new recommended preset:
-
-   ```javascript
-   import faf from '@morriconeluca/eslint-plugin-faf';
-
-   export default [faf.configs.recommended];
-   ```
-
-4. **Update CI and Scripts**:
-   Remove `--cache` from your ESLint linting scripts:
-   ```json
-   {
-     "scripts": {
-       "lint": "eslint ."
-     }
-   }
-   ```
-
----
-
-## License
-
-MIT © [Luca Morricone](https://github.com/morriconeluca)
+- **FAF Specification**: [github.com/morriconeluca/fractal-architecture-framework](https://github.com/morriconeluca/fractal-architecture-framework)
+- **License**: [MIT](./LICENSE) © [Luca Morricone](https://github.com/morriconeluca)

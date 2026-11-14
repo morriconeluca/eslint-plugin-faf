@@ -38,7 +38,7 @@ describe('acceptance: faf/conformity', () => {
 
     try {
       const results = await lintProject(fixture.path, ['.']);
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const otherMessages = results
         .filter((result) => result.filePath !== configPath)
         .flatMap((result) => result.messages);
@@ -69,11 +69,11 @@ describe('acceptance: faf/conformity', () => {
 
     try {
       const results = await lintProject(fixture.path, [
-        'fafconfig.ts',
+        'faf.config.ts',
         'src/_utils/widget/index.ts',
         'src/_utils/widget/widget.util.ts',
       ]);
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const otherMessages = results
         .filter((result) => result.filePath !== configPath)
         .flatMap((result) => result.messages);
@@ -89,21 +89,21 @@ describe('acceptance: faf/conformity', () => {
     }
   });
 
-  it('reports an unknown property as configuration on fafconfig.ts', async () => {
+  it('reports an unknown property as configuration on faf.config.ts', async () => {
     const fixture = await createProject(conformingTree, {
       ...config,
       extra: true,
     });
 
     try {
-      const results = await lintProject(fixture.path, ['fafconfig.ts']);
+      const results = await lintProject(fixture.path, ['faf.config.ts']);
       const messages = results.flatMap((result) => result.messages);
       expect(messages).toHaveLength(1);
       expect(messages[0]?.ruleId).toBe('faf/conformity');
       expect(messages[0]?.messageId).toBe('configuration');
       expect(messages[0]?.message).toContain('configuration/unknown-property');
       expect(results[0]?.filePath).toBe(
-        nodePath.join(fixture.path, 'fafconfig.ts')
+        nodePath.join(fixture.path, 'faf.config.ts')
       );
       expect(messages[0]?.line).toBe(1);
     } finally {
@@ -179,7 +179,7 @@ describe('acceptance: faf/conformity', () => {
     }
   });
 
-  it('reports a missing fafconfig.ts on every linted file', async () => {
+  it('reports a missing faf.config.ts on every linted file', async () => {
     const fixture = await createFixture({
       'src/a.ts': 'export const a = 1;\n',
       'src/b.ts': 'export const b = 2;\n',
@@ -229,7 +229,7 @@ describe('acceptance: faf/conformity', () => {
   it('produces zero conformity outcomes for this repository', async () => {
     const repository = nodePath.resolve(import.meta.dirname, '../..');
     const results = await lintProject(repository, [
-      'fafconfig.ts',
+      'faf.config.ts',
       'src/main.ts',
     ]);
     const messages = results.flatMap((result) => result.messages);
@@ -407,7 +407,7 @@ describe('acceptance: faf/conformity', () => {
           };
 
           nodeFs.writeFileSync(
-            nodePath.join(fixture.path, 'fafconfig.ts'),
+            nodePath.join(fixture.path, 'faf.config.ts'),
             `export default ${JSON.stringify(invertedConfig)};\n`
           );
 
@@ -474,7 +474,7 @@ describe('acceptance: faf/conformity', () => {
             },
           };
           nodeFs.writeFileSync(
-            nodePath.join(fixture.path, 'fafconfig.ts'),
+            nodePath.join(fixture.path, 'faf.config.ts'),
             `export default ${JSON.stringify(updatedConfig)};\n`
           );
 
@@ -608,7 +608,7 @@ describe('acceptance: faf/conformity', () => {
             },
           };
           nodeFs.writeFileSync(
-            nodePath.join(fixture.path, 'fafconfig.ts'),
+            nodePath.join(fixture.path, 'faf.config.ts'),
             `export default ${JSON.stringify(updatedConfig)};\n`
           );
 
@@ -678,7 +678,7 @@ describe('acceptance: faf/conformity', () => {
             },
           };
           nodeFs.writeFileSync(
-            nodePath.join(fixture.path, 'fafconfig.ts'),
+            nodePath.join(fixture.path, 'faf.config.ts'),
             `export default ${JSON.stringify(updatedConfig)};\n`
           );
 

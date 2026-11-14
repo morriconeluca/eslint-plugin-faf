@@ -30,12 +30,12 @@ export type TAnchoredOutcome = {
  */
 export type TAnchorOutcomesInput = {
   /**
-   * Absolute directory that hosts fafconfig.ts.
+   * Absolute directory that hosts faf.config.ts.
    */
   readonly baseDirectory: string;
 
   /**
-   * Absolute path of fafconfig.ts.
+   * Absolute path of faf.config.ts.
    */
   readonly configPath: string;
 

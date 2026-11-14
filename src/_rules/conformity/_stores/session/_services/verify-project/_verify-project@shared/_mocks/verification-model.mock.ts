@@ -8,7 +8,7 @@ export function verificationModel(): TVerificationModel {
     basis: {
       aliases: [],
       baseDirectory: '/project',
-      configPath: '/project/fafconfig.ts',
+      configPath: '/project/faf.config.ts',
       declarations: {
         aliases: [],
         baseDirectory: '/project',

@@ -78,7 +78,7 @@ export function classifyWorkerOutcome(
         )
       : makeFailure(
           configLoadFailure,
-          `Failed to load fafconfig.ts: ${message}${codeSuffix}`
+          `Failed to load faf.config.ts: ${message}${codeSuffix}`
         );
   };
 

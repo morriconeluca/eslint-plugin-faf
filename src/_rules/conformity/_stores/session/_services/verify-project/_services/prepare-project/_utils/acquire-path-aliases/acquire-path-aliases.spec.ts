@@ -79,10 +79,10 @@ describe('acquirePathAliases', () => {
     expect(result.ok).toBe(false);
     expect(!result.ok && result.outcomes[0]).toEqual({
       constraint: 'configuration/duplicate-alias-source',
-      element: 'fafconfig.ts',
+      element: 'faf.config.ts',
       family: 'configuration',
       message:
-        "'fafconfig.ts' cannot declare path aliases when package.json imports are present",
+        "'faf.config.ts' cannot declare path aliases when package.json imports are present",
       normativeReference: 'FAF §7.4',
       propertyPath: 'faf.common.aliases',
     });
@@ -101,10 +101,10 @@ describe('acquirePathAliases', () => {
     expect(result.ok).toBe(false);
     expect(!result.ok && result.outcomes[0]).toEqual({
       constraint: 'configuration/duplicate-alias-source',
-      element: 'fafconfig.ts',
+      element: 'faf.config.ts',
       family: 'configuration',
       message:
-        "'fafconfig.ts' cannot declare path aliases when package.json imports are present",
+        "'faf.config.ts' cannot declare path aliases when package.json imports are present",
       normativeReference: 'FAF §7.4',
       propertyPath: 'faf.common.aliases',
     });

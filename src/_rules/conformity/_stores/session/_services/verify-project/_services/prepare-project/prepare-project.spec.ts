@@ -7,11 +7,11 @@ import { prepareProject } from './prepare-project.service.js';
 const roles = `roles: [{ name: 'util', category: '_utils' }], subGraphRoles: [{ name: 'spec' }],`;
 
 describe('prepareProject', () => {
-  it('stops when fafconfig.ts cannot be loaded', async () => {
+  it('stops when faf.config.ts cannot be loaded', async () => {
     const fixture = await createFixture({});
     try {
       const result = prepareProject(
-        nodePath.join(fixture.path, 'fafconfig.ts')
+        nodePath.join(fixture.path, 'faf.config.ts')
       );
       expect(result.kind).toBe('blocked');
       if (result.kind === 'blocked') {
@@ -26,13 +26,13 @@ describe('prepareProject', () => {
 
   it('stops when package.json is not a regular file', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `export default { faf: { locals: [{ ${roles} rootLayers: ['src'] }] } };`,
+      'faf.config.ts': `export default { faf: { locals: [{ ${roles} rootLayers: ['src'] }] } };`,
       'package.json/not-a-file': 'x',
       'src/.keep': '',
     });
     try {
       const result = prepareProject(
-        nodePath.join(fixture.path, 'fafconfig.ts')
+        nodePath.join(fixture.path, 'faf.config.ts')
       );
       expect(result.kind).toBe('blocked');
       if (result.kind === 'blocked') {
@@ -47,7 +47,7 @@ describe('prepareProject', () => {
 
   it('stops when aliases are declared in both sources', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `export default { faf: { common: { aliases: { '#a': './a.ts' } }, locals: [{ ${roles} rootLayers: ['src'] }] } };`,
+      'faf.config.ts': `export default { faf: { common: { aliases: { '#a': './a.ts' } }, locals: [{ ${roles} rootLayers: ['src'] }] } };`,
       'package.json': JSON.stringify({
         imports: { '#b': './b.ts' },
         type: 'module',
@@ -56,7 +56,7 @@ describe('prepareProject', () => {
     });
     try {
       const result = prepareProject(
-        nodePath.join(fixture.path, 'fafconfig.ts')
+        nodePath.join(fixture.path, 'faf.config.ts')
       );
       expect(result.kind).toBe('blocked');
       if (result.kind === 'blocked') {
@@ -69,13 +69,13 @@ describe('prepareProject', () => {
 
   it('stops when roles are missing', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts':
+      'faf.config.ts':
         "export default { faf: { locals: [{ rootLayers: ['src'] }] } };",
       'package.json': JSON.stringify({ type: 'module' }),
     });
     try {
       const result = prepareProject(
-        nodePath.join(fixture.path, 'fafconfig.ts')
+        nodePath.join(fixture.path, 'faf.config.ts')
       );
       expect(result.kind).toBe('blocked');
       if (result.kind === 'blocked') {
@@ -90,12 +90,12 @@ describe('prepareProject', () => {
 
   it('stops when a declared origin cannot be listed', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `export default { faf: { locals: [{ ${roles} rootLayers: ['missing'] }] } };`,
+      'faf.config.ts': `export default { faf: { locals: [{ ${roles} rootLayers: ['missing'] }] } };`,
       'package.json': JSON.stringify({ type: 'module' }),
     });
     try {
       const result = prepareProject(
-        nodePath.join(fixture.path, 'fafconfig.ts')
+        nodePath.join(fixture.path, 'faf.config.ts')
       );
       expect(result.kind).toBe('blocked');
       if (result.kind === 'blocked') {
@@ -108,13 +108,13 @@ describe('prepareProject', () => {
 
   it('stops when a reference does not exist in the inventory', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `export default { faf: { locals: [{ ${roles} rootLayers: ['src'], externalDependencies: [{ from: ['src/main.ts'], to: ['missing.json'] }] }] } };`,
+      'faf.config.ts': `export default { faf: { locals: [{ ${roles} rootLayers: ['src'], externalDependencies: [{ from: ['src/main.ts'], to: ['missing.json'] }] }] } };`,
       'package.json': JSON.stringify({ type: 'module' }),
       'src/main.ts': 'export const main = 1;\n',
     });
     try {
       const result = prepareProject(
-        nodePath.join(fixture.path, 'fafconfig.ts')
+        nodePath.join(fixture.path, 'faf.config.ts')
       );
       expect(result.kind).toBe('blocked');
       if (result.kind === 'blocked') {
@@ -129,13 +129,13 @@ describe('prepareProject', () => {
 
   it('returns ready result with effective declarations containing aliases', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `export default { faf: { common: { aliases: { '#shared': 'src' } }, locals: [{ ${roles} rootLayers: ['src'] }] } };`,
+      'faf.config.ts': `export default { faf: { common: { aliases: { '#shared': 'src' } }, locals: [{ ${roles} rootLayers: ['src'] }] } };`,
       'package.json': JSON.stringify({ type: 'module' }),
       'src/main.ts': 'export const main = 1;\n',
     });
     try {
       const result = prepareProject(
-        nodePath.join(fixture.path, 'fafconfig.ts')
+        nodePath.join(fixture.path, 'faf.config.ts')
       );
       expect(result.kind).toBe('ready');
       if (result.kind === 'ready') {

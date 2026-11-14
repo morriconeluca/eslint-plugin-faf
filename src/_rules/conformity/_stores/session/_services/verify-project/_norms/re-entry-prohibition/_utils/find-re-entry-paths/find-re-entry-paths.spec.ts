@@ -1115,4 +1115,60 @@ describe('findReEntryPaths', () => {
     const outcomes = findReEntryPaths(model);
     expect(outcomes).toHaveLength(1);
   });
+
+  it('orders equal-distance intermediate states lexicographically and ignores pure inter-tree or external-origin transitions', () => {
+    const model = buildModel({
+      crossings: [
+        {
+          chain: ['b/hub.ts', 'y.ts', 'a/target.ts'],
+          destinationPath: 'a/target.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'b/hub.ts',
+          specifier: '../y.js',
+        },
+        {
+          chain: ['y.ts', 'a/target.ts'],
+          destinationPath: 'a/target.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'y.ts',
+          specifier: './a/target.js',
+        },
+      ],
+      edges: [
+        makeEdge('a/start.ts', 'a/sibling.ts'),
+        makeEdge('a/start.ts', 'b/z.ts'),
+        makeEdge('a/start.ts', 'b/a.ts'),
+        makeEdge('b/z.ts', 'b/hub.ts'),
+        makeEdge('b/a.ts', 'b/hub.ts'),
+        makeEdge('a/pure.ts', 'b/pure-mid.ts'),
+        makeEdge('b/pure-mid.ts', 'a/target.ts'),
+        makeEdge('a/pure.ts', 'y.ts'),
+      ],
+      nodes: [
+        { path: 'a/pure.ts', treeOrigin: 'a' },
+        { path: 'a/sibling.ts', treeOrigin: 'a' },
+        { path: 'a/start.ts', treeOrigin: 'a' },
+        { path: 'a/target.ts', treeOrigin: 'a' },
+        { path: 'b/a.ts', treeOrigin: 'b' },
+        { path: 'b/hub.ts', treeOrigin: 'b' },
+        { path: 'b/pure-mid.ts', treeOrigin: 'b' },
+        { path: 'b/z.ts', treeOrigin: 'b' },
+        { path: 'y.ts', treeOrigin: null },
+      ],
+      trees: ['a', 'b'],
+    });
+
+    const outcomes = findReEntryPaths(model);
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0]?.from).toBe('a/start.ts');
+    expect(outcomes[0]?.chain).toEqual([
+      'a/start.ts',
+      'b/a.ts',
+      'b/hub.ts',
+      'y.ts',
+      'a/target.ts',
+    ]);
+  });
 });

@@ -7,11 +7,11 @@ import { readFileFingerprints } from './read-file-fingerprints.adapter.js';
 describe('readFileFingerprints', () => {
   it('records mtime and size, and a missing file as an absent fingerprint', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};\n',
+      'faf.config.ts': 'export default {};\n',
     });
 
     try {
-      const filePath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const filePath = nodePath.join(fixture.path, 'faf.config.ts');
       const missingPath = nodePath.join(fixture.path, 'missing.ts');
       const fingerprints = readFileFingerprints({
         watchedFiles: [filePath, missingPath],

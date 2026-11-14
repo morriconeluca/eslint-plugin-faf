@@ -25,12 +25,12 @@ export type TDiscoverConfigResult = TResult<TDiscoveredConfig>;
  */
 export type TDiscoveredConfig = {
   /**
-   * Absolute path to the directory hosting the discovered fafconfig.ts file.
+   * Absolute path to the directory hosting the discovered faf.config.ts file.
    */
   readonly configDirectory: string;
 
   /**
-   * Absolute path to the discovered fafconfig.ts configuration file.
+   * Absolute path to the discovered faf.config.ts configuration file.
    */
   readonly configPath: string;
 };

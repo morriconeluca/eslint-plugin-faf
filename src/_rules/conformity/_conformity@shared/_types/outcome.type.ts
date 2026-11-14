@@ -219,13 +219,13 @@ export type TConfigFacts = {
   readonly position?: TSourceLocation;
 
   /**
-   * Configuration property path locating the setting within fafconfig.ts.
+   * Configuration property path locating the setting within faf.config.ts.
    */
   readonly propertyPath: string;
 };
 
 /**
- * Diagnostic outcome resulting from invalid fafconfig declarations or formatting.
+ * Diagnostic outcome resulting from invalid faf.config.ts declarations or formatting.
  */
 export type TConfigOutcome = {
   /**

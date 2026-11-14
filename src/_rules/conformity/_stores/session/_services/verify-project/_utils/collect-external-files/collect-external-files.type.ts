@@ -6,7 +6,7 @@ import type { TInventory } from '../../_verify-project@shared/_types/_primitives
  */
 export type TCollectExternalFilesInput = {
   /**
-   * Absolute path of the directory hosting fafconfig.ts.
+   * Absolute path of the directory hosting faf.config.ts.
    */
   readonly baseDirectory: string;
 

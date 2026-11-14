@@ -198,7 +198,7 @@ const containmentViolation = (
 
 const exclusiveFormsViolation = (
   element: string,
-  filePath = 'fafconfig.ts'
+  filePath = 'faf.config.ts'
 ): TScenarioMessage =>
   elementMessage(
     filePath,
@@ -234,7 +234,7 @@ const fragmentAnatomyViolation = (
 
 const incompatibleMimetic = (element: string): TScenarioMessage =>
   elementMessage(
-    'fafconfig.ts',
+    'faf.config.ts',
     element,
     'configuration/incompatible-mimetic-designation',
     'must identify a Category of Fragments',
@@ -244,7 +244,7 @@ const incompatibleMimetic = (element: string): TScenarioMessage =>
 
 const invalidImplicitExtension = (propertyPath: string): TScenarioMessage =>
   elementMessage(
-    'fafconfig.ts',
+    'faf.config.ts',
     propertyPath,
     'configuration/invalid-implicit-extension',
     'must be a dot-prefixed asset extension reserved to non-script files',
@@ -258,7 +258,7 @@ const implicitExtensionRolePrefix = (
 ): TScenarioMessage => {
   const firstSegment = extension.split('.', 2)[1] ?? '';
   return elementMessage(
-    'fafconfig.ts',
+    'faf.config.ts',
     propertyPath,
     'configuration/implicit-extension-role-name-prefix',
     'cannot start with a segment matching a role name',
@@ -270,7 +270,7 @@ const implicitExtensionRolePrefix = (
 
 const nestedRootFragmentNotDirectChild = (element: string): TScenarioMessage =>
   elementMessage(
-    'fafconfig.ts',
+    'faf.config.ts',
     element,
     'configuration/nested-root-fragment-not-direct-child',
     'must be a direct child directory of the root fragment',
@@ -280,7 +280,7 @@ const nestedRootFragmentNotDirectChild = (element: string): TScenarioMessage =>
 
 const publicRootNodeNotEnumerated = (element: string): TScenarioMessage =>
   elementMessage(
-    'fafconfig.ts',
+    'faf.config.ts',
     element,
     'configuration/public-root-node-not-enumerated',
     'must be an enumerated root node of its tree in publicRootNodes',
@@ -511,24 +511,24 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
     [
       'Category without underscore',
       'src/components',
-      [unclassifiableDirectory('fafconfig.ts', 'src/components')],
+      [unclassifiableDirectory('faf.config.ts', 'src/components')],
     ],
     ['Sub-Category', 'src/_utils/_atoms', []],
     [
       'Sub-Category without underscore',
       'src/atoms',
-      [unclassifiableDirectory('fafconfig.ts', 'src/atoms')],
+      [unclassifiableDirectory('faf.config.ts', 'src/atoms')],
     ],
     [
       'Sub-Category with uppercase',
       'src/_utils/_BadSub',
-      [invalidNomenclature('fafconfig.ts', 'src/_utils/_BadSub')],
+      [invalidNomenclature('faf.config.ts', 'src/_utils/_BadSub')],
     ],
     ['Layer', 'src/_domain', []],
     [
       'Layer without underscore',
       'src/domain',
-      [unclassifiableDirectory('fafconfig.ts', 'src/domain')],
+      [unclassifiableDirectory('faf.config.ts', 'src/domain')],
     ],
   ])(
     'verifies ordinary naming through classification: %s',
@@ -739,7 +739,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
             fragmentAnatomyViolation(path, widgetUtil),
           ];
         }
-        return [categoryRoleViolation('fafconfig.ts', path)];
+        return [categoryRoleViolation('faf.config.ts', path)];
       };
       await scenario(
         { ...fragment('src/_utils/widget'), [path]: 'body {}\n' },
@@ -763,7 +763,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
     await scenario(
       { [path]: 'body {}\n' },
       rootLayer(),
-      valid ? [] : [categoryRoleViolation('fafconfig.ts', path)]
+      valid ? [] : [categoryRoleViolation('faf.config.ts', path)]
     );
   });
 
@@ -1011,7 +1011,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         ? []
         : [
             invalidHierarchyMembers(
-              isNode ? `${parent}/high.type.ts` : 'fafconfig.ts',
+              isNode ? `${parent}/high.type.ts` : 'faf.config.ts',
               parent
             ),
           ]
@@ -1259,7 +1259,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
     await scenario(
       fragment('src/_components/_pages/home', 'page'),
       rootLayer(),
-      [containmentViolation('fafconfig.ts', 'src/_components/_pages')]
+      [containmentViolation('faf.config.ts', 'src/_components/_pages')]
     );
   });
 
@@ -1343,7 +1343,7 @@ describe('acceptance: Mimetic Path Structures', () => {
     await scenario(
       { [path]: {} },
       mimetic(),
-      valid ? [] : [invalidNomenclature('fafconfig.ts', path)]
+      valid ? [] : [invalidNomenclature('faf.config.ts', path)]
     );
   });
 
@@ -1949,7 +1949,7 @@ describe('acceptance: naming of Root Nodes and Foreign Nodes without exception c
       rootLayer({
         localHorizontalHierarchies: [{ hierarchies: [], paths: [path] }],
       }),
-      [invalidNomenclature('fafconfig.ts', path)]
+      [invalidNomenclature('faf.config.ts', path)]
     );
   });
 });

@@ -55,7 +55,7 @@ export const createProject = (
   createFixture({
     'package.json': JSON.stringify({ type: 'module' }),
     ...tree,
-    'fafconfig.ts': `export default ${inspect(config, {
+    'faf.config.ts': `export default ${inspect(config, {
       breakLength: Infinity,
       compact: true,
       depth: null,

@@ -20,7 +20,7 @@ describe('anchorOutcomes', () => {
     const earlier = outcome('src/a.ts', 2);
     const result = anchorOutcomes({
       baseDirectory: '/repo',
-      configPath: '/repo/fafconfig.ts',
+      configPath: '/repo/faf.config.ts',
       outcomes: [later, earlier],
     });
 
@@ -29,14 +29,14 @@ describe('anchorOutcomes', () => {
       'src/b.ts',
     ]);
     expect(result.outcomes[0]?.position).toEqual({ column: 1, line: 1 });
-    expect(result.byFile.get('/repo/fafconfig.ts')).toHaveLength(2);
+    expect(result.byFile.get('/repo/faf.config.ts')).toHaveLength(2);
   });
 
   it('uses the outcome position when the anchor is the element file', () => {
     const imported = outcome('src/a.ts', 3);
     const result = anchorOutcomes({
       baseDirectory: '/repo',
-      configPath: '/repo/fafconfig.ts',
+      configPath: '/repo/faf.config.ts',
       inventory: {
         items: [
           {
@@ -61,7 +61,7 @@ describe('anchorOutcomes', () => {
     expect(result.outcomes[0]?.anchorPath).toBe('/repo/src/a.ts');
     const windows = anchorOutcomes({
       baseDirectory: '/repo',
-      configPath: '/repo/fafconfig.ts',
+      configPath: '/repo/faf.config.ts',
       inventory: {
         items: [
           {
@@ -86,7 +86,7 @@ describe('anchorOutcomes', () => {
     expect(windows.outcomes[0]?.position).toEqual({ column: 1, line: 4 });
     const absolute = anchorOutcomes({
       baseDirectory: '/repo',
-      configPath: '/repo/fafconfig.ts',
+      configPath: '/repo/faf.config.ts',
       inventory: {
         items: [
           {

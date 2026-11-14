@@ -3,7 +3,7 @@
  */
 export type TClassifyWorkerOutcomeInput = {
   /**
-   * Absolute file path to the fafconfig.ts configuration file.
+   * Absolute file path to the faf.config.ts configuration file.
    */
   readonly configPath: string;
 

@@ -1,4 +1,4 @@
-export const FAF_CONFIG_ELEMENT = 'fafconfig.ts';
+export const FAF_CONFIG_ELEMENT = 'faf.config.ts';
 
 export const PACKAGE_JSON_ELEMENT = 'package.json';
 

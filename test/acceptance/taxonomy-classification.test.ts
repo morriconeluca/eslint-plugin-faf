@@ -105,7 +105,7 @@ describe('acceptance: taxonomy classification', () => {
         },
         [
           diagnostic(
-            'fafconfig.ts',
+            'faf.config.ts',
             'src',
             'configuration/duplicate-origin',
             "'src' is declared more than once as a tree origin",
@@ -136,7 +136,7 @@ describe('acceptance: taxonomy classification', () => {
         },
         [
           diagnostic(
-            'fafconfig.ts',
+            'faf.config.ts',
             'src/app',
             'configuration/overlapping-origins',
             "'src/app' overlaps with another declared tree origin: Origin 'src/app' is contained within origin 'src'",
@@ -226,7 +226,7 @@ describe('acceptance: taxonomy classification', () => {
         },
         [
           diagnostic(
-            'fafconfig.ts',
+            'faf.config.ts',
             'faf.locals[0]',
             'configuration/missing-origin',
             "'faf.locals[0]' must be an existing tree origin directory",
@@ -234,7 +234,7 @@ describe('acceptance: taxonomy classification', () => {
             'configuration'
           ),
           diagnostic(
-            'fafconfig.ts',
+            'faf.config.ts',
             'faf.locals[0].layers',
             'configuration/unknown-property',
             "'faf.locals[0].layers' is not a recognized property",
@@ -264,7 +264,7 @@ describe('acceptance: taxonomy classification', () => {
         },
         [
           diagnostic(
-            'fafconfig.ts',
+            'faf.config.ts',
             'src/blog',
             'configuration/undeclared-sub-root-fragment',
             "'src/blog' must be declared in subRootFragments",
@@ -347,7 +347,7 @@ describe('acceptance: taxonomy classification', () => {
         },
         [
           diagnostic(
-            'fafconfig.ts',
+            'faf.config.ts',
             'src/_configs',
             'configuration/incompatible-mimetic-designation',
             "'src/_configs' must identify a Category of Fragments",
@@ -410,7 +410,7 @@ describe('acceptance: taxonomy classification', () => {
         },
         [
           diagnostic(
-            'fafconfig.ts',
+            'faf.config.ts',
             'src/_components/_pages',
             'classification/containment-matrix',
             "'src/_components/_pages' is a child type that its parent Logical Domain does not admit",
@@ -445,7 +445,7 @@ describe('acceptance: taxonomy classification', () => {
         },
         [
           diagnostic(
-            'fafconfig.ts',
+            'faf.config.ts',
             'src/_components/_atoms/_pages',
             'classification/containment-matrix',
             "'src/_components/_atoms/_pages' is a child type that its parent Logical Domain does not admit",

@@ -148,7 +148,7 @@ const invalidExternalDependencySource = (source: string): TScenarioMessage => ({
   column: 1,
   constraint: 'configuration/invalid-external-dependency-source',
   element: source,
-  filePath: 'fafconfig.ts',
+  filePath: 'faf.config.ts',
   line: 1,
   message: `configuration/invalid-external-dependency-source: '${source}' must be an authorized logical node in externalDependencies (FAF §7.3).`,
   messageId: 'configuration',
@@ -957,7 +957,7 @@ const SCENARIOS: readonly TScenarioCase[] = [
     config: { faf: { common, locals: [{ rootLayers: ['src'] }] } },
     expected: [
       dependency('peerSeparation', {
-        filePath: 'fafconfig.ts',
+        filePath: 'faf.config.ts',
         from: 'src/_styles/a.css',
         specifier: './b.css',
         to: 'src/_styles/b.css',
@@ -1002,7 +1002,7 @@ const SCENARIOS: readonly TScenarioCase[] = [
         to: 'src/low.ts',
       }),
     ],
-    files: ['fafconfig.ts', 'src/high.ts'],
+    files: ['faf.config.ts', 'src/high.ts'],
     name: 'dependency is checked even when ESLint does not visit the target',
     tree: { ...rootTree, 'src/high.ts': "import './low.js';\n" },
   },

@@ -6,13 +6,13 @@ import { describe, expect, it } from 'vitest';
 import { loadConfig } from './load-config.adapter.js';
 
 describe('loadConfig', () => {
-  it('loads valid fafconfig.ts without package.json using default timeout', async () => {
+  it('loads valid faf.config.ts without package.json using default timeout', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default { faf: { locals: [] } };',
+      'faf.config.ts': 'export default { faf: { locals: [] } };',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(true);
@@ -30,7 +30,7 @@ describe('loadConfig', () => {
   it('loads a composite object with comments, constants, imports and spread', async () => {
     const fixture = await createFixture({
       'constants.ts': 'export const sharedLocals = [{ name: "local-tree" }];',
-      'fafconfig.ts': `
+      'faf.config.ts': `
         import { sharedLocals } from "./constants.ts";
         const extra = { verified: true };
         export default {
@@ -44,7 +44,7 @@ describe('loadConfig', () => {
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const constantsPath = nodePath.join(fixture.path, 'constants.ts');
       const result = loadConfig({ configPath });
 
@@ -66,14 +66,14 @@ describe('loadConfig', () => {
 
   it('loads configuration with top-level await', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `
+      'faf.config.ts': `
         const asyncValue = await Promise.resolve({ dynamic: true });
         export default { faf: asyncValue };
       `,
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(true);
@@ -89,7 +89,7 @@ describe('loadConfig', () => {
 
   it('loads configuration with type-only import without extension', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `
+      'faf.config.ts': `
         import type { TExtra } from "./types";
         const value = { typed: true };
         export default { faf: value };
@@ -98,7 +98,7 @@ describe('loadConfig', () => {
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(true);
@@ -115,11 +115,11 @@ describe('loadConfig', () => {
   it('returns configuration outcome for relative import without extension', async () => {
     const fixture = await createFixture({
       'dep.ts': 'export const item = 10;',
-      'fafconfig.ts': 'import { item } from "./dep"; export default { item };',
+      'faf.config.ts': 'import { item } from "./dep"; export default { item };',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -144,14 +144,14 @@ describe('loadConfig', () => {
     }
   });
 
-  it('returns configuration outcome when fafconfig uses non-strippable typescript enum', async () => {
+  it('returns configuration outcome when faf.config.ts uses non-strippable typescript enum', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts':
+      'faf.config.ts':
         'export enum InvalidEnum { A, B }; export default { InvalidEnum };',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -177,12 +177,12 @@ describe('loadConfig', () => {
 
   it('returns configuration outcome when nearest package.json declares type commonjs', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default { ok: true };',
+      'faf.config.ts': 'export default { ok: true };',
       'package.json': JSON.stringify({ type: 'commonjs' }),
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -208,11 +208,11 @@ describe('loadConfig', () => {
 
   it('returns configuration outcome when export default is missing', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export const namedOnly = 42;',
+      'faf.config.ts': 'export const namedOnly = 42;',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -236,11 +236,11 @@ describe('loadConfig', () => {
 
   it('returns configuration outcome when export default is a function', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default function getConfig() { return {}; };',
+      'faf.config.ts': 'export default function getConfig() { return {}; };',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -266,11 +266,11 @@ describe('loadConfig', () => {
 
   it('returns configuration outcome when export default is a Promise', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default Promise.resolve({ async: true });',
+      'faf.config.ts': 'export default Promise.resolve({ async: true });',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -296,11 +296,11 @@ describe('loadConfig', () => {
 
   it('returns configuration outcome when default export contains a nested function', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default { faf: { transform: () => 123 } };',
+      'faf.config.ts': 'export default { faf: { transform: () => 123 } };',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -327,12 +327,12 @@ describe('loadConfig', () => {
   it('reloads configuration with updated value after imported module is modified', async () => {
     const fixture = await createFixture({
       'dep.ts': 'export const version = 1;',
-      'fafconfig.ts':
+      'faf.config.ts':
         'import { version } from "./dep.ts"; export default { version };',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const dependencyPath = nodePath.join(fixture.path, 'dep.ts');
 
       const initialResult = loadConfig({ configPath });
@@ -355,14 +355,14 @@ describe('loadConfig', () => {
 
   it('returns unverified outcome when worker execution times out', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `
+      'faf.config.ts': `
         await new Promise((resolve) => setTimeout(resolve, 5000));
         export default { ok: true };
       `,
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({
         configPath,
         timeoutMs: 50,
@@ -441,11 +441,11 @@ describe('loadConfig', () => {
 
   it('returns configuration outcome when syntax error occurs in configuration file', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default { unclosed: ',
+      'faf.config.ts': 'export default { unclosed: ',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -457,7 +457,7 @@ describe('loadConfig', () => {
           expect(outcome.constraint).toBe('configuration/config-load-failure');
           expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
-          expect(outcome.message).toContain('Failed to load fafconfig.ts');
+          expect(outcome.message).toContain('Failed to load faf.config.ts');
         }
       }
     } finally {
@@ -467,7 +467,7 @@ describe('loadConfig', () => {
 
   it('handles unexpected non-standard payload from worker gracefully', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `
+      'faf.config.ts': `
         const { workerData } = await import("node:worker_threads");
         workerData.port.postMessage({ unrecognized: true });
         export default {};
@@ -475,7 +475,7 @@ describe('loadConfig', () => {
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -499,7 +499,7 @@ describe('loadConfig', () => {
 
   it('handles closed port without transmitting a payload gracefully', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `
+      'faf.config.ts': `
         const { workerData } = await import("node:worker_threads");
         workerData.port.close();
         export default {};
@@ -507,7 +507,7 @@ describe('loadConfig', () => {
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -531,7 +531,7 @@ describe('loadConfig', () => {
 
   it('handles worker success payload with non-string elements in loadedFiles', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `
+      'faf.config.ts': `
         const { workerData } = await import("node:worker_threads");
         workerData.port.postMessage({
           defaultExport: { valid: true },
@@ -543,7 +543,7 @@ describe('loadConfig', () => {
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -562,7 +562,7 @@ describe('loadConfig', () => {
 
   it('handles worker failure payload with non-configuration constraint', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `
+      'faf.config.ts': `
         const { workerData } = await import("node:worker_threads");
         workerData.port.postMessage({
           constraint: "other/unexpected-prefix",
@@ -574,7 +574,7 @@ describe('loadConfig', () => {
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);
@@ -593,7 +593,7 @@ describe('loadConfig', () => {
 
   it('handles worker payload with non-boolean ok flag', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': `
+      'faf.config.ts': `
         const { workerData } = await import("node:worker_threads");
         workerData.port.postMessage({
           defaultExport: { valid: true },
@@ -605,7 +605,7 @@ describe('loadConfig', () => {
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = loadConfig({ configPath });
 
       expect(result.ok).toBe(false);

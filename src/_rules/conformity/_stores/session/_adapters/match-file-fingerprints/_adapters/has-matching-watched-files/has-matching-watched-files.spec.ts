@@ -8,11 +8,11 @@ import { hasMatchingWatchedFiles } from './has-matching-watched-files.adapter.js
 describe('hasMatchingWatchedFiles', () => {
   it('returns true when all watched files match disk state', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};\n',
+      'faf.config.ts': 'export default {};\n',
     });
 
     try {
-      const filePath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const filePath = nodePath.join(fixture.path, 'faf.config.ts');
       const stat = nodeFs.statSync(filePath);
       const expected = new Map([
         [filePath, { mtimeMs: stat.mtimeMs, path: filePath, size: stat.size }],
@@ -25,11 +25,11 @@ describe('hasMatchingWatchedFiles', () => {
 
   it('returns false when a watched file is modified or absent', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};\n',
+      'faf.config.ts': 'export default {};\n',
     });
 
     try {
-      const filePath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const filePath = nodePath.join(fixture.path, 'faf.config.ts');
       const missing = nodePath.join(fixture.path, 'missing.ts');
       const stat = nodeFs.statSync(filePath);
       const expected = new Map([

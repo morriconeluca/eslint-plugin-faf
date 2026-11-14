@@ -5,8 +5,8 @@ import { readConfigFileSetting } from './read-config-file-setting.util.js';
 describe('readConfigFileSetting', () => {
   it('reads a string settings.faf.configFile and ignores other shapes', () => {
     expect(
-      readConfigFileSetting({ faf: { configFile: 'nested/fafconfig.ts' } })
-    ).toBe('nested/fafconfig.ts');
+      readConfigFileSetting({ faf: { configFile: 'nested/faf.config.ts' } })
+    ).toBe('nested/faf.config.ts');
     expect(readConfigFileSetting(undefined)).toBeUndefined();
     expect(readConfigFileSetting({ faf: { configFile: 1 } })).toBeUndefined();
     expect(readConfigFileSetting({ faf: null })).toBeUndefined();

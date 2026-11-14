@@ -7,7 +7,10 @@ import type {
   TInventoryItem,
 } from '../../../../_verify-project@shared/_types/_primitives/inventory.type.js';
 
-import { LINTABLE_EXTENSIONS } from '../../../../../../../../../../_src@shared/_constants/faf.constant.js';
+import {
+  CONFIG_FILE_NAME,
+  LINTABLE_EXTENSIONS,
+} from '../../../../../../../../../../_src@shared/_constants/faf.constant.js';
 import { toPosixPath } from '../../../../../../_session@shared/_utils/to-posix-path/index.js';
 import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 
@@ -103,7 +106,7 @@ export function includeExternalTargets(
       }
 
       if (
-        relativePath !== 'fafconfig.ts' &&
+        relativePath !== CONFIG_FILE_NAME &&
         dirent.isFile() &&
         LINTABLE_EXTENSIONS.some((extension) => dirent.name.endsWith(extension))
       ) {

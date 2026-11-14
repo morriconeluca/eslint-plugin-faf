@@ -8,12 +8,12 @@ import { hasMatchingFileFingerprints } from './match-file-fingerprints.adapter.j
 describe('hasMatchingFileFingerprints', () => {
   it('returns true when watched files and tree origins match expected fingerprints', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};\n',
+      'faf.config.ts': 'export default {};\n',
       'src/a.ts': 'export const a = 1;\n',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const origin = nodePath.join(fixture.path, 'src');
       const child = nodePath.join(origin, 'a.ts');
       const configStat = nodeFs.statSync(configPath);
@@ -64,11 +64,11 @@ describe('hasMatchingFileFingerprints', () => {
 
   it('returns false when watched files do not match', async () => {
     const fixture = await createFixture({
-      'fafconfig.ts': 'export default {};\n',
+      'faf.config.ts': 'export default {};\n',
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const expected = new Map([
         [configPath, { mtimeMs: 1234, path: configPath, size: 10 }],
       ]);

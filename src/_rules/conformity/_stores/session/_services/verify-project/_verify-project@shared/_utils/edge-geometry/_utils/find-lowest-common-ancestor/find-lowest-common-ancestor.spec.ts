@@ -62,11 +62,50 @@ describe('findLowestCommonAncestor', () => {
       preorderStart: 2,
     });
 
-    const index = findLowestCommonAncestor(
-      [root, directory, fileA],
-      [root, directory, fileB]
-    );
-    expect(index).toBe(1);
+    expect(
+      findLowestCommonAncestor(
+        [root, directory, fileA],
+        [root, directory, fileB]
+      )
+    ).toBe(1);
+  });
+
+  it('handles ancestor chains of unequal length and single-side empty chains', () => {
+    const root = createItem({
+      depth: 0,
+      id: 0,
+      kind: 'directory',
+      parentId: null,
+      path: 'src',
+      preorderEnd: 2,
+      preorderStart: 0,
+    });
+    const directory = createItem({
+      depth: 1,
+      id: 1,
+      kind: 'directory',
+      parentId: 0,
+      path: 'src/components',
+      preorderEnd: 2,
+      preorderStart: 1,
+    });
+    const file = createItem({
+      depth: 2,
+      id: 2,
+      parentId: 1,
+      path: 'src/components/a.ts',
+      preorderEnd: 2,
+      preorderStart: 2,
+    });
+
+    expect(findLowestCommonAncestor([], [root])).toBe(-1);
+    expect(findLowestCommonAncestor([root], [])).toBe(-1);
+    expect(
+      findLowestCommonAncestor([root, directory], [root, directory, file])
+    ).toBe(1);
+    expect(
+      findLowestCommonAncestor([root, directory, file], [root, directory])
+    ).toBe(1);
   });
 
   it('returns -1 when root items do not match or arrays are empty', () => {

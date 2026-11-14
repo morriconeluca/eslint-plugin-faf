@@ -12,7 +12,7 @@ import type {
 } from './_load-config@shared/_types/load-config.type.js';
 
 /**
- * Input arguments for loading fafconfig.ts including config path and optional timeout budget.
+ * Input arguments for loading faf.config.ts including config path and optional timeout budget.
  */
 export type TLoadConfigInput = TLoadConfigSharedInput;
 

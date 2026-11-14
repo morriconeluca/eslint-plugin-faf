@@ -31,11 +31,11 @@ describe('verifyProject', () => {
   it('returns zero outcomes for a conforming root layer', async () => {
     const fixture = await createFixture({
       ...conformingFiles,
-      'fafconfig.ts': configSource(''),
+      'faf.config.ts': configSource(''),
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = verifyProject({
         configPath,
         workingDirectory: fixture.path,
@@ -51,14 +51,14 @@ describe('verifyProject', () => {
     }
   });
 
-  it('anchors an unknown configuration property to fafconfig.ts and stops', async () => {
+  it('anchors an unknown configuration property to faf.config.ts and stops', async () => {
     const fixture = await createFixture({
       ...conformingFiles,
-      'fafconfig.ts': configSource('extra: true,'),
+      'faf.config.ts': configSource('extra: true,'),
     });
 
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       const result = verifyProject({
         configPath,
         workingDirectory: fixture.path,
@@ -80,14 +80,14 @@ describe('verifyProject', () => {
   it('anchors an unclassifiable directory to the first lintable child', async () => {
     const fixture = await createFixture({
       ...conformingFiles,
-      'fafconfig.ts': configSource(''),
+      'faf.config.ts': configSource(''),
       'src/mystery/a.ts': 'export const earlier = 1;\n',
       'src/mystery/b.ts': 'export const later = 2;\n',
     });
 
     try {
       const result = verifyProject({
-        configPath: nodePath.join(fixture.path, 'fafconfig.ts'),
+        configPath: nodePath.join(fixture.path, 'faf.config.ts'),
         workingDirectory: fixture.path,
       });
       const directoryOutcome = result.outcomes.find(
@@ -106,12 +106,12 @@ describe('verifyProject', () => {
   it('applies a relative source overlay when verifying imports', async () => {
     const fixture = await createFixture({
       ...conformingFiles,
-      'fafconfig.ts': configSource(''),
+      'faf.config.ts': configSource(''),
     });
 
     try {
       const result = verifyProject({
-        configPath: 'fafconfig.ts',
+        configPath: 'faf.config.ts',
         fileOverlays: new Map([
           [
             'src/_utils/widget/index.ts',
@@ -133,14 +133,14 @@ describe('verifyProject', () => {
   it('anchors an unresolved import to the file and the import line', async () => {
     const fixture = await createFixture({
       ...conformingFiles,
-      'fafconfig.ts': configSource(''),
+      'faf.config.ts': configSource(''),
       'src/_utils/widget/index.ts':
         "import { widget } from './widget.util.js';\nimport { missing } from './missing.js';\nexport { widget };\n",
     });
 
     try {
       const result = verifyProject({
-        configPath: nodePath.join(fixture.path, 'fafconfig.ts'),
+        configPath: nodePath.join(fixture.path, 'faf.config.ts'),
         workingDirectory: fixture.path,
       });
       const unresolved = result.outcomes.find(
@@ -159,7 +159,7 @@ describe('verifyProject', () => {
     const fixture = await createFixture({
       'external/bridge.ts':
         "import { target } from '../src/_utils/target/index.js';\nexport function bridge() { return target(); }\n",
-      'fafconfig.ts': configSource(''),
+      'faf.config.ts': configSource(''),
       'package.json': packageJson,
       'src/_utils/source/index.ts':
         "import { bridge } from '../../../external/bridge.js';\nexport function source() { return bridge(); }\n",
@@ -172,7 +172,7 @@ describe('verifyProject', () => {
     const treeFrontierModule = await import('./_norms/tree-frontier/index.js');
     const spy = vi.spyOn(treeFrontierModule, 'verifyTreeFrontier');
     try {
-      const configPath = nodePath.join(fixture.path, 'fafconfig.ts');
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
       verifyProject({
         configPath,
         workingDirectory: fixture.path,

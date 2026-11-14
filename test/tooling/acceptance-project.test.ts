@@ -42,7 +42,7 @@ describe('acceptance project support', () => {
   it('creates a real project from a tree and a configuration object', async () => {
     const fixture = await createProject(tree, config);
     try {
-      expect(await fixture.readFile('fafconfig.ts', 'utf8')).toBe(
+      expect(await fixture.readFile('faf.config.ts', 'utf8')).toBe(
         "export default { faf: { locals: [ { roles: [ { category: '_utils', name: 'util' } ], rootLayers: [ 'src' ] } ] } };\n"
       );
       expect(await fixture.readJson('package.json')).toEqual({
@@ -70,12 +70,12 @@ describe('acceptance project support', () => {
       config
     );
     try {
-      const files = ['fafconfig.ts', 'src/mystery/a.ts', 'src/mystery/b.ts'];
+      const files = ['faf.config.ts', 'src/mystery/a.ts', 'src/mystery/b.ts'];
       const forward = await lintScenario(fixture.path, files);
       const reverse = await lintScenario(fixture.path, [
         'src/mystery/b.ts',
         'src/mystery/a.ts',
-        'fafconfig.ts',
+        'faf.config.ts',
       ]);
       expect(reverse).toEqual(forward);
       expect(forward).toEqual(
