@@ -147,9 +147,9 @@ describe('prepareProject', () => {
     }
   });
 
-  it('composes subCategoryHierarchies and horizontalHierarchies when direct children exist, and blocks when a member is missing', async () => {
+  it('composes horizontalHierarchyModels and horizontalHierarchies when direct children exist, and blocks when a member is missing', async () => {
     const validFixture = await createFixture({
-      'faf.config.ts': `export default { faf: { common: { subCategoryHierarchies: [[['_atoms'], ['_molecules']]] }, locals: [{ ${roles} horizontalHierarchies: [{ hierarchy: [['_domain'], ['_ui']], path: 'src' }], rootLayers: ['src'] }] } };`,
+      'faf.config.ts': `export default { faf: { common: { horizontalHierarchyModels: [[['_atoms'], ['_molecules']]] }, locals: [{ ${roles} horizontalHierarchies: [{ hierarchy: [['_domain'], ['_ui']], path: 'src' }], rootLayers: ['src'] }] } };`,
       'package.json': JSON.stringify({ type: 'module' }),
       'src/_domain/.keep': '',
       'src/_ui/.keep': '',
@@ -160,7 +160,7 @@ describe('prepareProject', () => {
       );
       expect(ready.kind).toBe('ready');
       if (ready.kind === 'ready') {
-        expect(ready.declarations.trees[0]?.subCategoryHierarchies).toEqual([
+        expect(ready.declarations.trees[0]?.horizontalHierarchyModels).toEqual([
           [['_atoms'], ['_molecules']],
         ]);
         expect(ready.declarations.trees[0]?.horizontalHierarchies).toEqual([

@@ -190,13 +190,15 @@ export const filterByTreeContainment = (
     ),
     foreignNodes: buildForeignNodes(),
     horizontalHierarchies: buildHorizontalHierarchies(),
+    horizontalHierarchyModels:
+      local.horizontalHierarchyModels ??
+      common?.horizontalHierarchyModels ??
+      [],
     mimeticPathStructures: buildMimeticStructures(),
     publicRootNodes: buildSortedPaths(
       local.publicRootNodes ?? common?.publicRootNodes,
       local.publicRootNodes === undefined
     ),
-    subCategoryHierarchies:
-      local.subCategoryHierarchies ?? common?.subCategoryHierarchies ?? [],
     treeDependencyPairs: buildTreeDependencyPairs(),
   };
 };

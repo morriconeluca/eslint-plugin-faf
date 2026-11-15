@@ -22,6 +22,16 @@ const FAF_NEXT_EXAMPLE_CONFIG = {
           patterns: ['*.md'],
         },
       ],
+      horizontalHierarchyModels: [
+        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
+        [
+          ['_primitives'],
+          ['_compounds'],
+          ['_aggregates'],
+          ['_systems'],
+          ['_ecosystems'],
+        ],
+      ],
       roles: [
         [
           {
@@ -80,16 +90,6 @@ const FAF_NEXT_EXAMPLE_CONFIG = {
           { category: '_pages', name: 'page' },
           { category: '_routes', name: 'route' },
           { category: '_stores', name: 'store' },
-        ],
-      ],
-      subCategoryHierarchies: [
-        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
-        [
-          ['_primitives'],
-          ['_compounds'],
-          ['_aggregates'],
-          ['_systems'],
-          ['_ecosystems'],
         ],
       ],
       subGraphRoles: [{ name: 'spec' }, { name: 'story' }],
@@ -218,6 +218,15 @@ describe('validateConfigFormat', () => {
                 path: 'src/_src@shared',
               },
             ],
+            horizontalHierarchyModels: [
+              [
+                ['_primitives'],
+                ['_compounds'],
+                ['_aggregates'],
+                ['_systems'],
+                ['_ecosystems'],
+              ],
+            ],
             publicRootNodes: ['src/main.ts'],
             roles: [
               {
@@ -252,15 +261,6 @@ describe('validateConfigFormat', () => {
               { category: '_rules', name: 'rule' },
             ],
             rootFragments: [{ path: 'src', rootNodes: [['main.ts']] }],
-            subCategoryHierarchies: [
-              [
-                ['_primitives'],
-                ['_compounds'],
-                ['_aggregates'],
-                ['_systems'],
-                ['_ecosystems'],
-              ],
-            ],
             subGraphRoles: [{ name: 'spec' }],
           },
         ],
@@ -450,6 +450,31 @@ describe('validateConfigFormat', () => {
       propertyPath: 'faf.locals[0].localHorizontalHierarchies',
     },
     {
+      constraint: 'configuration/unknown-property',
+      description: 'removed subCategoryHierarchies in common',
+      message: 'Unknown property "subCategoryHierarchies" is forbidden.',
+      normativeReference: 'FAF §1.2, §6.9',
+      payload: {
+        faf: {
+          common: { subCategoryHierarchies: [] },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      },
+      propertyPath: 'faf.common.subCategoryHierarchies',
+    },
+    {
+      constraint: 'configuration/unknown-property',
+      description: 'removed subCategoryHierarchies in locals',
+      message: 'Unknown property "subCategoryHierarchies" is forbidden.',
+      normativeReference: 'FAF §1.2, §6.9',
+      payload: {
+        faf: {
+          locals: [{ rootLayers: ['src'], subCategoryHierarchies: [] }],
+        },
+      },
+      propertyPath: 'faf.locals[0].subCategoryHierarchies',
+    },
+    {
       constraint: 'configuration/scope-mismatch',
       description: 'horizontalHierarchies in common',
       message: 'Property "horizontalHierarchies" cannot be declared in common.',
@@ -625,43 +650,43 @@ describe('validateConfigFormat', () => {
     },
     {
       constraint: 'configuration/empty-tier',
-      description: 'empty tier in common subCategoryHierarchies',
+      description: 'empty tier in common horizontalHierarchyModels',
       message: 'Hierarchy tier cannot be empty.',
       normativeReference: 'FAF §6.2.2',
       payload: {
         faf: {
-          common: { subCategoryHierarchies: [[[], ['_molecules']]] },
+          common: { horizontalHierarchyModels: [[[], ['_molecules']]] },
           locals: [{ rootLayers: ['src'] }],
         },
       },
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0]',
     },
     {
       constraint: 'configuration/insufficient-hierarchy-tiers',
-      description: 'single tier in common subCategoryHierarchies',
+      description: 'single tier in common horizontalHierarchyModels',
       message: 'Hierarchy must declare at least two Rank tiers.',
       normativeReference: 'FAF §4',
       payload: {
         faf: {
-          common: { subCategoryHierarchies: [[['_atoms']]] },
+          common: { horizontalHierarchyModels: [[['_atoms']]] },
           locals: [{ rootLayers: ['src'] }],
         },
       },
-      propertyPath: 'faf.common.subCategoryHierarchies[0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0]',
     },
     {
       constraint: 'configuration/invalid-sub-category-name',
-      description: 'non-underscore member in common subCategoryHierarchies',
+      description: 'non-underscore member in common horizontalHierarchyModels',
       message:
         'Member must be an underscore-prefixed kebab-case Sub-Category name.',
       normativeReference: 'FAF §4, §6.3.4',
       payload: {
         faf: {
-          common: { subCategoryHierarchies: [[['atoms'], ['_molecules']]] },
+          common: { horizontalHierarchyModels: [[['atoms'], ['_molecules']]] },
           locals: [{ rootLayers: ['src'] }],
         },
       },
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
     },
     {
       constraint: 'configuration/missing-property',
@@ -1088,13 +1113,13 @@ describe('validateConfigFormat', () => {
     }
   });
 
-  describe('subCategoryHierarchies Category name conflict validation', () => {
-    it('rejects common subCategoryHierarchies member matching common role category without duplication', () => {
+  describe('horizontalHierarchyModels Category name conflict validation', () => {
+    it('rejects common horizontalHierarchyModels member matching common role category without duplication', () => {
       const result = validateConfigFormat({
         faf: {
           common: {
+            horizontalHierarchyModels: [[['_types'], ['_molecules']]],
             roles: [{ category: '_types', name: 'type' }],
-            subCategoryHierarchies: [[['_types'], ['_molecules']]],
           },
           locals: [{ rootLayers: ['src'] }, { rootLayers: ['lib'] }],
         },
@@ -1106,24 +1131,25 @@ describe('validateConfigFormat', () => {
       const conflicts = result.outcomes.filter(
         (o) =>
           o.constraint ===
-          'configuration/sub-category-hierarchy-category-conflict'
+          'configuration/horizontal-hierarchy-model-category-conflict'
       );
       expect(conflicts).toHaveLength(1);
       expect(conflicts[0]).toMatchObject({
-        constraint: 'configuration/sub-category-hierarchy-category-conflict',
-        element: 'faf.common.subCategoryHierarchies[0][0][0]',
+        constraint:
+          'configuration/horizontal-hierarchy-model-category-conflict',
+        element: 'faf.common.horizontalHierarchyModels[0][0][0]',
         family: 'configuration',
         normativeReference: 'FAF §6.3.4',
-        propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+        propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
       });
       expect(conflicts[0]?.message).toContain('_types');
     });
 
-    it('checks inherited common subCategoryHierarchies against each local roles and deduplicates by propertyPath', () => {
+    it('checks inherited common horizontalHierarchyModels against each local roles and deduplicates by propertyPath', () => {
       const result = validateConfigFormat({
         faf: {
           common: {
-            subCategoryHierarchies: [[['_types'], ['_utils']]],
+            horizontalHierarchyModels: [[['_types'], ['_utils']]],
           },
           locals: [
             {
@@ -1149,19 +1175,19 @@ describe('validateConfigFormat', () => {
         (o) =>
           o.family === 'configuration' &&
           o.constraint ===
-            'configuration/sub-category-hierarchy-category-conflict'
+            'configuration/horizontal-hierarchy-model-category-conflict'
       );
       expect(
         conflicts.map((c) =>
           c.family === 'configuration' ? c.propertyPath : ''
         )
       ).toEqual([
-        'faf.common.subCategoryHierarchies[0][0][0]',
-        'faf.common.subCategoryHierarchies[0][1][0]',
+        'faf.common.horizontalHierarchyModels[0][0][0]',
+        'faf.common.horizontalHierarchyModels[0][1][0]',
       ]);
     });
 
-    it('checks local subCategoryHierarchies against inherited common roles and respects local role overrides', () => {
+    it('checks local horizontalHierarchyModels against inherited common roles and respects local role overrides', () => {
       const inheritedRolesConflict = validateConfigFormat({
         faf: {
           common: {
@@ -1169,8 +1195,8 @@ describe('validateConfigFormat', () => {
           },
           locals: [
             {
+              horizontalHierarchyModels: [[['_atoms'], ['_hooks']]],
               rootLayers: ['src'],
-              subCategoryHierarchies: [[['_atoms'], ['_hooks']]],
             },
           ],
         },
@@ -1181,7 +1207,7 @@ describe('validateConfigFormat', () => {
           inheritedRolesConflict.outcomes.map((o) =>
             o.family === 'configuration' ? o.propertyPath : ''
           )
-        ).toEqual(['faf.locals[0].subCategoryHierarchies[0][1][0]']);
+        ).toEqual(['faf.locals[0].horizontalHierarchyModels[0][1][0]']);
       }
 
       const overriddenRolesValid = validateConfigFormat({
@@ -1191,9 +1217,9 @@ describe('validateConfigFormat', () => {
           },
           locals: [
             {
+              horizontalHierarchyModels: [[['_atoms'], ['_hooks']]],
               roles: [{ category: '_utils', name: 'util' }],
               rootLayers: ['src'],
-              subCategoryHierarchies: [[['_atoms'], ['_hooks']]],
             },
           ],
         },
@@ -1201,10 +1227,10 @@ describe('validateConfigFormat', () => {
       expect(overriddenRolesValid.ok).toBe(true);
     });
 
-    it('handles malformed subCategoryHierarchies and explicit undefined horizontalHierarchies in common', () => {
+    it('handles malformed horizontalHierarchyModels and explicit undefined horizontalHierarchies in common', () => {
       const commonRecord: Record<string, unknown> = {
+        horizontalHierarchyModels: ['not-an-array', ['not-a-tier']],
         roles: [{ category: '_types', name: 'type' }],
-        subCategoryHierarchies: ['not-an-array', ['not-a-tier']],
       };
       Object.defineProperty(commonRecord, 'horizontalHierarchies', {
         enumerable: true,

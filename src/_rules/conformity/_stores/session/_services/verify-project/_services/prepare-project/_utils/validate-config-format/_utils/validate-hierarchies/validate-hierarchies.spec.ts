@@ -19,7 +19,7 @@ describe('validateHierarchies', () => {
     expect(outcomes).toHaveLength(0);
   });
 
-  it('accepts valid subCategoryHierarchies and local horizontalHierarchies', () => {
+  it('accepts valid horizontalHierarchyModels and local horizontalHierarchies', () => {
     const outcomes = validateHierarchies(
       {
         horizontalHierarchies: [
@@ -32,7 +32,7 @@ describe('validateHierarchies', () => {
             path: 'src/_components/button',
           },
         ],
-        subCategoryHierarchies: [
+        horizontalHierarchyModels: [
           [['_types'], ['_utils']],
           [['_atoms'], ['_molecules'], ['_organisms']],
         ],
@@ -42,114 +42,114 @@ describe('validateHierarchies', () => {
     expect(outcomes).toHaveLength(0);
   });
 
-  it('accepts empty subCategoryHierarchies and horizontalHierarchies arrays', () => {
+  it('accepts empty horizontalHierarchyModels and horizontalHierarchies arrays', () => {
     expect(
       validateHierarchies(
-        { horizontalHierarchies: [], subCategoryHierarchies: [] },
+        { horizontalHierarchies: [], horizontalHierarchyModels: [] },
         'faf.locals[0]'
       )
     ).toHaveLength(0);
   });
 
-  const subCategoryCases: readonly {
+  const modelCases: readonly {
     readonly config: Record<string, unknown>;
     readonly constraint: TConfigConstraint;
     readonly propertyPath: string;
   }[] = [
     {
-      config: { subCategoryHierarchies: null },
+      config: { horizontalHierarchyModels: null },
       constraint: 'configuration/null-forbidden',
-      propertyPath: 'faf.common.subCategoryHierarchies',
+      propertyPath: 'faf.common.horizontalHierarchyModels',
     },
     {
-      config: { subCategoryHierarchies: 'none' },
+      config: { horizontalHierarchyModels: 'none' },
       constraint: 'configuration/invalid-type',
-      propertyPath: 'faf.common.subCategoryHierarchies',
+      propertyPath: 'faf.common.horizontalHierarchyModels',
     },
     {
-      config: { subCategoryHierarchies: [null] },
+      config: { horizontalHierarchyModels: [null] },
       constraint: 'configuration/null-forbidden',
-      propertyPath: 'faf.common.subCategoryHierarchies[0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0]',
     },
     {
-      config: { subCategoryHierarchies: ['none'] },
+      config: { horizontalHierarchyModels: ['none'] },
       constraint: 'configuration/invalid-type',
-      propertyPath: 'faf.common.subCategoryHierarchies[0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0]',
     },
     {
-      config: { subCategoryHierarchies: [[]] },
+      config: { horizontalHierarchyModels: [[]] },
       constraint: 'configuration/insufficient-hierarchy-tiers',
-      propertyPath: 'faf.common.subCategoryHierarchies[0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0]',
     },
     {
-      config: { subCategoryHierarchies: [[['_atoms']]] },
+      config: { horizontalHierarchyModels: [[['_atoms']]] },
       constraint: 'configuration/insufficient-hierarchy-tiers',
-      propertyPath: 'faf.common.subCategoryHierarchies[0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0]',
     },
     {
-      config: { subCategoryHierarchies: [[null, ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[null, ['_molecules']]] },
       constraint: 'configuration/null-forbidden',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0]',
     },
     {
-      config: { subCategoryHierarchies: [['none', ['_molecules']]] },
+      config: { horizontalHierarchyModels: [['none', ['_molecules']]] },
       constraint: 'configuration/invalid-type',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[[], ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[[], ['_molecules']]] },
       constraint: 'configuration/empty-tier',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[[null], ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[[null], ['_molecules']]] },
       constraint: 'configuration/null-forbidden',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[[123], ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[[123], ['_molecules']]] },
       constraint: 'configuration/invalid-type',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[[''], ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[[''], ['_molecules']]] },
       constraint: 'configuration/empty-string',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[['atoms'], ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[['atoms'], ['_molecules']]] },
       constraint: 'configuration/invalid-sub-category-name',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[['_'], ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[['_'], ['_molecules']]] },
       constraint: 'configuration/invalid-sub-category-name',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[['__atoms'], ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[['__atoms'], ['_molecules']]] },
       constraint: 'configuration/invalid-sub-category-name',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[['_Atoms'], ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[['_Atoms'], ['_molecules']]] },
       constraint: 'configuration/invalid-sub-category-name',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[['_[id]'], ['_molecules']]] },
+      config: { horizontalHierarchyModels: [[['_[id]'], ['_molecules']]] },
       constraint: 'configuration/invalid-sub-category-name',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][0][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]',
     },
     {
-      config: { subCategoryHierarchies: [[['_atoms'], ['_atoms']]] },
+      config: { horizontalHierarchyModels: [[['_atoms'], ['_atoms']]] },
       constraint: 'configuration/duplicate-element',
-      propertyPath: 'faf.common.subCategoryHierarchies[0][1][0]',
+      propertyPath: 'faf.common.horizontalHierarchyModels[0][1][0]',
     },
   ];
 
-  it.each(subCategoryCases)(
-    'rejects invalid subCategoryHierarchies producing $constraint',
+  it.each(modelCases)(
+    'rejects invalid horizontalHierarchyModels producing $constraint',
     ({ config, constraint, propertyPath }) => {
       const outcomes = validateHierarchies(config, 'faf.common');
       const outcome = outcomes.find(
@@ -165,9 +165,9 @@ describe('validateHierarchies', () => {
     }
   );
 
-  it('does not emit invalid-sub-category-name alongside empty-string for empty subCategoryHierarchies member', () => {
+  it('does not emit invalid-sub-category-name alongside empty-string for empty horizontalHierarchyModels member', () => {
     const outcomes = validateHierarchies(
-      { subCategoryHierarchies: [[[''], ['_molecules']]] },
+      { horizontalHierarchyModels: [[[''], ['_molecules']]] },
       'faf.common'
     );
     expect(outcomes).toHaveLength(1);

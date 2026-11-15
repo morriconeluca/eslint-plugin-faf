@@ -1,4 +1,7 @@
-import type { TFAFDomainHierarchy } from '../../../../../../../../../_src@shared/_types/faf-config.type.js';
+import type {
+  TFAFHorizontalHierarchy,
+  TFAFHorizontalHierarchyModel,
+} from '../../../../../../../../../_src@shared/_types/faf-config.type.js';
 
 /**
  * Configuration source from which path alias definitions were retrieved.
@@ -86,13 +89,13 @@ export type TEffectiveForeignNodes = {
 };
 
 /**
- * Domain-scoped horizontal hierarchy applied to a specific parent directory path.
+ * Horizontal Hierarchy established for a single parent Logical Domain applied to a specific parent directory path.
  */
 export type TEffectiveHorizontalHierarchy = {
   /**
    * Tiered descending rank tiers where each tier lists allowed direct child names.
    */
-  readonly hierarchy: TFAFDomainHierarchy;
+  readonly hierarchy: TFAFHorizontalHierarchy['hierarchy'];
 
   /**
    * Explicit parent folder location governed by this ordering structure.
@@ -250,9 +253,14 @@ export type TEffectiveTree = {
   readonly foreignNodes: TEffectiveForeignNodes;
 
   /**
-   * Domain-scoped horizontal hierarchy definitions bound to explicit folder locations in this tree.
+   * Horizontal Hierarchies established for a single parent Logical Domain bound to explicit folder locations in this tree.
    */
   readonly horizontalHierarchies: readonly TEffectiveHorizontalHierarchy[];
+
+  /**
+   * Tree-wide Horizontal Hierarchy models applied to matching sibling Sub-Categories.
+   */
+  readonly horizontalHierarchyModels: readonly TFAFHorizontalHierarchyModel[];
 
   /**
    * Designated organizational folders mirroring external HTTP or command structures.
@@ -278,11 +286,6 @@ export type TEffectiveTree = {
    * Hierarchical root fragments comprising the entry boundary of this tree.
    */
   readonly rootFragments: readonly TEffectiveRootFragment[];
-
-  /**
-   * Tree-wide descending rank tiers applied to matching sibling sub-categories.
-   */
-  readonly subCategoryHierarchies: readonly TFAFDomainHierarchy[];
 
   /**
    * Authorized unidirectional dependency pairs linking this tree to other trees.

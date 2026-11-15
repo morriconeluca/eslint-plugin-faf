@@ -3,20 +3,18 @@ import { describe, expect, it } from 'vitest';
 import { hierarchiesSchema } from './hierarchies-schema.schema.js';
 
 describe('hierarchiesSchema', () => {
-  it('validates subCategoryHierarchies and horizontalHierarchies', () => {
-    expect(hierarchiesSchema.subCategory.safeParse([]).success).toBe(true);
+  it('validates horizontalHierarchyModels and horizontalHierarchies', () => {
+    expect(hierarchiesSchema.models.safeParse([]).success).toBe(true);
     expect(
-      hierarchiesSchema.subCategory.safeParse([[['_atoms'], ['_molecules']]])
-        .success
+      hierarchiesSchema.models.safeParse([[['_atoms'], ['_molecules']]]).success
     ).toBe(true);
+    expect(hierarchiesSchema.models.safeParse([[['_atoms']]]).success).toBe(
+      false
+    );
     expect(
-      hierarchiesSchema.subCategory.safeParse([[['_atoms']]]).success
+      hierarchiesSchema.models.safeParse([[['atoms'], ['_molecules']]]).success
     ).toBe(false);
-    expect(
-      hierarchiesSchema.subCategory.safeParse([[['atoms'], ['_molecules']]])
-        .success
-    ).toBe(false);
-    expect(hierarchiesSchema.subCategory.safeParse(null).success).toBe(false);
+    expect(hierarchiesSchema.models.safeParse(null).success).toBe(false);
 
     expect(hierarchiesSchema.horizontal.safeParse([]).success).toBe(true);
     expect(

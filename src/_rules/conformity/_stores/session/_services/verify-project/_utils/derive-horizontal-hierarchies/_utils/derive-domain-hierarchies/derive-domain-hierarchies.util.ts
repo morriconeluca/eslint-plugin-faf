@@ -1,4 +1,4 @@
-import type { TFAFDomainHierarchy } from '../../../../../../../../../../_src@shared/_types/faf-config.type.js';
+import type { TFAFHierarchy } from '../../../../../../../../../../_src@shared/_types/faf-config.type.js';
 import type { TLogicalDomainKind } from '../../../../_verify-project@shared/_types/_compounds/classification.type.js';
 import type {
   THorizontalHierarchySet,
@@ -10,15 +10,13 @@ import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compar
 import { isOrderableSiblingSet } from './_utils/is-orderable-sibling-set/index.js';
 
 export const deriveDomainHierarchies = (() => {
-  const SUB_CATEGORY = 'sub-category' as const;
+  const SUB_CATEGORY_DOMAIN = 'sub-category' as const;
 
   const isSubCategoryEligibleParent = (
     domainKind: null | TLogicalDomainKind | undefined
-  ): boolean => domainKind === 'category' || domainKind === SUB_CATEGORY;
+  ): boolean => domainKind === 'category' || domainKind === SUB_CATEGORY_DOMAIN;
 
-  const collectRepetitions = (
-    hierarchy: TFAFDomainHierarchy
-  ): readonly string[] => {
+  const collectRepetitions = (hierarchy: TFAFHierarchy): readonly string[] => {
     const names = hierarchy.flat();
     const repetitions = [
       ...new Set(names.filter((name, index) => names.indexOf(name) !== index)),
@@ -28,7 +26,7 @@ export const deriveDomainHierarchies = (() => {
   };
 
   const collectSiblings = (
-    hierarchy: TFAFDomainHierarchy,
+    hierarchy: TFAFHierarchy,
     context: THierarchyContext,
     isSubCategoryOnly: boolean
   ): readonly TSiblingRank[] =>
@@ -42,7 +40,7 @@ export const deriveDomainHierarchies = (() => {
               child.path.split('/').at(-1) === name &&
               (!isSubCategoryOnly ||
                 context.taxonomy.byItemId.get(child.id)?.domainKind ===
-                  SUB_CATEGORY)
+                  SUB_CATEGORY_DOMAIN)
           )
           .map((child) => ({ itemId: child.id, rank }))
       );
@@ -55,16 +53,16 @@ export const deriveDomainHierarchies = (() => {
     const sets: Omit<THorizontalHierarchySet, 'id'>[] = [];
 
     if (isSubCategoryEligibleParent(classification?.domainKind)) {
-      for (const hierarchy of context.tree.subCategoryHierarchies) {
-        const siblings = collectSiblings(hierarchy, context, true);
+      for (const model of context.tree.horizontalHierarchyModels) {
+        const siblings = collectSiblings(model, context, true);
         if (siblings.length === 0) {
           continue;
         }
         sets.push({
           isOrderable: true,
-          origin: SUB_CATEGORY,
+          origin: 'horizontal-hierarchy-model',
           parentPath: context.parent.path,
-          repetitions: collectRepetitions(hierarchy),
+          repetitions: collectRepetitions(model),
           siblings,
         });
       }
@@ -82,7 +80,7 @@ export const deriveDomainHierarchies = (() => {
             context.taxonomy.byItemId.get(sibling.itemId)
           )
         ),
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: context.parent.path,
         repetitions: collectRepetitions(entry.hierarchy),
         siblings,

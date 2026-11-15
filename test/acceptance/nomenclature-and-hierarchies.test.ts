@@ -943,7 +943,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_utils/_right/_b/target',
         '../../../_right/_b/target/index.js'
       ),
-      rootLayer({ subCategoryHierarchies: [[['_b'], ['_a']]] }),
+      rootLayer({ horizontalHierarchyModels: [[['_b'], ['_a']]] }),
       [
         peerSeparationViolation(
           'src/_utils/_left/_a/source/source.util.ts',
@@ -1211,7 +1211,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
       await scenario(
         tree,
         rootLayer({
-          subCategoryHierarchies: [partitions.map((name) => [name])],
+          horizontalHierarchyModels: [partitions.map((name) => [name])],
         })
       );
       await scenario(tree, rootLayer(), [
@@ -1228,7 +1228,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
           reverseSpecifier
         ),
         rootLayer({
-          subCategoryHierarchies: [partitions.map((name) => [name])],
+          horizontalHierarchyModels: [partitions.map((name) => [name])],
         }),
         [
           peerSeparationViolation(
@@ -1246,7 +1246,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
     await scenario(
       linkedFragments('src/_utils/_atoms/a', 'src/_utils/_atoms/b', specifier),
       rootLayer({
-        subCategoryHierarchies: [
+        horizontalHierarchyModels: [
           [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
         ],
       }),
@@ -1294,7 +1294,7 @@ describe('acceptance: admissible Horizontal Hierarchies', () => {
         'src/_utils/_low/b',
         '../../_low/b/index.js'
       ),
-      rootLayer({ subCategoryHierarchies: [[['_low'], ['_high']]] })
+      rootLayer({ horizontalHierarchyModels: [[['_low'], ['_high']]] })
     );
   });
 });

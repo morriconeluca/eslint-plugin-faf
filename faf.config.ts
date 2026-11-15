@@ -39,6 +39,15 @@ export default {
             path: 'src/_rules/conformity/_stores/session/_session@shared',
           },
         ],
+        horizontalHierarchyModels: [
+          [
+            ['_primitives'],
+            ['_compounds'],
+            ['_aggregates'],
+            ['_systems'],
+            ['_ecosystems'],
+          ],
+        ],
         publicRootNodes: ['src/main.ts'],
         roles: [
           {
@@ -74,15 +83,6 @@ export default {
           { category: '_rules', name: 'rule' },
         ],
         rootFragments: [{ path: 'src', rootNodes: [['main.ts']] }],
-        subCategoryHierarchies: [
-          [
-            ['_primitives'],
-            ['_compounds'],
-            ['_aggregates'],
-            ['_systems'],
-            ['_ecosystems'],
-          ],
-        ],
         subGraphRoles: [{ name: 'spec' }],
       },
     ],

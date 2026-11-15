@@ -88,12 +88,12 @@ function createTree(originPath: string): TEffectiveTree {
     foreignDomains: [],
     foreignNodes: { families: [], individualPaths: [] },
     horizontalHierarchies: [],
+    horizontalHierarchyModels: [],
     mimeticPathStructures: [],
     originKind: 'root-layer',
     originPath,
     publicRootNodes: [],
     rootFragments: [],
-    subCategoryHierarchies: [],
     treeDependencyPairs: [],
   };
 }
@@ -200,10 +200,10 @@ describe('validateConfigReferences', () => {
             'src/README.md',
             { paths: ['src'], patterns: ['*.missing'] },
           ],
+          horizontalHierarchyModels: [[['_absent-a'], ['_absent-b']]],
           mimeticPathStructures: [{ actions: ['get'], paths: ['src/_apis'] }],
           publicRootNodes: ['src/app/app.tsx'],
           roles: [{ category: '_missing', name: 'missing' }],
-          subCategoryHierarchies: [[['_absent-a'], ['_absent-b']]],
         },
         locals: [
           {
@@ -403,8 +403,8 @@ describe('validateConfigReferences', () => {
         faf: {
           common: {
             foreignNodes: [{ paths: ['src'], patterns: ['*.md'] }],
+            horizontalHierarchyModels: [[['_not-present'], ['_also-absent']]],
             roles: [{ category: '_never-created', name: 'ghost' }],
-            subCategoryHierarchies: [[['_not-present'], ['_also-absent']]],
           },
           locals: [localLayer('src')],
         },

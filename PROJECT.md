@@ -16,28 +16,25 @@ Complements `AGENTS.md` (FAF specification) and `faf.config.ts` (repository Decl
   - `prepareProject(configPath)`: `loadConfig` -> `validateConfigFormat` -> `readPackageJson` -> `acquirePathAliases` -> `composeDeclarations` -> `listEntries` -> `buildInventory` -> `includeExternalTargets` -> `validateConfigReferences`.
   - `verifyProject`: `prepareProject` -> `classifyTaxonomy` -> `deriveHorizontalHierarchies` -> `derivePublicSurface` -> `collectModules` -> `buildDependencyGraph` -> `deriveExternalCrossings` -> `_norms/*` (23 norms) -> `anchorOutcomes` -> `collectExternalFiles`.
 - **Stage Independence and Failure Mode**: Pipeline stages never import one another; `verifyProject` composes them. Verification halts immediately on blocking preparation defects (configuration or inventory failure); otherwise, non-blocking preparation, taxonomy, module, graph, and norm outcomes all accumulate. The 23 Fragments under `_norms/` are mutually independent and named after the FAF prescription they check.
-- **Outcome Catalog and Anchoring**: Every diagnostic outcome is constructed exclusively through `createOutcome`, backed by the closed `OUTCOME_CATALOG` in `_conformity@shared`, and deterministically projected by `anchorOutcomes` onto a single lintable file path.
-- **Session Memoization and Cache**: `session` memoizes anchored outcomes per `faf.config.ts`, invalidating on watched-file fingerprints (`faf.config.ts`, its local imports, `package.json`, external files), tree origins, or in-memory `context.sourceCode.text` overlays. Content-addressed Module Records are persisted under `node_modules/.cache/eslint-plugin-faf` and cleared in memory when the active config path changes.
+- **Outcome Catalog and Anchoring**: Every diagnostic outcome is constructed exclusively through `createOutcome` (encapsulating the closed `OUTCOME_CATALOG`) and deterministically projected by `anchorOutcomes` onto a single lintable file path.
+- **Session Memoization and Cache**: `session` memoizes anchored outcomes per `faf.config.ts` based on file/origin fingerprints (`faf.config.ts`, its local imports, `package.json`, external files, tree origins) and in-memory `context.sourceCode.text` overlays without owning `verifyProject`, while `collectModules` encapsulates persistent content-addressed `Module Record` caching under `node_modules/.cache/eslint-plugin-faf` (clearing in-memory records when the active config path changes).
 
 ## 3. Role Semantics, Purity, and Placement Rules
 
-- **Role Responsibilities** _(complementing Ranks and forms in `faf.config.ts`)_:
-  - `constant`: primitive literals with zero dependencies.
-  - `schema`: declarative runtime validation schemas only; must never import `.type.ts`, `_types/`, `_configs/`, `_mocks/`, or external `_utils/`.
-  - `type`: static type declarations only; zero runtime code, zero value imports, mandatory JSDoc.
-  - `mock`: synthetic in-memory test/sample data (excluded from coverage and mutation).
-  - `config`: typed immutable domain tables and catalogs (e.g., containment matrix, `OUTCOME_CATALOG`).
-  - `util`: pure functional transformations, including `.safeParse(...)` execution and error-to-outcome translation.
-  - `norm`: pure FAF norm check `(model) => outcomes`.
-  - `adapter`: sole boundary for side effects (`fs`, worker threads, child processes, `oxc-resolver`, `process`); catches external exceptions and translates them into structured outcomes.
-  - `service`: pipeline coordination across adapters and pure stages.
-  - `store`: mutable process state encapsulated in module closures.
-  - `rule`: ESLint `{ meta, create }` rule module.
-  - `class` and `error` Roles are intentionally omitted in favor of pure functions and typed outcome data.
-- **Purity Enforced by Role** _(on `src/**/*.ts` excluding `*.spec.ts`)_:
-  - Only `*.adapter.ts` may import `node:fs`/`fs`, `node:worker_threads`/`worker_threads`, `node:child_process`/`child_process`, or `oxc-resolver`, instantiate external classes, or reference `process`.
-  - Pure Roles (`constant`, `schema`, `type`, `mock`, `config`, `util`, `norm`) must never import through `**/_adapters/**`.
-  - Only `service`, `store`, and `rule` may import adapters.
+- **Project Roles** _(complementing Ranks and forms in `faf.config.ts`)_:
+  - `constant`: primitive literals with zero dependencies (`isCategoryNode: true`, `allowMultipleSymbols: true`).
+  - `schema`: declarative Zod runtime validation schemas (`isCategoryNode: true`, `allowMultipleSymbols: true`); must never import `type`, `config`, `mock`, or `util`.
+  - `type`: static type declarations only (`isCategoryNode: true`, `allowMultipleSymbols: true`); zero runtime code, zero value imports, mandatory JSDoc.
+  - `config` & `mock` _(co-ranked)_: `config` for typed immutable domain tables/catalogs (`isCategoryNode: true`, `allowMultipleSymbols: true`); `mock` for synthetic in-memory test data (`isCategoryNode: true`, `allowMultipleSymbols: true`, excluded from coverage and mutation).
+  - `util`: domain functions — pure functional transformations and, exclusively in dedicated host-boundary units, synchronous I/O (`node:fs`, `node:worker_threads`, `oxc-resolver`, `process`) catching external exceptions and translating them into structured `TResult` / `TOutcome` values.
+  - `norm`, `rule`, `store` _(co-ranked at top Role Rank — Master Nodes only)_:
+    - `norm`: pure FAF norm check `(model) => outcomes`.
+    - `store`: sole modules encapsulating mutable in-memory process state in closures (`session` for fingerprint-invalidated outcome memoization; `module-record-store` encapsulated inside `collect-modules` for content-addressed `Module Record` caching).
+    - `rule`: ESLint `{ meta, create }` rule module (`conformity`, coordinating config discovery, `session`, and `verifyProject` as peers rather than nesting `verifyProject` inside `session`).
+  - `class`, `controller`, `service`, `adapter`, and `error` Roles are intentionally omitted in favor of functional composition and typed `TResult` / `TOutcome` data.
+- **Host I/O Boundary Isolation (Pure Core vs. Host I/O Leaves)** _(on `src/**/*.ts` excluding `*.spec.ts`)_:
+  - `constant`, `schema`, `type`, `config`, `mock`, all 23 `norm` units, and pure model/graph stages (`composeDeclarations`, `acquirePathAliases`, `validateConfigFormat`, `buildInventory`, `validateConfigReferences`, `classifyTaxonomy`, `deriveHorizontalHierarchies`, `derivePublicSurface`, `buildDependencyGraph`, `deriveExternalCrossings`, `anchorOutcomes`, `collectExternalFiles`) must remain 100% pure in memory (no `node:fs`, `node:worker_threads`, `node:child_process`, `oxc-resolver`, or `process`).
+  - Host effects are confined strictly to dedicated I/O boundary units (config discovery and worker loading, `package.json` reading and directory scanning, module reading and specifier resolution, persistent `.cache/eslint-plugin-faf` I/O, and file fingerprinting).
 - **Production-Only Placement and Reachability**:
   - Placement and promotion are determined exclusively by **production** consumers (`*.spec.ts` excluded).
   - Every production file in `src/` (excluding `*.spec.ts` and `*.mock.ts`) must be reachable from `src/main.ts` (enforced by `dependency-cruiser`).
@@ -55,11 +52,11 @@ Complements `AGENTS.md` (FAF specification) and `faf.config.ts` (repository Decl
   - Strict boolean expressions (no implicit coercion on strings, numbers, or nullable objects), exhaustive `switch` statements, `noUncheckedIndexedAccess`, `noPropertyAccessFromIndexSignature`, and `@typescript-eslint/no-unnecessary-condition` (`checkTypePredicates: true`).
   - **`repository/no-unknown-parameters`**: `unknown` in function parameter annotations under `src/` (excluding `*.spec.ts`) is forbidden except:
     1. On a parameter `p` when the function declares an explicit return type predicate `p is T` or `asserts p is T`.
-    2. In `*.adapter.ts` or `*.schema.ts`.
-    3. In `*.util.ts` containing a value `ImportDeclaration` from `/_schemas/` or `*.schema.js`.
+    2. In `*.schema.ts` or in `*.util.ts` importing a runtime schema (`/_schemas/` or `*.schema.js`).
+    3. At untyped external host or ESLint boundaries.
   - **`repository/no-decided-assertion`**: forbids `assertInvariant(typeof x === '...')` when static operand types already decide the comparison.
 - **Functional Style, Immutability, and Complexity**:
-  - `class` declarations/expressions, `this`, and `throw` statements are forbidden across the repository. The single exception for `throw` is `assertInvariant` (`src/_rules/conformity/_stores/session/_services/verify-project/_verify-project@shared/_utils/assert-invariant/assert-invariant.util.ts`), reserved strictly for broken internal invariants. Expected failures are always returned as data (`TResult` / `TOutcome`).
+  - `class` declarations/expressions, `this`, and `throw` statements are forbidden across the repository. The single exception for `throw` is `assertInvariant` (`assert-invariant.util.ts`), reserved strictly for broken internal invariants. Expected failures are always returned as data (`TResult` / `TOutcome`).
   - All boundary types, properties, arrays, Maps, and Sets must be `readonly`; function arguments must never be mutated. Local mutation is permitted solely on private data structures allocated inside the executing function (e.g., Tarjan SCC, CSR `Int32Array`).
   - Enforced structural limits: cyclomatic complexity `<= 10`, cognitive complexity `<= 15`, boolean expression complexity `<= 3`, control-flow nesting `<= 3`, arrow parameter parentheses required, no wildcard imports (`import * as`), natural sorting enforced by `eslint-plugin-perfectionist`, and `kebab-case` ASCII naming (`^[a-z0-9]+(?:-[a-z0-9]+)*$`).
 - **Comment and `*.type.ts` Policy (`repository/comment-policy` + `jsdoc/*`)**:
@@ -69,8 +66,8 @@ Complements `AGENTS.md` (FAF specification) and `faf.config.ts` (repository Decl
 ## 5. Testing Discipline
 
 - **Unit Specs**: Every Fragment under `src/` must have a sibling `<name>.spec.ts`.
-- **In-Memory Purity**: Specs for pure Roles (`constant`, `schema`, `type`, `mock`, `config`, `util`, `norm`) must use exclusively in-memory inputs (`_mocks` or inline data) and never touch the filesystem or spawn processes.
-- **Real Disk Fixtures (`fs-fixture`)**: Specs for `adapter`, `service`, `rule`, and suites in `test/` must use real temporary directories via `fs-fixture` or `os.tmpdir()` ( placed outside the repository). Virtual filesystems (`memfs`, `mock-fs`) are prohibited because `oxc-resolver` performs native OS calls; do not build custom wrapper utilities around `fs-fixture`. Acceptance tests use `test/support/acceptance-project.ts` (`createProject`, `warmupESLint`, `lintScenario`, `expectScenario`, `lintProject`).
+- **In-Memory Purity**: Specs for all pure units (`constant`, `schema`, `type`, `config`, `mock`, `norm`, and pure `util` units) must use exclusively in-memory inputs (`_mocks` or inline data) without touching the filesystem or spawning processes.
+- **Real Disk Fixtures (`fs-fixture`)**: Specs for host I/O units, `conformity` (`rule`), and suites in `test/` must use real temporary directories via `fs-fixture` or `os.tmpdir()` (placed outside the repository). Virtual filesystems (`memfs`, `mock-fs`) are prohibited because `oxc-resolver` performs native OS calls; do not build custom wrapper utilities around `fs-fixture`. Acceptance tests use `test/support/acceptance-project.ts` (`createProject`, `warmupESLint`, `lintScenario`, `expectScenario`, `lintProject`).
 - **Non-Tautological Assertions (`repository/no-tautological-assertion`)**: `expect` / `expect.soft` subjects that execute no code (`CallExpression`, `NewExpression`, `AwaitExpression`, `TaggedTemplateExpression`) and whose referenced identifiers all resolve to `*.constant.js` or `*.config.js` imports (directly or via `const` locals/containers) are forbidden. Assert observable outputs against literal expected values so constant/string mutants are killed.
 
 ## 6. Quality Gates and Commands

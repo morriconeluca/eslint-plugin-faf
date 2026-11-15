@@ -61,12 +61,12 @@ const defaultTree: TEffectiveTree = {
   foreignDomains: [],
   foreignNodes: { families: [], individualPaths: [] },
   horizontalHierarchies: [],
+  horizontalHierarchyModels: [],
   mimeticPathStructures: [],
   originKind: 'root-layer',
   originPath: 'src',
   publicRootNodes: [],
   rootFragments: [],
-  subCategoryHierarchies: [],
   treeDependencyPairs: [],
 };
 

@@ -23,7 +23,7 @@ export default {
           patterns: ['*.md'],
         },
       ],
-      subCategoryHierarchies: [
+      horizontalHierarchyModels: [
         [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
         [
           ['_primitives'],

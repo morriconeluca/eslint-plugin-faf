@@ -51,23 +51,19 @@ export const validateHierarchies = (() => {
       ? record[key]
       : undefined;
 
-  const subCategoryOutcomes = (
-    subCategory: unknown,
+  const modelOutcomes = (
+    models: unknown,
     basePath: string
   ): readonly TConfigOutcome[] => {
-    if (subCategory === undefined) {
+    if (models === undefined) {
       return [];
     }
-    const propertyPath = `${basePath}.subCategoryHierarchies`;
+    const propertyPath = `${basePath}.horizontalHierarchyModels`;
     const outcomes: TConfigOutcome[] = [
-      ...parseProperty(
-        hierarchiesSchema.subCategory,
-        subCategory,
-        propertyPath
-      ),
+      ...parseProperty(hierarchiesSchema.models, models, propertyPath),
     ];
-    if (Array.isArray(subCategory)) {
-      for (const [index, hierarchy] of subCategory.entries()) {
+    if (Array.isArray(models)) {
+      for (const [index, hierarchy] of models.entries()) {
         outcomes.push(
           ...hierarchyDuplicates(hierarchy, `${propertyPath}[${index}]`)
         );
@@ -109,10 +105,7 @@ export const validateHierarchies = (() => {
     basePath: string
   ): readonly TConfigOutcome[] {
     return [
-      ...subCategoryOutcomes(
-        present(config, 'subCategoryHierarchies'),
-        basePath
-      ),
+      ...modelOutcomes(present(config, 'horizontalHierarchyModels'), basePath),
       ...horizontalOutcomes(present(config, 'horizontalHierarchies'), basePath),
     ];
   };

@@ -6,7 +6,7 @@ import { hierarchyFixture } from '../../_derive-horizontal-hierarchies@shared/_m
 import { deriveDomainHierarchies } from './derive-domain-hierarchies.util.js';
 
 describe('deriveDomainHierarchies', () => {
-  it('applies subCategoryHierarchies to Category, Private Category and Sub-Category parents when at least one Sub-Category child matches', () => {
+  it('applies horizontalHierarchyModels to Category, Private Category and Sub-Category parents when at least one Sub-Category child matches', () => {
     for (const [parentKind, isPrivateCategory] of [
       ['category', false],
       ['category', true],
@@ -28,7 +28,7 @@ describe('deriveDomainHierarchies', () => {
           { domainKind: 'sub-category', path: 'src/_utils/_primitives-extra' },
         ],
         {
-          subCategoryHierarchies: [
+          horizontalHierarchyModels: [
             [['_primitives'], ['_aggregates'], ['_compounds']],
             [['_absent'], ['_other']],
           ],
@@ -38,7 +38,7 @@ describe('deriveDomainHierarchies', () => {
       expect(deriveDomainHierarchies(context)).toEqual([
         {
           isOrderable: true,
-          origin: 'sub-category',
+          origin: 'horizontal-hierarchy-model',
           parentPath: 'src/_utils',
           repetitions: [],
           siblings: [
@@ -50,21 +50,21 @@ describe('deriveDomainHierarchies', () => {
     }
   });
 
-  it('instantiates subCategoryHierarchies when a single matching Sub-Category child exists', () => {
+  it('instantiates horizontalHierarchyModels when a single matching Sub-Category child exists', () => {
     const { context } = hierarchyFixture(
       [
         { domainKind: 'category', path: 'src/_utils' },
         { domainKind: 'sub-category', path: 'src/_utils/_primitives' },
       ],
       {
-        subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
+        horizontalHierarchyModels: [[['_primitives'], ['_compounds']]],
       }
     );
 
     expect(deriveDomainHierarchies(context)).toEqual([
       {
         isOrderable: true,
-        origin: 'sub-category',
+        origin: 'horizontal-hierarchy-model',
         parentPath: 'src/_utils',
         repetitions: [],
         siblings: [{ itemId: 1, rank: 0 }],
@@ -81,7 +81,7 @@ describe('deriveDomainHierarchies', () => {
     'foreign-domain',
     'path-sub-category',
   ])(
-    'does not instantiate subCategoryHierarchies on %s parent even when a child matches by name',
+    'does not instantiate horizontalHierarchyModels on %s parent even when a child matches by name',
     (domainKind) => {
       const { context } = hierarchyFixture(
         [
@@ -90,7 +90,7 @@ describe('deriveDomainHierarchies', () => {
           { domainKind: 'layer', path: 'src/parent/_compounds' },
         ],
         {
-          subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
+          horizontalHierarchyModels: [[['_primitives'], ['_compounds']]],
         }
       );
 
@@ -98,7 +98,7 @@ describe('deriveDomainHierarchies', () => {
     }
   );
 
-  it('never matches Path Sub-Categories, Fragments, Fractal Branches, Foreign Domains, Layers or Category Nodes in subCategoryHierarchies', () => {
+  it('never matches Path Sub-Categories, Fragments, Fractal Branches, Foreign Domains, Layers or Category Nodes in horizontalHierarchyModels', () => {
     const { context: mimeticContext } = hierarchyFixture(
       [
         {
@@ -115,7 +115,7 @@ describe('deriveDomainHierarchies', () => {
         { domainKind: 'foreign-domain', path: 'src/_routes/_tooling' },
       ],
       {
-        subCategoryHierarchies: [
+        horizontalHierarchyModels: [
           [['_users'], ['get-health'], ['_routes@shared'], ['_tooling']],
         ],
       }
@@ -130,13 +130,13 @@ describe('deriveDomainHierarchies', () => {
         { domainKind: 'sub-category', path: 'src/_types/_primitives' },
       ],
       {
-        subCategoryHierarchies: [[['_layer'], ['_node'], ['_primitives']]],
+        horizontalHierarchyModels: [[['_layer'], ['_node'], ['_primitives']]],
       }
     );
     expect(deriveDomainHierarchies(mixedCategoryContext)).toEqual([
       {
         isOrderable: true,
-        origin: 'sub-category',
+        origin: 'horizontal-hierarchy-model',
         parentPath: 'src/_types',
         repetitions: [],
         siblings: [{ itemId: 3, rank: 2 }],
@@ -144,7 +144,7 @@ describe('deriveDomainHierarchies', () => {
     ]);
   });
 
-  it('applies domain horizontalHierarchies only to exact parent paths and orders Layers, Categories and Sub-Categories', () => {
+  it('applies horizontalHierarchies only to exact parent paths and orders Layers, Categories and Sub-Categories', () => {
     const { context: rootLayerContext } = hierarchyFixture(
       [
         { domainKind: 'root-layer', path: 'src' },
@@ -163,7 +163,7 @@ describe('deriveDomainHierarchies', () => {
     expect(deriveDomainHierarchies(rootLayerContext)).toEqual([
       {
         isOrderable: true,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src',
         repetitions: [],
         siblings: [
@@ -173,7 +173,7 @@ describe('deriveDomainHierarchies', () => {
       },
       {
         isOrderable: true,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src',
         repetitions: [],
         siblings: [],
@@ -195,7 +195,7 @@ describe('deriveDomainHierarchies', () => {
     expect(deriveDomainHierarchies(layerContext)).toEqual([
       {
         isOrderable: true,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src/_domain',
         repetitions: [],
         siblings: [
@@ -220,7 +220,7 @@ describe('deriveDomainHierarchies', () => {
     expect(deriveDomainHierarchies(categoryContext)).toEqual([
       {
         isOrderable: true,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src/_utils',
         repetitions: [],
         siblings: [
@@ -231,7 +231,7 @@ describe('deriveDomainHierarchies', () => {
     ]);
   });
 
-  it('preserves repetitions and all effective ranks for both sub-category and domain applications', () => {
+  it('preserves repetitions and all effective ranks for both horizontal-hierarchy-model and horizontal-hierarchy applications', () => {
     const { context } = hierarchyFixture(
       [
         { domainKind: 'category', path: 'src/_utils' },
@@ -248,7 +248,7 @@ describe('deriveDomainHierarchies', () => {
             path: 'src/_utils',
           },
         ],
-        subCategoryHierarchies: [
+        horizontalHierarchyModels: [
           [
             ['_z', '_a', '_missing'],
             ['_z', '_a', '_missing'],
@@ -259,7 +259,7 @@ describe('deriveDomainHierarchies', () => {
     expect(deriveDomainHierarchies(context)).toEqual([
       {
         isOrderable: true,
-        origin: 'sub-category',
+        origin: 'horizontal-hierarchy-model',
         parentPath: 'src/_utils',
         repetitions: ['_a', '_missing', '_z'],
         siblings: [
@@ -271,7 +271,7 @@ describe('deriveDomainHierarchies', () => {
       },
       {
         isOrderable: true,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src/_utils',
         repetitions: ['_a', '_missing', '_z'],
         siblings: [
@@ -284,7 +284,7 @@ describe('deriveDomainHierarchies', () => {
     ]);
   });
 
-  it('records non-orderable domain selections rather than discarding the application', () => {
+  it('records non-orderable horizontal-hierarchy selections rather than discarding the application', () => {
     const { context } = hierarchyFixture(
       [
         { domainKind: 'root-fragment', path: 'src' },
@@ -305,7 +305,7 @@ describe('deriveDomainHierarchies', () => {
     expect(deriveDomainHierarchies(context)).toEqual([
       {
         isOrderable: false,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src',
         repetitions: [],
         siblings: [
@@ -316,7 +316,7 @@ describe('deriveDomainHierarchies', () => {
     ]);
   });
 
-  it('retains invalid domain applications inside Foreign Domains with isOrderable false', () => {
+  it('retains invalid horizontal-hierarchy applications inside Foreign Domains with isOrderable false', () => {
     const { context } = hierarchyFixture(
       [
         { domainKind: 'foreign-domain', path: 'src/_foreign' },
@@ -332,7 +332,7 @@ describe('deriveDomainHierarchies', () => {
     expect(deriveDomainHierarchies(context)).toEqual([
       {
         isOrderable: false,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src/_foreign',
         repetitions: [],
         siblings: [

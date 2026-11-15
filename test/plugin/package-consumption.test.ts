@@ -29,11 +29,11 @@ const UTF8 = 'utf8';
 const CONFIGURATION_TYPE_NAMES = [
   'TFAFCommonConfig',
   'TFAFConfig',
-  'TFAFDomainHierarchy',
   'TFAFExternalDependency',
   'TFAFForeignNodeFamily',
   'TFAFHierarchy',
   'TFAFHorizontalHierarchy',
+  'TFAFHorizontalHierarchyModel',
   'TFAFLocalConfig',
   'TFAFMimeticPathStructure',
   'TFAFNonEmptyArray',

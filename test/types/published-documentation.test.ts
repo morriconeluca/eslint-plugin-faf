@@ -19,11 +19,11 @@ const UTF8 = 'utf8';
 const EXPECTED_TFAF_TYPE_NAMES = [
   'TFAFCommonConfig',
   'TFAFConfig',
-  'TFAFDomainHierarchy',
   'TFAFExternalDependency',
   'TFAFForeignNodeFamily',
   'TFAFHierarchy',
   'TFAFHorizontalHierarchy',
+  'TFAFHorizontalHierarchyModel',
   'TFAFLocalConfig',
   'TFAFMimeticPathStructure',
   'TFAFNonEmptyArray',

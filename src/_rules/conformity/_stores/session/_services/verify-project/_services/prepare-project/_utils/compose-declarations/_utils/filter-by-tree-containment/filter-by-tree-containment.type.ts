@@ -1,4 +1,4 @@
-import type { TFAFDomainHierarchy } from '../../../../../../../../../../../../_src@shared/_types/faf-config.type.js';
+import type { TFAFHorizontalHierarchyModel } from '../../../../../../../../../../../../_src@shared/_types/faf-config.type.js';
 import type {
   TEffectiveForeignNodes,
   TEffectiveHorizontalHierarchy,
@@ -26,9 +26,14 @@ export type TTreeScopedDeclarations = {
   readonly foreignNodes: TEffectiveForeignNodes;
 
   /**
-   * Domain-scoped horizontal hierarchy definitions bound to explicit folder locations in this tree.
+   * Horizontal Hierarchies established for a single parent Logical Domain bound to explicit folder locations in this tree.
    */
   readonly horizontalHierarchies: readonly TEffectiveHorizontalHierarchy[];
+
+  /**
+   * Tree-wide Horizontal Hierarchy models applied to matching sibling Sub-Categories.
+   */
+  readonly horizontalHierarchyModels: readonly TFAFHorizontalHierarchyModel[];
 
   /**
    * Designated organizational folders mirroring external HTTP or command structures.
@@ -39,11 +44,6 @@ export type TTreeScopedDeclarations = {
    * Exposed entry files accessible to external consumers across tree boundaries.
    */
   readonly publicRootNodes: readonly string[];
-
-  /**
-   * Tree-wide descending rank tiers applied to matching sibling sub-categories.
-   */
-  readonly subCategoryHierarchies: readonly TFAFDomainHierarchy[];
 
   /**
    * Authorized unidirectional dependency pairs linking this tree to other trees.
