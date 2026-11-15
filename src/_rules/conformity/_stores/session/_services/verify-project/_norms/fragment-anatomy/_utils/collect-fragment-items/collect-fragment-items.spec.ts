@@ -82,12 +82,12 @@ const mockTree = (originPath: string): TEffectiveTree => ({
   foreignDomains: [],
   foreignNodes: { families: [], individualPaths: [] },
   horizontalHierarchies: [],
+  horizontalHierarchyModels: [],
   mimeticPathStructures: [],
   originKind: 'root-layer',
   originPath,
   publicRootNodes: [],
   rootFragments: [],
-  subCategoryHierarchies: [],
   treeDependencyPairs: [],
 });
 

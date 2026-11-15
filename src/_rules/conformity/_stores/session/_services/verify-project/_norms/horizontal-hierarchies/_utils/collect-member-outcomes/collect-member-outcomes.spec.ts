@@ -54,7 +54,7 @@ const buildSet = (
 ): THorizontalHierarchySet => ({
   id,
   isOrderable,
-  origin: 'domain',
+  origin: 'horizontal-hierarchy',
   parentPath,
   repetitions: [],
   siblings: [],

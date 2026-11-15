@@ -7,11 +7,11 @@ import { createConformity } from './_rules/conformity/index.js';
 export type {
   TFAFCommonConfig,
   TFAFConfig,
-  TFAFDomainHierarchy,
   TFAFExternalDependency,
   TFAFForeignNodeFamily,
   TFAFHierarchy,
   TFAFHorizontalHierarchy,
+  TFAFHorizontalHierarchyModel,
   TFAFLocalConfig,
   TFAFMimeticPathStructure,
   TFAFNonEmptyArray,

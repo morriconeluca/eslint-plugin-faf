@@ -84,13 +84,13 @@ const createTree = (
   foreignDomains: [],
   foreignNodes: { families: [], individualPaths: [] },
   horizontalHierarchies: [],
+  horizontalHierarchyModels: [],
   mimeticPathStructures:
     mimeticPaths.length > 0 ? [{ actions: null, paths: mimeticPaths }] : [],
   originKind: 'root-layer',
   originPath: 'src',
   publicRootNodes: [],
   rootFragments: [],
-  subCategoryHierarchies: [],
   treeDependencyPairs: [],
 });
 

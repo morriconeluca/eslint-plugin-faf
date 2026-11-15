@@ -10,10 +10,10 @@ export const configShape = (() => {
     'externalDependencies',
     'foreignDomains',
     'foreignNodes',
+    'horizontalHierarchyModels',
     'mimeticPathStructures',
     'publicRootNodes',
     'roles',
-    'subCategoryHierarchies',
     'subGraphRoles',
     'treeDependencies',
   ] as const;

@@ -7,7 +7,7 @@ describe('configShape', () => {
     expect(
       configShape.root.safeParse({
         faf: {
-          common: { subCategoryHierarchies: [] },
+          common: { horizontalHierarchyModels: [] },
           locals: [{ horizontalHierarchies: [], rootLayers: ['src'] }],
         },
       }).success
@@ -19,6 +19,24 @@ describe('configShape', () => {
       configShape.root.safeParse({
         faf: {
           locals: [{ localHorizontalHierarchies: [], rootLayers: ['src'] }],
+        },
+      }).success
+    ).toBe(false);
+  });
+
+  it('rejects removed subCategoryHierarchies as unknown property in common and locals', () => {
+    expect(
+      configShape.root.safeParse({
+        faf: {
+          common: { subCategoryHierarchies: [] },
+          locals: [{ rootLayers: ['src'] }],
+        },
+      }).success
+    ).toBe(false);
+    expect(
+      configShape.root.safeParse({
+        faf: {
+          locals: [{ rootLayers: ['src'], subCategoryHierarchies: [] }],
         },
       }).success
     ).toBe(false);

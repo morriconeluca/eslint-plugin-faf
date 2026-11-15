@@ -17,6 +17,16 @@ const EXAMPLE_CONFIG: TFAFConfig = {
           patterns: ['*.md'],
         },
       ],
+      horizontalHierarchyModels: [
+        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
+        [
+          ['_primitives'],
+          ['_compounds'],
+          ['_aggregates'],
+          ['_systems'],
+          ['_ecosystems'],
+        ],
+      ],
       roles: [
         [
           {
@@ -75,16 +85,6 @@ const EXAMPLE_CONFIG: TFAFConfig = {
           { category: '_pages', name: 'page' },
           { category: '_routes', name: 'route' },
           { category: '_stores', name: 'store' },
-        ],
-      ],
-      subCategoryHierarchies: [
-        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
-        [
-          ['_primitives'],
-          ['_compounds'],
-          ['_aggregates'],
-          ['_systems'],
-          ['_ecosystems'],
         ],
       ],
       subGraphRoles: [{ name: 'spec' }, { name: 'story' }],
@@ -164,8 +164,8 @@ const EXAMPLE_CONFIG: TFAFConfig = {
             path: 'packages/contracts/src',
           },
         ],
+        horizontalHierarchyModels: [[['_primitives'], ['_compounds']]],
         rootLayers: ['packages/contracts/src', 'packages/formatters/src'],
-        subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
       },
     ],
   },
@@ -208,18 +208,18 @@ describe('composeDeclarations', () => {
     const config: TFAFConfig = {
       faf: {
         common: {
+          horizontalHierarchyModels: [[['_domain'], ['_ui']]],
           roles: [
             { category: '_types', isCategoryNode: true, name: 'type' },
             { category: '_utils', name: 'util' },
           ],
-          subCategoryHierarchies: [[['_domain'], ['_ui']]],
           subGraphRoles: [{ name: 'spec' }],
         },
         locals: [
           {
+            horizontalHierarchyModels: [[['_queries'], ['_handlers']]],
             roles: [{ category: '_queries', name: 'query' }],
             rootLayers: ['src'],
-            subCategoryHierarchies: [[['_queries'], ['_handlers']]],
             subGraphRoles: [],
           },
         ],
@@ -236,7 +236,7 @@ describe('composeDeclarations', () => {
     expect(tree?.catalog.roles).toHaveLength(1);
     expect(tree?.catalog.roles[0]?.name).toBe('query');
     expect(tree?.catalog.subGraphRoles).toEqual([]);
-    expect(tree?.subCategoryHierarchies).toEqual([
+    expect(tree?.horizontalHierarchyModels).toEqual([
       [['_queries'], ['_handlers']],
     ]);
   });
@@ -351,9 +351,9 @@ describe('composeDeclarations', () => {
     expect(tree?.foreignDomains).toEqual([]);
     expect(tree?.foreignNodes).toEqual({ families: [], individualPaths: [] });
     expect(tree?.horizontalHierarchies).toEqual([]);
+    expect(tree?.horizontalHierarchyModels).toEqual([]);
     expect(tree?.mimeticPathStructures).toEqual([]);
     expect(tree?.publicRootNodes).toEqual([]);
-    expect(tree?.subCategoryHierarchies).toEqual([]);
     expect(tree?.treeDependencyPairs).toEqual([]);
     expect(tree?.externalDependencyPairs).toEqual([]);
     expect(tree?.rootFragments).toEqual([]);
@@ -800,7 +800,7 @@ describe('composeDeclarations', () => {
       (t) => t.originPath === 'packages/formatters/src'
     );
 
-    expect(srcTree?.subCategoryHierarchies).toEqual([
+    expect(srcTree?.horizontalHierarchyModels).toEqual([
       [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
       [
         ['_primitives'],
@@ -840,10 +840,10 @@ describe('composeDeclarations', () => {
       },
     ]);
 
-    expect(contractsTree?.subCategoryHierarchies).toEqual([
+    expect(contractsTree?.horizontalHierarchyModels).toEqual([
       [['_primitives'], ['_compounds']],
     ]);
-    expect(formattersTree?.subCategoryHierarchies).toEqual([
+    expect(formattersTree?.horizontalHierarchyModels).toEqual([
       [['_primitives'], ['_compounds']],
     ]);
 

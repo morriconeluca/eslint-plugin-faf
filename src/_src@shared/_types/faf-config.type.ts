@@ -8,7 +8,7 @@ export type TFAFCommonConfig = TFAFSharedConfig & {
   readonly aliases?: Readonly<Record<string, string>>;
 
   /**
-   * Domain-scoped horizontal hierarchies must be declared exclusively in local configurations.
+   * Horizontal Hierarchies established for a single parent Logical Domain must be declared exclusively in local configurations.
    */
   readonly horizontalHierarchies?: never;
 
@@ -59,17 +59,6 @@ export type TFAFConfig = {
 };
 
 /**
- * Tiered hierarchy requiring at least two rank levels where each non-empty
- * group occupies the positional rank matching its index starting from zero.
- * Only strictly descending dependencies are authorized.
- */
-export type TFAFDomainHierarchy = readonly [
-  TFAFNonEmptyArray<string>,
-  TFAFNonEmptyArray<string>,
-  ...TFAFNonEmptyArray<string>[],
-];
-
-/**
  * Authorized egress dependency from internal logical nodes to external local modules.
  */
 export type TFAFExternalDependency = {
@@ -110,20 +99,33 @@ export type TFAFForeignNodeFamily = {
 export type TFAFHierarchy = readonly TFAFNonEmptyArray<string>[];
 
 /**
- * Domain-scoped horizontal hierarchy applied to direct children of a single
- * parent directory.
+ * Horizontal Hierarchy established for direct children of a single parent Logical Domain.
  */
 export type TFAFHorizontalHierarchy = {
   /**
-   * Tiered ordering applied to direct children of the designated parent directory.
+   * Ranks starting from zero ordering direct-child Logical Domains present under path.
    */
-  readonly hierarchy: TFAFDomainHierarchy;
+  readonly hierarchy: readonly [
+    TFAFNonEmptyArray<string>,
+    TFAFNonEmptyArray<string>,
+    ...TFAFNonEmptyArray<string>[],
+  ];
 
   /**
-   * Parent directory path relative to configuration file where ordering applies.
+   * Parent Logical Domain path relative to configuration file where ordering applies.
    */
   readonly path: string;
 };
+
+/**
+ * Tree-wide Horizontal Hierarchy model spanning at least two distinct Ranks
+ * of Sub-Category names across the Fractal Tree.
+ */
+export type TFAFHorizontalHierarchyModel = readonly [
+  TFAFNonEmptyArray<string>,
+  TFAFNonEmptyArray<string>,
+  ...TFAFNonEmptyArray<string>[],
+];
 
 /**
  * Local configuration defining one or more fractal trees via root origins.
@@ -149,7 +151,7 @@ export type TFAFLocalConfig = TFAFSharedConfig &
     readonly aliases?: never;
 
     /**
-     * Domain-scoped horizontal hierarchies applied to direct children of designated parent directories.
+     * Horizontal Hierarchies established for a single parent Logical Domain applied to direct children of designated parent directories.
      *
      * @default [] Defaults to an empty list.
      */
@@ -317,6 +319,13 @@ export type TFAFSharedConfig = {
   readonly foreignNodes?: readonly (string | TFAFForeignNodeFamily)[];
 
   /**
+   * Tree-wide Horizontal Hierarchy models applied to matching sibling Sub-Categories.
+   *
+   * @default [] Defaults to an empty list.
+   */
+  readonly horizontalHierarchyModels?: readonly TFAFHorizontalHierarchyModel[];
+
+  /**
    * Designated organizational folders mirroring external HTTP or command address spaces.
    *
    * @default [] Defaults to an empty list.
@@ -334,13 +343,6 @@ export type TFAFSharedConfig = {
    * Ordered catalog of architectural roles and internal fragment hierarchies.
    */
   readonly roles?: TFAFRoles;
-
-  /**
-   * Tree-wide horizontal hierarchy models applied to matching sibling sub-categories.
-   *
-   * @default [] Defaults to an empty list.
-   */
-  readonly subCategoryHierarchies?: readonly TFAFDomainHierarchy[];
 
   /**
    * Specialized responsibilities reserved for entry files in test and auxiliary sub-graphs.

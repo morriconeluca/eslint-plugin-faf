@@ -258,6 +258,12 @@ export const OUTCOME_CATALOG = {
     predicate:
       'cannot be targeted as an external dependency because it is a node_modules library',
   },
+  'configuration/horizontal-hierarchy-model-category-conflict': {
+    family: 'configuration',
+    form: 'element',
+    normativeReference: REFERENCE_FAF_6_3_4,
+    predicate: 'cannot match a Category name declared in the role catalog',
+  },
   'configuration/implicit-extension-category-node-mismatch': {
     family: 'configuration',
     form: 'element',
@@ -517,12 +523,6 @@ export const OUTCOME_CATALOG = {
     form: 'element',
     normativeReference: REFERENCE_FAF_1_2_6_9,
     predicate: 'cannot be declared in this configuration scope',
-  },
-  'configuration/sub-category-hierarchy-category-conflict': {
-    family: 'configuration',
-    form: 'element',
-    normativeReference: REFERENCE_FAF_6_3_4,
-    predicate: 'cannot match a Category name declared in the role catalog',
   },
   'configuration/tree-dependency-from-outside-scope': {
     family: 'configuration',

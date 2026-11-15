@@ -52,6 +52,9 @@ describe('deriveHorizontalHierarchies', () => {
             path: 'src/_src@shared',
           },
         ],
+        horizontalHierarchyModels: [
+          [['_primitives'], ['_missing'], ['_compounds']],
+        ],
         originKind: 'root-fragment',
         rootFragments: [
           {
@@ -60,9 +63,6 @@ describe('deriveHorizontalHierarchies', () => {
             rootNodes: [{ name: 'main.ts', rank: 0 }],
             subRootFragments: [],
           },
-        ],
-        subCategoryHierarchies: [
-          [['_primitives'], ['_missing'], ['_compounds']],
         ],
       }
     );
@@ -81,7 +81,7 @@ describe('deriveHorizontalHierarchies', () => {
           {
             id: 1,
             isOrderable: true,
-            origin: 'domain',
+            origin: 'horizontal-hierarchy',
             parentPath: 'src/_src@shared',
             repetitions: [],
             siblings: [
@@ -92,7 +92,7 @@ describe('deriveHorizontalHierarchies', () => {
           {
             id: 2,
             isOrderable: true,
-            origin: 'sub-category',
+            origin: 'horizontal-hierarchy-model',
             parentPath: 'src/_src@shared/_domain/_utils',
             repetitions: [],
             siblings: [
@@ -139,7 +139,7 @@ describe('deriveHorizontalHierarchies', () => {
       {
         id: 0,
         isOrderable: true,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src',
         repetitions: [],
         siblings: [
@@ -150,7 +150,7 @@ describe('deriveHorizontalHierarchies', () => {
       {
         id: 1,
         isOrderable: true,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src',
         repetitions: [],
         siblings: [
@@ -162,7 +162,7 @@ describe('deriveHorizontalHierarchies', () => {
     expect(result.outcomes).toEqual([]);
   });
 
-  it('captures overlap conflicts between subCategoryHierarchies and domain horizontalHierarchies and between same-origin sets', () => {
+  it('captures overlap conflicts between horizontalHierarchyModels and horizontalHierarchies and between same-origin sets', () => {
     const { basis, taxonomy } = hierarchyFixture(
       [
         { domainKind: 'category', path: 'src/_utils' },
@@ -174,7 +174,7 @@ describe('deriveHorizontalHierarchies', () => {
           { hierarchy: [['_a', '_b'], ['_missing']], path: 'src/_utils' },
           { hierarchy: [['_a'], ['_other']], path: 'src/_utils' },
         ],
-        subCategoryHierarchies: [
+        horizontalHierarchyModels: [
           [['_a'], ['_a']],
           [['_a'], ['_b']],
         ],
@@ -227,7 +227,7 @@ describe('deriveHorizontalHierarchies', () => {
       {
         id: 0,
         isOrderable: false,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src',
         repetitions: [],
         siblings: [
@@ -246,7 +246,7 @@ describe('deriveHorizontalHierarchies', () => {
       {
         id: 2,
         isOrderable: false,
-        origin: 'domain',
+        origin: 'horizontal-hierarchy',
         parentPath: 'src/_src@shared',
         repetitions: [],
         siblings: [
@@ -258,7 +258,7 @@ describe('deriveHorizontalHierarchies', () => {
     expect(deriveHorizontalHierarchies(basis, taxonomy).outcomes).toEqual([]);
   });
 
-  it('applies subCategoryHierarchies only to Category and Sub-Category parents and domain hierarchies only at target path', () => {
+  it('applies horizontalHierarchyModels only to Category and Sub-Category parents and horizontalHierarchies only at target path', () => {
     const { basis, taxonomy } = hierarchyFixture(
       [
         { domainKind: 'root-layer', path: 'src' },
@@ -292,7 +292,7 @@ describe('deriveHorizontalHierarchies', () => {
           { hierarchy: [['_types'], ['_utils']], path: 'src/_a' },
           { hierarchy: [['_types'], ['_utils']], path: 'src/_b' },
         ],
-        subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
+        horizontalHierarchyModels: [[['_primitives'], ['_compounds']]],
       }
     );
     const result = deriveHorizontalHierarchies(basis, taxonomy);
@@ -304,12 +304,16 @@ describe('deriveHorizontalHierarchies', () => {
         set.siblings,
       ])
     ).toEqual([
-      ['src/_a', 'domain', [{ itemId: 3, rank: 1 }]],
-      ['src/_a/_utils', 'sub-category', [{ itemId: 4, rank: 0 }]],
-      ['src/_a/_utils/_primitives', 'sub-category', [{ itemId: 5, rank: 1 }]],
+      ['src/_a', 'horizontal-hierarchy', [{ itemId: 3, rank: 1 }]],
+      ['src/_a/_utils', 'horizontal-hierarchy-model', [{ itemId: 4, rank: 0 }]],
+      [
+        'src/_a/_utils/_primitives',
+        'horizontal-hierarchy-model',
+        [{ itemId: 5, rank: 1 }],
+      ],
       [
         'src/_b',
-        'domain',
+        'horizontal-hierarchy',
         [
           { itemId: 6, rank: 0 },
           { itemId: 7, rank: 1 },
@@ -419,7 +423,7 @@ describe('deriveHorizontalHierarchies', () => {
           { hierarchy: [['_z'], ['_empty']], path: 'src' },
           { hierarchy: [['_a'], ['_empty']], path: 'src' },
         ],
-        subCategoryHierarchies: [
+        horizontalHierarchyModels: [
           [['_z', '_a'], ['_other']],
           [['_a'], ['_other']],
         ],
@@ -440,7 +444,7 @@ describe('deriveHorizontalHierarchies', () => {
       return {
         ...tree,
         horizontalHierarchies,
-        subCategoryHierarchies: [
+        horizontalHierarchyModels: [
           [['_a'], ['_other']],
           [['_z', '_a'], ['_other']],
         ] as const,

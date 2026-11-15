@@ -56,12 +56,12 @@ const createTree = (
   foreignDomains: [],
   foreignNodes: { families: [], individualPaths: [] },
   horizontalHierarchies: [],
+  horizontalHierarchyModels: [],
   mimeticPathStructures: [],
   originKind: 'root-layer',
   originPath: 'src',
   publicRootNodes: ['src/main.ts'],
   rootFragments: [],
-  subCategoryHierarchies: [],
   treeDependencyPairs: [],
 });
 

@@ -16,12 +16,12 @@ const treeOf = (overrides: Partial<TEffectiveTree> = {}): TEffectiveTree => ({
   foreignDomains: [],
   foreignNodes: { families: [], individualPaths: [] },
   horizontalHierarchies: [],
+  horizontalHierarchyModels: [],
   mimeticPathStructures: [],
   originKind: 'root-fragment',
   originPath: 'src',
   publicRootNodes: [],
   rootFragments: [],
-  subCategoryHierarchies: [],
   treeDependencyPairs: [],
   ...overrides,
 });

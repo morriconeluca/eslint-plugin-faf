@@ -25,12 +25,12 @@ const createTreeDeclaration = (
   foreignDomains: [],
   foreignNodes: { families: [], individualPaths: [] },
   horizontalHierarchies: [],
+  horizontalHierarchyModels: [],
   mimeticPathStructures: [],
   originKind: 'root-fragment',
   originPath: 'src',
   publicRootNodes: [],
   rootFragments,
-  subCategoryHierarchies: [],
   treeDependencyPairs: [],
 });
 

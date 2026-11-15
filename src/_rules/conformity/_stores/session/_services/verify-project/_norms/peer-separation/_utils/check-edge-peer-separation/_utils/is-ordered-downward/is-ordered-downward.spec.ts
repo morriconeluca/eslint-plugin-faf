@@ -17,7 +17,7 @@ describe('isOrderedDownward', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'domain',
+          origin: 'horizontal-hierarchy',
           parentPath: 'src',
           repetitions: [],
           siblings: [
@@ -37,7 +37,7 @@ describe('isOrderedDownward', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'domain',
+          origin: 'horizontal-hierarchy',
           parentPath: 'src',
           repetitions: [],
           siblings: [
@@ -57,7 +57,7 @@ describe('isOrderedDownward', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'domain',
+          origin: 'horizontal-hierarchy',
           parentPath: 'src',
           repetitions: [],
           siblings: [
@@ -77,7 +77,7 @@ describe('isOrderedDownward', () => {
         {
           id: 1,
           isOrderable: false,
-          origin: 'domain',
+          origin: 'horizontal-hierarchy',
           parentPath: 'src',
           repetitions: [],
           siblings: [
@@ -97,7 +97,7 @@ describe('isOrderedDownward', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'domain',
+          origin: 'horizontal-hierarchy',
           parentPath: 'src/other',
           repetitions: [],
           siblings: [
@@ -117,7 +117,7 @@ describe('isOrderedDownward', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'domain',
+          origin: 'horizontal-hierarchy',
           parentPath: 'src',
           repetitions: ['a'],
           siblings: [
@@ -138,7 +138,7 @@ describe('isOrderedDownward', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'domain',
+          origin: 'horizontal-hierarchy',
           parentPath: 'src',
           repetitions: ['b'],
           siblings: [
@@ -159,7 +159,7 @@ describe('isOrderedDownward', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'domain',
+          origin: 'horizontal-hierarchy',
           parentPath: 'src',
           repetitions: [],
           siblings: [
@@ -179,7 +179,7 @@ describe('isOrderedDownward', () => {
         {
           id: 1,
           isOrderable: true,
-          origin: 'domain',
+          origin: 'horizontal-hierarchy',
           parentPath: 'src',
           repetitions: [],
           siblings: [

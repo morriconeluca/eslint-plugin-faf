@@ -43,13 +43,13 @@ export type THorizontalHierarchySet = {
   readonly isOrderable: boolean;
 
   /**
-   * Declaration source: domain-scoped entry, fragment internal roles, root-node tiers, or tree-wide sub-category model.
+   * Declaration source: horizontal hierarchy on a single parent, fragment internal roles, horizontal hierarchy model, or root-node tiers.
    */
   readonly origin:
-    | 'domain'
     | 'fragment-internal'
-    | 'root-nodes'
-    | 'sub-category';
+    | 'horizontal-hierarchy'
+    | 'horizontal-hierarchy-model'
+    | 'root-nodes';
 
   /**
    * POSIX path of the parent whose direct children are selected.

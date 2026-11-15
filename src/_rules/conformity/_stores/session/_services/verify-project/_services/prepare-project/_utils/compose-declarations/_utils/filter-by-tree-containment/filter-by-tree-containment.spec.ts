@@ -38,7 +38,7 @@ describe('filterByTreeContainment', () => {
     expect(result.foreignDomains).toEqual([]);
     expect(result.foreignNodes).toEqual({ families: [], individualPaths: [] });
     expect(result.horizontalHierarchies).toEqual([]);
-    expect(result.subCategoryHierarchies).toEqual([]);
+    expect(result.horizontalHierarchyModels).toEqual([]);
     expect(result.mimeticPathStructures).toEqual([]);
     expect(result.externalDependencyPairs).toEqual([]);
     expect(result.treeDependencyPairs).toEqual([]);
@@ -74,6 +74,7 @@ describe('filterByTreeContainment', () => {
           patterns: ['*.txt'],
         },
       ],
+      horizontalHierarchyModels: [[['_atoms'], ['_molecules']]],
       mimeticPathStructures: [
         {
           actions: ['get', 'post'],
@@ -87,7 +88,6 @@ describe('filterByTreeContainment', () => {
         },
       ],
       publicRootNodes: ['app/z-main.ts', 'app/a-main.ts', 'lib/main.ts'],
-      subCategoryHierarchies: [[['_atoms'], ['_molecules']]],
       treeDependencies: [
         {
           from: ['app', 'lib'],
@@ -126,7 +126,7 @@ describe('filterByTreeContainment', () => {
         path: 'app/_shared',
       },
     ]);
-    expect(appResult.subCategoryHierarchies).toEqual([
+    expect(appResult.horizontalHierarchyModels).toEqual([
       [['_atoms'], ['_molecules']],
     ]);
     expect(appResult.mimeticPathStructures).toEqual([
@@ -161,7 +161,7 @@ describe('filterByTreeContainment', () => {
       individualPaths: ['lib/vite-env.d.ts'],
     });
     expect(libraryResult.horizontalHierarchies).toEqual([]);
-    expect(libraryResult.subCategoryHierarchies).toEqual([
+    expect(libraryResult.horizontalHierarchyModels).toEqual([
       [['_atoms'], ['_molecules']],
     ]);
     expect(libraryResult.mimeticPathStructures).toEqual([
@@ -185,9 +185,9 @@ describe('filterByTreeContainment', () => {
       externalDependencies: [{ from: ['app/ext.ts'], to: ['outside.ts'] }],
       foreignDomains: ['app/_legacy'],
       foreignNodes: [{ paths: ['app'], patterns: ['*.md'] }],
+      horizontalHierarchyModels: [[['_primitives'], ['_compounds']]],
       mimeticPathStructures: [{ paths: ['app/_apis'] }],
       publicRootNodes: ['app/main.ts'],
-      subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
       treeDependencies: [{ from: ['app'], to: ['other'] }],
     };
 
@@ -211,12 +211,12 @@ describe('filterByTreeContainment', () => {
       horizontalHierarchies: [
         { hierarchy: [['_local'], ['_utils']], path: 'app/_local' },
       ],
+      horizontalHierarchyModels: [[['_atoms'], ['_molecules']]],
       mimeticPathStructures: [
         { actions: ['list'], paths: ['app/_local_apis'] },
       ],
       publicRootNodes: ['app/z.ts', 'app/a.ts'],
       rootLayers: ['app'],
-      subCategoryHierarchies: [[['_atoms'], ['_molecules']]],
       treeDependencies: [
         { from: ['app'], to: ['z-target', 'a-target'] },
         { from: ['app'], to: ['a-target'] },
@@ -229,7 +229,7 @@ describe('filterByTreeContainment', () => {
       families: [{ paths: ['app/sub'], patterns: ['*.md'] }],
       individualPaths: ['app/a.d.ts', 'app/z.d.ts'],
     });
-    expect(result.subCategoryHierarchies).toEqual([
+    expect(result.horizontalHierarchyModels).toEqual([
       [['_atoms'], ['_molecules']],
     ]);
     expect(result.horizontalHierarchies).toEqual([

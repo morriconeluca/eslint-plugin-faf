@@ -21,14 +21,14 @@ import { validateRootLayers } from './_utils/validate-root-layers/index.js';
 import { validateSubGraphRoles } from './_utils/validate-sub-graph-roles/index.js';
 import { translateConfigIssues } from './_validate-config-format@shared/_utils/translate-config-issues/index.js';
 import {
+  CONSTRAINT_MODEL_CATEGORY_CONFLICT,
   CONSTRAINT_SCOPE_MISMATCH,
-  CONSTRAINT_SUB_CATEGORY_CONFLICT,
 } from './validate-config-format.constant.js';
 
 export const validateConfigFormat = (() => {
-  type TCommonSubCategoryInfo = {
+  type TCommonHierarchyModelsInfo = {
     readonly categoryNames: null | ReadonlySet<string>;
-    readonly subCategoryHierarchies: unknown;
+    readonly horizontalHierarchyModels: unknown;
   };
 
   const hasDefined = (record: Record<string, unknown>, key: string): boolean =>
@@ -62,7 +62,7 @@ export const validateConfigFormat = (() => {
       }
       seenPaths.add(propertyPath);
       outcomes.push(
-        createOutcome(CONSTRAINT_SUB_CATEGORY_CONFLICT, {
+        createOutcome(CONSTRAINT_MODEL_CATEGORY_CONFLICT, {
           detail: `Sub-Category "${member}" matches Category "${member}" in the role catalog.`,
           propertyPath,
         })
@@ -90,21 +90,21 @@ export const validateConfigFormat = (() => {
     }
   };
 
-  const collectSubCategoryConflicts = (
-    hierarchies: unknown,
+  const collectModelCategoryConflicts = (
+    models: unknown,
     categoryNames: ReadonlySet<string>,
     basePropertyPath: string,
     seenPaths: Set<string>,
     outcomes: TConfigOutcome[]
   ): void => {
-    if (!Array.isArray(hierarchies) || categoryNames.size === 0) {
+    if (!Array.isArray(models) || categoryNames.size === 0) {
       return;
     }
-    for (const [hierarchyIndex, hierarchy] of hierarchies.entries()) {
-      if (Array.isArray(hierarchy)) {
+    for (const [modelIndex, model] of models.entries()) {
+      if (Array.isArray(model)) {
         collectHierarchyConflicts(
-          hierarchy,
-          `${basePropertyPath}[${hierarchyIndex}]`,
+          model,
+          `${basePropertyPath}[${modelIndex}]`,
           categoryNames,
           seenPaths,
           outcomes
@@ -136,9 +136,9 @@ export const validateConfigFormat = (() => {
     common: unknown,
     seenConflictPaths: Set<string>,
     outcomes: TConfigOutcome[]
-  ): TCommonSubCategoryInfo => {
+  ): TCommonHierarchyModelsInfo => {
     if (!isPlainRecord(common)) {
-      return { categoryNames: null, subCategoryHierarchies: null };
+      return { categoryNames: null, horizontalHierarchyModels: null };
     }
     for (const key of [
       'horizontalHierarchies',
@@ -153,25 +153,28 @@ export const validateConfigFormat = (() => {
       outcomes.push(...validateAliases(common['aliases'], 'faf.common'));
     }
     const categoryNames = pushShared(common, 'faf.common', outcomes);
-    const subCategoryHierarchies = hasDefined(common, 'subCategoryHierarchies')
-      ? common['subCategoryHierarchies']
+    const horizontalHierarchyModels = hasDefined(
+      common,
+      'horizontalHierarchyModels'
+    )
+      ? common['horizontalHierarchyModels']
       : null;
-    if (categoryNames !== null && subCategoryHierarchies !== null) {
-      collectSubCategoryConflicts(
-        subCategoryHierarchies,
+    if (categoryNames !== null && horizontalHierarchyModels !== null) {
+      collectModelCategoryConflicts(
+        horizontalHierarchyModels,
         categoryNames,
-        'faf.common.subCategoryHierarchies',
+        'faf.common.horizontalHierarchyModels',
         seenConflictPaths,
         outcomes
       );
     }
-    return { categoryNames, subCategoryHierarchies };
+    return { categoryNames, horizontalHierarchyModels };
   };
 
   const collectLocal = (
     local: unknown,
     localPath: string,
-    commonInfo: TCommonSubCategoryInfo,
+    commonInfo: TCommonHierarchyModelsInfo,
     seenConflictPaths: Set<string>,
     outcomes: TConfigOutcome[]
   ): void => {
@@ -190,17 +193,17 @@ export const validateConfigFormat = (() => {
     if (effectiveCategories === null) {
       return;
     }
-    const hasLocalSubCategory = hasDefined(local, 'subCategoryHierarchies');
-    const subCategoryHierarchies = hasLocalSubCategory
-      ? local['subCategoryHierarchies']
-      : commonInfo.subCategoryHierarchies;
-    const subCategoryPath = hasLocalSubCategory
-      ? `${localPath}.subCategoryHierarchies`
-      : 'faf.common.subCategoryHierarchies';
-    collectSubCategoryConflicts(
-      subCategoryHierarchies,
+    const hasLocalModels = hasDefined(local, 'horizontalHierarchyModels');
+    const horizontalHierarchyModels = hasLocalModels
+      ? local['horizontalHierarchyModels']
+      : commonInfo.horizontalHierarchyModels;
+    const modelsPath = hasLocalModels
+      ? `${localPath}.horizontalHierarchyModels`
+      : 'faf.common.horizontalHierarchyModels';
+    collectModelCategoryConflicts(
+      horizontalHierarchyModels,
       effectiveCategories,
-      subCategoryPath,
+      modelsPath,
       seenConflictPaths,
       outcomes
     );

@@ -81,12 +81,12 @@ const createTree = (roles: readonly TEffectiveRole[]): TEffectiveTree => ({
   foreignDomains: [],
   foreignNodes: { families: [], individualPaths: [] },
   horizontalHierarchies: [],
+  horizontalHierarchyModels: [],
   mimeticPathStructures: [],
   originKind: 'root-layer',
   originPath: 'src',
   publicRootNodes: [],
   rootFragments: [],
-  subCategoryHierarchies: [],
   treeDependencyPairs: [],
 });
 

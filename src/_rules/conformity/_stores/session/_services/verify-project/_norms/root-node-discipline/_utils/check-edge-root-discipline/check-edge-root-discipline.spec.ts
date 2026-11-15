@@ -134,12 +134,12 @@ const buildTestModel = (options: {
     foreignDomains: [],
     foreignNodes: { families: [], individualPaths: [] },
     horizontalHierarchies: [],
+    horizontalHierarchyModels: [],
     mimeticPathStructures: [],
     originKind: 'root-fragment',
     originPath,
     publicRootNodes: [],
     rootFragments: options.rootFragments ?? [],
-    subCategoryHierarchies: [],
     treeDependencyPairs: [],
   };
 

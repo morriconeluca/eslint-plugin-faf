@@ -9,7 +9,7 @@ export const hierarchiesSchema = (() => {
   const INVALID_SUB_CATEGORY = 'configuration/invalid-sub-category-name';
   const SUB_CATEGORY_NAME_PATTERN = /^_[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
-  const subCategoryItemSchema = formFields
+  const modelMemberSchema = formFields
     .textValue()
     .superRefine((value, context) => {
       if (value.length > 0 && !SUB_CATEGORY_NAME_PATTERN.test(value)) {
@@ -20,25 +20,28 @@ export const hierarchiesSchema = (() => {
       }
     });
 
-  const subCategoryTierSchema = z
-    .array(subCategoryItemSchema, {
+  const modelTierSchema = z
+    .array(modelMemberSchema, {
       error: (issue) => formFields.nullOrType(issue.input),
     })
     .min(1, {
       error: () => formFields.fixed(EMPTY_TIER),
     });
 
-  const subCategoryHierarchySchema = z
-    .array(subCategoryTierSchema, {
+  const horizontalHierarchyModelSchema = z
+    .array(modelTierSchema, {
       error: (issue) => formFields.nullOrType(issue.input),
     })
     .min(2, {
       error: () => formFields.fixed(INSUFFICIENT_TIERS),
     });
 
-  const subCategoryHierarchiesSchema = z.array(subCategoryHierarchySchema, {
-    error: (issue) => formFields.nullOrType(issue.input),
-  });
+  const horizontalHierarchyModelsSchema = z.array(
+    horizontalHierarchyModelSchema,
+    {
+      error: (issue) => formFields.nullOrType(issue.input),
+    }
+  );
 
   const domainTierSchema = z
     .array(formFields.textValue(), {
@@ -48,7 +51,7 @@ export const hierarchiesSchema = (() => {
       error: () => formFields.fixed(EMPTY_TIER),
     });
 
-  const requiredDomainHierarchySchema = z
+  const requiredHorizontalHierarchySchema = z
     .array(domainTierSchema, {
       error: (issue) =>
         issue.input === undefined
@@ -72,7 +75,7 @@ export const hierarchiesSchema = (() => {
 
   const horizontalHierarchyEntrySchema = z.strictObject(
     {
-      hierarchy: requiredDomainHierarchySchema,
+      hierarchy: requiredHorizontalHierarchySchema,
       path: requiredPathSchema,
     },
     {
@@ -92,6 +95,6 @@ export const hierarchiesSchema = (() => {
 
   return {
     horizontal: horizontalHierarchiesSchema,
-    subCategory: subCategoryHierarchiesSchema,
+    models: horizontalHierarchyModelsSchema,
   };
 })();
