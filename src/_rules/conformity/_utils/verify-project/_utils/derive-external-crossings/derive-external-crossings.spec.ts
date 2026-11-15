@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type {
   TDependencyGraph,
   TEdgeMetadata,
-  TLibraryNote,
+  TLibraryImport,
   TVertexNature,
 } from '../../_verify-project@shared/_types/verification-model.type.js';
 
@@ -38,7 +38,7 @@ const createTestGraph = (
     readonly line?: number;
     readonly source: number;
   }[],
-  libraryNotes: readonly TLibraryNote[] = []
+  libraryImports: readonly TLibraryImport[] = []
 ): TDependencyGraph => {
   const edgeMetadata: TEdgeMetadata[] = [];
   const columnTargets: number[] = [];
@@ -81,8 +81,8 @@ const createTestGraph = (
     edgeCount: columnTargets.length,
     edgeMetadata,
     edgesBySourcePath,
-    libraryNotes,
-    libraryNotesBySourcePath: new Map(),
+    libraryImports,
+    libraryImportsBySourcePath: new Map(),
     pathToVertex,
     rowOffsets,
     vertexCount: paths.length,
@@ -335,7 +335,7 @@ describe('deriveExternalCrossings', () => {
   });
 
   it('ignores external libraries and direct tree-to-tree edges', () => {
-    const note: TLibraryNote = {
+    const libraryImport: TLibraryImport = {
       aliasAlternatives: [],
       aliasUsed: null,
       importIndex: 0,
@@ -351,7 +351,7 @@ describe('deriveExternalCrossings', () => {
       ['src/a.ts', 'src/b.ts'],
       [TREE_NODE, TREE_NODE],
       [{ destination: 1, source: 0 }],
-      [note]
+      [libraryImport]
     );
 
     expect(deriveExternalCrossings(graph)).toEqual([]);

@@ -66,7 +66,6 @@ const HOST_EFFECT_IMPORT_PATHS = [
 const HOST_IO_BOUNDARY_FILES = [
   'src/_rules/conformity/_stores/session/_session@shared/_utils/read-file-snapshot/read-file-snapshot.util.ts',
   'src/_rules/conformity/_stores/session/_session@shared/_utils/read-origin-dirents/read-origin-dirents.util.ts',
-  'src/_rules/conformity/_stores/session/_utils/match-file-fingerprints/_utils/has-matching-tree-origin/_utils/has-matching-origin-dirents/has-matching-origin-dirents.util.ts',
   'src/_rules/conformity/_stores/session/_utils/match-file-fingerprints/_utils/has-matching-tree-origin/has-matching-tree-origin.util.ts',
   'src/_rules/conformity/_stores/session/_utils/match-file-fingerprints/_utils/has-matching-watched-files/has-matching-watched-files.util.ts',
   'src/_rules/conformity/_stores/session/_utils/read-file-fingerprints/read-file-fingerprints.util.ts',

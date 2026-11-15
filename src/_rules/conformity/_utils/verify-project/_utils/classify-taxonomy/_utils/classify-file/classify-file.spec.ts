@@ -82,4 +82,103 @@ describe('classifyFile', () => {
     expect(result.conflict).toBeNull();
     expect(result.fields.nodeKind).toBeNull();
   });
+
+  it('classifies designated Foreign Nodes, enumerated Root Nodes, and Category or Sub-Category files', () => {
+    const foreignResult = classifyFile(
+      'src/readme.md',
+      {
+        domainKind: 'root-fragment',
+        form: null,
+        imposedRoleName: null,
+        isMimeticContext: false,
+        parentFragmentPath: null,
+        path: 'src',
+      },
+      context
+    );
+    expect(foreignResult.conflict).toBeNull();
+    expect(foreignResult.fields.nodeKind).toBe('foreign-node');
+
+    const rootResult = classifyFile(
+      'src/main.ts',
+      {
+        domainKind: 'root-fragment',
+        form: null,
+        imposedRoleName: null,
+        isMimeticContext: false,
+        parentFragmentPath: null,
+        path: 'src',
+      },
+      context
+    );
+    expect(rootResult.conflict).toBeNull();
+    expect(rootResult.fields.nodeKind).toBe('root-node');
+
+    const categoryContext: TTreeClassificationContext = {
+      ...context,
+      getRoleFromName: (fileName) =>
+        fileName === 'ids.type.ts'
+          ? { kind: 'explicit', roleName: 'type' }
+          : { kind: 'absent', roleName: null },
+    };
+    expect(
+      classifyFile(
+        'src/_types/_models/ids.type.ts',
+        {
+          domainKind: 'sub-category',
+          form: 'category-nodes',
+          imposedRoleName: 'type',
+          isMimeticContext: false,
+          parentFragmentPath: null,
+          path: 'src/_types/_models',
+        },
+        categoryContext
+      ).fields.nodeKind
+    ).toBe('category-node');
+
+    expect(
+      classifyFile(
+        'src/_types/ids.type.ts',
+        {
+          domainKind: 'category',
+          form: 'fragments',
+          imposedRoleName: 'type',
+          isMimeticContext: false,
+          parentFragmentPath: null,
+          path: 'src/_types',
+        },
+        categoryContext
+      ).fields.nodeKind
+    ).toBe('unauthorized-logical-node');
+
+    expect(
+      classifyFile(
+        'src/_domain/ids.type.ts',
+        {
+          domainKind: 'layer',
+          form: null,
+          imposedRoleName: null,
+          isMimeticContext: false,
+          parentFragmentPath: null,
+          path: 'src/_domain',
+        },
+        categoryContext
+      ).fields.nodeKind
+    ).toBe('unauthorized-logical-node');
+
+    expect(
+      classifyFile(
+        'src/_types/readme',
+        {
+          domainKind: 'category',
+          form: 'category-nodes',
+          imposedRoleName: 'type',
+          isMimeticContext: false,
+          parentFragmentPath: null,
+          path: 'src/_types',
+        },
+        categoryContext
+      ).fields.nodeKind
+    ).toBe('unauthorized-logical-node');
+  });
 });

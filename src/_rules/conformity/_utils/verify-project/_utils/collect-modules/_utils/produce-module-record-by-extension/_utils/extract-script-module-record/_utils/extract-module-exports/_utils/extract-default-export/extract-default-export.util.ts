@@ -13,7 +13,6 @@ import {
   LOCAL_SYMBOL_ORIGIN,
   NAMESPACE_ORIGIN,
 } from '../../_extract-module-exports@shared/_constants/module-exports.constant.js';
-import { isAllTypeSpace } from '../../_extract-module-exports@shared/_utils/is-all-type-space/index.js';
 
 export function extractDefaultExport(
   statement: ExportDefaultDeclaration,
@@ -67,7 +66,10 @@ export function extractDefaultExport(
         position,
       };
     }
-    const isTypeOnly = isAllTypeSpace(name, rootSymbols);
+    const matching = rootSymbols.filter((symbol) => symbol.name === name);
+    const isTypeOnly =
+      matching.length > 0 &&
+      matching.every((symbol) => symbol.space === 'type');
     return {
       exportedName: DEFAULT_NAME,
       isTypeOnly,

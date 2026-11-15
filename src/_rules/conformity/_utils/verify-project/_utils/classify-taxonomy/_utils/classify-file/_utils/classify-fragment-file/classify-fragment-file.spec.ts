@@ -121,7 +121,7 @@ describe('classifyFragmentFile', () => {
     expect(subGraph.fields.fragmentInternalRank).toBe(7);
   });
 
-  it('rejects a name mismatch, an implicit role, and a non-matching stem', () => {
+  it('rejects a name mismatch, an implicit role, and a non-matching stem or hidden dotfile', () => {
     expect(
       classifyFragmentFile(
         'other.component.tsx',
@@ -144,6 +144,22 @@ describe('classifyFragmentFile', () => {
         parent,
         context,
         'src/_components/button'
+      ).fields.nodeKind
+    ).toBe('unauthorized-logical-node');
+    expect(
+      classifyFragmentFile(
+        '.hidden',
+        { ...parent, path: 'src/_components/.hidden' },
+        context,
+        'src/_components/.hidden'
+      ).fields.nodeKind
+    ).toBe('unauthorized-logical-node');
+    expect(
+      classifyFragmentFile(
+        'README',
+        { ...parent, path: 'src/_components/README' },
+        context,
+        'src/_components/README'
       ).fields.nodeKind
     ).toBe('unauthorized-logical-node');
   });

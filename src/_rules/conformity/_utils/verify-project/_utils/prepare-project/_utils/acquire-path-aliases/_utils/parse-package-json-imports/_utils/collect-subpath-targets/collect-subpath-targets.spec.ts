@@ -92,6 +92,42 @@ describe('collectSubpathTargets', () => {
       key: '#nested-invalid',
       value: { node: { import: 123 } },
     },
+    {
+      expectedConstraint: 'configuration/invalid-alias-source',
+      hasWildcardKey: false,
+      key: '#parent',
+      value: '../external',
+    },
+    {
+      expectedConstraint: 'configuration/invalid-alias-source',
+      hasWildcardKey: false,
+      key: '#abs',
+      value: '/absolute/path',
+    },
+    {
+      expectedConstraint: 'configuration/unresolvable-alias-base',
+      hasWildcardKey: true,
+      key: '#no-wildcard',
+      value: './src/no-wildcard.ts',
+    },
+    {
+      expectedConstraint: 'configuration/unresolvable-alias-base',
+      hasWildcardKey: true,
+      key: '#no-slash',
+      value: './src/no-slash*',
+    },
+    {
+      expectedConstraint: 'configuration/unresolvable-alias-base',
+      hasWildcardKey: true,
+      key: '#double-wildcard',
+      value: './src/*/*',
+    },
+    {
+      expectedConstraint: 'configuration/unresolvable-alias-base',
+      hasWildcardKey: false,
+      key: '#exact-wildcard',
+      value: './src/*',
+    },
   ])(
     'fails with $expectedConstraint when target is invalid',
     ({ expectedConstraint, hasWildcardKey, key, value }) => {
@@ -102,4 +138,18 @@ describe('collectSubpathTargets', () => {
       );
     }
   );
+
+  it('normalizes root dot and trailing slashes in resolved local targets', () => {
+    expect(collectSubpathTargets('./*', '#root/*', true)).toEqual({
+      targets: ['.'],
+    });
+    expect(
+      collectSubpathTargets('./src/_src@shared/', '#shared', false)
+    ).toEqual({
+      targets: ['src/_src@shared'],
+    });
+    expect(collectSubpathTargets('./', '#root', false)).toEqual({
+      targets: ['.'],
+    });
+  });
 });

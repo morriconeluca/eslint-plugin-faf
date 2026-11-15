@@ -130,4 +130,120 @@ describe('parseModuleRecordCache', () => {
       })
     ).toBeUndefined();
   });
+
+  it('validates all export origins, import kinds, symbols, and unsupported syntaxes while rejecting malformed records', () => {
+    const richRecord: TModuleRecord = {
+      exports: [
+        {
+          exportedName: 'testLocal',
+          isTypeOnly: false,
+          origin: { symbolName: 'testLocal', type: 'local-symbol' },
+          position: { column: 1, line: 1 },
+        },
+        {
+          exportedName: '*',
+          isTypeOnly: false,
+          origin: { specifier: './dep.js', type: 'export-all' },
+          position: { column: 1, line: 2 },
+        },
+        {
+          exportedName: 'ns',
+          isTypeOnly: false,
+          origin: { specifier: './dep.js', type: 'namespace' },
+          position: { column: 1, line: 3 },
+        },
+        {
+          exportedName: 'named',
+          isTypeOnly: true,
+          origin: {
+            importedName: 'origNamed',
+            specifier: './dep.js',
+            type: 'imported-binding',
+          },
+          position: { column: 1, line: 4 },
+        },
+      ],
+      imports: [
+        {
+          isTypeOnly: false,
+          kind: 'named-import',
+          position: { column: 1, line: 5 },
+          specifier: './dep.js',
+        },
+        {
+          isTypeOnly: false,
+          kind: 'non-literal-dynamic-import',
+          position: { column: 1, line: 6 },
+          specifier: null,
+        },
+      ],
+      language: 'style',
+      symbols: [
+        { name: 'testLocal', position: { column: 1, line: 1 }, space: 'value' },
+        { name: 'TType', position: { column: 1, line: 7 }, space: 'type' },
+      ],
+      unsupportedSyntaxes: [
+        { description: 'dynamic require', position: { column: 1, line: 8 } },
+      ],
+    };
+
+    expect(
+      parseModuleRecordCache({
+        packageVersion: '0.5.0',
+        raw: payload([['rich', richRecord]]),
+        schemaVersion: 1,
+      })?.get('rich')
+    ).toEqual(richRecord);
+
+    const malformedCases: readonly unknown[] = [
+      null,
+      { ...richRecord, exports: 'bad' },
+      { ...richRecord, exports: [null] },
+      {
+        ...richRecord,
+        exports: [{ ...richRecord.exports[0], origin: null }],
+      },
+      {
+        ...richRecord,
+        exports: [{ ...richRecord.exports[0], origin: { type: 'bad' } }],
+      },
+      {
+        ...richRecord,
+        exports: [
+          {
+            ...richRecord.exports[0],
+            origin: {
+              importedName: 1,
+              specifier: 'x',
+              type: 'imported-binding',
+            },
+          },
+        ],
+      },
+      { ...richRecord, imports: [null] },
+      {
+        ...richRecord,
+        imports: [{ ...richRecord.imports[0], isTypeOnly: 'false' }],
+      },
+      { ...richRecord, imports: [{ ...richRecord.imports[0], kind: 'bad' }] },
+      { ...richRecord, symbols: [null] },
+      { ...richRecord, symbols: [{ ...richRecord.symbols[0], space: 'bad' }] },
+      { ...richRecord, unsupportedSyntaxes: [null] },
+      {
+        ...richRecord,
+        unsupportedSyntaxes: [
+          { description: 1, position: { column: 1, line: 1 } },
+        ],
+      },
+    ];
+    for (const candidate of malformedCases) {
+      expect(
+        parseModuleRecordCache({
+          packageVersion: '0.5.0',
+          raw: payload([['bad', candidate]]),
+          schemaVersion: 1,
+        })
+      ).toBeUndefined();
+    }
+  });
 });

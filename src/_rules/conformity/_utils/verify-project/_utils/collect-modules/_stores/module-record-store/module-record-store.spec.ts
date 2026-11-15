@@ -1,4 +1,5 @@
 import { createFixture } from 'fs-fixture';
+import nodeCrypto from 'node:crypto';
 import nodeFs from 'node:fs';
 import nodePath from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,11 +9,19 @@ import type {
   TModuleRecordProducer,
 } from '../../../../_verify-project@shared/_types/verification-model.type.js';
 
-import { calculateContentKey } from './_utils/calculate-content-key/index.js';
-import { readModuleRecordCache } from './_utils/read-module-record-cache/index.js';
-import { writeModuleRecordCache } from './_utils/write-module-record-cache/index.js';
+import { toPosixPath } from '../../../../../../../../_src@shared/_utils/to-posix-path/index.js';
 import { MODULE_RECORD_CACHE_SCHEMA_VERSION } from './module-record-store.constant.js';
 import { moduleRecordStore } from './module-record-store.store.js';
+
+const contentKeyFor = (path: string, text: string): string =>
+  nodeCrypto
+    .createHash('sha256')
+    .update(String(MODULE_RECORD_CACHE_SCHEMA_VERSION))
+    .update('\0')
+    .update(toPosixPath(path))
+    .update('\0')
+    .update(text)
+    .digest('hex');
 
 const createDummyRecord = (name: string): TModuleRecord => ({
   exports: [
@@ -58,11 +67,7 @@ describe('moduleRecordStore', () => {
   it('consults memory before persistent entries for the same content key', () => {
     const path = 'src/a.ts';
     const text = 'const x = 1;';
-    const key = calculateContentKey(
-      path,
-      text,
-      MODULE_RECORD_CACHE_SCHEMA_VERSION
-    );
+    const key = contentKeyFor(path, text);
     const memoryRecord = createDummyRecord('memory');
     const persistentRecord = createDummyRecord('persistent');
 
@@ -80,11 +85,7 @@ describe('moduleRecordStore', () => {
   it('consults persistent cache before calling producer and promotes to memory tier', () => {
     const path = 'test-file.ts';
     const text = 'const a = 1;';
-    const key = calculateContentKey(
-      path,
-      text,
-      MODULE_RECORD_CACHE_SCHEMA_VERSION
-    );
+    const key = contentKeyFor(path, text);
     const persistentRecord = createDummyRecord('persistent');
     const persistentMap = new Map<string, TModuleRecord>([
       [key, persistentRecord],
@@ -124,10 +125,7 @@ describe('moduleRecordStore', () => {
     const text = 'export const foo = 1;';
     const record = createDummyRecord('preloaded');
     const persistentMap = new Map<string, TModuleRecord>([
-      [
-        calculateContentKey(path, text, MODULE_RECORD_CACHE_SCHEMA_VERSION),
-        record,
-      ],
+      [contentKeyFor(path, text), record],
     ]);
 
     const spyProducer: TModuleRecordProducer = vi.fn(() =>
@@ -142,7 +140,7 @@ describe('moduleRecordStore', () => {
     expect(spyProducer).toHaveBeenCalledTimes(0);
   });
 
-  it('loads and saves persistent cache across baseDirectory changes', async () => {
+  it('loads and saves persistent cache across baseDirectory changes and POSIX-normalizes Windows paths', async () => {
     const first = await createFixture({});
     const second = await createFixture({});
     try {
@@ -152,7 +150,7 @@ describe('moduleRecordStore', () => {
 
       moduleRecordStore.loadCache(first.path, '0.5.0');
       const wrapped = moduleRecordStore.wrapProducer(() => record);
-      expect(wrapped(path, text)).toBe(record);
+      expect(wrapped('src\\a.ts', text)).toBe(record);
       moduleRecordStore.saveCache(first.path, '0.5.0');
 
       const cacheFile = nodePath.join(
@@ -190,16 +188,8 @@ describe('moduleRecordStore', () => {
     const replacedText = 'const replaced = 1;';
     const keptPath = 'src/kept.ts';
     const keptText = 'const kept = 2;';
-    const replacedKey = calculateContentKey(
-      replacedPath,
-      replacedText,
-      MODULE_RECORD_CACHE_SCHEMA_VERSION
-    );
-    const keptKey = calculateContentKey(
-      keptPath,
-      keptText,
-      MODULE_RECORD_CACHE_SCHEMA_VERSION
-    );
+    const replacedKey = contentKeyFor(replacedPath, replacedText);
+    const keptKey = contentKeyFor(keptPath, keptText);
     const keptRecord = createDummyRecord('kept');
     const replacedRecord = createDummyRecord('replaced');
 
@@ -233,20 +223,16 @@ describe('moduleRecordStore', () => {
       'src/item.ts': 'export const item = 1;',
     });
     try {
-      const filePath = nodePath.join(fixture.path, 'src/item.ts');
-      const text = nodeFs.readFileSync(filePath, 'utf8');
+      const filePath = 'src/item.ts';
+      const text = 'export const item = 1;';
       const packageVersion = '0.5.0';
       const producer: TModuleRecordProducer = vi.fn((itemPath, itemText) =>
         createDummyRecord(`${itemPath}:${itemText}`)
       );
+      moduleRecordStore.loadCache(fixture.path, packageVersion);
       const wrapped = moduleRecordStore.wrapProducer(producer);
       wrapped(filePath, text);
-      writeModuleRecordCache({
-        baseDirectory: fixture.path,
-        entries: moduleRecordStore.getAllEntries(),
-        packageVersion,
-        schemaVersion: MODULE_RECORD_CACHE_SCHEMA_VERSION,
-      });
+      moduleRecordStore.saveCache(fixture.path, packageVersion);
 
       const cachePath = nodePath.join(
         fixture.path,
@@ -254,20 +240,12 @@ describe('moduleRecordStore', () => {
       );
       nodeFs.writeFileSync(cachePath, Buffer.from('corrupted binary data'));
       moduleRecordStore.clear();
-
-      const loaded = readModuleRecordCache({
-        baseDirectory: fixture.path,
-        packageVersion,
-        schemaVersion: MODULE_RECORD_CACHE_SCHEMA_VERSION,
-      });
-      expect(loaded.size).toBe(0);
+      moduleRecordStore.loadCache(fixture.path, packageVersion);
 
       const spyProducer: TModuleRecordProducer = vi.fn((itemPath, itemText) =>
         createDummyRecord(`${itemPath}:${itemText}`)
       );
-      const reloaded = moduleRecordStore.wrapProducer(spyProducer, {
-        persistentEntries: loaded,
-      });
+      const reloaded = moduleRecordStore.wrapProducer(spyProducer);
       expect(reloaded(filePath, text).symbols[0]?.name).toBe(
         `${filePath}:${text}`
       );

@@ -46,7 +46,7 @@ export const filterByTreeContainment = (
     const families: TEffectiveForeignFamily[] = [];
     for (const item of familyItems) {
       const paths = isInherited
-        ? item.paths.filter((p: string) => isPathInTree(p))
+        ? item.paths.filter((itemPath: string) => isPathInTree(itemPath))
         : [...item.paths];
       if (paths.length > 0) {
         families.push({
@@ -70,9 +70,12 @@ export const filterByTreeContainment = (
 
   const buildMimeticStructures = (): readonly TEffectiveMimeticStructure[] => {
     if (local.mimeticPathStructures !== undefined) {
-      return local.mimeticPathStructures.map((m) => ({
-        actions: m.actions === undefined ? null : [...m.actions],
-        paths: [...m.paths],
+      return local.mimeticPathStructures.map((mimeticStructure) => ({
+        actions:
+          mimeticStructure.actions === undefined
+            ? null
+            : [...mimeticStructure.actions],
+        paths: [...mimeticStructure.paths],
       }));
     }
 
@@ -81,11 +84,16 @@ export const filterByTreeContainment = (
     }
 
     const result: TEffectiveMimeticStructure[] = [];
-    for (const m of common.mimeticPathStructures) {
-      const filteredPaths = m.paths.filter((p: string) => isPathInTree(p));
+    for (const mimeticStructure of common.mimeticPathStructures) {
+      const filteredPaths = mimeticStructure.paths.filter((itemPath: string) =>
+        isPathInTree(itemPath)
+      );
       if (filteredPaths.length > 0) {
         result.push({
-          actions: m.actions === undefined ? null : [...m.actions],
+          actions:
+            mimeticStructure.actions === undefined
+              ? null
+              : [...mimeticStructure.actions],
           paths: filteredPaths,
         });
       }

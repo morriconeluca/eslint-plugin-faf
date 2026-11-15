@@ -62,30 +62,36 @@ export function checkCatalogInvariants(
     return map;
   };
 
-  const roleNameEntries = roleValidation.roleEntries.map((r: TRoleEntry) => ({
-    name: r.name,
-    path: `${r.path}.name`,
-  }));
+  const roleNameEntries = roleValidation.roleEntries.map(
+    (roleEntry: TRoleEntry) => ({
+      name: roleEntry.name,
+      path: `${roleEntry.path}.name`,
+    })
+  );
   const roleNamesMap = checkDuplicatesInMap(
     roleNameEntries,
     CONSTRAINT_DUPLICATE_ROLE_NAME,
     'Duplicate role name'
   );
 
-  const categoryEntries = roleValidation.roleEntries.map((r: TRoleEntry) => ({
-    name: r.category,
-    path: `${r.path}.category`,
-  }));
+  const categoryEntries = roleValidation.roleEntries.map(
+    (roleEntry: TRoleEntry) => ({
+      name: roleEntry.category,
+      path: `${roleEntry.path}.category`,
+    })
+  );
   checkDuplicatesInMap(
     categoryEntries,
     CONSTRAINT_DUPLICATE_CATEGORY,
     'Category is already assigned to another role'
   );
 
-  const subGraphNameEntries = subGraphEntries.map((s: TSubGraphRoleEntry) => ({
-    name: s.name,
-    path: `${s.path}.name`,
-  }));
+  const subGraphNameEntries = subGraphEntries.map(
+    (subGraphRoleEntry: TSubGraphRoleEntry) => ({
+      name: subGraphRoleEntry.name,
+      path: `${subGraphRoleEntry.path}.name`,
+    })
+  );
   const subGraphNamesMap = checkDuplicatesInMap(
     subGraphNameEntries,
     CONSTRAINT_DUPLICATE_ROLE_NAME,

@@ -8,7 +8,7 @@ import type {
 
 import { assembleDependencyGraph } from './_utils/assemble-dependency-graph/index.js';
 import { collectGraphVertices } from './_utils/collect-graph-vertices/index.js';
-import { collectResolvedArcs } from './_utils/collect-resolved-arcs/index.js';
+import { collectResolvedEdges } from './_utils/collect-resolved-edges/index.js';
 
 export function buildDependencyGraph(
   basis: TProjectBasis,
@@ -23,7 +23,7 @@ export function buildDependencyGraph(
     modules.records,
     modules.resolutions
   );
-  const arcs = collectResolvedArcs(
+  const resolved = collectResolvedEdges(
     modules.records,
     modules.resolutions,
     vertices.paths,
@@ -33,8 +33,8 @@ export function buildDependencyGraph(
     graph: assembleDependencyGraph(
       vertices.paths,
       vertices.natures,
-      arcs.edges,
-      arcs.libraryNotes
+      resolved.edges,
+      resolved.libraryImports
     ),
     outcomes: [],
   };

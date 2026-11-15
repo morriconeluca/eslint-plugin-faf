@@ -9,13 +9,45 @@ import type {
 
 import { createOutcome } from '../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 import { assertInvariant } from '../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { formatIssuePath } from './_utils/format-issue-path/index.js';
-import { hasExplicitProperty } from './_utils/has-explicit-property/index.js';
-import { joinPropertyPath } from './_utils/join-property-path/index.js';
 import { DIAGNOSTIC_PREFIX } from './config-diagnostic-codec.constant.js';
 import { formFields } from './config-diagnostic-codec.schema.js';
 
 export const translateConfigIssues = (() => {
+  const formatIssuePath = (segments: readonly PropertyKey[]): string => {
+    let path = '';
+    for (const segment of segments) {
+      if (typeof segment === 'number') {
+        path += `[${segment}]`;
+      } else if (typeof segment === 'string' && path.length === 0) {
+        path += segment;
+      } else {
+        path += `.${String(segment)}`;
+      }
+    }
+    return path;
+  };
+
+  const hasExplicitProperty = (
+    parent: null | object,
+    key: PropertyKey | undefined
+  ): boolean =>
+    parent !== null &&
+    !Array.isArray(parent) &&
+    typeof key === 'string' &&
+    Object.hasOwn(parent, key);
+
+  const joinPropertyPath = (prefix: string, relativePath: string): string => {
+    if (relativePath.length === 0) {
+      return prefix;
+    }
+    if (prefix.length === 0) {
+      return relativePath;
+    }
+    return relativePath.startsWith('[')
+      ? `${prefix}${relativePath}`
+      : `${prefix}.${relativePath}`;
+  };
+
   const isConfigDiagnostic = (value: unknown): value is TConfigDiagnostic => {
     const isObject = typeof value === 'object' && value !== null;
     const record = isObject && !Array.isArray(value) ? value : null;

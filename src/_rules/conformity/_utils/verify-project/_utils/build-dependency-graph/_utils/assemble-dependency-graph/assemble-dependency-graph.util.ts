@@ -1,7 +1,7 @@
 import type {
   TDependencyGraph,
   TEdgeMetadata,
-  TLibraryNote,
+  TLibraryImport,
   TVertexNature,
 } from '../../../../_verify-project@shared/_types/verification-model.type.js';
 import type { TPendingEdge } from '../../_build-dependency-graph@shared/_types/pending-edge.type.js';
@@ -10,7 +10,7 @@ export function assembleDependencyGraph(
   paths: readonly string[],
   natures: readonly TVertexNature[],
   edges: readonly TPendingEdge[],
-  libraryNotes: readonly TLibraryNote[]
+  libraryImports: readonly TLibraryImport[]
 ): TDependencyGraph {
   const emptyEdges = (): TPendingEdge[] => [];
   const groups = Array.from(paths, (path) => ({
@@ -45,11 +45,11 @@ export function assembleDependencyGraph(
   }
   rowOffsets[paths.length] = edgeIndex;
 
-  const libraryNotesBySourcePath = new Map<string, number[]>();
-  for (const [index, note] of libraryNotes.entries()) {
-    const existing = libraryNotesBySourcePath.get(note.sourcePath);
+  const libraryImportsBySourcePath = new Map<string, number[]>();
+  for (const [index, libraryImport] of libraryImports.entries()) {
+    const existing = libraryImportsBySourcePath.get(libraryImport.sourcePath);
     if (existing === undefined) {
-      libraryNotesBySourcePath.set(note.sourcePath, [index]);
+      libraryImportsBySourcePath.set(libraryImport.sourcePath, [index]);
     } else {
       existing.push(index);
     }
@@ -60,8 +60,8 @@ export function assembleDependencyGraph(
     edgeCount: destinationVertices.length,
     edgeMetadata,
     edgesBySourcePath,
-    libraryNotes,
-    libraryNotesBySourcePath,
+    libraryImports,
+    libraryImportsBySourcePath,
     pathToVertex,
     rowOffsets,
     vertexCount: paths.length,

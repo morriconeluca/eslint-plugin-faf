@@ -4,63 +4,86 @@ import type { TResolvedTarget } from '../../../../../../_verify-project@shared/_
 import type { TClassifyResolutionInput } from './classify-resolution-target.type.js';
 
 import { toPosixPath } from '../../../../../../../../../../_src@shared/_utils/to-posix-path/index.js';
-import { DISCORDANCE_REASON } from '../../_resolve-specifiers@shared/_constants/resolve-specifiers.constant.js';
-import { extractPackageName } from './_utils/extract-package-name/index.js';
-import { isAlternativeMatch } from './_utils/is-alternative-match/index.js';
-import { isInNodeModules } from './_utils/is-in-node-modules/index.js';
+import { assertInvariant } from '../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
+import {
+  DISCORDANCE_REASON,
+  NODE_MODULES_MARKER,
+  NODE_MODULES_PREFIX,
+} from '../../_resolve-specifiers@shared/_constants/resolve-specifiers.constant.js';
 
-export function classifyResolutionTarget(
-  input: TClassifyResolutionInput
-): TResolvedTarget {
-  const {
-    aliasAlternatives,
-    aliasUsed,
-    canonicalBase,
-    resolveResult,
-    specifier,
-  } = input;
+export const classifyResolutionTarget = (() => {
+  const isInNodeModules = (posixPath: string): boolean =>
+    posixPath.includes(NODE_MODULES_MARKER) ||
+    posixPath.startsWith(NODE_MODULES_PREFIX) ||
+    posixPath.endsWith('/node_modules');
 
-  if (resolveResult.builtin !== undefined || specifier.startsWith('node:')) {
-    if (aliasUsed !== null) {
-      return {
-        reason: DISCORDANCE_REASON,
-        type: 'unresolved',
-      };
+  const extractPackageName = (posixPath: string): string => {
+    const index = posixPath.lastIndexOf(NODE_MODULES_MARKER);
+    let remainder: string;
+
+    if (index !== -1) {
+      remainder = posixPath.slice(index + NODE_MODULES_MARKER.length);
+    } else if (posixPath.startsWith(NODE_MODULES_PREFIX)) {
+      remainder = posixPath.slice(NODE_MODULES_PREFIX.length);
+    } else {
+      remainder = posixPath;
     }
-    return {
-      packageName: resolveResult.builtin?.resolved ?? specifier,
-      type: 'external-library',
-    };
-  }
 
-  const classifyLocalFile = (realResolvedPath: string): TResolvedTarget => {
-    const relativeToCanonical = toPosixPath(
-      nodePath.relative(canonicalBase, realResolvedPath)
-    );
-    const posixRelative = relativeToCanonical;
+    const segments = remainder.split('/');
+    const first = segments[0];
+    assertInvariant(first !== undefined, 'Expected segment');
+    const second = segments[1];
+    return second !== undefined && first.startsWith('@')
+      ? `${first}/${second}`
+      : first;
+  };
 
-    if (aliasUsed !== null) {
-      const isMatched = aliasAlternatives.some((alt) =>
-        isAlternativeMatch(posixRelative, alt)
-      );
-      if (!isMatched) {
-        return {
-          reason: DISCORDANCE_REASON,
-          type: 'unresolved',
-        };
+  const isAlternativeMatch = (
+    resolvedPath: string,
+    alternative: string
+  ): boolean => {
+    const normResolved = toPosixPath(nodePath.posix.normalize(resolvedPath));
+    const normAlt = toPosixPath(nodePath.posix.normalize(alternative));
+
+    if (normAlt === '.' || normAlt === './') {
+      return !normResolved.startsWith('../');
+    }
+
+    if (
+      normResolved === normAlt ||
+      normResolved.startsWith(`${normAlt}/`) ||
+      normResolved.startsWith(`${normAlt}.`)
+    ) {
+      return true;
+    }
+
+    const altExtension = nodePath.posix.extname(normAlt);
+    if (altExtension !== '') {
+      const altWithoutExtension = normAlt.slice(0, -altExtension.length);
+      const resolvedExtension = nodePath.posix.extname(normResolved);
+      if (
+        resolvedExtension !== '' &&
+        normResolved.slice(0, -resolvedExtension.length) === altWithoutExtension
+      ) {
+        return true;
       }
     }
 
-    return {
-      path: posixRelative,
-      type: 'local-file',
-    };
+    return false;
   };
 
-  if (resolveResult.path !== undefined) {
-    const posixReal = toPosixPath(resolveResult.path);
+  return function classifyResolutionTarget(
+    input: TClassifyResolutionInput
+  ): TResolvedTarget {
+    const {
+      aliasAlternatives,
+      aliasUsed,
+      canonicalBase,
+      resolveResult,
+      specifier,
+    } = input;
 
-    if (isInNodeModules(posixReal)) {
+    if (resolveResult.builtin !== undefined || specifier.startsWith('node:')) {
       if (aliasUsed !== null) {
         return {
           reason: DISCORDANCE_REASON,
@@ -68,16 +91,57 @@ export function classifyResolutionTarget(
         };
       }
       return {
-        packageName: extractPackageName(posixReal),
+        packageName: resolveResult.builtin?.resolved ?? specifier,
         type: 'external-library',
       };
     }
 
-    return classifyLocalFile(resolveResult.path);
-  }
+    const classifyLocalFile = (realResolvedPath: string): TResolvedTarget => {
+      const relativeToCanonical = toPosixPath(
+        nodePath.relative(canonicalBase, realResolvedPath)
+      );
+      const posixRelative = relativeToCanonical;
 
-  return {
-    reason: resolveResult.error ?? `Cannot resolve module '${specifier}'`,
-    type: 'unresolved',
+      if (aliasUsed !== null) {
+        const isMatched = aliasAlternatives.some((alt) =>
+          isAlternativeMatch(posixRelative, alt)
+        );
+        if (!isMatched) {
+          return {
+            reason: DISCORDANCE_REASON,
+            type: 'unresolved',
+          };
+        }
+      }
+
+      return {
+        path: posixRelative,
+        type: 'local-file',
+      };
+    };
+
+    if (resolveResult.path !== undefined) {
+      const posixReal = toPosixPath(resolveResult.path);
+
+      if (isInNodeModules(posixReal)) {
+        if (aliasUsed !== null) {
+          return {
+            reason: DISCORDANCE_REASON,
+            type: 'unresolved',
+          };
+        }
+        return {
+          packageName: extractPackageName(posixReal),
+          type: 'external-library',
+        };
+      }
+
+      return classifyLocalFile(resolveResult.path);
+    }
+
+    return {
+      reason: resolveResult.error ?? `Cannot resolve module '${specifier}'`,
+      type: 'unresolved',
+    };
   };
-}
+})();

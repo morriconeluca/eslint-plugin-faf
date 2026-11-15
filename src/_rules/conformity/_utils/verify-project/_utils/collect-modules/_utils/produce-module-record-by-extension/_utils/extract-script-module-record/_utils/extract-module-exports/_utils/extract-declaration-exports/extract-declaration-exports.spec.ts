@@ -136,4 +136,21 @@ describe('extractDeclarationExports', () => {
       },
     ]);
   });
+
+  it('extracts array, object, assignment, and rest pattern variable exports and skips ambient modules', () => {
+    const patternExports = parseAndExtractExports(
+      'export const [first = 1, , ...rest] = source, { nested: renamed, ...others } = obj;'
+    );
+    expect(patternExports.map((item) => item.exportedName)).toEqual([
+      'first',
+      'rest',
+      'renamed',
+      'others',
+    ]);
+
+    const ambientExports = parseAndExtractExports(
+      'export declare module "pkg" {}'
+    );
+    expect(ambientExports).toEqual([]);
+  });
 });

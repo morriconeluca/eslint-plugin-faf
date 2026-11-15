@@ -365,6 +365,42 @@ describe('configDiagnosticCodec', () => {
       expect(absentNullEmptyList[0]?.constraint).toBe(
         'configuration/missing-property'
       );
+
+      const arrayParent = translateConfigIssues(
+        [
+          {
+            code: 'invalid_type',
+            expected: 'string',
+            message: absentMessage,
+            path: ['items', 0],
+          },
+        ],
+        { items: ['a'] },
+        'faf'
+      );
+      expect(arrayParent[0]?.constraint).toBe('configuration/missing-property');
+
+      const explicitInput: Record<string, unknown> = {};
+      Object.defineProperty(explicitInput, 'roles', {
+        enumerable: true,
+        value: void 0,
+      });
+      const explicitUndefinedKey = translateConfigIssues(
+        [
+          {
+            code: 'invalid_type',
+            expected: 'string',
+            message: absentMessage,
+            path: ['roles'],
+          },
+        ],
+        explicitInput,
+        ''
+      );
+      expect(explicitUndefinedKey[0]?.constraint).toBe(
+        'configuration/explicit-undefined'
+      );
+      expect(explicitUndefinedKey[0]?.propertyPath).toBe('roles');
     });
   });
 });

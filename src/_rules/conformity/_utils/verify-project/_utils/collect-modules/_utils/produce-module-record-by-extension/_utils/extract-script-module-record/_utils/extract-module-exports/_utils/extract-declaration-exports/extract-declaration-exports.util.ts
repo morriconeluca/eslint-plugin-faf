@@ -1,50 +1,196 @@
-import type { Statement } from 'oxc-parser';
+import type {
+  BindingPattern,
+  BindingRestElement,
+  Class,
+  Function as OxcFunction,
+  Statement,
+  TSEnumDeclaration,
+  TSGlobalDeclaration,
+  TSInterfaceDeclaration,
+  TSModuleDeclaration,
+  TSTypeAliasDeclaration,
+  VariableDeclaration,
+} from 'oxc-parser';
 
 import type { TModuleExport } from '../../../../../../../../../../_verify-project@shared/_types/verification-model.type.js';
 import type { TSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
-import { extractClassExports } from './_utils/extract-class-exports/index.js';
-import { extractFunctionExports } from './_utils/extract-function-exports/index.js';
-import { extractNamespaceExports } from './_utils/extract-namespace-exports/index.js';
-import { extractTypeExports } from './_utils/extract-type-exports/index.js';
-import { extractVariableExports } from './_utils/extract-variable-exports/index.js';
+import {
+  DEFAULT_NAME,
+  LOCAL_SYMBOL_ORIGIN,
+} from '../../_extract-module-exports@shared/_constants/module-exports.constant.js';
 
-export function extractDeclarationExports(
-  declaration: Statement,
-  locator: TSourceLocator,
-  exports: TModuleExport[],
-  seenExportNames: Set<string>
-): void {
-  if (declaration.type === 'VariableDeclaration') {
-    extractVariableExports(declaration, locator, exports, seenExportNames);
-    return;
-  }
+export const extractDeclarationExports = (() => {
+  type TPatternIdentifier = {
+    readonly name: string;
+    readonly start: number;
+  };
 
-  if (
-    declaration.type === 'TSInterfaceDeclaration' ||
-    declaration.type === 'TSTypeAliasDeclaration'
-  ) {
-    extractTypeExports(declaration, locator, exports, seenExportNames);
-    return;
-  }
+  const collectPatternIdentifiers = (
+    pattern: BindingPattern | BindingRestElement,
+    results: TPatternIdentifier[]
+  ): void => {
+    switch (pattern.type) {
+      case 'ArrayPattern': {
+        for (const element of pattern.elements) {
+          if (element !== null) {
+            collectPatternIdentifiers(element, results);
+          }
+        }
+        return;
+      }
+      case 'AssignmentPattern': {
+        collectPatternIdentifiers(pattern.left, results);
+        return;
+      }
+      case 'Identifier': {
+        results.push({ name: pattern.name, start: pattern.start });
+        return;
+      }
+      case 'ObjectPattern': {
+        for (const property of pattern.properties) {
+          const next =
+            property.type === 'Property' ? property.value : property.argument;
+          collectPatternIdentifiers(next, results);
+        }
+        return;
+      }
+      case 'RestElement': {
+        collectPatternIdentifiers(pattern.argument, results);
+        return;
+      }
+    }
+  };
 
-  if (
-    declaration.type === 'FunctionDeclaration' ||
-    declaration.type === 'TSDeclareFunction'
-  ) {
-    extractFunctionExports(declaration, locator, exports, seenExportNames);
-    return;
-  }
+  const extractVariableExports = (
+    declaration: VariableDeclaration,
+    locator: TSourceLocator,
+    exports: TModuleExport[],
+    seenExportNames: Set<string>
+  ): void => {
+    const identifiers: TPatternIdentifier[] = [];
+    for (const declarator of declaration.declarations) {
+      collectPatternIdentifiers(declarator.id, identifiers);
+    }
+    for (const item of identifiers) {
+      seenExportNames.add(item.name);
+      exports.push({
+        exportedName: item.name,
+        isTypeOnly: false,
+        origin: { symbolName: item.name, type: LOCAL_SYMBOL_ORIGIN },
+        position: locator(item.start),
+      });
+    }
+  };
 
-  if (
-    declaration.type === 'ClassDeclaration' ||
-    declaration.type === 'TSEnumDeclaration'
-  ) {
-    extractClassExports(declaration, locator, exports, seenExportNames);
-    return;
-  }
+  const extractTypeExports = (
+    declaration: TSInterfaceDeclaration | TSTypeAliasDeclaration,
+    locator: TSourceLocator,
+    exports: TModuleExport[],
+    seenExportNames: Set<string>
+  ): void => {
+    seenExportNames.add(declaration.id.name);
+    exports.push({
+      exportedName: declaration.id.name,
+      isTypeOnly: true,
+      origin: { symbolName: declaration.id.name, type: LOCAL_SYMBOL_ORIGIN },
+      position: locator(declaration.id.start),
+    });
+  };
 
-  if (declaration.type === 'TSModuleDeclaration') {
-    extractNamespaceExports(declaration, locator, exports, seenExportNames);
-  }
-}
+  const extractFunctionExports = (
+    declaration: OxcFunction,
+    locator: TSourceLocator,
+    exports: TModuleExport[],
+    seenExportNames: Set<string>
+  ): void => {
+    const name = declaration.id?.name ?? DEFAULT_NAME;
+    if (seenExportNames.has(name)) {
+      return;
+    }
+    seenExportNames.add(name);
+    exports.push({
+      exportedName: name,
+      isTypeOnly: false,
+      origin: { symbolName: name, type: LOCAL_SYMBOL_ORIGIN },
+      position: locator(declaration.start),
+    });
+  };
+
+  const extractClassExports = (
+    declaration: Class | TSEnumDeclaration,
+    locator: TSourceLocator,
+    exports: TModuleExport[],
+    seenExportNames: Set<string>
+  ): void => {
+    const name = declaration.id?.name ?? DEFAULT_NAME;
+    seenExportNames.add(name);
+    exports.push({
+      exportedName: name,
+      isTypeOnly: false,
+      origin: { symbolName: name, type: LOCAL_SYMBOL_ORIGIN },
+      position: locator(declaration.start),
+    });
+  };
+
+  const extractNamespaceExports = (
+    declaration: TSGlobalDeclaration | TSModuleDeclaration,
+    locator: TSourceLocator,
+    exports: TModuleExport[],
+    seenExportNames: Set<string>
+  ): void => {
+    if (
+      declaration.kind !== 'namespace' ||
+      declaration.id.type !== 'Identifier'
+    ) {
+      return;
+    }
+    seenExportNames.add(declaration.id.name);
+    exports.push({
+      exportedName: declaration.id.name,
+      isTypeOnly: false,
+      origin: { symbolName: declaration.id.name, type: LOCAL_SYMBOL_ORIGIN },
+      position: locator(declaration.id.start),
+    });
+  };
+
+  return function extractDeclarationExports(
+    declaration: Statement,
+    locator: TSourceLocator,
+    exports: TModuleExport[],
+    seenExportNames: Set<string>
+  ): void {
+    if (declaration.type === 'VariableDeclaration') {
+      extractVariableExports(declaration, locator, exports, seenExportNames);
+      return;
+    }
+
+    if (
+      declaration.type === 'TSInterfaceDeclaration' ||
+      declaration.type === 'TSTypeAliasDeclaration'
+    ) {
+      extractTypeExports(declaration, locator, exports, seenExportNames);
+      return;
+    }
+
+    if (
+      declaration.type === 'FunctionDeclaration' ||
+      declaration.type === 'TSDeclareFunction'
+    ) {
+      extractFunctionExports(declaration, locator, exports, seenExportNames);
+      return;
+    }
+
+    if (
+      declaration.type === 'ClassDeclaration' ||
+      declaration.type === 'TSEnumDeclaration'
+    ) {
+      extractClassExports(declaration, locator, exports, seenExportNames);
+      return;
+    }
+
+    if (declaration.type === 'TSModuleDeclaration') {
+      extractNamespaceExports(declaration, locator, exports, seenExportNames);
+    }
+  };
+})();

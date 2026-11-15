@@ -147,4 +147,147 @@ describe('extractNamedSpecifiersExports', () => {
     const exports = parseAndExtractSpecifiers('export { MyType };', symbols);
     expect(exports[0]?.isTypeOnly).toBe(true);
   });
+
+  it('prefers local type-space symbol over value import for export type and extracts literal export names', () => {
+    const bindings = new Map<string, TImportedBinding>([
+      [
+        'Merged',
+        {
+          importedName: 'Merged',
+          isNamespace: false,
+          isTypeOnly: false,
+          localName: 'Merged',
+          specifier: './dep.js',
+        },
+      ],
+    ]);
+    const symbols: TRootSymbol[] = [
+      { name: 'Merged', position: { column: 6, line: 1 }, space: 'type' },
+    ];
+    const localTypeExports = parseAndExtractSpecifiers(
+      'export type { Merged };',
+      symbols,
+      bindings
+    );
+    expect(localTypeExports[0]?.origin).toEqual({
+      symbolName: 'Merged',
+      type: 'local-symbol',
+    });
+
+    const literalExports = parseAndExtractSpecifiers(
+      "export { orig as 'custom-name' } from './dep.js';"
+    );
+    expect(literalExports[0]?.exportedName).toBe('custom-name');
+
+    const inlineTypeReExport = parseAndExtractSpecifiers(
+      "export { type orig } from './dep.js';"
+    );
+    expect(inlineTypeReExport[0]?.isTypeOnly).toBe(true);
+  });
+
+  it('handles merged value+type symbols, unknown symbols, and value-vs-type imported bindings cleanly', () => {
+    const mergedSymbols: TRootSymbol[] = [
+      { name: 'Other', position: { column: 1, line: 1 }, space: 'value' },
+      { name: 'X', position: { column: 1, line: 2 }, space: 'value' },
+      { name: 'X', position: { column: 1, line: 3 }, space: 'type' },
+      { name: 'OnlyType', position: { column: 1, line: 4 }, space: 'type' },
+    ];
+    expect(
+      parseAndExtractSpecifiers('export { X };', mergedSymbols)[0]?.isTypeOnly
+    ).toBe(false);
+    expect(
+      parseAndExtractSpecifiers('export { unknownId };', mergedSymbols)[0]
+        ?.isTypeOnly
+    ).toBe(false);
+    expect(
+      parseAndExtractSpecifiers('export { OnlyType };', mergedSymbols)[0]
+        ?.isTypeOnly
+    ).toBe(true);
+    expect(
+      parseAndExtractSpecifiers('export { type Other };', mergedSymbols)[0]
+        ?.isTypeOnly
+    ).toBe(true);
+
+    const bindings = new Map<string, TImportedBinding>([
+      [
+        'TypeImp',
+        {
+          importedName: 'TypeImp',
+          isNamespace: false,
+          isTypeOnly: true,
+          localName: 'TypeImp',
+          specifier: './dep.js',
+        },
+      ],
+      [
+        'Val',
+        {
+          importedName: 'Val',
+          isNamespace: false,
+          isTypeOnly: false,
+          localName: 'Val',
+          specifier: './dep.js',
+        },
+      ],
+    ]);
+    const localMixedSymbols: TRootSymbol[] = [
+      { name: 'Other', position: { column: 1, line: 1 }, space: 'value' },
+      { name: 'TypeImp', position: { column: 1, line: 2 }, space: 'type' },
+    ];
+    const valueBindingTypeExport = parseAndExtractSpecifiers(
+      'export type { Val };',
+      localMixedSymbols,
+      bindings
+    );
+    expect(valueBindingTypeExport[0]).toMatchObject({
+      isTypeOnly: true,
+      origin: {
+        importedName: 'Val',
+        specifier: './dep.js',
+        type: 'imported-binding',
+      },
+    });
+
+    const typeBindingValueExport = parseAndExtractSpecifiers(
+      'export { TypeImp };',
+      localMixedSymbols,
+      bindings
+    );
+    expect(typeBindingValueExport[0]).toMatchObject({
+      isTypeOnly: true,
+      origin: {
+        importedName: 'TypeImp',
+        specifier: './dep.js',
+        type: 'imported-binding',
+      },
+    });
+
+    const mergedBindingValueExport = parseAndExtractSpecifiers(
+      'export { Val };',
+      [{ name: 'Val', position: { column: 1, line: 1 }, space: 'type' }],
+      bindings
+    );
+    expect(mergedBindingValueExport[0]).toMatchObject({
+      isTypeOnly: false,
+      origin: {
+        importedName: 'Val',
+        specifier: './dep.js',
+        type: 'imported-binding',
+      },
+    });
+
+    const typeBindingExplicitTypeExport = parseAndExtractSpecifiers(
+      'export type { TypeImp };',
+      localMixedSymbols,
+      bindings
+    );
+    expect(typeBindingExplicitTypeExport[0]).toMatchObject({
+      isTypeOnly: true,
+      origin: {
+        importedName: 'TypeImp',
+        specifier: './dep.js',
+        type: 'imported-binding',
+      },
+    });
+  });
 });

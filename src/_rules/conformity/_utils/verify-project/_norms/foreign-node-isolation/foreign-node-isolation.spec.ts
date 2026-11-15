@@ -4,7 +4,7 @@ import type {
   TDependencyGraph,
   TEdgeMetadata,
   TItemClassification,
-  TLibraryNote,
+  TLibraryImport,
   TNodeKind,
   TTaxonomyModel,
   TVerificationModel,
@@ -72,7 +72,7 @@ const createEdge = (
 const createLibraryNote = (
   packageName: string,
   specifier: string
-): TLibraryNote => ({
+): TLibraryImport => ({
   aliasAlternatives: [],
   aliasUsed: null,
   importIndex: 0,
@@ -87,7 +87,7 @@ const createLibraryNote = (
 const buildModel = (
   taxonomyEntries: readonly (readonly [string, null | TNodeKind])[],
   edges: readonly TEdgeMetadata[],
-  libraryNotes: readonly TLibraryNote[] = []
+  libraryImports: readonly TLibraryImport[] = []
 ): TVerificationModel => {
   const base = verificationModel();
   const taxonomy = buildTaxonomy(taxonomyEntries);
@@ -95,7 +95,7 @@ const buildModel = (
     ...base.graph,
     edgeCount: edges.length,
     edgeMetadata: edges,
-    libraryNotes,
+    libraryImports,
   };
 
   return {
@@ -253,11 +253,11 @@ describe('verifyForeignNodeIsolation', () => {
     ] as const)(
       'emits no outcomes when Foreign Node connects to %s',
       (_description, target) => {
-        const libraryNote = createLibraryNote(target, target);
+        const libraryImport = createLibraryNote(target, target);
         const model = buildModel(
           [['src/foreign.ts', 'foreign-node']],
           [],
-          [libraryNote]
+          [libraryImport]
         );
         expect(verifyForeignNodeIsolation(model)).toEqual([]);
       }

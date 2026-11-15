@@ -761,6 +761,17 @@ describe('extractScriptModuleRecord', () => {
         column: 7,
         line: 1,
       });
+
+      const labellessRecord = extractScriptModuleRecord(
+        'binary.ts',
+        '\u{D800}'
+      );
+      expect(labellessRecord.unsupportedSyntaxes).toEqual([
+        {
+          description: 'File appears to be binary.',
+          position: { column: 1, line: 1 },
+        },
+      ]);
     });
   });
 });

@@ -342,4 +342,52 @@ describe('deriveDomainHierarchies', () => {
       },
     ]);
   });
+
+  it('rejects mixed Categories and Layers, non-Sub-Category children of Categories, and empty Path-Category hierarchies', () => {
+    const { context: mixedContext } = hierarchyFixture(
+      [
+        { domainKind: 'fractal-branch', path: 'src/_src@shared' },
+        { domainKind: 'category', path: 'src/_src@shared/_types' },
+        { domainKind: 'layer', path: 'src/_src@shared/_domain' },
+      ],
+      {
+        horizontalHierarchies: [
+          { hierarchy: [['_types'], ['_domain']], path: 'src/_src@shared' },
+        ],
+      }
+    );
+    expect(deriveDomainHierarchies(mixedContext)[0]?.isOrderable).toBe(false);
+
+    const { context: mimeticContext } = hierarchyFixture(
+      [
+        {
+          domainKind: 'category',
+          path: 'src/_routes',
+          relationalQualifications: { isParentCategory: true },
+        },
+        { domainKind: 'path-sub-category', path: 'src/_routes/_users' },
+      ],
+      {
+        horizontalHierarchies: [
+          { hierarchy: [['_missing'], ['_other']], path: 'src/_routes' },
+          { hierarchy: [['_users'], ['_other']], path: 'src/_routes' },
+        ],
+      }
+    );
+    expect(
+      deriveDomainHierarchies(mimeticContext).map((set) => set.isOrderable)
+    ).toEqual([false, false]);
+
+    const { context: subCategoryEmptyContext } = hierarchyFixture(
+      [{ domainKind: 'sub-category', path: 'src/_utils/_base' }],
+      {
+        horizontalHierarchies: [
+          { hierarchy: [['_missing'], ['_other']], path: 'src/_utils/_base' },
+        ],
+      }
+    );
+    expect(
+      deriveDomainHierarchies(subCategoryEmptyContext)[0]?.isOrderable
+    ).toBe(true);
+  });
 });

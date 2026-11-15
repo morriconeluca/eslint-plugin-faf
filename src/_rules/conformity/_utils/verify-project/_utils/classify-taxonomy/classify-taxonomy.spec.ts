@@ -11,12 +11,6 @@ import type {
 
 import { compareOrdinal } from '../../_verify-project@shared/_utils/compare-ordinal/index.js';
 import { inventoryFromEntries } from './_classify-taxonomy@shared/_mocks/inventory-from-entries.mock.js';
-import { classifyDirectory } from './_utils/classify-directory/index.js';
-import { classifyFile } from './_utils/classify-file/index.js';
-import { compareConfigOutcomes } from './_utils/compare-config-outcomes/index.js';
-import { finalizeClassifications } from './_utils/finalize-classifications/index.js';
-import { getRoleFromName } from './_utils/get-role-from-name/index.js';
-import { selectForeignNodes } from './_utils/select-foreign-nodes/index.js';
 import { classifyTaxonomy } from './classify-taxonomy.util.js';
 
 const DOT = '.';
@@ -188,190 +182,6 @@ const kindOf = (
     role: classification?.role ?? { kind: 'absent', roleName: null },
   };
 };
-
-describe('classification helpers', () => {
-  it('orders configuration outcomes by constraint, element, then property path', () => {
-    const base = {
-      element: 'src/a',
-      family: 'configuration' as const,
-      message: 'same',
-      normativeReference: '§6.9',
-    };
-    expect(
-      compareConfigOutcomes(
-        { ...base, constraint: 'configuration/empty-list', propertyPath: 'p' },
-        {
-          ...base,
-          constraint: 'configuration/duplicate-element',
-          propertyPath: 'p',
-        }
-      )
-    ).toBeGreaterThan(0);
-    expect(
-      compareConfigOutcomes(
-        {
-          ...base,
-          constraint: 'configuration/duplicate-element',
-          propertyPath: 'p',
-        },
-        {
-          ...base,
-          constraint: 'configuration/duplicate-element',
-          element: 'src/b',
-          propertyPath: 'p',
-        }
-      )
-    ).toBeLessThan(0);
-    expect(
-      compareConfigOutcomes(
-        {
-          ...base,
-          constraint: 'configuration/duplicate-element',
-          propertyPath: 'z',
-        },
-        {
-          ...base,
-          constraint: 'configuration/duplicate-element',
-          propertyPath: 'a',
-        }
-      )
-    ).toBeGreaterThan(0);
-  });
-
-  it('classifies a fragment file and a category file with exact node kinds', () => {
-    const context = {
-      catalog: standardCatalog,
-      foreignDomainPaths: new Set<string>(),
-      foreignNodePaths: new Set<string>(),
-      getRoleFromName,
-      mimeticPaths: new Set<string>(),
-      originKind: 'root-layer' as const,
-      originPath: 'src',
-      rootFragmentPaths: new Set<string>(),
-      rootNodePaths: new Set<string>(),
-    };
-    const fragmentParent = {
-      domainKind: 'fragment' as const,
-      form: null,
-      imposedRoleName: 'component',
-      isMimeticContext: false,
-      parentFragmentPath: null,
-      path: 'src/_components/button',
-    };
-    expect(
-      classifyFile(
-        'src/_components/button/button.component.tsx',
-        fragmentParent,
-        context
-      ).fields.nodeKind
-    ).toBe('fragment-node');
-    expect(
-      classifyFile('src/_components/button/index.ts', fragmentParent, context)
-        .fields.nodeKind
-    ).toBe('access-node');
-    expect(
-      classifyFile(
-        'src/_components/button/button.spec.tsx',
-        fragmentParent,
-        context
-      ).fields.nodeKind
-    ).toBe('sub-graph-node');
-    const categoryParent = {
-      domainKind: 'category' as const,
-      form: 'category-nodes' as const,
-      imposedRoleName: 'type',
-      isMimeticContext: false,
-      parentFragmentPath: null,
-      path: 'src/_types',
-    };
-    expect(
-      classifyFile('src/_types/user.type.ts', categoryParent, context).fields
-        .nodeKind
-    ).toBe('category-node');
-    expect(
-      classifyFile('src/_types/note.ts', categoryParent, context).fields
-        .nodeKind
-    ).toBe('unauthorized-logical-node');
-    const directory = classifyDirectory(
-      'src/_components',
-      {
-        domainKind: 'root-layer',
-        form: null,
-        imposedRoleName: null,
-        isMimeticContext: false,
-        parentFragmentPath: null,
-        path: 'src',
-      },
-      context
-    );
-    expect(directory.domainKind).toBe('category');
-    expect(directory.isPrivateCategory).toBe(false);
-  });
-
-  it('marks parent categories and sorts finalized classifications by item id', () => {
-    const drafts = new Map([
-      [
-        1,
-        {
-          domainKind: 'category' as const,
-          entryKind: 'directory' as const,
-          form: 'fragments' as const,
-          fragmentInternalRank: null,
-          imposedRoleName: 'component',
-          isPathFragment: false,
-          isPrivateCategory: false,
-          isSubFragment: false,
-          isSubLayer: false,
-          itemId: 1,
-          nodeKind: null,
-          parentFragmentPath: null,
-          path: 'src/_components',
-          role: { kind: 'absent' as const, roleName: null },
-        },
-      ],
-      [
-        2,
-        {
-          domainKind: 'sub-category' as const,
-          entryKind: 'directory' as const,
-          form: 'fragments' as const,
-          fragmentInternalRank: null,
-          imposedRoleName: 'component',
-          isPathFragment: false,
-          isPrivateCategory: false,
-          isSubFragment: false,
-          isSubLayer: false,
-          itemId: 2,
-          nodeKind: null,
-          parentFragmentPath: null,
-          path: 'src/_components/_atoms',
-          role: { kind: 'absent' as const, roleName: null },
-        },
-      ],
-    ]);
-    const finalized = finalizeClassifications(
-      drafts,
-      new Map([[1, [2]]]),
-      new Set(['src/_components'])
-    );
-    expect(finalized.map((item) => item.itemId)).toEqual([1, 2]);
-    expect(finalized[0]?.relationalQualifications.isParentCategory).toBe(true);
-    expect(finalized[1]?.relationalQualifications.isParentCategory).toBe(false);
-  });
-
-  it('does not select files when the origin is absent', () => {
-    const inventory = inventoryFromEntries(
-      [entry('src', 'directory')],
-      ['src']
-    );
-    const selection = selectForeignNodes(
-      inventory,
-      treeOf('missing', { foreignDomains: ['missing'] })
-    );
-    expect(selection.foreignNodePaths.size).toBe(0);
-    expect(selection.foreignDomainPaths.size).toBe(0);
-  });
-});
 
 describe('classifyTaxonomy', () => {
   it('omits files outside every tree and does not emit outcomes for them', () => {
@@ -1361,13 +1171,12 @@ describe('classifyTaxonomy', () => {
     const repositoryCatalog = catalogOf(
       [
         { category: '_constants', isCategoryNode: true, name: 'constant' },
+        { category: '_schemas', isCategoryNode: true, name: 'schema' },
         { category: '_types', isCategoryNode: true, name: 'type' },
         { category: '_mocks', isCategoryNode: true, name: 'mock' },
         { category: '_configs', isCategoryNode: true, name: 'config' },
         { category: '_utils', name: 'util' },
         { category: '_norms', name: 'norm' },
-        { category: '_adapters', name: 'adapter' },
-        { category: '_services', name: 'service' },
         { category: '_stores', name: 'store' },
         { category: '_rules', name: 'rule' },
       ],
@@ -1380,8 +1189,8 @@ describe('classifyTaxonomy', () => {
       'src/_src@shared/_taxonomy/_types/classification.type.ts',
       'src/_src@shared/_taxonomy/_utils/get-role-from-name/get-role-from-name.util.ts',
       'src/_src@shared/_taxonomy/_utils/get-role-from-name/index.ts',
-      'src/_src@shared/_runtime/_adapters/load-config/load-config.adapter.ts',
-      'src/_src@shared/_runtime/_adapters/load-config/index.ts',
+      'src/_src@shared/_runtime/_utils/load-config/load-config.util.ts',
+      'src/_src@shared/_runtime/_utils/load-config/index.ts',
     ];
     const result = classify(paths, [
       treeOf('src', {
@@ -1420,7 +1229,7 @@ describe('classifyTaxonomy', () => {
     expect(
       kindOf(
         result,
-        'src/_src@shared/_runtime/_adapters/load-config/load-config.adapter.ts'
+        'src/_src@shared/_runtime/_utils/load-config/load-config.util.ts'
       ).nodeKind
     ).toBe('master-node');
   });

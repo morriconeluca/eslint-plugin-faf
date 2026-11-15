@@ -4,7 +4,7 @@ import type {
   TEdgeMetadata,
   TInventoryItem,
   TItemClassification,
-  TLibraryNote,
+  TLibraryImport,
   TNodeKind,
   TVerificationModel,
 } from '../../../../_verify-project@shared/_types/verification-model.type.js';
@@ -87,7 +87,7 @@ const makeNote = (
   packageName: string,
   specifier: string,
   importIndex: number
-): TLibraryNote => ({
+): TLibraryImport => ({
   aliasAlternatives: [],
   aliasUsed: null,
   importIndex,
@@ -233,7 +233,7 @@ describe('collectSourceOutcomes', () => {
       graph: {
         ...base.graph,
         edgeMetadata: [edgeSpec, edgeForeign],
-        libraryNotes: [noteLibrary],
+        libraryImports: [noteLibrary],
       },
       taxonomy: {
         byItemId: new Map([

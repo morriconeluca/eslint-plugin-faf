@@ -1,3 +1,5 @@
+import nodeCrypto from 'node:crypto';
+
 import type {
   TModuleRecord,
   TModuleRecordProducer,
@@ -7,7 +9,7 @@ import type {
   TWrapProducerOptions,
 } from './module-record-store.type.js';
 
-import { calculateContentKey } from './_utils/calculate-content-key/index.js';
+import { toPosixPath } from '../../../../../../../../_src@shared/_utils/to-posix-path/index.js';
 import { readModuleRecordCache } from './_utils/read-module-record-cache/index.js';
 import { writeModuleRecordCache } from './_utils/write-module-record-cache/index.js';
 import { MODULE_RECORD_CACHE_SCHEMA_VERSION } from './module-record-store.constant.js';
@@ -17,6 +19,20 @@ export const moduleRecordStore: TModuleRecordStore = (() => {
   const persistentCache = new Map<string, TModuleRecord>();
   const usedSinceLoad = new Map<string, TModuleRecord>();
   let activeBaseDirectory: null | string = null;
+
+  const calculateContentKey = (
+    path: string,
+    text: string,
+    schemaVersion: number
+  ): string =>
+    nodeCrypto
+      .createHash('sha256')
+      .update(String(schemaVersion))
+      .update('\0')
+      .update(toPosixPath(path))
+      .update('\0')
+      .update(text)
+      .digest('hex');
 
   const clear = (): void => {
     inMemoryCache.clear();

@@ -8,7 +8,6 @@ import type { TRolesValidationResult } from './_validate-config-format@shared/_t
 import { createOutcome } from '../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 import { isPlainRecord } from '../../../../../../../../_src@shared/_utils/is-plain-record/index.js';
 import { checkCatalogInvariants } from './_utils/check-catalog-invariants/index.js';
-import { isFafConfig } from './_utils/is-faf-config/index.js';
 import { validateAliases } from './_utils/validate-aliases/index.js';
 import { validateDependencies } from './_utils/validate-dependencies/index.js';
 import { validateForeignNodes } from './_utils/validate-foreign-nodes/index.js';
@@ -33,6 +32,11 @@ export const validateConfigFormat = (() => {
 
   const hasDefined = (record: Record<string, unknown>, key: string): boolean =>
     Object.hasOwn(record, key) && record[key] !== undefined;
+
+  const isFafConfig = (
+    _candidate: unknown,
+    outcomeCount: number
+  ): _candidate is TFAFConfig => outcomeCount === 0;
 
   const extractCategoryNames = (
     roles: TRolesValidationResult

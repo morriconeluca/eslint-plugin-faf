@@ -187,4 +187,75 @@ describe('classifyResolutionTarget', () => {
       type: 'local-file',
     });
   });
+
+  it('extracts scoped and nested node_modules package names and matches .js/.ts and root dot alias alternatives', () => {
+    expect(
+      classifyResolutionTarget({
+        aliasAlternatives: [],
+        aliasUsed: null,
+        canonicalBase,
+        resolveResult: {
+          path: 'node_modules/react/index.js',
+        },
+        specifier: 'react',
+      })
+    ).toEqual({
+      packageName: 'react',
+      type: 'external-library',
+    });
+
+    expect(
+      classifyResolutionTarget({
+        aliasAlternatives: [],
+        aliasUsed: null,
+        canonicalBase,
+        resolveResult: {
+          path: '/repo/node_modules/a/node_modules/@scope/pkg/index.js',
+        },
+        specifier: '@scope/pkg',
+      })
+    ).toEqual({
+      packageName: '@scope/pkg',
+      type: 'external-library',
+    });
+
+    expect(
+      classifyResolutionTarget({
+        aliasAlternatives: ['src/unit.js'],
+        aliasUsed: '#unit',
+        canonicalBase,
+        resolveResult: { path: '/repo/src/unit.ts' },
+        specifier: '#unit',
+      })
+    ).toEqual({
+      path: 'src/unit.ts',
+      type: 'local-file',
+    });
+
+    expect(
+      classifyResolutionTarget({
+        aliasAlternatives: ['.'],
+        aliasUsed: '#root',
+        canonicalBase,
+        resolveResult: { path: '/repo/src/file.ts' },
+        specifier: '#root/src/file.ts',
+      })
+    ).toEqual({
+      path: 'src/file.ts',
+      type: 'local-file',
+    });
+
+    expect(
+      classifyResolutionTarget({
+        aliasAlternatives: ['.'],
+        aliasUsed: '#root',
+        canonicalBase,
+        resolveResult: { path: '/outside/file.ts' },
+        specifier: '#root/outside',
+      })
+    ).toEqual({
+      reason: 'Path alias resolution falls outside the declared alias targets',
+      type: 'unresolved',
+    });
+  });
 });

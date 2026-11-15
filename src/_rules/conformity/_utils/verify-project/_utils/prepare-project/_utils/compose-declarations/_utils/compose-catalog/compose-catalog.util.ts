@@ -50,7 +50,7 @@ export const composeCatalog = (
     categoryToRole,
     extensionToRole,
     roles: effectiveRoles,
-    subGraphRoles: subGraphRoles.map((s) => s.name),
+    subGraphRoles: subGraphRoles.map((subGraphRole) => subGraphRole.name),
     topRank: roles.length,
   };
 };

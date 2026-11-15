@@ -30,11 +30,11 @@ export function deriveNodeHierarchies({
   if (kind !== 'root-fragment') {
     return [];
   }
-  const fragments = [...tree.rootFragments];
-  let fragment = fragments.shift();
-  while (fragment !== undefined) {
-    if (fragment.path === parent.path) {
-      const rootNodes = fragment.rootNodes;
+  const rootFragments = [...tree.rootFragments];
+  let rootFragment = rootFragments.shift();
+  while (rootFragment !== undefined) {
+    if (rootFragment.path === parent.path) {
+      const rootNodes = rootFragment.rootNodes;
       const names = rootNodes.map((node) => node.name);
       const repetitions = [
         ...new Set(
@@ -60,8 +60,8 @@ export function deriveNodeHierarchies({
         },
       ];
     }
-    fragments.push(...fragment.subRootFragments);
-    fragment = fragments.shift();
+    rootFragments.push(...rootFragment.subRootFragments);
+    rootFragment = rootFragments.shift();
   }
   return [];
 }

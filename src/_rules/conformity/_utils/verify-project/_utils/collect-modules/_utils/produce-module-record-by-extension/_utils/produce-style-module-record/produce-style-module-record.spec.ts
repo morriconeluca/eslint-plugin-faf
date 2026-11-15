@@ -275,4 +275,24 @@ describe('produceStyleModuleRecord', () => {
     expect(result.imports[1]?.specifier).toBe('./typography');
     expect(result.imports[2]?.specifier).toBe('./logo.png');
   });
+
+  it('tracks CRLF, CR, escaped/unterminated strings, and unclosed comments accurately', () => {
+    const css = ['/* unclosed block', '  @import "ignored.css";'].join('\r');
+    expect(produceStyleModuleRecord('unclosed.css', css).imports).toEqual([]);
+
+    const mixed = [
+      '.a { content: "escaped \\" quote \\\\ end"; }',
+      '.b { content: "unterminated\r\n  background: url("after-crlf.png"); }',
+      '// single-line at eof without newline',
+    ].join('\r');
+    const result = produceStyleModuleRecord('mixed.scss', mixed);
+    expect(result.imports).toEqual([
+      {
+        isTypeOnly: false,
+        kind: 'css-url',
+        position: { column: 15, line: 3 },
+        specifier: './after-crlf.png',
+      },
+    ]);
+  });
 });

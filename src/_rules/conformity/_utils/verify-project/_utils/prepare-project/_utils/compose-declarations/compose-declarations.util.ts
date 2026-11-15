@@ -35,11 +35,14 @@ export const composeDeclarations = (
         }
       }
       if (local.rootFragments !== undefined) {
-        for (const [fragIndex, frag] of local.rootFragments.entries()) {
+        for (const [
+          rootFragmentIndex,
+          rootFragment,
+        ] of local.rootFragments.entries()) {
           origins.push({
             kind: 'root-fragment',
-            path: frag.path,
-            propertyPath: `faf.locals[${localIndex}].rootFragments[${fragIndex}]`,
+            path: rootFragment.path,
+            propertyPath: `faf.locals[${localIndex}].rootFragments[${rootFragmentIndex}]`,
           });
         }
       }

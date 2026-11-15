@@ -76,13 +76,17 @@ export function indexExternalSubgraph(
     }
   };
 
-  for (let u = 0; u < graph.vertexCount; u += 1) {
-    const uNature = graph.vertexNatures[u]?.kind;
-    const offsetStart = graph.rowOffsets[u] ?? 0;
-    const offsetEnd = graph.rowOffsets[u + 1] ?? 0;
+  for (
+    let sourceVertex = 0;
+    sourceVertex < graph.vertexCount;
+    sourceVertex += 1
+  ) {
+    const sourceNature = graph.vertexNatures[sourceVertex]?.kind;
+    const offsetStart = graph.rowOffsets[sourceVertex] ?? 0;
+    const offsetEnd = graph.rowOffsets[sourceVertex + 1] ?? 0;
 
     for (let edgeIndex = offsetStart; edgeIndex < offsetEnd; edgeIndex += 1) {
-      processEdge(u, uNature, edgeIndex);
+      processEdge(sourceVertex, sourceNature, edgeIndex);
     }
   }
 
@@ -90,7 +94,9 @@ export function indexExternalSubgraph(
   for (const [destinationVertex, externalSources] of destinationsMap) {
     destinations.push({ destinationVertex, externalSources });
   }
-  destinations.sort((a, b) => a.destinationVertex - b.destinationVertex);
+  destinations.sort(
+    (left, right) => left.destinationVertex - right.destinationVertex
+  );
 
   return {
     destinations,

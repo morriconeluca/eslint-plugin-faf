@@ -124,7 +124,7 @@ describe('buildDependencyGraph', () => {
     expect(result.graph.vertexCount).toBe(0);
     expect(result.graph.edgeCount).toBe(0);
     expect([...result.graph.rowOffsets]).toEqual([0]);
-    expect(result.graph.libraryNotes).toEqual([]);
+    expect(result.graph.libraryImports).toEqual([]);
   });
 
   it('records tree edges, external-file edges, type-only imports, aliases, and isolated vertices', () => {
@@ -283,7 +283,7 @@ describe('buildDependencyGraph', () => {
     expect(graph.edgeMetadata[2]?.aliasAlternatives).toEqual(['src', 'alt']);
     expect(graph.edgeMetadata[0]?.position).toEqual({ column: 1, line: 2 });
     expect(graph.edgeMetadata[1]?.position).toEqual({ column: 1, line: 3 });
-    expect(graph.libraryNotes).toEqual([
+    expect(graph.libraryImports).toEqual([
       {
         aliasAlternatives: [],
         aliasUsed: null,
@@ -296,7 +296,7 @@ describe('buildDependencyGraph', () => {
         syntaxKind: 'side-effect-import',
       },
     ]);
-    expect(graph.libraryNotesBySourcePath.get(TREE_SOURCE)).toEqual([0]);
+    expect(graph.libraryImportsBySourcePath.get(TREE_SOURCE)).toEqual([0]);
     expect([...graph.rowOffsets]).toEqual([0, 0, 0, 4, 4]);
   });
 

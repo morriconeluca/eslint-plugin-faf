@@ -1,13 +1,13 @@
 import type { TFAFHierarchy } from '../../../../../../../../_src@shared/_types/faf-config.type.js';
 import type {
   THorizontalHierarchySet,
+  TItemClassification,
   TLogicalDomainKind,
   TSiblingRank,
 } from '../../../../_verify-project@shared/_types/verification-model.type.js';
 import type { THierarchyContext } from '../../_derive-horizontal-hierarchies@shared/_types/hierarchy-context.type.js';
 
 import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { isOrderableSiblingSet } from './_utils/is-orderable-sibling-set/index.js';
 
 export const deriveDomainHierarchies = (() => {
   const SUB_CATEGORY_DOMAIN = 'sub-category' as const;
@@ -15,6 +15,29 @@ export const deriveDomainHierarchies = (() => {
   const isSubCategoryEligibleParent = (
     domainKind: null | TLogicalDomainKind | undefined
   ): boolean => domainKind === 'category' || domainKind === SUB_CATEGORY_DOMAIN;
+
+  const isOrderableSiblingSet = (
+    parent: TItemClassification | undefined,
+    children: readonly (TItemClassification | undefined)[]
+  ): boolean => {
+    if (
+      parent?.domainKind === 'category' ||
+      parent?.domainKind === SUB_CATEGORY_DOMAIN
+    ) {
+      return children.length > 0
+        ? children.every((child) => child?.domainKind === SUB_CATEGORY_DOMAIN)
+        : !parent.relationalQualifications.isParentCategory;
+    }
+    const isStratified =
+      parent?.domainKind === 'layer' ||
+      parent?.domainKind === 'root-layer' ||
+      parent?.domainKind === 'fractal-branch';
+    return (
+      isStratified &&
+      (children.every((child) => child?.domainKind === 'layer') ||
+        children.every((child) => child?.domainKind === 'category'))
+    );
+  };
 
   const collectRepetitions = (hierarchy: TFAFHierarchy): readonly string[] => {
     const names = hierarchy.flat();

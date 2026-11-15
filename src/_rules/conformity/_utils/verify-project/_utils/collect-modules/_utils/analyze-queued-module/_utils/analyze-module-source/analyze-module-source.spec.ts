@@ -134,4 +134,69 @@ describe('analyzeModuleSource', () => {
       'unverified/unresolved-import'
     );
   });
+
+  it('marks unreadable external files as unverified/unreadable-external-file and checks directory inventory items', () => {
+    const externalAnalysis = analyzeModuleSource({
+      inventory: {
+        ...inventory,
+        items: [
+          ...inventory.items,
+          {
+            depth: 0,
+            id: 1,
+            isSymlink: false,
+            kind: 'directory',
+            parentId: null,
+            path: 'src/dir',
+            preorderEnd: 1,
+            preorderStart: 1,
+            realPath: 'src/dir',
+            treeOrigin: 'src',
+          },
+        ],
+        pathToId: new Map([
+          ['src/dir', 1],
+          ['src/file.ts', 0],
+        ]),
+      },
+      producer: binaryRecord,
+      readResult: { reason: 'EACCES', status: 'unreadable' },
+      relativePath: 'outside/file.ts',
+      resolver: () => [],
+    });
+    expect(externalAnalysis.outcomes[0]?.constraint).toBe(
+      'unverified/unreadable-external-file'
+    );
+    expect(externalAnalysis.outcomes[0]?.message).toBe(
+      "'outside/file.ts' could not be read: EACCES"
+    );
+
+    const directoryEntryAnalysis = analyzeModuleSource({
+      inventory: {
+        ...inventory,
+        items: [
+          {
+            depth: 0,
+            id: 0,
+            isSymlink: false,
+            kind: 'directory',
+            parentId: null,
+            path: 'src/dir',
+            preorderEnd: 0,
+            preorderStart: 0,
+            realPath: 'src/dir',
+            treeOrigin: 'src',
+          },
+        ],
+        pathToId: new Map([['src/dir', 0]]),
+      },
+      producer: binaryRecord,
+      readResult: { reason: 'Path is a directory', status: 'directory' },
+      relativePath: 'src/dir',
+      resolver: () => [],
+    });
+    expect(directoryEntryAnalysis.outcomes[0]?.constraint).toBe(
+      'unverified/unreadable-external-file'
+    );
+  });
 });

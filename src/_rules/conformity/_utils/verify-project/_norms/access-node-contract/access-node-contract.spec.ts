@@ -4,7 +4,7 @@ import type {
   TEdgeMetadata,
   TInventoryItem,
   TItemClassification,
-  TLibraryNote,
+  TLibraryImport,
   TModuleExport,
   TModuleRecord,
   TNodeKind,
@@ -103,7 +103,7 @@ const makeNote = (
   sourcePath: string,
   packageName: string,
   specifier: string
-): TLibraryNote => ({
+): TLibraryImport => ({
   aliasAlternatives: [],
   aliasUsed: null,
   importIndex: 0,
@@ -542,7 +542,7 @@ describe('verifyAccessNodeContract', () => {
       },
       graph: {
         ...base.graph,
-        libraryNotes: [noteA, noteB],
+        libraryImports: [noteA, noteB],
       },
       taxonomy: {
         byItemId: new Map([
@@ -574,7 +574,7 @@ describe('verifyAccessNodeContract', () => {
       },
       graph: {
         ...base.graph,
-        libraryNotes: [noteB, noteA],
+        libraryImports: [noteB, noteA],
       },
       taxonomy: {
         byItemId: new Map([

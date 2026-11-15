@@ -38,14 +38,14 @@ export type TDependencyGraph = {
   readonly edgesBySourcePath: ReadonlyMap<string, readonly number[]>;
 
   /**
-   * Import arcs toward external libraries, which are not local-graph vertices.
+   * Import edges toward external libraries, which are not local-graph vertices.
    */
-  readonly libraryNotes: readonly TLibraryNote[];
+  readonly libraryImports: readonly TLibraryImport[];
 
   /**
-   * Library-note indices for each source file that imports an external library.
+   * Library-import indices for each source file that imports an external library.
    */
-  readonly libraryNotesBySourcePath: ReadonlyMap<string, readonly number[]>;
+  readonly libraryImportsBySourcePath: ReadonlyMap<string, readonly number[]>;
 
   /**
    * Map translating relative POSIX file paths to integer vertex indices.
@@ -348,27 +348,27 @@ export type TEffectiveRootNode = {
  */
 export type TEffectiveTree = {
   /**
-   * Effective role catalog and positional rank definitions for this tree.
+   * Effective Role catalog and positional Rank definitions for this Fractal Tree.
    */
   readonly catalog: TEffectiveCatalog;
 
   /**
-   * Authorized egress dependency pairs connecting internal nodes to external files.
+   * Authorized egress dependency pairs connecting internal Logical Nodes to external codebase files.
    */
   readonly externalDependencyPairs: readonly TEffectiveOrientedPair[];
 
   /**
-   * Folder locations designated as foreign domains within this tree.
+   * Directory locations designated as Foreign Domains within this Fractal Tree.
    */
   readonly foreignDomains: readonly string[];
 
   /**
-   * Discrete foreign files and pattern matching rules for non-architectural assets.
+   * Foreign Node paths and pattern families excluded from the Dependency Graph.
    */
   readonly foreignNodes: TEffectiveForeignNodes;
 
   /**
-   * Horizontal Hierarchies established for a single parent Logical Domain bound to explicit folder locations in this tree.
+   * Horizontal Hierarchies established for a single parent Logical Domain bound to explicit directory locations in this Fractal Tree.
    */
   readonly horizontalHierarchies: readonly TEffectiveHorizontalHierarchy[];
 
@@ -378,32 +378,32 @@ export type TEffectiveTree = {
   readonly horizontalHierarchyModels: readonly TFAFHorizontalHierarchyModel[];
 
   /**
-   * Designated organizational folders mirroring external HTTP or command structures.
+   * Mimetic Path Structures configured on Categories of Fragments to mirror external hierarchical address spaces.
    */
   readonly mimeticPathStructures: readonly TEffectiveMimeticStructure[];
 
   /**
-   * Structural nature of the tree origin: root-fragment or root-layer.
+   * Structural nature of the Fractal Tree origin: Root Fragment or Root Layer.
    */
   readonly originKind: TOriginKind;
 
   /**
-   * Relative POSIX path identifying the root directory of this fractal tree.
+   * Relative POSIX path identifying the origin directory of this Fractal Tree.
    */
   readonly originPath: string;
 
   /**
-   * Exposed entry files accessible to external consumers across tree boundaries.
+   * Exposed Root Nodes accessible to external consumers across Fractal Tree boundaries.
    */
   readonly publicRootNodes: readonly string[];
 
   /**
-   * Hierarchical root fragments comprising the entry boundary of this tree.
+   * Hierarchical Root Fragments comprising the entry boundary of this Fractal Tree.
    */
   readonly rootFragments: readonly TEffectiveRootFragment[];
 
   /**
-   * Authorized unidirectional dependency pairs linking this tree to other trees.
+   * Authorized unidirectional dependency pairs linking this Fractal Tree to other Fractal Trees.
    */
   readonly treeDependencyPairs: readonly TEffectiveOrientedPair[];
 };
@@ -452,7 +452,7 @@ export type TExportOrigin =
     }
   | {
       /**
-       * Name of the binding as originally exported from the foreign module.
+       * Name of the binding as originally exported from the imported target module.
        */
       readonly importedName: string;
 
@@ -462,7 +462,7 @@ export type TExportOrigin =
       readonly specifier: string;
 
       /**
-       * Provenance discriminant for explicitly imported foreign bindings.
+       * Provenance discriminant for explicitly imported bindings.
        */
       readonly type: 'imported-binding';
     };
@@ -753,21 +753,21 @@ export type TItemClassification = {
 export type TLanguageKind = 'binary' | 'script' | 'style';
 
 /**
- * Import arc toward an external library, retained without a local vertex.
+ * Import edge toward an external library, retained without a local vertex.
  */
-export type TLibraryNote = {
+export type TLibraryImport = {
   /**
-   * Alternative base paths of the path alias matched by the specifier.
+   * Alternative base paths of the Path Alias matched by the specifier.
    */
   readonly aliasAlternatives: readonly string[];
 
   /**
-   * Path alias prefix matched by the specifier, or null when none was used.
+   * Path Alias prefix matched by the specifier, or null when none was used.
    */
   readonly aliasUsed: null | string;
 
   /**
-   * Zero-based import index within the source module record.
+   * Zero-based import index within the source Module Record.
    */
   readonly importIndex: number;
 
@@ -777,7 +777,7 @@ export type TLibraryNote = {
   readonly isTypeOnly: boolean;
 
   /**
-   * External package or built-in module name recorded for this import arc.
+   * External package or built-in module name recorded for this import edge.
    */
   readonly packageName: string;
 
@@ -906,7 +906,7 @@ export type TModuleRecord = {
   readonly language: TLanguageKind;
 
   /**
-   * Declarations introduced into the module root scope counted under FAF §4.
+   * Declarations introduced into the module root scope counted under FAF Symbol rules.
    */
   readonly symbols: readonly TRootSymbol[];
 
@@ -1023,36 +1023,36 @@ export type TRawInventoryEntry = {
 };
 
 /**
- * Calculated relational qualities derived from container hierarchy and context.
+ * Calculated relational qualities derived from Logical Domain hierarchy and context.
  */
 export type TRelationalQualifications = {
   /**
-   * Indicates whether this category serves as origin for a mimetic or sub-category chain.
+   * Indicates whether this Category is the Parent Category of a Sub-Category chain or Mimetic Path Structure.
    */
   readonly isParentCategory: boolean;
 
   /**
-   * Indicates whether this fragment represents an endpoint in a mimetic path structure.
+   * Indicates whether this Fragment is a Path Fragment inside a Mimetic Path Structure.
    */
   readonly isPathFragment: boolean;
 
   /**
-   * Indicates whether this category is directly owned by a fragment or root fragment.
+   * Indicates whether this Category is a Private Category directly inside a Fragment or Root Fragment.
    */
   readonly isPrivateCategory: boolean;
 
   /**
-   * Indicates whether this fragment is encapsulated within an ancestor parent fragment.
+   * Indicates whether this Fragment is a Sub-Fragment enclosed within an ancestor Parent Fragment.
    */
   readonly isSubFragment: boolean;
 
   /**
-   * Indicates whether this layer is nested directly under another layer container.
+   * Indicates whether this Layer is a Sub-Layer nested directly under another Layer.
    */
   readonly isSubLayer: boolean;
 
   /**
-   * POSIX path of enclosing parent fragment, or null if this is a top-level unit.
+   * POSIX path of the enclosing Parent Fragment, or null if this unit is not inside a Fragment.
    */
   readonly parentFragmentPath: null | string;
 };
@@ -1121,7 +1121,7 @@ export type TRoleForm = 'category-nodes' | 'fragments';
 export type TRoleKind = 'absent' | 'explicit' | 'implicit';
 
 /**
- * Root scope declaration representing an architectural symbol under FAF §4.
+ * Root-scope declaration representing a Symbol under FAF §2.
  */
 export type TRootSymbol = {
   /**

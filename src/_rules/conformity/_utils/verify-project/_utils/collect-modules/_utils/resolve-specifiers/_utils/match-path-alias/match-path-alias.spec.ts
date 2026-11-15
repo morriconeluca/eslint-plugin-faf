@@ -121,4 +121,15 @@ describe('matchPathAlias', () => {
     expect(result).not.toBeNull();
     expect(result?.alias.targets).toEqual(['first/target']);
   });
+
+  it('strips trailing slashes and handles empty target bases when applying suffix', () => {
+    const slashAndEmptyAlias: TEffectivePathAlias = {
+      prefix: '#base',
+      source: 'common.aliases',
+      targets: ['src/_shared/', ''],
+    };
+
+    const result = matchPathAlias('#base/unit', [slashAndEmptyAlias]);
+    expect(result?.targets).toEqual(['src/_shared/unit', 'unit']);
+  });
 });

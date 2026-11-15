@@ -142,4 +142,26 @@ describe('collectStatementSymbols', () => {
     const symbols = parseAndCollectStatement('console.log(123);');
     expect(symbols).toHaveLength(0);
   });
+
+  it('collects destructured array/object/rest/assignment pattern bindings and nested value namespaces', () => {
+    const patternSymbols = parseAndCollectStatement(
+      'const [first = 1, , ...rest] = source, { nested: renamed, ...others } = obj;'
+    );
+    expect(patternSymbols.map((symbol) => symbol.name)).toEqual([
+      'first',
+      'rest',
+      'renamed',
+      'others',
+    ]);
+
+    const nestedNamespace = parseAndCollectStatement(
+      'namespace Outer { export namespace Inner { export const x = 1; } }'
+    );
+    expect(nestedNamespace[0]?.space).toBe('value');
+
+    const emptyOrAmbientNamespace = parseAndCollectStatement(
+      'declare module "pkg" {}'
+    );
+    expect(emptyOrAmbientNamespace).toEqual([]);
+  });
 });

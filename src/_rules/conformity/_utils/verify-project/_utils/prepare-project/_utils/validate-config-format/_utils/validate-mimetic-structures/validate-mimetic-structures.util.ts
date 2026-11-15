@@ -10,10 +10,14 @@ import {
   formFields,
   translateConfigIssues,
 } from '../../_validate-config-format@shared/_utils/config-diagnostic-codec/index.js';
-import { isKebabCase } from './_utils/is-kebab-case/index.js';
 import { mimeticStructuresSchema } from './validate-mimetic-structures.schema.js';
 
 export const validateMimeticStructures = (() => {
+  const KEBAB_CASE_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+
+  const isKebabCase = (candidate: string): boolean =>
+    KEBAB_CASE_PATTERN.test(candidate);
+
   const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
 

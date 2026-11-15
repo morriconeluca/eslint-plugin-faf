@@ -110,12 +110,18 @@ describe('scanCssAtImport', () => {
     expect(result.nextIndex).toBe(text.length);
   });
 
-  it('handles unquoted Sass import terminated by newline', () => {
+  it('handles unquoted Sass import with braces and terminated by newline', () => {
     const text = '@import reset\n@import typography';
     const result = scanCssAtImport(text, 0, true);
 
     expect(result.raw).toBe('reset');
     expect(result.nextIndex).toBe(13);
+
+    const interpolated = scanCssAtImport('@import #{$theme}/a.css;', 0, false);
+    expect(interpolated.raw).toBe('#{$theme}/a.css');
+
+    const invalidUrl = scanCssAtImport('@import url = bad;', 0, false);
+    expect(invalidUrl.raw).toBe('');
   });
 
   it.each([

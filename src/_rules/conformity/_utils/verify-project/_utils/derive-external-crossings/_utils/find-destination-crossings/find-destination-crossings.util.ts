@@ -37,30 +37,30 @@ export function findDestinationCrossings(
     const expandNextLevel = (level: readonly number[]): readonly number[] => {
       const candidateMap = new Map<number, number>();
 
-      for (const u of level) {
-        const reverseList = indexed.reverseExternalEdges[u];
+      for (const successorVertex of level) {
+        const reverseList = indexed.reverseExternalEdges[successorVertex];
         if (reverseList === undefined) {
           continue;
         }
-        for (const v of reverseList) {
-          if (distanceToDestination[v] !== -1) {
+        for (const predecessorVertex of reverseList) {
+          if (distanceToDestination[predecessorVertex] !== -1) {
             continue;
           }
-          const existing = candidateMap.get(v);
+          const existing = candidateMap.get(predecessorVertex);
           if (
             existing === undefined ||
-            compareOrdinal(readPath(u), readPath(existing)) < 0
+            compareOrdinal(readPath(successorVertex), readPath(existing)) < 0
           ) {
-            candidateMap.set(v, u);
+            candidateMap.set(predecessorVertex, successorVertex);
           }
         }
       }
 
       const nextLevel: number[] = [];
-      for (const [v, bestNext] of candidateMap) {
-        distanceToDestination[v] = currentDistance;
-        nextInPath[v] = bestNext;
-        nextLevel.push(v);
+      for (const [predecessorVertex, bestNext] of candidateMap) {
+        distanceToDestination[predecessorVertex] = currentDistance;
+        nextInPath[predecessorVertex] = bestNext;
+        nextLevel.push(predecessorVertex);
       }
       return nextLevel;
     };
@@ -105,16 +105,16 @@ export function findDestinationCrossings(
   ): ReadonlyMap<number, TCandidateCrossing> => {
     const bestBySource = new Map<number, TCandidateCrossing>();
 
-    for (const x of reachedExternal) {
-      const treeEdges = indexed.treeEdgesByExternal[x];
-      const distance = distanceToDestination[x];
+    for (const externalVertex of reachedExternal) {
+      const treeEdges = indexed.treeEdgesByExternal[externalVertex];
+      const distance = distanceToDestination[externalVertex];
       if (treeEdges === undefined || distance === undefined) {
         continue;
       }
       for (const edge of treeEdges) {
         const candidate: TCandidateCrossing = {
           distance,
-          externalStart: x,
+          externalStart: externalVertex,
           metadata: edge.metadata,
         };
         const existing = bestBySource.get(edge.sourceVertex);

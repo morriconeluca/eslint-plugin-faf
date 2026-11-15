@@ -154,4 +154,36 @@ describe('buildTreeContext', () => {
     expect(result.outcomes).toEqual([]);
     expect(result.context.foreignDomainPaths.size).toBe(0);
   });
+
+  it('joins dot root-fragment paths cleanly and avoids prefix false-positives for foreign domains', () => {
+    const result = buildTreeContext(
+      treeOf({
+        originPath: '.',
+        rootFragments: [
+          {
+            dependencyPairs: [],
+            path: '.',
+            rootNodes: [{ name: 'main.ts', rank: 0 }],
+            subRootFragments: [
+              {
+                dependencyPairs: [],
+                path: 'src/_tooling-extra',
+                rootNodes: [],
+                subRootFragments: [],
+              },
+            ],
+          },
+        ],
+      }),
+      0,
+      () => ({ kind: 'absent', roleName: null }),
+      {
+        foreignDomainPaths: new Set(['src/_tooling']),
+        foreignNodePaths: new Set<string>(),
+      }
+    );
+
+    expect(result.context.rootNodePaths.has('main.ts')).toBe(true);
+    expect(result.outcomes).toEqual([]);
+  });
 });

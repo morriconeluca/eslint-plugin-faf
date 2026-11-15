@@ -154,4 +154,86 @@ describe('hasMatchingTreeOrigin', () => {
       await fixture.rm();
     }
   });
+
+  it('matches when expected includes outside entries and origin has a trailing separator or a vanished child dirent mismatch', async () => {
+    const fixture = await createFixture({
+      'package.json': '{}',
+      'src/a.ts': 'export const a = 1;\n',
+    });
+
+    try {
+      const origin = nodePath.join(fixture.path, 'src');
+      const originStat = nodeFs.statSync(origin);
+      const child = nodePath.join(origin, 'a.ts');
+      const childStat = nodeFs.statSync(child);
+      const outside = nodePath.join(fixture.path, 'package.json');
+
+      const expectedWithOutside = new Map([
+        [
+          child,
+          { mtimeMs: childStat.mtimeMs, path: child, size: childStat.size },
+        ],
+        [
+          origin,
+          { mtimeMs: originStat.mtimeMs, path: origin, size: originStat.size },
+        ],
+        [outside, { mtimeMs: 1, path: outside, size: 2 }],
+      ]);
+      expect(hasMatchingTreeOrigin(expectedWithOutside, origin)).toBe(true);
+
+      const alteredChild = new Map([
+        [
+          child,
+          { mtimeMs: childStat.mtimeMs + 1, path: child, size: childStat.size },
+        ],
+        [
+          origin,
+          { mtimeMs: originStat.mtimeMs, path: origin, size: originStat.size },
+        ],
+      ]);
+      expect(hasMatchingTreeOrigin(alteredChild, origin)).toBe(false);
+
+      const brokenLink = nodePath.join(origin, 'broken-link.ts');
+      await nodeFs.promises.symlink(
+        nodePath.join(fixture.path, 'nonexistent.ts'),
+        brokenLink
+      );
+      const updatedOriginStat = nodeFs.statSync(origin);
+      const withBrokenLinkValid = new Map([
+        [brokenLink, { mtimeMs: -1, path: brokenLink, size: -1 }],
+        [
+          child,
+          { mtimeMs: childStat.mtimeMs, path: child, size: childStat.size },
+        ],
+        [
+          origin,
+          {
+            mtimeMs: updatedOriginStat.mtimeMs,
+            path: origin,
+            size: updatedOriginStat.size,
+          },
+        ],
+      ]);
+      expect(hasMatchingTreeOrigin(withBrokenLinkValid, origin)).toBe(true);
+
+      const withBrokenLinkInvalid = new Map([
+        [brokenLink, { mtimeMs: 100, path: brokenLink, size: -1 }],
+        [
+          child,
+          { mtimeMs: childStat.mtimeMs, path: child, size: childStat.size },
+        ],
+        [
+          origin,
+          {
+            mtimeMs: updatedOriginStat.mtimeMs,
+            path: origin,
+            size: updatedOriginStat.size,
+          },
+        ],
+      ]);
+      expect(hasMatchingTreeOrigin(withBrokenLinkInvalid, origin)).toBe(false);
+    } finally {
+      await fixture.rm();
+    }
+  });
 });

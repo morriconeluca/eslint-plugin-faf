@@ -39,16 +39,16 @@ export function collectSourceOutcomes(
     }
   }
 
-  for (const note of graph.libraryNotes) {
-    const sourceClassification = taxonomy.byPath.get(note.sourcePath);
+  for (const libraryImport of graph.libraryImports) {
+    const sourceClassification = taxonomy.byPath.get(libraryImport.sourcePath);
     if (sourceClassification?.nodeKind === 'access-node') {
       outcomes.push(
         createOutcome('dependency/access-node-sources', {
-          from: note.sourcePath,
-          importIndex: note.importIndex,
-          position: note.position,
-          specifier: note.specifier,
-          to: note.packageName,
+          from: libraryImport.sourcePath,
+          importIndex: libraryImport.importIndex,
+          position: libraryImport.position,
+          specifier: libraryImport.specifier,
+          to: libraryImport.packageName,
         })
       );
     }

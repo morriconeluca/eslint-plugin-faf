@@ -1,28 +1,59 @@
-import type { TFAFConfig } from '../../../../../../../../../../_src@shared/_types/faf-config.type.js';
+import type {
+  TFAFConfig,
+  TFAFHorizontalHierarchy,
+  TFAFMimeticPathStructure,
+} from '../../../../../../../../../../_src@shared/_types/faf-config.type.js';
 import type { TConfigOutcome } from '../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
-import type { TReferenceContext } from '../../_validate-config-references@shared/_utils/reference-scope/index.js';
+import type {
+  TReferenceContext,
+  TScopeBinding,
+} from '../../_validate-config-references@shared/_utils/reference-scope/index.js';
 
-import { validateStructuralSection } from './_utils/validate-structural-section/index.js';
+import { rejectHierarchyPaths } from './_utils/reject-hierarchy-paths/index.js';
+import { rejectMimeticStructures } from './_utils/reject-mimetic-structures/index.js';
 
-export function validateStructuralReferences(
-  config: TFAFConfig,
-  context: TReferenceContext
-): readonly TConfigOutcome[] {
-  const commonOutcomes = validateStructuralSection(
-    undefined,
-    config.faf.common?.mimeticPathStructures,
-    'faf.common',
-    { kind: 'common' },
-    context
-  );
-  const localOutcomes = config.faf.locals.flatMap((local, localIndex) =>
-    validateStructuralSection(
-      local.horizontalHierarchies,
-      local.mimeticPathStructures,
-      `faf.locals[${localIndex}]`,
-      { kind: 'local', localIndex },
+export const validateStructuralReferences = (() => {
+  const validateStructuralSection = (
+    hierarchies: readonly TFAFHorizontalHierarchy[] | undefined,
+    structures: readonly TFAFMimeticPathStructure[] | undefined,
+    basePath: string,
+    scope: TScopeBinding,
+    context: TReferenceContext
+  ): readonly TConfigOutcome[] => [
+    ...rejectHierarchyPaths(
+      hierarchies ?? [],
+      `${basePath}.horizontalHierarchies`,
+      scope,
       context
-    )
-  );
-  return [...commonOutcomes, ...localOutcomes];
-}
+    ),
+    ...rejectMimeticStructures(
+      structures ?? [],
+      `${basePath}.mimeticPathStructures`,
+      scope,
+      context
+    ),
+  ];
+
+  return function validateStructuralReferences(
+    config: TFAFConfig,
+    context: TReferenceContext
+  ): readonly TConfigOutcome[] {
+    const commonOutcomes = validateStructuralSection(
+      undefined,
+      config.faf.common?.mimeticPathStructures,
+      'faf.common',
+      { kind: 'common' },
+      context
+    );
+    const localOutcomes = config.faf.locals.flatMap((local, localIndex) =>
+      validateStructuralSection(
+        local.horizontalHierarchies,
+        local.mimeticPathStructures,
+        `faf.locals[${localIndex}]`,
+        { kind: 'local', localIndex },
+        context
+      )
+    );
+    return [...commonOutcomes, ...localOutcomes];
+  };
+})();

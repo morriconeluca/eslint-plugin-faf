@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type {
-  TLibraryNote,
+  TLibraryImport,
   TVertexNature,
 } from '../../../../_verify-project@shared/_types/verification-model.type.js';
 import type { TPendingEdge } from '../../_build-dependency-graph@shared/_types/pending-edge.type.js';
@@ -32,7 +32,10 @@ const edge = (sourceVertex: number, importIndex: number): TPendingEdge => ({
   sourceVertex,
 });
 
-const note = (sourcePath: string, importIndex: number): TLibraryNote => ({
+const libraryImport = (
+  sourcePath: string,
+  importIndex: number
+): TLibraryImport => ({
   aliasAlternatives: [],
   aliasUsed: null,
   importIndex,
@@ -65,19 +68,23 @@ describe('assembleDependencyGraph', () => {
     expect(graph.edgeMetadata.map((item) => item.importIndex)).toEqual([0, 1]);
   });
 
-  it('indexes multiple library notes of the same source and ignores edges outside the vertex list', () => {
+  it('indexes multiple library imports of the same source and ignores edges outside the vertex list', () => {
     const graph = assembleDependencyGraph(
       [SOURCE],
       [{ kind: 'external-local-file' }],
       [edge(4, 0)],
-      [note(SOURCE, 0), note(SOURCE, 1), note(OTHER, 0)]
+      [
+        libraryImport(SOURCE, 0),
+        libraryImport(SOURCE, 1),
+        libraryImport(OTHER, 0),
+      ]
     );
 
     expect(graph.edgeCount).toBe(0);
     expect([...graph.columnTargets]).toEqual([]);
     expect([...graph.rowOffsets]).toEqual([0, 0]);
-    expect(graph.libraryNotesBySourcePath.get(SOURCE)).toEqual([0, 1]);
-    expect(graph.libraryNotesBySourcePath.get(OTHER)).toEqual([2]);
+    expect(graph.libraryImportsBySourcePath.get(SOURCE)).toEqual([0, 1]);
+    expect(graph.libraryImportsBySourcePath.get(OTHER)).toEqual([2]);
   });
 
   it('returns an empty CSR graph when there are no vertices', () => {
@@ -87,6 +94,6 @@ describe('assembleDependencyGraph', () => {
     expect(graph.edgeCount).toBe(0);
     expect([...graph.rowOffsets]).toEqual([0]);
     expect(graph.edgesBySourcePath.size).toBe(0);
-    expect(graph.libraryNotesBySourcePath.size).toBe(0);
+    expect(graph.libraryImportsBySourcePath.size).toBe(0);
   });
 });

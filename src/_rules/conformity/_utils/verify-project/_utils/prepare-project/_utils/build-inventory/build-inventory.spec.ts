@@ -211,6 +211,9 @@ describe('buildInventory', () => {
 
     expect(root?.path).toBe('src');
     expect(root?.treeOrigin).toBe('src');
+
+    const slashResult = buildInventory([], ['/']);
+    expect(slashResult.inventory.items[0]?.path).toBe('/');
   });
 
   it('deduplicates entries with identical paths by keeping first occurrence', () => {

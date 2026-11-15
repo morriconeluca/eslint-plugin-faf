@@ -9,7 +9,7 @@ import type {
   TInventory,
   TInventoryItem,
   TItemClassification,
-  TLibraryNote,
+  TLibraryImport,
   TNodeKind,
   TTaxonomyModel,
   TVerificationModel,
@@ -78,7 +78,7 @@ const createEdge = (
 const buildVerificationModel = (parameters: {
   readonly edges: readonly TEdgeMetadata[];
   readonly items: readonly TModelItemSpec[];
-  readonly libraryNotes?: readonly TLibraryNote[];
+  readonly libraryImports?: readonly TLibraryImport[];
   readonly trees: readonly TEffectiveTree[];
   readonly vertices: readonly TVertexSpec[];
 }): TVerificationModel => {
@@ -153,8 +153,8 @@ const buildVerificationModel = (parameters: {
     edgeCount: parameters.edges.length,
     edgeMetadata: parameters.edges,
     edgesBySourcePath: new Map(),
-    libraryNotes: parameters.libraryNotes ?? [],
-    libraryNotesBySourcePath: new Map(),
+    libraryImports: parameters.libraryImports ?? [],
+    libraryImportsBySourcePath: new Map(),
     pathToVertex,
     rowOffsets: new Int32Array(0),
     vertexCount: parameters.vertices.length,
@@ -319,7 +319,7 @@ describe('verifyExternalDependencies', () => {
   });
 
   it('adversarial: external library and workspace package in the same file', () => {
-    const libraryNote: TLibraryNote = {
+    const libraryImport: TLibraryImport = {
       aliasAlternatives: [],
       aliasUsed: null,
       importIndex: 1,
@@ -334,7 +334,7 @@ describe('verifyExternalDependencies', () => {
     const model = buildVerificationModel({
       edges: [createEdge('src/high.ts', 'outside.ts', '#workspace', 0)],
       items: commonItems,
-      libraryNotes: [libraryNote],
+      libraryImports: [libraryImport],
       trees: [createTree('src', [])],
       vertices: commonVertices,
     });

@@ -4,18 +4,21 @@ import type { TReferenceContext } from '../../_validate-config-references@shared
 
 import { rejectExternalDependencies } from './_utils/reject-external-dependencies/index.js';
 import { rejectLocalPublicRootNodes } from './_utils/reject-local-public-root-nodes/index.js';
-import { rejectPublicRootNodeList } from './_utils/reject-public-root-node-list/index.js';
 import { rejectTreeDependencies } from './_utils/reject-tree-dependencies/index.js';
+import { rejectPublicRootNode } from './_validate-frontier-references@shared/_utils/reject-public-root-node/index.js';
 
 export function validateFrontierReferences(
   config: TFAFConfig,
   context: TReferenceContext
 ): readonly TConfigOutcome[] {
-  const commonPublic = rejectPublicRootNodeList(
-    config.faf.common?.publicRootNodes ?? [],
-    'faf.common.publicRootNodes',
-    { kind: 'common' },
-    context
+  const commonPublic = (config.faf.common?.publicRootNodes ?? []).flatMap(
+    (path, index) =>
+      rejectPublicRootNode(
+        path,
+        `faf.common.publicRootNodes[${index}]`,
+        { kind: 'common' },
+        context
+      )
   );
   const commonTrees = rejectTreeDependencies(
     config.faf.common?.treeDependencies ?? [],

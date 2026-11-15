@@ -260,4 +260,61 @@ describe('selectAnchorPath', () => {
     });
     expect(anchor).toBe(absoluteElement);
   });
+
+  it('normalizes Windows separators, rejects dot-relative cwd lookups, and handles undefined model or non-lintable extensions', () => {
+    expect(
+      selectAnchorPath({
+        baseDirectory,
+        configPath,
+        inventory,
+        model,
+        outcome: classificationOutcome('src\\mystery\\b.ts'),
+      })
+    ).toBe(nodePath.resolve(baseDirectory, 'src/mystery/b.ts'));
+
+    expect(
+      selectAnchorPath({
+        baseDirectory,
+        configPath,
+        inventory,
+        model,
+        outcome: classificationOutcome('./src/mystery/b.ts'),
+      })
+    ).toBe(configPath);
+
+    expect(
+      selectAnchorPath({
+        baseDirectory,
+        configPath,
+        inventory,
+        outcome: classificationOutcome('src/widget'),
+      })
+    ).toBe(nodePath.resolve(baseDirectory, 'src/widget/index.ts'));
+
+    const parent = inventoryItem(0, 'src', 'directory', null);
+    const outerMaster = inventoryItem(1, 'src/b.ts', 'file', 0);
+    const outerFirst = inventoryItem(2, 'src/a.js', 'file', 0);
+    const outerCss = inventoryItem(3, 'src/theme.css', 'file', 0);
+    const outerInventory = inventoryFrom([
+      parent,
+      outerMaster,
+      outerFirst,
+      outerCss,
+    ]);
+    const outerModel = modelFrom([
+      classification(parent, 'root-layer', null),
+      classification(outerMaster, null, 'master-node'),
+      classification(outerFirst, null, 'fragment-node'),
+      classification(outerCss, null, 'category-node'),
+    ]);
+    expect(
+      selectAnchorPath({
+        baseDirectory,
+        configPath,
+        inventory: outerInventory,
+        model: outerModel,
+        outcome: classificationOutcome('src'),
+      })
+    ).toBe(nodePath.resolve(baseDirectory, 'src/a.js'));
+  });
 });

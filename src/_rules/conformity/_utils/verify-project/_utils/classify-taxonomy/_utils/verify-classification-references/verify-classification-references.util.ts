@@ -5,25 +5,110 @@ import type {
 } from '../../../../_verify-project@shared/_types/verification-model.type.js';
 import type { TTreeBuild } from '../../_classify-taxonomy@shared/_types/classify-taxonomy.type.js';
 
-import { verifyExternalSources } from './_utils/verify-external-sources/index.js';
-import { verifyMimeticPaths } from './_utils/verify-mimetic-paths/index.js';
-import { verifyPublicRootNodes } from './_utils/verify-public-root-nodes/index.js';
+import { createOutcome } from '../../../../../../../../_src@shared/_utils/create-outcome/index.js';
+import {
+  DOMAIN_CATEGORY,
+  FORM_FRAGMENTS,
+  NODE_ACCESS,
+  NODE_FOREIGN,
+  NODE_ROOT,
+} from '../../_classify-taxonomy@shared/_constants/classification-constraints.constant.js';
+import { readPathName } from '../../_classify-taxonomy@shared/_utils/read-path-name/index.js';
 
-export function verifyClassificationReferences(
-  classifications: readonly TItemClassification[],
-  tree: TEffectiveTree,
-  treeIndex: number,
-  treeBuild: TTreeBuild
-): readonly TConfigOutcome[] {
-  const byPath = new Map(
-    classifications.map((classification) => [
-      classification.path,
-      classification,
-    ])
-  );
-  return [
-    ...verifyMimeticPaths(byPath, tree, treeBuild.mimeticPropertyPaths),
-    ...verifyExternalSources(byPath, tree, treeIndex),
-    ...verifyPublicRootNodes(byPath, tree, treeIndex),
-  ];
-}
+export const verifyClassificationReferences = (() => {
+  const verifyMimeticPaths = (
+    byPath: ReadonlyMap<string, TItemClassification>,
+    tree: TEffectiveTree,
+    mimeticPropertyPaths: ReadonlyMap<string, string>
+  ): readonly TConfigOutcome[] => {
+    const outcomes: TConfigOutcome[] = [];
+    for (const [mimeticPath, propertyPath] of mimeticPropertyPaths) {
+      const classification = byPath.get(mimeticPath);
+      if (classification === undefined) {
+        continue;
+      }
+      const role = tree.catalog.categoryToRole.get(readPathName(mimeticPath));
+      const isValidParent =
+        classification.domainKind === DOMAIN_CATEGORY &&
+        role?.form === FORM_FRAGMENTS;
+      if (!isValidParent) {
+        outcomes.push(
+          createOutcome('configuration/incompatible-mimetic-designation', {
+            element: mimeticPath,
+            propertyPath,
+          })
+        );
+      }
+    }
+    return outcomes;
+  };
+
+  const verifyExternalSources = (
+    byPath: ReadonlyMap<string, TItemClassification>,
+    tree: TEffectiveTree,
+    treeIndex: number
+  ): readonly TConfigOutcome[] => {
+    const outcomes: TConfigOutcome[] = [];
+    for (const [pairIndex, pair] of tree.externalDependencyPairs.entries()) {
+      const classification = byPath.get(pair.from);
+      if (classification === undefined) {
+        continue;
+      }
+      const isRejectedSource =
+        classification.domainKind !== null ||
+        classification.nodeKind === NODE_ACCESS ||
+        classification.nodeKind === NODE_FOREIGN;
+      if (isRejectedSource) {
+        outcomes.push(
+          createOutcome('configuration/invalid-external-dependency-source', {
+            element: pair.from,
+            propertyPath: `trees[${treeIndex}].externalDependencyPairs[${pairIndex}].from`,
+          })
+        );
+      }
+    }
+    return outcomes;
+  };
+
+  const verifyPublicRootNodes = (
+    byPath: ReadonlyMap<string, TItemClassification>,
+    tree: TEffectiveTree,
+    treeIndex: number
+  ): readonly TConfigOutcome[] => {
+    const outcomes: TConfigOutcome[] = [];
+    for (const [nodeIndex, nodePath] of tree.publicRootNodes.entries()) {
+      const classification = byPath.get(nodePath);
+      if (
+        classification !== undefined &&
+        classification.nodeKind !== NODE_ROOT
+      ) {
+        outcomes.push(
+          createOutcome('configuration/invalid-public-root-node', {
+            element: nodePath,
+            propertyPath: `trees[${treeIndex}].publicRootNodes[${nodeIndex}]`,
+          })
+        );
+      }
+    }
+    return outcomes;
+  };
+
+  return function verifyClassificationReferences(
+    classifications: readonly TItemClassification[],
+    tree: TEffectiveTree,
+    treeIndex: number,
+    treeBuild: TTreeBuild
+  ): readonly TConfigOutcome[] {
+    const byPath = new Map(
+      classifications.map((classification) => [
+        classification.path,
+        classification,
+      ])
+    );
+    return [
+      ...verifyMimeticPaths(byPath, tree, treeBuild.mimeticPropertyPaths),
+      ...verifyExternalSources(byPath, tree, treeIndex),
+      ...verifyPublicRootNodes(byPath, tree, treeIndex),
+    ];
+  };
+})();
