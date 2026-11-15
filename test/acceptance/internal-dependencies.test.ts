@@ -799,7 +799,7 @@ describe('acceptance: internal dependencies', () => {
                     {
                       ...(isMolecules
                         ? {
-                            subCategoryHierarchies: [
+                            horizontalHierarchyModels: [
                               [['_atoms'], ['_molecules']],
                             ],
                           }
@@ -1108,9 +1108,9 @@ describe('acceptance: internal dependencies', () => {
           faf: {
             locals: [
               {
+                horizontalHierarchyModels: [[['_atoms'], ['_molecules']]],
                 roles,
                 rootFragments: [{ path: 'src', rootNodes: [] }],
-                subCategoryHierarchies: [[['_atoms'], ['_molecules']]],
               },
             ],
           },
@@ -1399,9 +1399,9 @@ describe('acceptance: internal dependencies', () => {
           faf: {
             locals: [
               {
+                horizontalHierarchyModels: [[['_atoms'], ['_molecules']]],
                 roles,
                 rootFragments: [{ path: 'src', rootNodes: [] }],
-                subCategoryHierarchies: [[['_atoms'], ['_molecules']]],
               },
             ],
           },

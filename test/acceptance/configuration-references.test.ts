@@ -172,6 +172,16 @@ const fullHypotheticalConfig = {
           patterns: ['*.md'],
         },
       ],
+      horizontalHierarchyModels: [
+        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
+        [
+          ['_primitives'],
+          ['_compounds'],
+          ['_aggregates'],
+          ['_systems'],
+          ['_ecosystems'],
+        ],
+      ],
       roles: [
         [
           {
@@ -230,16 +240,6 @@ const fullHypotheticalConfig = {
           { category: '_pages', name: 'page' },
           { category: '_routes', name: 'route' },
           { category: '_stores', name: 'store' },
-        ],
-      ],
-      subCategoryHierarchies: [
-        [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
-        [
-          ['_primitives'],
-          ['_compounds'],
-          ['_aggregates'],
-          ['_systems'],
-          ['_ecosystems'],
         ],
       ],
       subGraphRoles,
@@ -693,7 +693,7 @@ describe('acceptance: Foreign Node families and scopes', () => {
   );
 });
 
-describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', () => {
+describe('acceptance: Horizontal Hierarchy models and parent-targeted Horizontal Hierarchies', () => {
   const baseRoles = [
     { category: '_types', isCategoryNode: true, name: 'type' },
     { category: '_utils', name: 'util' },
@@ -702,14 +702,14 @@ describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', ()
     { category: '_pages', name: 'page' },
   ];
 
-  it('applies subCategoryHierarchies across Categories, Private Categories, and nested Sub-Categories', async () => {
+  it('applies horizontalHierarchyModels across Categories, Private Categories, and nested Sub-Categories', async () => {
     const config = {
       faf: {
         locals: [
           {
+            horizontalHierarchyModels: [[['_primitives'], ['_compounds']]],
             roles: baseRoles,
             rootLayers: ['src'],
-            subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
             subGraphRoles,
           },
         ],
@@ -751,16 +751,16 @@ describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', ()
     }
   });
 
-  it('rejects upward and same-tier imports under subCategoryHierarchies', async () => {
+  it('rejects upward and same-tier imports under horizontalHierarchyModels', async () => {
     const config = {
       faf: {
         locals: [
           {
-            roles: baseRoles,
-            rootLayers: ['src'],
-            subCategoryHierarchies: [
+            horizontalHierarchyModels: [
               [['_primitives'], ['_compounds', '_aggregates']],
             ],
+            roles: baseRoles,
+            rootLayers: ['src'],
             subGraphRoles,
           },
         ],
@@ -818,14 +818,14 @@ describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', ()
     }
   });
 
-  it('does not activate subCategoryHierarchies on Layers or Path Sub-Categories', async () => {
+  it('does not activate horizontalHierarchyModels on Layers or Path Sub-Categories', async () => {
     const layersConfig = {
       faf: {
         locals: [
           {
+            horizontalHierarchyModels: [[['_primitives'], ['_compounds']]],
             roles: baseRoles,
             rootLayers: ['src'],
-            subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
             subGraphRoles,
           },
         ],
@@ -861,10 +861,10 @@ describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', ()
       faf: {
         locals: [
           {
+            horizontalHierarchyModels: [[['_primitives'], ['_compounds']]],
             mimeticPathStructures: [{ actions: ['get'], paths: ['src/_apis'] }],
             roles: baseRoles,
             rootLayers: ['src'],
-            subCategoryHierarchies: [[['_primitives'], ['_compounds']]],
             subGraphRoles,
           },
         ],
@@ -1231,17 +1231,17 @@ describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', ()
   const conflictCases = [
     {
       caseName:
-        'two subCategoryHierarchies select the same direct sub-category',
+        'two horizontalHierarchyModels select the same direct sub-category',
       config: {
         faf: {
           locals: [
             {
-              roles: baseRoles,
-              rootLayers: ['src'],
-              subCategoryHierarchies: [
+              horizontalHierarchyModels: [
                 [['_low'], ['_mid']],
                 [['_low'], ['_high']],
               ],
+              roles: baseRoles,
+              rootLayers: ['src'],
               subGraphRoles,
             },
           ],
@@ -1267,7 +1267,7 @@ describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', ()
     },
     {
       caseName:
-        'subCategoryHierarchies (even with 1 matching child) and horizontalHierarchies select the same child',
+        'horizontalHierarchyModels (even with 1 matching child) and horizontalHierarchies select the same child',
       config: {
         faf: {
           locals: [
@@ -1278,9 +1278,9 @@ describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', ()
                   path: 'src/_utils',
                 },
               ],
+              horizontalHierarchyModels: [[['_low'], ['_absent']]],
               roles: baseRoles,
               rootLayers: ['src'],
-              subCategoryHierarchies: [[['_low'], ['_absent']]],
               subGraphRoles,
             },
           ],
@@ -1400,17 +1400,17 @@ describe('acceptance: Sub-Category and domain-scoped Horizontal Hierarchies', ()
     },
     {
       caseName:
-        'two subCategoryHierarchies share only absent names and select no common children',
+        'two horizontalHierarchyModels share only absent names and select no common children',
       config: {
         faf: {
           locals: [
             {
-              roles: baseRoles,
-              rootLayers: ['src'],
-              subCategoryHierarchies: [
+              horizontalHierarchyModels: [
                 [['_low'], ['_mid']],
                 [['_low'], ['_high']],
               ],
+              roles: baseRoles,
+              rootLayers: ['src'],
               subGraphRoles,
             },
           ],

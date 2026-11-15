@@ -606,12 +606,12 @@ describe('acceptance: explicit architectural declarations without implicit conve
           faf: {
             locals: [
               {
+                horizontalHierarchyModels: [[['_a'], ['_b']]],
                 roles: [
                   { category: '_types', isCategoryNode: true, name: 'type' },
                   { category: '_utils', name: 'util' },
                 ],
                 rootLayers: ['src'],
-                subCategoryHierarchies: [[['_a'], ['_b']]],
               },
             ],
           },
