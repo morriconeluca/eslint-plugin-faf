@@ -149,11 +149,11 @@ export default {
 ```
 
 - **`faf.locals`** _(required)_: Non-empty array. Each entry declares one or more Fractal Trees and tree-specific declarations:
-  - **`locals` only**: `rootLayers`, `rootFragments`, and domain-scoped `horizontalHierarchies` (`{ path, hierarchy }`).
-  - **Shared properties** (inherited from `common` if omitted): `roles`, `subGraphRoles`, `subCategoryHierarchies`, `mimeticPathStructures`, `foreignDomains`, `foreignNodes`, `publicRootNodes`, `treeDependencies`, `externalDependencies`.
+  - **`locals` only**: `rootLayers`, `rootFragments`, and `horizontalHierarchies` (`{ path, hierarchy }`).
+  - **Shared properties** (inherited from `common` if omitted): `roles`, `subGraphRoles`, `horizontalHierarchyModels`, `mimeticPathStructures`, `foreignDomains`, `foreignNodes`, `publicRootNodes`, `treeDependencies`, `externalDependencies`.
 - **`faf.common`** _(optional)_: Shared declarations inherited by every `locals` entry:
   - **`common` only**: `aliases`.
-  - **Shared properties**: `roles`, `subGraphRoles`, `subCategoryHierarchies`, `mimeticPathStructures`, `foreignDomains`, `foreignNodes`, `publicRootNodes`, `treeDependencies`, `externalDependencies`.
+  - **Shared properties**: `roles`, `subGraphRoles`, `horizontalHierarchyModels`, `mimeticPathStructures`, `foreignDomains`, `foreignNodes`, `publicRootNodes`, `treeDependencies`, `externalDependencies`.
 - **Override semantics**: When a `locals` entry defines a shared property also present in `common`, the local property **replaces** the `common` property in full (no shallow or deep merging).
 
 ### Tree Origins (`locals` only)
@@ -206,9 +206,9 @@ Every Fractal Tree requires a `roles` catalog (defined in `locals` or inherited 
 
 Hierarchies are arrays of Rank tiers (`[['lowest'], ['higher']]`) ordered from Rank `0` upward, authorizing dependencies strictly from higher Rank to lower Rank:
 
-- **`subCategoryHierarchies`** (`common` or `locals`, `readonly TFAFDomainHierarchy[]`): Tree-wide Horizontal Hierarchy models exclusively for **Sub-Categories** (e.g., Atomic Design or Systemic Design). Must declare at least two non-empty Rank tiers (`[['_atoms'], ['_molecules'], ...]`) of `_kebab-case` Sub-Category names distinct from every `category` name in the `roles` catalog. Automatically instantiates in every Category (including Private Categories) or ordinary Sub-Category where matching direct-child Sub-Categories exist:
+- **`horizontalHierarchyModels`** (`common` or `locals`, `readonly TFAFHorizontalHierarchyModel[]`): Tree-wide Horizontal Hierarchy models exclusively for **Sub-Categories** (e.g., Atomic Design or Systemic Design). Must declare at least two non-empty Rank tiers (`[['_atoms'], ['_molecules'], ...]`) of `_kebab-case` Sub-Category names distinct from every `category` name in the `roles` catalog. Automatically instantiates a Horizontal Hierarchy in every Category (including Private Categories) or ordinary Sub-Category where matching direct-child Sub-Categories exist:
   ```ts
-  subCategoryHierarchies: [
+  horizontalHierarchyModels: [
     [['_atoms'], ['_molecules'], ['_organisms'], ['_templates']],
     [
       ['_primitives'],
@@ -219,7 +219,7 @@ Hierarchies are arrays of Rank tiers (`[['lowest'], ['higher']]`) ordered from R
     ],
   ];
   ```
-- **`horizontalHierarchies`** (`locals` only, `readonly TFAFHorizontalHierarchy[]`): Domain-scoped Horizontal Hierarchies (`{ path, hierarchy }`) targeting a **single** parent Logical Domain `path` (e.g., ordering sibling Layers/Sub-Layers or non-private Categories inside a Root Layer, Layer, or Fractal Branch, or ordering domain-specific sibling Sub-Categories inside a Category or Sub-Category). `hierarchy` must declare at least two non-empty Rank tiers, every listed child name must physically exist on disk as a direct child of `path`, and multiple Horizontal Hierarchies (including `subCategoryHierarchies`) may coexist under the same parent only on disjoint sets of direct children:
+- **`horizontalHierarchies`** (`locals` only, `readonly TFAFHorizontalHierarchy[]`): Horizontal Hierarchies (`{ path, hierarchy }`) established for a **single** parent Logical Domain `path` (e.g., ordering sibling Layers/Sub-Layers or non-private Categories inside a Root Layer, Layer, or Fractal Branch, or ordering sibling Sub-Categories inside a Category or Sub-Category). `hierarchy` must declare at least two non-empty Rank tiers, every listed child name must physically exist on disk as a direct child of `path`, and multiple Horizontal Hierarchies (including those instantiated from `horizontalHierarchyModels`) may coexist under the same parent only on disjoint sets of direct children:
   ```ts
   horizontalHierarchies: [
     {
@@ -302,11 +302,11 @@ All configuration types are exported from the package root:
 import type {
   TFAFCommonConfig,
   TFAFConfig,
-  TFAFDomainHierarchy,
   TFAFExternalDependency,
   TFAFForeignNodeFamily,
   TFAFHierarchy,
   TFAFHorizontalHierarchy,
+  TFAFHorizontalHierarchyModel,
   TFAFLocalConfig,
   TFAFMimeticPathStructure,
   TFAFNonEmptyArray,
