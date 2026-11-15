@@ -8,16 +8,15 @@ Complements `AGENTS.md` (FAF specification) and `faf.config.ts` (repository Decl
 - **Public Package Surface**: `src/main.ts` is the sole package entry. It exports the ESLint plugin (`rules.conformity`, `configs.recommended`) and re-exports `TFAFConfig` and related configuration types. There is no CLI, no programmatic API, no rule options, no severity demotion (uniform `error` / `2`), and no rule autofix (`fix` / `meta.fixable`).
 - **Package Manifest Edge**: `src/main.ts` reads only `name` and `version` from `package.json` via static JSON import; no other file may import or `require` `package.json`.
 - **Synchronous Execution**: ESLint discards deferred `context.report()` calls. Every stage in `faf/conformity` must remain synchronous: synchronous `node:fs`, `oxc-parser` `parseSync`, synchronous `oxc-resolver`, and synchronous `Atomics.wait` over an isolated worker thread for `faf.config.ts` evaluation (native Node.js type stripping).
-- **Runtime Dependencies**: Strictly `oxc-parser`, `oxc-resolver`, and `zod` (v4). Zod is used exclusively at untyped external boundaries (`faf.config.ts` payload, `package.json#imports`, load-config worker messages). `TFAFConfig` is hand-written; bidirectional type equivalence with Zod schemas is verified in `test/types/`.
+- **Runtime Dependencies**: Strictly `oxc-parser`, `oxc-resolver`, and `zod` (v4). Zod is used at untyped external boundaries (e.g., `faf.config.ts` payload, `package.json`, ESLint rule `settings`, load-config worker messages, and `.cache` JSON payloads). `TFAFConfig` is hand-written; bidirectional type equivalence with Zod schemas is verified in `test/types/`.
 
 ## 2. Verification Pipeline and State
 
-- **Stage Orchestration**:
-  - `prepareProject(configPath)`: `loadConfig` -> `validateConfigFormat` -> `readPackageJson` -> `acquirePathAliases` -> `composeDeclarations` -> `listEntries` -> `buildInventory` -> `includeExternalTargets` -> `validateConfigReferences`.
-  - `verifyProject`: `prepareProject` -> `classifyTaxonomy` -> `deriveHorizontalHierarchies` -> `derivePublicSurface` -> `collectModules` -> `buildDependencyGraph` -> `deriveExternalCrossings` -> `_norms/*` (23 norms) -> `anchorOutcomes` -> `collectExternalFiles`.
-- **Stage Independence and Failure Mode**: Pipeline stages never import one another; `verifyProject` composes them. Verification halts immediately on blocking preparation defects (configuration or inventory failure); otherwise, non-blocking preparation, taxonomy, module, graph, and norm outcomes all accumulate. The 23 Fragments under `_norms/` are mutually independent and named after the FAF prescription they check.
-- **Outcome Catalog and Anchoring**: Every diagnostic outcome is constructed exclusively through `createOutcome` (encapsulating the closed `OUTCOME_CATALOG`) and deterministically projected by `anchorOutcomes` onto a single lintable file path.
-- **Session Memoization and Cache**: `session` memoizes anchored outcomes per `faf.config.ts` based on file/origin fingerprints (`faf.config.ts`, its local imports, `package.json`, external files, tree origins) and in-memory `context.sourceCode.text` overlays without owning `verifyProject`, while `collectModules` encapsulates persistent content-addressed `Module Record` caching under `node_modules/.cache/eslint-plugin-faf` (clearing in-memory records when the active config path changes).
+- **Stage and Norm Orchestration** _(directly inside `src/_rules/conformity/`)_:
+  - `conformity` (`conformity.rule.ts` + `conformity.util.ts`) coordinates `discoverConfig` -> `session` lookup -> `resolveDeclarations` -> `buildInventory` -> `validateDeclarationReferences` -> `classifyTaxonomy` -> `deriveHorizontalHierarchies` -> `derivePublicSurface` -> `collectModules` -> `buildDependencyGraph` -> `deriveExternalCrossings` -> `_norms/*` (23 norms) -> `anchorOutcomes` -> `session` save.
+- **Stage and Norm Independence and Failure Mode**: Pipeline stages (`_stages/*`) and norms (`_norms/*`) never import one another; `conformity` composes them directly without procedural umbrella Fragments. Verification halts immediately on blocking foundation defects (`discoverConfig`, `resolveDeclarations`, `buildInventory`, or `validateDeclarationReferences`); otherwise, non-blocking inventory, taxonomy, hierarchy, surface, module, graph, and norm outcomes all accumulate. The 23 Fragments under `_norms/` are mutually independent and named after the FAF prescription they check.
+- **Outcome Catalog and Anchoring**: Every diagnostic outcome is constructed exclusively through `createOutcome` (exposing family-specific typed constructors over the closed `OUTCOME_CATALOG`) and deterministically projected by `anchorOutcomes` onto a single lintable file path.
+- **Session Memoization and Cache**: `session` memoizes anchored outcomes per `faf.config.ts` based on file/origin fingerprints (`faf.config.ts`, its local imports, `package.json`, external files, tree origins) and in-memory `context.sourceCode.text` overlays as a peer child of `conformity`, while `collectModules` encapsulates persistent content-addressed `Module Record` caching under `node_modules/.cache/eslint-plugin-faf` via `module-record-store`.
 
 ## 3. Role Semantics, Purity, and Placement Rules
 
@@ -26,14 +25,15 @@ Complements `AGENTS.md` (FAF specification) and `faf.config.ts` (repository Decl
   - `schema`: declarative Zod runtime validation schemas (`isCategoryNode: true`, `allowMultipleSymbols: true`); must never import `type`, `config`, `mock`, or `util`.
   - `type`: static type declarations only (`isCategoryNode: true`, `allowMultipleSymbols: true`); zero runtime code, zero value imports, mandatory JSDoc.
   - `config` & `mock` _(co-ranked)_: `config` for typed immutable domain tables/catalogs (`isCategoryNode: true`, `allowMultipleSymbols: true`); `mock` for synthetic in-memory test data (`isCategoryNode: true`, `allowMultipleSymbols: true`, excluded from coverage and mutation).
-  - `util`: domain functions — pure functional transformations and, exclusively in dedicated host-boundary units, synchronous I/O (`node:fs`, `node:worker_threads`, `oxc-resolver`, `process`) catching external exceptions and translating them into structured `TResult` / `TOutcome` values.
-  - `norm`, `rule`, `store` _(co-ranked at top Role Rank — Master Nodes only)_:
+  - `util`: auxiliary domain functions — pure functional transformations and, exclusively in dedicated host-boundary units, synchronous I/O (`node:fs`, `node:worker_threads`, `oxc-resolver`, `process`) catching external exceptions and translating them into structured `TResult` / `TOutcome` values (`allowMultipleSymbols: true`).
+  - `norm`, `rule`, `stage`, `store` _(co-ranked at top Role Rank — Master Nodes only)_:
     - `norm`: pure FAF norm check `(model) => outcomes`.
+    - `stage`: primary verification pipeline stage under `conformity/_stages/`.
     - `store`: sole modules encapsulating mutable in-memory process state in closures (`session` for fingerprint-invalidated outcome memoization; `module-record-store` encapsulated inside `collect-modules` for content-addressed `Module Record` caching).
-    - `rule`: ESLint `{ meta, create }` rule module (`conformity`, coordinating config discovery, `session`, and `verifyProject` as peers rather than nesting `verifyProject` inside `session`).
-  - `class`, `controller`, `service`, `adapter`, and `error` Roles are intentionally omitted in favor of functional composition and typed `TResult` / `TOutcome` data.
+    - `rule`: ESLint `{ meta, create }` rule module (`conformity`, directly coordinating `_stores/`, `_stages/`, and `_norms/`).
+  - Per catalog minimality, Roles not required by this analyzer (and non-FAF infrastructural labels) are omitted; expected failures are modeled as typed `TResult` / `TOutcome` values.
 - **Host I/O Boundary Isolation (Pure Core vs. Host I/O Leaves)** _(on `src/**/*.ts` excluding `*.spec.ts`)_:
-  - `constant`, `schema`, `type`, `config`, `mock`, all 23 `norm` units, and pure model/graph stages (`composeDeclarations`, `acquirePathAliases`, `validateConfigFormat`, `buildInventory`, `validateConfigReferences`, `classifyTaxonomy`, `deriveHorizontalHierarchies`, `derivePublicSurface`, `buildDependencyGraph`, `deriveExternalCrossings`, `anchorOutcomes`, `collectExternalFiles`) must remain 100% pure in memory (no `node:fs`, `node:worker_threads`, `node:child_process`, `oxc-resolver`, or `process`).
+  - `constant`, `schema`, `type`, `config`, `mock`, all 23 `norm` units, and pure model/graph stages (`validateDeclarationReferences`, `classifyTaxonomy`, `deriveHorizontalHierarchies`, `derivePublicSurface`, `buildDependencyGraph`, `deriveExternalCrossings`, `anchorOutcomes`) must remain 100% pure in memory (no `node:fs`, `node:worker_threads`, `node:child_process`, `oxc-resolver`, or `process`).
   - Host effects are confined strictly to dedicated I/O boundary units (config discovery and worker loading, `package.json` reading and directory scanning, module reading and specifier resolution, persistent `.cache/eslint-plugin-faf` I/O, and file fingerprinting).
 - **Production-Only Placement and Reachability**:
   - Placement and promotion are determined exclusively by **production** consumers (`*.spec.ts` excluded).
@@ -53,10 +53,10 @@ Complements `AGENTS.md` (FAF specification) and `faf.config.ts` (repository Decl
   - **`repository/no-unknown-parameters`**: `unknown` in function parameter annotations under `src/` (excluding `*.spec.ts`) is forbidden except:
     1. On a parameter `p` when the function declares an explicit return type predicate `p is T` or `asserts p is T`.
     2. In `*.schema.ts` or in `*.util.ts` importing a runtime schema (`/_schemas/` or `*.schema.js`).
-    3. At untyped external host or ESLint boundaries.
   - **`repository/no-decided-assertion`**: forbids `assertInvariant(typeof x === '...')` when static operand types already decide the comparison.
 - **Functional Style, Immutability, and Complexity**:
   - `class` declarations/expressions, `this`, and `throw` statements are forbidden across the repository. The single exception for `throw` is `assertInvariant` (`assert-invariant.util.ts`), reserved strictly for broken internal invariants. Expected failures are always returned as data (`TResult` / `TOutcome`).
+  - Module-level IIFE closures (`(() => { ... })()`) are reserved exclusively for stateful `store` modules (`session.store.ts`, `module-record-store.store.ts`); stateless modules never wrap top-level declarations in an IIFE.
   - All boundary types, properties, arrays, Maps, and Sets must be `readonly`; function arguments must never be mutated. Local mutation is permitted solely on private data structures allocated inside the executing function (e.g., Tarjan SCC, CSR `Int32Array`).
   - Enforced structural limits: cyclomatic complexity `<= 10`, cognitive complexity `<= 15`, boolean expression complexity `<= 3`, control-flow nesting `<= 3`, arrow parameter parentheses required, no wildcard imports (`import * as`), natural sorting enforced by `eslint-plugin-perfectionist`, and `kebab-case` ASCII naming (`^[a-z0-9]+(?:-[a-z0-9]+)*$`).
 - **Comment and `*.type.ts` Policy (`repository/comment-policy` + `jsdoc/*`)**:
@@ -66,7 +66,7 @@ Complements `AGENTS.md` (FAF specification) and `faf.config.ts` (repository Decl
 ## 5. Testing Discipline
 
 - **Unit Specs**: Every Fragment under `src/` must have a sibling `<name>.spec.ts`.
-- **In-Memory Purity**: Specs for all pure units (`constant`, `schema`, `type`, `config`, `mock`, `norm`, and pure `util` units) must use exclusively in-memory inputs (`_mocks` or inline data) without touching the filesystem or spawning processes.
+- **In-Memory Purity**: Specs for all pure units (`constant`, `schema`, `type`, `config`, `mock`, `norm`, pure `stage` units, and pure `util` units) must use exclusively in-memory inputs (`_mocks` or inline data) without touching the filesystem or spawning processes.
 - **Real Disk Fixtures (`fs-fixture`)**: Specs for host I/O units, `conformity` (`rule`), and suites in `test/` must use real temporary directories via `fs-fixture` or `os.tmpdir()` (placed outside the repository). Virtual filesystems (`memfs`, `mock-fs`) are prohibited because `oxc-resolver` performs native OS calls; do not build custom wrapper utilities around `fs-fixture`. Acceptance tests use `test/support/acceptance-project.ts` (`createProject`, `warmupESLint`, `lintScenario`, `expectScenario`, `lintProject`).
 - **Non-Tautological Assertions (`repository/no-tautological-assertion`)**: `expect` / `expect.soft` subjects that execute no code (`CallExpression`, `NewExpression`, `AwaitExpression`, `TaggedTemplateExpression`) and whose referenced identifiers all resolve to `*.constant.js` or `*.config.js` imports (directly or via `const` locals/containers) are forbidden. Assert observable outputs against literal expected values so constant/string mutants are killed.
 

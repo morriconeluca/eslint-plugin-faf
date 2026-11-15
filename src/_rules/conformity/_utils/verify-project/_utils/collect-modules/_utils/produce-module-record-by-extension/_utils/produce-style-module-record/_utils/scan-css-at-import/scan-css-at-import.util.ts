@@ -8,20 +8,23 @@ import {
   STATEMENT_TERMINATORS,
 } from './scan-css-at-import.constant.js';
 
-export const scanCssAtImport = (() => {
+export function scanCssAtImport(
+  text: string,
+  startIndex: number,
+  isSass: boolean
+): TScanAtImportResult {
   type TSpecifierResult = {
     readonly nextIndex: number;
     readonly raw: string;
   };
 
   const readQuotedSpecifier = (
-    text: string,
-    startIndex: number,
+    specifierStart: number,
     quote: string
   ): TSpecifierResult => {
     const terminators: ReadonlySet<string> = new Set(['\n', '\r', quote]);
 
-    let index = startIndex;
+    let index = specifierStart;
     while (index < text.length && !terminators.has(text[index] ?? '')) {
       if (text[index] === '\\') {
         if (index + 1 >= text.length) {
@@ -33,19 +36,16 @@ export const scanCssAtImport = (() => {
       }
     }
 
-    const raw = text.slice(startIndex, index).replaceAll(/\\(.)/g, '$1');
+    const raw = text.slice(specifierStart, index).replaceAll(/\\(.)/g, '$1');
     const isClosed = index < text.length && text[index] === quote;
     const nextIndex = isClosed ? index + 1 : index;
 
     return { nextIndex, raw };
   };
 
-  const readBareSpecifier = (
-    text: string,
-    startIndex: number
-  ): TSpecifierResult => {
+  const readBareSpecifier = (specifierStart: number): TSpecifierResult => {
     let braceDepth = 0;
-    let index = startIndex;
+    let index = specifierStart;
 
     while (index < text.length) {
       const char = text[index] ?? '';
@@ -62,85 +62,70 @@ export const scanCssAtImport = (() => {
       }
     }
 
-    const raw = text.slice(startIndex, index).trim();
+    const raw = text.slice(specifierStart, index).trim();
     return { nextIndex: index, raw };
   };
 
-  const readAtImportSpecifier = (
-    text: string,
-    startIndex: number
-  ): TSpecifierResult => {
-    const quote = text[startIndex];
+  const readAtImportSpecifier = (specifierStart: number): TSpecifierResult => {
+    const quote = text[specifierStart];
     const isQuoted = quote === '"' || quote === "'";
     if (isQuoted) {
-      return readQuotedSpecifier(text, startIndex + 1, quote);
+      return readQuotedSpecifier(specifierStart + 1, quote);
     }
 
     const isUrl =
-      text.slice(startIndex, startIndex + 3).toLowerCase() === 'url';
+      text.slice(specifierStart, specifierStart + 3).toLowerCase() === 'url';
     return isUrl
-      ? (readUrlSpecifier(text, startIndex) ?? {
-          nextIndex: startIndex,
+      ? (readUrlSpecifier(text, specifierStart) ?? {
+          nextIndex: specifierStart,
           raw: '',
         })
-      : readBareSpecifier(text, startIndex);
+      : readBareSpecifier(specifierStart);
   };
 
-  const skipAtImportStatement = (
-    text: string,
-    startIndex: number,
-    isSass: boolean
-  ): number => {
-    const isStatementTerminator = (char: string | undefined): boolean =>
-      char === undefined ||
-      STATEMENT_TERMINATORS.includes(char) ||
-      (isSass && SASS_NEWLINES.includes(char));
-
-    let statementEnd = startIndex;
-    while (!isStatementTerminator(text[statementEnd])) {
+  const skipAtImportStatement = (specifierEnd: number): number => {
+    let statementEnd = specifierEnd;
+    while (statementEnd < text.length) {
+      const char = text[statementEnd] ?? '';
+      if (
+        STATEMENT_TERMINATORS.includes(char) ||
+        (isSass && SASS_NEWLINES.includes(char))
+      ) {
+        break;
+      }
       statementEnd += 1;
     }
 
     return text[statementEnd] === ';' ? statementEnd + 1 : statementEnd;
   };
 
-  return function scanCssAtImport(
-    text: string,
-    startIndex: number,
-    isSass: boolean
-  ): TScanAtImportResult {
-    const isAtImportKeyword =
-      text.slice(startIndex, startIndex + 7).toLowerCase() === '@import';
-    if (!isAtImportKeyword) {
-      return { nextIndex: startIndex };
-    }
+  const isAtImportKeyword =
+    text.slice(startIndex, startIndex + 7).toLowerCase() === '@import';
+  if (!isAtImportKeyword) {
+    return { nextIndex: startIndex };
+  }
 
-    const nextChar = text[startIndex + 7];
-    const isFollowedByIdentifier =
-      nextChar !== undefined && IDENTIFIER_CHAR_PATTERN.test(nextChar);
-    if (isFollowedByIdentifier) {
-      return { nextIndex: startIndex };
-    }
+  const nextChar = text[startIndex + 7];
+  const isFollowedByIdentifier =
+    nextChar !== undefined && IDENTIFIER_CHAR_PATTERN.test(nextChar);
+  if (isFollowedByIdentifier) {
+    return { nextIndex: startIndex };
+  }
 
-    let contentStart = startIndex + 7;
-    while (
-      contentStart < text.length &&
-      (text[contentStart] === ' ' || text[contentStart] === '\t')
-    ) {
-      contentStart += 1;
-    }
+  let contentStart = startIndex + 7;
+  while (
+    contentStart < text.length &&
+    (text[contentStart] === ' ' || text[contentStart] === '\t')
+  ) {
+    contentStart += 1;
+  }
 
-    if (contentStart >= text.length) {
-      return { nextIndex: startIndex };
-    }
+  if (contentStart >= text.length) {
+    return { nextIndex: startIndex };
+  }
 
-    const specifierResult = readAtImportSpecifier(text, contentStart);
-    const nextIndex = skipAtImportStatement(
-      text,
-      specifierResult.nextIndex,
-      isSass
-    );
+  const specifierResult = readAtImportSpecifier(contentStart);
+  const nextIndex = skipAtImportStatement(specifierResult.nextIndex);
 
-    return { nextIndex, raw: specifierResult.raw };
-  };
-})();
+  return { nextIndex, raw: specifierResult.raw };
+}

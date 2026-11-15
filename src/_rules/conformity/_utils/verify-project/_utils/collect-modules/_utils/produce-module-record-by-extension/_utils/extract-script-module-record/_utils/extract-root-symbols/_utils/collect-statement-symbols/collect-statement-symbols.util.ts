@@ -15,7 +15,12 @@ import type {
 import type { TRootSymbol } from '../../../../../../../../../../_verify-project@shared/_types/verification-model.type.js';
 import type { TSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 
-export const collectStatementSymbols = (() => {
+export function collectStatementSymbols(
+  target: Statement,
+  locator: TSourceLocator,
+  symbols: TRootSymbol[],
+  seenFunctions: Set<string>
+): void {
   const VALUE_STATEMENT_TYPES = new Set([
     'ClassDeclaration',
     'FunctionDeclaration',
@@ -24,16 +29,15 @@ export const collectStatementSymbols = (() => {
   ]);
 
   const isValueStatement = (statement: Statement): boolean => {
-    const target =
+    const inner =
       statement.type === 'ExportNamedDeclaration' &&
       statement.declaration !== null
         ? statement.declaration
         : statement;
 
     return (
-      VALUE_STATEMENT_TYPES.has(target.type) ||
-      (target.type === 'TSModuleDeclaration' &&
-        hasValueDeclaration(target.body))
+      VALUE_STATEMENT_TYPES.has(inner.type) ||
+      (inner.type === 'TSModuleDeclaration' && hasValueDeclaration(inner.body))
     );
   };
 
@@ -41,21 +45,19 @@ export const collectStatementSymbols = (() => {
     body !== null && body.body.some((statement) => isValueStatement(statement));
 
   const collectPatternBindings = (
-    pattern: BindingPattern | BindingRestElement,
-    locator: TSourceLocator,
-    symbols: TRootSymbol[]
+    pattern: BindingPattern | BindingRestElement
   ): void => {
     switch (pattern.type) {
       case 'ArrayPattern': {
         for (const element of pattern.elements) {
           if (element !== null) {
-            collectPatternBindings(element, locator, symbols);
+            collectPatternBindings(element);
           }
         }
         return;
       }
       case 'AssignmentPattern': {
-        collectPatternBindings(pattern.left, locator, symbols);
+        collectPatternBindings(pattern.left);
         return;
       }
       case 'Identifier': {
@@ -70,31 +72,25 @@ export const collectStatementSymbols = (() => {
         for (const property of pattern.properties) {
           const next =
             property.type === 'Property' ? property.value : property.argument;
-          collectPatternBindings(next, locator, symbols);
+          collectPatternBindings(next);
         }
         return;
       }
       case 'RestElement': {
-        collectPatternBindings(pattern.argument, locator, symbols);
+        collectPatternBindings(pattern.argument);
         return;
       }
     }
   };
 
-  const collectVariableSymbols = (
-    statement: VariableDeclaration,
-    locator: TSourceLocator,
-    symbols: TRootSymbol[]
-  ): void => {
+  const collectVariableSymbols = (statement: VariableDeclaration): void => {
     for (const declarator of statement.declarations) {
-      collectPatternBindings(declarator.id, locator, symbols);
+      collectPatternBindings(declarator.id);
     }
   };
 
   const collectNamespaceSymbols = (
-    statement: TSGlobalDeclaration | TSModuleDeclaration,
-    locator: TSourceLocator,
-    symbols: TRootSymbol[]
+    statement: TSGlobalDeclaration | TSModuleDeclaration
   ): void => {
     if (statement.kind !== 'namespace' || statement.id.type !== 'Identifier') {
       return;
@@ -107,12 +103,7 @@ export const collectStatementSymbols = (() => {
     });
   };
 
-  const collectFunctionSymbols = (
-    statement: OxcFunction,
-    locator: TSourceLocator,
-    symbols: TRootSymbol[],
-    seenFunctions: Set<string>
-  ): void => {
+  const collectFunctionSymbols = (statement: OxcFunction): void => {
     if (statement.id === null) {
       symbols.push({
         name: 'default',
@@ -134,9 +125,7 @@ export const collectStatementSymbols = (() => {
   };
 
   const collectClassOrEnumSymbols = (
-    statement: Class | TSEnumDeclaration,
-    locator: TSourceLocator,
-    symbols: TRootSymbol[]
+    statement: Class | TSEnumDeclaration
   ): void => {
     if (statement.id === null) {
       symbols.push({
@@ -154,9 +143,7 @@ export const collectStatementSymbols = (() => {
   };
 
   const collectTypeSymbols = (
-    statement: TSInterfaceDeclaration | TSTypeAliasDeclaration,
-    locator: TSourceLocator,
-    symbols: TRootSymbol[]
+    statement: TSInterfaceDeclaration | TSTypeAliasDeclaration
   ): void => {
     symbols.push({
       name: statement.id.name,
@@ -165,39 +152,36 @@ export const collectStatementSymbols = (() => {
     });
   };
 
-  return function collectStatementSymbols(
-    target: Statement,
-    locator: TSourceLocator,
-    symbols: TRootSymbol[],
-    seenFunctions: Set<string>
-  ): void {
+  const dispatch = (): void => {
     if (target.type === 'VariableDeclaration') {
-      collectVariableSymbols(target, locator, symbols);
+      collectVariableSymbols(target);
       return;
     }
     if (target.type === 'TSModuleDeclaration') {
-      collectNamespaceSymbols(target, locator, symbols);
+      collectNamespaceSymbols(target);
       return;
     }
     if (
       target.type === 'FunctionDeclaration' ||
       target.type === 'TSDeclareFunction'
     ) {
-      collectFunctionSymbols(target, locator, symbols, seenFunctions);
+      collectFunctionSymbols(target);
       return;
     }
     if (
       target.type === 'ClassDeclaration' ||
       target.type === 'TSEnumDeclaration'
     ) {
-      collectClassOrEnumSymbols(target, locator, symbols);
+      collectClassOrEnumSymbols(target);
       return;
     }
     if (
       target.type === 'TSInterfaceDeclaration' ||
       target.type === 'TSTypeAliasDeclaration'
     ) {
-      collectTypeSymbols(target, locator, symbols);
+      collectTypeSymbols(target);
     }
   };
-})();
+
+  dispatch();
+}

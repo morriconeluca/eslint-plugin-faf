@@ -424,7 +424,7 @@ describe('verifyHorizontalHierarchies', () => {
       );
 
       expect(outcomesA).toEqual(outcomesB);
-      expect(outcomesA.map((o) => o.element)).toEqual([
+      expect(outcomesA.map((outcome) => outcome.element)).toEqual([
         'src/a',
         'src/b',
         'src/c',

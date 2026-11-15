@@ -12,11 +12,13 @@ import { extractDeclarationExports } from './_utils/extract-declaration-exports/
 import { extractDefaultExport } from './_utils/extract-default-export/index.js';
 import { extractNamedSpecifiersExports } from './_utils/extract-named-specifiers-exports/index.js';
 
-export const extractModuleExports = (() => {
-  const extractAllExport = (
-    statement: ExportAllDeclaration,
-    locator: TSourceLocator
-  ): TModuleExport => {
+export function extractModuleExports(
+  body: readonly Statement[],
+  rootSymbols: readonly TRootSymbol[],
+  importedBindings: ReadonlyMap<string, TImportedBinding>,
+  locator: TSourceLocator
+): readonly TModuleExport[] {
+  const extractAllExport = (statement: ExportAllDeclaration): TModuleExport => {
     const isTypeOnly = statement.exportKind === 'type';
     const position = locator(statement.start);
     const specifier = statement.source.value;
@@ -42,57 +44,45 @@ export const extractModuleExports = (() => {
     };
   };
 
-  return function extractModuleExports(
-    body: readonly Statement[],
-    rootSymbols: readonly TRootSymbol[],
-    importedBindings: ReadonlyMap<string, TImportedBinding>,
-    locator: TSourceLocator
-  ): readonly TModuleExport[] {
-    const exports: TModuleExport[] = [];
-    const seenExportNames = new Set<string>();
+  const exports: TModuleExport[] = [];
+  const seenExportNames = new Set<string>();
 
-    const processStatement = (statement: Statement): void => {
-      if (statement.type === 'ExportNamedDeclaration') {
-        if (statement.declaration === null) {
-          extractNamedSpecifiersExports(
-            statement,
-            rootSymbols,
-            importedBindings,
-            locator,
-            exports
-          );
-        } else {
-          extractDeclarationExports(
-            statement.declaration,
-            locator,
-            exports,
-            seenExportNames
-          );
-        }
-        return;
-      }
-
-      if (statement.type === 'ExportAllDeclaration') {
-        exports.push(extractAllExport(statement, locator));
-        return;
-      }
-
-      if (statement.type === 'ExportDefaultDeclaration') {
-        exports.push(
-          extractDefaultExport(
-            statement,
-            rootSymbols,
-            importedBindings,
-            locator
-          )
+  const processStatement = (statement: Statement): void => {
+    if (statement.type === 'ExportNamedDeclaration') {
+      if (statement.declaration === null) {
+        extractNamedSpecifiersExports(
+          statement,
+          rootSymbols,
+          importedBindings,
+          locator,
+          exports
+        );
+      } else {
+        extractDeclarationExports(
+          statement.declaration,
+          locator,
+          exports,
+          seenExportNames
         );
       }
-    };
-
-    for (const statement of body) {
-      processStatement(statement);
+      return;
     }
 
-    return exports;
+    if (statement.type === 'ExportAllDeclaration') {
+      exports.push(extractAllExport(statement));
+      return;
+    }
+
+    if (statement.type === 'ExportDefaultDeclaration') {
+      exports.push(
+        extractDefaultExport(statement, rootSymbols, importedBindings, locator)
+      );
+    }
   };
-})();
+
+  for (const statement of body) {
+    processStatement(statement);
+  }
+
+  return exports;
+}

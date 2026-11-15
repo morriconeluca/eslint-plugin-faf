@@ -476,7 +476,9 @@ describe('validateRoles', () => {
       const validation = validateRoles(payload, 'faf.common');
       expect(validation.outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = validation.outcomes.find(
-        (o) => o.constraint === constraint && o.propertyPath === propertyPath
+        (outcome) =>
+          outcome.constraint === constraint &&
+          outcome.propertyPath === propertyPath
       );
       expect(outcome).toBeDefined();
       expect(outcome?.family).toBe('configuration');

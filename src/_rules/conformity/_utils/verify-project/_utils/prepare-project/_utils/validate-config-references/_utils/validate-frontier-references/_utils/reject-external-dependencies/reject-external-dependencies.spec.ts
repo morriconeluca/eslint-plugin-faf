@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TInventory } from '../../../../../../../../_verify-project@shared/_types/verification-model.type.js';
-import type { TReferenceContext } from '../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+import type { TReferenceContext } from '../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 import { rejectExternalDependencies } from './reject-external-dependencies.util.js';
 

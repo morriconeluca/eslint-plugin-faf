@@ -15,14 +15,17 @@ import {
 } from '../../_classify-taxonomy@shared/_constants/classification-constraints.constant.js';
 import { readPathName } from '../../_classify-taxonomy@shared/_utils/read-path-name/index.js';
 
-export const verifyClassificationReferences = (() => {
+export function verifyClassificationReferences(
+  classifications: readonly TItemClassification[],
+  tree: TEffectiveTree,
+  treeIndex: number,
+  treeBuild: TTreeBuild
+): readonly TConfigOutcome[] {
   const verifyMimeticPaths = (
-    byPath: ReadonlyMap<string, TItemClassification>,
-    tree: TEffectiveTree,
-    mimeticPropertyPaths: ReadonlyMap<string, string>
+    byPath: ReadonlyMap<string, TItemClassification>
   ): readonly TConfigOutcome[] => {
     const outcomes: TConfigOutcome[] = [];
-    for (const [mimeticPath, propertyPath] of mimeticPropertyPaths) {
+    for (const [mimeticPath, propertyPath] of treeBuild.mimeticPropertyPaths) {
       const classification = byPath.get(mimeticPath);
       if (classification === undefined) {
         continue;
@@ -44,9 +47,7 @@ export const verifyClassificationReferences = (() => {
   };
 
   const verifyExternalSources = (
-    byPath: ReadonlyMap<string, TItemClassification>,
-    tree: TEffectiveTree,
-    treeIndex: number
+    byPath: ReadonlyMap<string, TItemClassification>
   ): readonly TConfigOutcome[] => {
     const outcomes: TConfigOutcome[] = [];
     for (const [pairIndex, pair] of tree.externalDependencyPairs.entries()) {
@@ -71,9 +72,7 @@ export const verifyClassificationReferences = (() => {
   };
 
   const verifyPublicRootNodes = (
-    byPath: ReadonlyMap<string, TItemClassification>,
-    tree: TEffectiveTree,
-    treeIndex: number
+    byPath: ReadonlyMap<string, TItemClassification>
   ): readonly TConfigOutcome[] => {
     const outcomes: TConfigOutcome[] = [];
     for (const [nodeIndex, nodePath] of tree.publicRootNodes.entries()) {
@@ -93,22 +92,15 @@ export const verifyClassificationReferences = (() => {
     return outcomes;
   };
 
-  return function verifyClassificationReferences(
-    classifications: readonly TItemClassification[],
-    tree: TEffectiveTree,
-    treeIndex: number,
-    treeBuild: TTreeBuild
-  ): readonly TConfigOutcome[] {
-    const byPath = new Map(
-      classifications.map((classification) => [
-        classification.path,
-        classification,
-      ])
-    );
-    return [
-      ...verifyMimeticPaths(byPath, tree, treeBuild.mimeticPropertyPaths),
-      ...verifyExternalSources(byPath, tree, treeIndex),
-      ...verifyPublicRootNodes(byPath, tree, treeIndex),
-    ];
-  };
-})();
+  const byPath = new Map(
+    classifications.map((classification) => [
+      classification.path,
+      classification,
+    ])
+  );
+  return [
+    ...verifyMimeticPaths(byPath),
+    ...verifyExternalSources(byPath),
+    ...verifyPublicRootNodes(byPath),
+  ];
+}

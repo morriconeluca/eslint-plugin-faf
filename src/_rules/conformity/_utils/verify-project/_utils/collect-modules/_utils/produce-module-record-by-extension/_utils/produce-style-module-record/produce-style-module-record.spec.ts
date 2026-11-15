@@ -295,4 +295,76 @@ describe('produceStyleModuleRecord', () => {
       },
     ]);
   });
+
+  it('tracks exact column after multiline block comments, single-slash tokens, single-quoted strings, and CR-only strings', () => {
+    const css = [
+      '/* line 1',
+      'line 2 */ .x { background: url("after.png"); }',
+      '/*/*/ .y { content: \'@import "skip.css";\'; background: url("after-slash.png"); }',
+      '/*a*/@import "tight.css";',
+    ].join('\n');
+    const cssResult = produceStyleModuleRecord('coords.css', css);
+    expect(cssResult.imports).toEqual([
+      {
+        isTypeOnly: false,
+        kind: 'css-url',
+        position: { column: 28, line: 2 },
+        specifier: './after.png',
+      },
+      {
+        isTypeOnly: false,
+        kind: 'css-url',
+        position: { column: 56, line: 3 },
+        specifier: './after-slash.png',
+      },
+      {
+        isTypeOnly: false,
+        kind: 'css-at-import',
+        position: { column: 6, line: 4 },
+        specifier: './tight.css',
+      },
+    ]);
+
+    const scss = [
+      '.a { font: 16px/24px sans-serif; } @import "after-ratio.scss";',
+      '// line comment',
+      '@import "after-line-comment.scss";',
+      '.b { content: "unterminated\r  @import "after-cr.scss";',
+      '/* a\r\nb */ .c { background: url("after-crlf-comment.png"); }',
+      '*/ /* d */ @import "after-stray-close.scss";',
+    ].join('\n');
+    const scssResult = produceStyleModuleRecord('coords.scss', scss);
+    expect(scssResult.imports).toEqual([
+      {
+        isTypeOnly: false,
+        kind: 'css-at-import',
+        position: { column: 36, line: 1 },
+        specifier: './after-ratio.scss',
+      },
+      {
+        isTypeOnly: false,
+        kind: 'css-at-import',
+        position: { column: 1, line: 3 },
+        specifier: './after-line-comment.scss',
+      },
+      {
+        isTypeOnly: false,
+        kind: 'css-at-import',
+        position: { column: 3, line: 5 },
+        specifier: './after-cr.scss',
+      },
+      {
+        isTypeOnly: false,
+        kind: 'css-url',
+        position: { column: 23, line: 7 },
+        specifier: './after-crlf-comment.png',
+      },
+      {
+        isTypeOnly: false,
+        kind: 'css-at-import',
+        position: { column: 12, line: 8 },
+        specifier: './after-stray-close.scss',
+      },
+    ]);
+  });
 });

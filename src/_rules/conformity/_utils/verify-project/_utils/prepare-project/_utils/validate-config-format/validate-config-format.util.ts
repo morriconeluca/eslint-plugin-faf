@@ -24,14 +24,11 @@ import {
 } from './validate-config-format.constant.js';
 import { configFormatSchema } from './validate-config-format.schema.js';
 
-export const validateConfigFormat = (() => {
+export function validateConfigFormat(raw: unknown): TResult<TFAFConfig> {
   type TCommonHierarchyModelsInfo = {
     readonly categoryNames: null | ReadonlySet<string>;
     readonly horizontalHierarchyModels: unknown;
   };
-
-  const hasDefined = (record: Record<string, unknown>, key: string): boolean =>
-    Object.hasOwn(record, key) && record[key] !== undefined;
 
   const isFafConfig = (
     _candidate: unknown,
@@ -133,7 +130,9 @@ export const validateConfigFormat = (() => {
       ...validateDependencies(record, basePath),
       ...validateMimeticStructures(record['mimeticPathStructures'], basePath)
     );
-    return hasDefined(record, 'roles') ? extractCategoryNames(roles) : null;
+    return Object.hasOwn(record, 'roles') && record['roles'] !== undefined
+      ? extractCategoryNames(roles)
+      : null;
   };
 
   const collectCommon = (
@@ -157,12 +156,11 @@ export const validateConfigFormat = (() => {
       outcomes.push(...validateAliases(common['aliases'], 'faf.common'));
     }
     const categoryNames = pushShared(common, 'faf.common', outcomes);
-    const horizontalHierarchyModels = hasDefined(
-      common,
-      'horizontalHierarchyModels'
-    )
-      ? common['horizontalHierarchyModels']
-      : null;
+    const horizontalHierarchyModels =
+      Object.hasOwn(common, 'horizontalHierarchyModels') &&
+      common['horizontalHierarchyModels'] !== undefined
+        ? common['horizontalHierarchyModels']
+        : null;
     if (categoryNames !== null && horizontalHierarchyModels !== null) {
       collectModelCategoryConflicts(
         horizontalHierarchyModels,
@@ -197,7 +195,9 @@ export const validateConfigFormat = (() => {
     if (effectiveCategories === null) {
       return;
     }
-    const hasLocalModels = hasDefined(local, 'horizontalHierarchyModels');
+    const hasLocalModels =
+      Object.hasOwn(local, 'horizontalHierarchyModels') &&
+      local['horizontalHierarchyModels'] !== undefined;
     const horizontalHierarchyModels = hasLocalModels
       ? local['horizontalHierarchyModels']
       : commonInfo.horizontalHierarchyModels;
@@ -214,13 +214,13 @@ export const validateConfigFormat = (() => {
   };
 
   const collectBody = (
-    raw: Record<string, unknown>,
+    record: Record<string, unknown>,
     outcomes: TConfigOutcome[]
   ): void => {
-    if (!isPlainRecord(raw['faf'])) {
+    if (!isPlainRecord(record['faf'])) {
       return;
     }
-    const faf = raw['faf'];
+    const faf = record['faf'];
     const seenConflictPaths = new Set<string>();
     const commonInfo = collectCommon(
       faf['common'],
@@ -242,16 +242,14 @@ export const validateConfigFormat = (() => {
     }
   };
 
-  return function validateConfigFormat(raw: unknown): TResult<TFAFConfig> {
-    const shaped = configFormatSchema.safeParse(raw);
-    const outcomes: TConfigOutcome[] = shaped.success
-      ? []
-      : [...translateConfigIssues(shaped.error.issues, raw, '')];
-    if (isPlainRecord(raw)) {
-      collectBody(raw, outcomes);
-    }
-    return shaped.success && outcomes.length === 0 && isFafConfig(raw, 0)
-      ? { ok: true, value: raw }
-      : { ok: false, outcomes };
-  };
-})();
+  const shaped = configFormatSchema.safeParse(raw);
+  const outcomes: TConfigOutcome[] = shaped.success
+    ? []
+    : [...translateConfigIssues(shaped.error.issues, raw, '')];
+  if (isPlainRecord(raw)) {
+    collectBody(raw, outcomes);
+  }
+  return shaped.success && outcomes.length === 0 && isFafConfig(raw, 0)
+    ? { ok: true, value: raw }
+    : { ok: false, outcomes };
+}

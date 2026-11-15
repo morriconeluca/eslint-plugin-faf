@@ -1456,9 +1456,9 @@ const SCENARIOS: readonly TScenarioCase[] = [
       specifier: '../../../outside.js',
     },
     {
-      contract: './_types/adapter.type.js',
+      contract: './_types/gateway.type.js',
       label: 'Category Node',
-      node: 'src/_types/adapter.type.ts',
+      node: 'src/_types/gateway.type.ts',
       specifier: '../../outside.js',
     },
   ].map(({ contract, label, node, specifier }) => ({
@@ -1481,7 +1481,7 @@ const SCENARIOS: readonly TScenarioCase[] = [
         to: 'outside.ts',
       }),
     ],
-    name: `qualified adapter static contract: ${label}`,
+    name: `qualified gateway static contract: ${label}`,
     tree: {
       'outside.ts': 'export const outside = 1;\n',
       'src/main.ts': `import '${contract}';\nimport '../outside.js';\nexport const main = 1;\n`,
@@ -1492,7 +1492,7 @@ const SCENARIOS: readonly TScenarioCase[] = [
             'src/_utils/widget/widget.util.ts': `import '${specifier}';\nexport const widget = 1;\n`,
           }
         : {
-            'src/_types/adapter.type.ts': `import '${specifier}';\nexport type Adapter = string;\n`,
+            'src/_types/gateway.type.ts': `import '${specifier}';\nexport type TGateway = string;\n`,
           }),
     },
   })),

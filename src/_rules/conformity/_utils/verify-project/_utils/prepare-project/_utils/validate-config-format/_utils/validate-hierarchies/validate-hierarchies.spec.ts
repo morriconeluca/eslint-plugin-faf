@@ -152,7 +152,9 @@ describe('validateHierarchies', () => {
     ({ config, constraint, propertyPath }) => {
       const outcomes = validateHierarchies(config, 'faf.common');
       const outcome = outcomes.find(
-        (o) => o.constraint === constraint && o.propertyPath === propertyPath
+        (outcome) =>
+          outcome.constraint === constraint &&
+          outcome.propertyPath === propertyPath
       );
       expect(outcome).toBeDefined();
       expect(outcome?.family).toBe('configuration');
@@ -329,7 +331,9 @@ describe('validateHierarchies', () => {
     ({ config, constraint, propertyPath }) => {
       const outcomes = validateHierarchies(config, 'faf.locals[0]');
       const outcome = outcomes.find(
-        (o) => o.constraint === constraint && o.propertyPath === propertyPath
+        (outcome) =>
+          outcome.constraint === constraint &&
+          outcome.propertyPath === propertyPath
       );
       expect(outcome).toBeDefined();
       expect(outcome?.family).toBe('configuration');
@@ -378,7 +382,7 @@ describe('validateHierarchies', () => {
       'faf.locals[0]'
     );
     const pathUndefined = pathOutcomes.find(
-      (o) => o.constraint === 'configuration/explicit-undefined'
+      (outcome) => outcome.constraint === 'configuration/explicit-undefined'
     );
     expect(pathUndefined?.propertyPath).toBe(
       'faf.locals[0].horizontalHierarchies[0].path'
@@ -397,7 +401,7 @@ describe('validateHierarchies', () => {
       'faf.locals[0]'
     );
     const hierarchyUndefined = hierarchyOutcomes.find(
-      (o) => o.constraint === 'configuration/explicit-undefined'
+      (outcome) => outcome.constraint === 'configuration/explicit-undefined'
     );
     expect(hierarchyUndefined?.propertyPath).toBe(
       'faf.locals[0].horizontalHierarchies[0].hierarchy'

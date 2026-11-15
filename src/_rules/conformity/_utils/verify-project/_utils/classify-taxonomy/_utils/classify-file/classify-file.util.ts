@@ -20,10 +20,12 @@ import { readPathName } from '../../_classify-taxonomy@shared/_utils/read-path-n
 import { blankFileFields } from './_classify-file@shared/_utils/blank-file-fields/index.js';
 import { classifyFragmentFile } from './_utils/classify-fragment-file/index.js';
 
-export const classifyFile = (() => {
+export function classifyFile(
+  path: string,
+  parent: TDirectoryParent,
+  context: TTreeClassificationContext
+): TFileClassification {
   const classifyDesignatedFile = (
-    path: string,
-    context: TTreeClassificationContext,
     parentFragmentPath: null | string
   ): null | TFileClassification => {
     const absentRole = { kind: ABSENT_ROLE_KIND, roleName: null } as const;
@@ -57,12 +59,10 @@ export const classifyFile = (() => {
   };
 
   const classifyRootFragmentFile = (
-    path: string,
-    rootNodePaths: ReadonlySet<string>,
     parentFragmentPath: null | string
   ): TFileClassification => {
     const absentRole = { kind: ABSENT_ROLE_KIND, roleName: null } as const;
-    if (rootNodePaths.has(path)) {
+    if (context.rootNodePaths.has(path)) {
       return {
         conflict: null,
         fields: blankFileFields(
@@ -81,9 +81,6 @@ export const classifyFile = (() => {
   };
 
   const classifyCategoryFile = (
-    path: string,
-    parent: TDirectoryParent,
-    context: TTreeClassificationContext,
     parentFragmentPath: null | string
   ): TFileClassification => {
     const role = context.getRoleFromName(readPathName(path), context.catalog);
@@ -106,50 +103,36 @@ export const classifyFile = (() => {
     };
   };
 
-  return function classifyFile(
-    path: string,
-    parent: TDirectoryParent,
-    context: TTreeClassificationContext
-  ): TFileClassification {
-    const parentFragmentPath =
-      parent.domainKind === DOMAIN_FRAGMENT
-        ? parent.path
-        : parent.parentFragmentPath;
-    const designated = classifyDesignatedFile(
-      path,
+  const parentFragmentPath =
+    parent.domainKind === DOMAIN_FRAGMENT
+      ? parent.path
+      : parent.parentFragmentPath;
+  const designated = classifyDesignatedFile(parentFragmentPath);
+  if (designated !== null) {
+    return designated;
+  }
+  if (parent.domainKind === null) {
+    return {
+      conflict: null,
+      fields: blankFileFields(
+        null,
+        { kind: ABSENT_ROLE_KIND, roleName: null },
+        null,
+        null,
+        parentFragmentPath
+      ),
+    };
+  }
+  if (parent.domainKind === DOMAIN_ROOT_FRAGMENT) {
+    return classifyRootFragmentFile(parentFragmentPath);
+  }
+  if (parent.domainKind === DOMAIN_FRAGMENT) {
+    return classifyFragmentFile(
+      readPathName(path),
+      parent,
       context,
       parentFragmentPath
     );
-    if (designated !== null) {
-      return designated;
-    }
-    if (parent.domainKind === null) {
-      return {
-        conflict: null,
-        fields: blankFileFields(
-          null,
-          { kind: ABSENT_ROLE_KIND, roleName: null },
-          null,
-          null,
-          parentFragmentPath
-        ),
-      };
-    }
-    if (parent.domainKind === DOMAIN_ROOT_FRAGMENT) {
-      return classifyRootFragmentFile(
-        path,
-        context.rootNodePaths,
-        parentFragmentPath
-      );
-    }
-    if (parent.domainKind === DOMAIN_FRAGMENT) {
-      return classifyFragmentFile(
-        readPathName(path),
-        parent,
-        context,
-        parentFragmentPath
-      );
-    }
-    return classifyCategoryFile(path, parent, context, parentFragmentPath);
-  };
-})();
+  }
+  return classifyCategoryFile(parentFragmentPath);
+}

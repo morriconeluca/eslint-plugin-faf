@@ -6,7 +6,10 @@ import { collectStringDuplicates } from '../../_validate-config-format@shared/_u
 import { translateConfigIssues } from '../../_validate-config-format@shared/_utils/config-diagnostic-codec/index.js';
 import { dependenciesSchema } from './validate-dependencies.schema.js';
 
-export const validateDependencies = (() => {
+export function validateDependencies(
+  config: Record<string, unknown>,
+  basePath: string
+): readonly TConfigOutcome[] {
   type TSchema = {
     safeParse: (
       value: unknown
@@ -62,10 +65,8 @@ export const validateDependencies = (() => {
   };
 
   const readList = (
-    config: Record<string, unknown>,
     key: string,
     schema: TSchema,
-    basePath: string,
     duplicates: (
       value: unknown,
       propertyPath: string
@@ -81,32 +82,17 @@ export const validateDependencies = (() => {
     ];
   };
 
-  return function validateDependencies(
-    config: Record<string, unknown>,
-    basePath: string
-  ): readonly TConfigOutcome[] {
-    return [
-      ...readList(
-        config,
-        'publicRootNodes',
-        dependenciesSchema.publicRootNodes,
-        basePath,
-        pathDuplicates
-      ),
-      ...readList(
-        config,
-        'treeDependencies',
-        dependenciesSchema.pairs,
-        basePath,
-        pairDuplicates
-      ),
-      ...readList(
-        config,
-        'externalDependencies',
-        dependenciesSchema.pairs,
-        basePath,
-        pairDuplicates
-      ),
-    ];
-  };
-})();
+  return [
+    ...readList(
+      'publicRootNodes',
+      dependenciesSchema.publicRootNodes,
+      pathDuplicates
+    ),
+    ...readList('treeDependencies', dependenciesSchema.pairs, pairDuplicates),
+    ...readList(
+      'externalDependencies',
+      dependenciesSchema.pairs,
+      pairDuplicates
+    ),
+  ];
+}

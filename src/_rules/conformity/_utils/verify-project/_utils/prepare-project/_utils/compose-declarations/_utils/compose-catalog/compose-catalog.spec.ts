@@ -27,10 +27,10 @@ describe('composeCatalog', () => {
     expect(catalog.topRank).toBe(3);
     expect(catalog.subGraphRoles).toEqual(['spec', 'story']);
 
-    const font = catalog.roles.find((r) => r.name === 'font');
-    const image = catalog.roles.find((r) => r.name === 'image');
-    const type = catalog.roles.find((r) => r.name === 'type');
-    const component = catalog.roles.find((r) => r.name === 'component');
+    const font = catalog.roles.find((role) => role.name === 'font');
+    const image = catalog.roles.find((role) => role.name === 'image');
+    const type = catalog.roles.find((role) => role.name === 'type');
+    const component = catalog.roles.find((role) => role.name === 'component');
 
     expect(font?.rank).toBe(0);
     expect(image?.rank).toBe(0);
@@ -64,8 +64,8 @@ describe('composeCatalog', () => {
       []
     );
 
-    const util = catalog.roles.find((r) => r.name === 'util');
-    const constant = catalog.roles.find((r) => r.name === 'constant');
+    const util = catalog.roles.find((role) => role.name === 'util');
+    const constant = catalog.roles.find((role) => role.name === 'constant');
 
     expect(util?.allowMultipleSymbols).toBe(false);
     expect(constant?.allowMultipleSymbols).toBe(true);
@@ -92,7 +92,7 @@ describe('composeCatalog', () => {
       []
     );
 
-    const style = catalog.roles.find((r) => r.name === 'style');
+    const style = catalog.roles.find((role) => role.name === 'style');
     expect(style?.form).toBe('category-nodes');
     expect(style?.implicitExtensions).toEqual(['.css']);
   });

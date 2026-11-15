@@ -63,8 +63,18 @@ const buildModel = (options: {
   const mimeticPaths = options.mimeticPaths ?? [];
 
   const taxonomy: TTaxonomyModel = {
-    byItemId: new Map(classifications.map((c) => [c.itemId, c])),
-    byPath: new Map(classifications.map((c) => [c.path, c])),
+    byItemId: new Map(
+      classifications.map((classification) => [
+        classification.itemId,
+        classification,
+      ])
+    ),
+    byPath: new Map(
+      classifications.map((classification) => [
+        classification.path,
+        classification,
+      ])
+    ),
     classifications,
   };
 
@@ -319,7 +329,7 @@ describe('verifyCategoryRole', () => {
     });
 
     const outcomes = verifyCategoryRole(model);
-    expect(outcomes.map((o) => o.element)).toEqual([
+    expect(outcomes.map((outcome) => outcome.element)).toEqual([
       'src/_types/index.ts',
       'src/_types/user.schema.ts',
       'src/_types/user.spec.ts',
@@ -372,7 +382,7 @@ describe('verifyCategoryRole', () => {
     });
 
     const outcomes = verifyCategoryRole(model);
-    expect(outcomes.map((o) => o.element)).toEqual([
+    expect(outcomes.map((outcome) => outcome.element)).toEqual([
       'src/_fonts/theme.css',
       'src/_utils/widget/theme.css',
     ]);
@@ -602,7 +612,7 @@ describe('verifyCategoryRole', () => {
     const first = verifyCategoryRole(modelFirst);
     const second = verifyCategoryRole(modelSecond);
 
-    expect(first.map((o) => o.element)).toEqual([
+    expect(first.map((outcome) => outcome.element)).toEqual([
       'src/_types/a.ts',
       'src/_types/z.ts',
     ]);

@@ -3,18 +3,22 @@ import type { TConfigOutcome } from '../../../../../../../../../../../../_src@sh
 import type {
   TReferenceContext,
   TScopeBinding,
-} from '../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+} from '../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 import { createOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 import { assertInvariant } from '../../../../../../../../_verify-project@shared/_utils/assert-invariant/index.js';
-import { referenceScope } from '../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+import { rejectReferenceScope } from '../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
-export const rejectHierarchyPaths = (() => {
-  function validateHierarchyMembers(
+export function rejectHierarchyPaths(
+  hierarchies: readonly TFAFHorizontalHierarchy[],
+  basePath: string,
+  scope: TScopeBinding,
+  context: TReferenceContext
+): readonly TConfigOutcome[] {
+  const validateHierarchyMembers = (
     entry: TFAFHorizontalHierarchy,
-    entryPath: string,
-    context: TReferenceContext
-  ): readonly TConfigOutcome[] {
+    entryPath: string
+  ): readonly TConfigOutcome[] => {
     const parentId = context.inventory.pathToId.get(entry.path);
     assertInvariant(
       parentId !== undefined,
@@ -42,26 +46,20 @@ export const rejectHierarchyPaths = (() => {
         ];
       })
     );
-  }
-
-  return function rejectHierarchyPaths(
-    hierarchies: readonly TFAFHorizontalHierarchy[],
-    basePath: string,
-    scope: TScopeBinding,
-    context: TReferenceContext
-  ): readonly TConfigOutcome[] {
-    return hierarchies.flatMap((entry, entryIndex) => {
-      const entryPath = `${basePath}[${entryIndex}]`;
-      const parentOutcomes = referenceScope.rejectDirectoryInScope({
-        context,
-        label: 'Hierarchy directory',
-        path: entry.path,
-        propertyPath: `${entryPath}.path`,
-        scope,
-      });
-      return parentOutcomes.length > 0
-        ? parentOutcomes
-        : validateHierarchyMembers(entry, entryPath, context);
-    });
   };
-})();
+
+  return hierarchies.flatMap((entry, entryIndex) => {
+    const entryPath = `${basePath}[${entryIndex}]`;
+    const parentOutcomes = rejectReferenceScope({
+      context,
+      expectedKind: 'directory',
+      label: 'Hierarchy directory',
+      path: entry.path,
+      propertyPath: `${entryPath}.path`,
+      scope,
+    });
+    return parentOutcomes.length > 0
+      ? parentOutcomes
+      : validateHierarchyMembers(entry, entryPath);
+  });
+}

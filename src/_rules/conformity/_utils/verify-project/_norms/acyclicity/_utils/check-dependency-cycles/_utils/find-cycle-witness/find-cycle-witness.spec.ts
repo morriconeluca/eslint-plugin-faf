@@ -95,5 +95,14 @@ describe('findCycleWitness', () => {
       4
     );
     expect(result?.witness).toEqual(['src/c.ts', 'src/d.ts', 'src/c.ts']);
+
+    const bestFirst = findCycleWitness(
+      [0, 1, 2, 3],
+      new Set(),
+      [[1, 2], [0], [3], [0]],
+      ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts'],
+      4
+    );
+    expect(bestFirst?.witness).toEqual(['src/a.ts', 'src/b.ts', 'src/a.ts']);
   });
 });

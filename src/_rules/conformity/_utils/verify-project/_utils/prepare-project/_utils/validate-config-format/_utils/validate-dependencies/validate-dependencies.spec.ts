@@ -17,10 +17,10 @@ describe('validateDependencies', () => {
     );
     expect(outcomes).toHaveLength(2);
     const treeOutcome = outcomes.find(
-      (o) => o.propertyPath === 'faf.common.treeDependencies'
+      (outcome) => outcome.propertyPath === 'faf.common.treeDependencies'
     );
     const externalOutcome = outcomes.find(
-      (o) => o.propertyPath === 'faf.common.externalDependencies'
+      (outcome) => outcome.propertyPath === 'faf.common.externalDependencies'
     );
     expect(treeOutcome?.constraint).toBe('configuration/null-forbidden');
     expect(treeOutcome?.element).toBe('faf.common.treeDependencies');
@@ -222,7 +222,9 @@ describe('validateDependencies', () => {
       const outcomes = validateDependencies(config, 'faf.common');
       expect(outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = outcomes.find(
-        (o) => o.constraint === constraint && o.propertyPath === propertyPath
+        (outcome) =>
+          outcome.constraint === constraint &&
+          outcome.propertyPath === propertyPath
       );
       expect(outcome).toBeDefined();
       expect(outcome?.family).toBe('configuration');
@@ -243,10 +245,12 @@ describe('validateDependencies', () => {
       'faf.common'
     );
     expect(
-      outcomes.some((o) => o.constraint === 'configuration/explicit-undefined')
+      outcomes.some(
+        (outcome) => outcome.constraint === 'configuration/explicit-undefined'
+      )
     ).toBe(true);
     const outcome = outcomes.find(
-      (o) => o.constraint === 'configuration/explicit-undefined'
+      (outcome) => outcome.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');

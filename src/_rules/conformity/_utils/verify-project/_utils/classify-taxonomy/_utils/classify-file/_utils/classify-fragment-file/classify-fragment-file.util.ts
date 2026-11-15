@@ -17,36 +17,32 @@ import {
 import { readPathName } from '../../../../_classify-taxonomy@shared/_utils/read-path-name/index.js';
 import { blankFileFields } from '../../_classify-file@shared/_utils/blank-file-fields/index.js';
 
-export const classifyFragmentFile = (() => {
-  const fileStem = (fileName: string): string => {
-    const dotIndex = fileName.indexOf(DOT_PATH);
-    return dotIndex <= 0 ? fileName : fileName.slice(0, dotIndex);
-  };
-
-  return function classifyFragmentFile(
-    fileName: string,
-    parent: TDirectoryParent,
-    context: TTreeClassificationContext,
-    parentFragmentPath: null | string
-  ): TFileClassification {
-    const role = context.getRoleFromName(fileName, context.catalog);
-    const isNameMatches = fileStem(fileName) === readPathName(parent.path);
-    if (fileName === ACCESS_NODE_FILE_NAME && role.kind === ABSENT_ROLE_KIND) {
-      return {
-        conflict: null,
-        fields: blankFileFields(
-          NODE_ACCESS,
-          { kind: ABSENT_ROLE_KIND, roleName: null },
-          parent.imposedRoleName,
-          context.catalog.topRank,
-          parentFragmentPath
-        ),
-      };
-    }
-    const isSubGraph =
-      isNameMatches &&
-      role.kind === ROLE_EXPLICIT &&
-      context.catalog.subGraphRoles.some((name) => name === role.roleName);
+export function classifyFragmentFile(
+  fileName: string,
+  parent: TDirectoryParent,
+  context: TTreeClassificationContext,
+  parentFragmentPath: null | string
+): TFileClassification {
+  const role = context.getRoleFromName(fileName, context.catalog);
+  const dotIndex = fileName.indexOf(DOT_PATH);
+  const stem = dotIndex <= 0 ? fileName : fileName.slice(0, dotIndex);
+  const isNameMatches = stem === readPathName(parent.path);
+  if (fileName === ACCESS_NODE_FILE_NAME && role.kind === ABSENT_ROLE_KIND) {
+    return {
+      conflict: null,
+      fields: blankFileFields(
+        NODE_ACCESS,
+        { kind: ABSENT_ROLE_KIND, roleName: null },
+        parent.imposedRoleName,
+        context.catalog.topRank,
+        parentFragmentPath
+      ),
+    };
+  }
+  if (isNameMatches && role.kind === ROLE_EXPLICIT) {
+    const isSubGraph = context.catalog.subGraphRoles.some(
+      (name) => name === role.roleName
+    );
     if (isSubGraph) {
       return {
         conflict: null,
@@ -59,33 +55,28 @@ export const classifyFragmentFile = (() => {
         ),
       };
     }
-    if (isNameMatches && role.kind === ROLE_EXPLICIT) {
-      let rank: null | number = null;
-      for (const candidate of context.catalog.roles) {
-        if (candidate.name === role.roleName) {
-          rank = candidate.rank;
-        }
-      }
-      return {
-        conflict: null,
-        fields: blankFileFields(
-          NODE_FRAGMENT,
-          role,
-          parent.imposedRoleName,
-          rank,
-          parentFragmentPath
-        ),
-      };
-    }
+    const matchedRole = context.catalog.roles.find(
+      (candidate) => candidate.name === role.roleName
+    );
     return {
       conflict: null,
       fields: blankFileFields(
-        NODE_UNAUTHORIZED,
+        NODE_FRAGMENT,
         role,
         parent.imposedRoleName,
-        null,
+        matchedRole === undefined ? null : matchedRole.rank,
         parentFragmentPath
       ),
     };
+  }
+  return {
+    conflict: null,
+    fields: blankFileFields(
+      NODE_UNAUTHORIZED,
+      role,
+      parent.imposedRoleName,
+      null,
+      parentFragmentPath
+    ),
   };
-})();
+}

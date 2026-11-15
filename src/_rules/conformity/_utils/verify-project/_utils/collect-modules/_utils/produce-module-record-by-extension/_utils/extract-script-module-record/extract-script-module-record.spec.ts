@@ -133,7 +133,10 @@ describe('extractScriptModuleRecord', () => {
     ])('$title', ({ code, expectedSymbols }) => {
       const record = extractScriptModuleRecord('test.ts', code);
       expect(
-        record.symbols.map((s) => ({ name: s.name, space: s.space }))
+        record.symbols.map((symbol) => ({
+          name: symbol.name,
+          space: symbol.space,
+        }))
       ).toEqual(expectedSymbols);
     });
   });
@@ -528,7 +531,7 @@ describe('extractScriptModuleRecord', () => {
       const code = 'namespace A { export const B = 1; } import x = A.B;';
       const record = extractScriptModuleRecord('test.ts', code);
       expect(record.imports).toHaveLength(0);
-      expect(record.symbols.map((s) => s.name)).toContain('A');
+      expect(record.symbols.map((symbol) => symbol.name)).toContain('A');
     });
 
     it('marks mixed import as typeOnly when all specifiers have type qualifier', () => {
@@ -771,6 +774,23 @@ describe('extractScriptModuleRecord', () => {
           description: 'File appears to be binary.',
           position: { column: 1, line: 1 },
         },
+      ]);
+
+      const mixedUnsupported = extractScriptModuleRecord(
+        'mixed-unsupported.ts',
+        'module.exports = 1;\nreturn;'
+      );
+      expect(
+        mixedUnsupported.unsupportedSyntaxes.map((entry) => entry.position.line)
+      ).toEqual([1, 2]);
+
+      const mixedSymbols = extractScriptModuleRecord(
+        'mixed-symbols.ts',
+        'export default 1;\nexport const afterDefault = 2;'
+      );
+      expect(mixedSymbols.symbols.map((symbol) => symbol.name)).toEqual([
+        'default',
+        'afterDefault',
       ]);
     });
   });

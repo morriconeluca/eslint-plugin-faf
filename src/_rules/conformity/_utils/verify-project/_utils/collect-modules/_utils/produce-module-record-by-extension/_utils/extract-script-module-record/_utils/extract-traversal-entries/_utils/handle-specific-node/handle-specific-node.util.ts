@@ -1,5 +1,3 @@
-import type { TemplateLiteral } from 'oxc-parser';
-
 import type {
   TModuleImport,
   TUnsupportedSyntax,
@@ -7,6 +5,7 @@ import type {
 import type { TSourceLocator } from '../../../../_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import type { TAstNode } from '../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
+import { isPlainRecord } from '../../../../../../../../../../../../../../_src@shared/_utils/is-plain-record/index.js';
 import {
   EXPORTS_NAME,
   MODULE_NAME,
@@ -16,42 +15,46 @@ import {
 } from '../../_extract-traversal-entries@shared/_constants/traversal-entries.constant.js';
 import { isAstNode } from '../../_extract-traversal-entries@shared/_utils/is-ast-node/index.js';
 
-export const handleSpecificNode = (() => {
-  const isTemplateLiteral = (node: {
-    readonly type: string;
-  }): node is TemplateLiteral => node.type === 'TemplateLiteral';
+export function handleSpecificNode(
+  node: TAstNode,
+  isRequireShadowed: boolean,
+  isModuleShadowed: boolean,
+  isExportsShadowed: boolean,
+  locator: TSourceLocator,
+  inlineImports: TModuleImport[],
+  unsupportedSyntaxes: TUnsupportedSyntax[]
+): void {
+  const extractStaticSpecifier = (candidate: TAstNode): null | string => {
+    if (candidate.type === 'Literal') {
+      return typeof candidate['value'] === 'string' ? candidate['value'] : null;
+    }
 
-  const extractTemplateSpecifier = (node: TemplateLiteral): null | string => {
-    if (node.expressions.length > 0) {
+    if (candidate.type !== 'TemplateLiteral') {
       return null;
     }
-    const quasi = node.quasis[0];
-    return quasi === undefined ? null : (quasi.value.cooked ?? quasi.value.raw);
+
+    const extractTemplateSpecifier = (): null | string => {
+      const expressions = candidate['expressions'];
+      const quasis = candidate['quasis'];
+      if (
+        !Array.isArray(expressions) ||
+        expressions.length > 0 ||
+        !Array.isArray(quasis)
+      ) {
+        return null;
+      }
+      const quasi: unknown = quasis[0];
+      const value = isPlainRecord(quasi) ? quasi['value'] : undefined;
+      const text = isPlainRecord(value)
+        ? (value['cooked'] ?? value['raw'])
+        : undefined;
+      return typeof text === 'string' ? text : null;
+    };
+
+    return extractTemplateSpecifier();
   };
 
-  const extractStaticSpecifier = (node: {
-    readonly type: string;
-  }): null | string => {
-    if (
-      node.type === 'Literal' &&
-      'value' in node &&
-      typeof node.value === 'string'
-    ) {
-      return node.value;
-    }
-
-    if (isTemplateLiteral(node)) {
-      return extractTemplateSpecifier(node);
-    }
-
-    return null;
-  };
-
-  const handleImportExpression = (
-    expression: TAstNode,
-    locator: TSourceLocator,
-    inlineImports: TModuleImport[]
-  ): void => {
+  const handleImportExpression = (expression: TAstNode): void => {
     const start =
       typeof expression['start'] === 'number' ? expression['start'] : 0;
     const position = locator(start);
@@ -76,21 +79,11 @@ export const handleSpecificNode = (() => {
     });
   };
 
-  const handleRequireCall = (
-    call: TAstNode,
-    locator: TSourceLocator,
-    inlineImports: TModuleImport[],
-    unsupportedSyntaxes: TUnsupportedSyntax[]
-  ): void => {
+  const handleRequireCall = (call: TAstNode): void => {
     const start = typeof call['start'] === 'number' ? call['start'] : 0;
     const position = locator(start);
     const callArguments = call['arguments'];
-    const isSingleElement = (
-      value: null | object
-    ): value is readonly [unknown] =>
-      value === callArguments && Array.isArray(value) && value.length === 1;
-
-    if (typeof callArguments !== 'object' || !isSingleElement(callArguments)) {
+    if (!Array.isArray(callArguments) || callArguments.length !== 1) {
       unsupportedSyntaxes.push({
         description: UNSUPPORTED_REQUIRE_MESSAGE,
         position,
@@ -98,7 +91,7 @@ export const handleSpecificNode = (() => {
       return;
     }
 
-    const argument = callArguments[0];
+    const argument: unknown = callArguments[0];
     const specifier = isAstNode(argument)
       ? extractStaticSpecifier(argument)
       : null;
@@ -118,11 +111,7 @@ export const handleSpecificNode = (() => {
     });
   };
 
-  const handleTsImportType = (
-    importType: TAstNode,
-    locator: TSourceLocator,
-    inlineImports: TModuleImport[]
-  ): void => {
+  const handleTsImportType = (importType: TAstNode): void => {
     const start =
       typeof importType['start'] === 'number' ? importType['start'] : 0;
     const position = locator(start);
@@ -139,24 +128,20 @@ export const handleSpecificNode = (() => {
     });
   };
 
-  const isExportsProperty = (node: TAstNode): boolean => {
-    const property = node['property'];
+  const isExportsProperty = (member: TAstNode): boolean => {
+    const property = member['property'];
     if (!isAstNode(property)) {
       return false;
     }
 
-    if (node['computed'] === true) {
+    if (member['computed'] === true) {
       return extractStaticSpecifier(property) === EXPORTS_NAME;
     }
 
     return property.type === 'Identifier' && property['name'] === EXPORTS_NAME;
   };
 
-  const isCommonJsExportAssignment = (
-    left: TAstNode,
-    isModuleShadowed: boolean,
-    isExportsShadowed: boolean
-  ): boolean => {
+  const isCommonJsExportAssignment = (left: TAstNode): boolean => {
     if (left.type !== 'MemberExpression') {
       return false;
     }
@@ -187,15 +172,9 @@ export const handleSpecificNode = (() => {
     );
   };
 
-  const handleUnsupportedSyntax = (
-    node: TAstNode,
-    isModuleShadowed: boolean,
-    isExportsShadowed: boolean,
-    locator: TSourceLocator,
-    unsupportedSyntaxes: TUnsupportedSyntax[]
-  ): void => {
-    if (node.type === 'TSExportAssignment') {
-      const start = typeof node['start'] === 'number' ? node['start'] : 0;
+  const handleUnsupportedSyntax = (target: TAstNode): void => {
+    if (target.type === 'TSExportAssignment') {
+      const start = typeof target['start'] === 'number' ? target['start'] : 0;
       unsupportedSyntaxes.push({
         description: 'TypeScript export assignment (export =) is unsupported',
         position: locator(start),
@@ -203,35 +182,24 @@ export const handleSpecificNode = (() => {
       return;
     }
 
-    if (node.type !== 'AssignmentExpression') {
+    if (target.type !== 'AssignmentExpression') {
       return;
     }
 
-    const left = node['left'];
-    if (
-      !isAstNode(left) ||
-      !isCommonJsExportAssignment(left, isModuleShadowed, isExportsShadowed)
-    ) {
+    const left = target['left'];
+    if (!isAstNode(left) || !isCommonJsExportAssignment(left)) {
       return;
     }
 
-    const start = typeof node['start'] === 'number' ? node['start'] : 0;
+    const start = typeof target['start'] === 'number' ? target['start'] : 0;
     unsupportedSyntaxes.push({
       description: UNSUPPORTED_COMMONJS_MESSAGE,
       position: locator(start),
     });
   };
 
-  return function handleSpecificNode(
-    node: TAstNode,
-    isRequireShadowed: boolean,
-    isModuleShadowed: boolean,
-    isExportsShadowed: boolean,
-    locator: TSourceLocator,
-    inlineImports: TModuleImport[],
-    unsupportedSyntaxes: TUnsupportedSyntax[]
-  ): void {
-    if (node.type === 'CallExpression') {
+  switch (node.type) {
+    case 'CallExpression': {
       const callee = node['callee'];
       if (
         !isRequireShadowed &&
@@ -239,27 +207,20 @@ export const handleSpecificNode = (() => {
         callee.type === 'Identifier' &&
         callee['name'] === REQUIRE_NAME
       ) {
-        handleRequireCall(node, locator, inlineImports, unsupportedSyntaxes);
+        handleRequireCall(node);
       }
       return;
     }
-
-    if (node.type === 'ImportExpression') {
-      handleImportExpression(node, locator, inlineImports);
+    case 'ImportExpression': {
+      handleImportExpression(node);
       return;
     }
-
-    if (node.type === 'TSImportType') {
-      handleTsImportType(node, locator, inlineImports);
+    case 'TSImportType': {
+      handleTsImportType(node);
       return;
     }
-
-    handleUnsupportedSyntax(
-      node,
-      isModuleShadowed,
-      isExportsShadowed,
-      locator,
-      unsupportedSyntaxes
-    );
-  };
-})();
+    default: {
+      handleUnsupportedSyntax(node);
+    }
+  }
+}

@@ -6,7 +6,10 @@ import { collectStringDuplicates } from '../../_validate-config-format@shared/_u
 import { translateConfigIssues } from '../../_validate-config-format@shared/_utils/config-diagnostic-codec/index.js';
 import { hierarchiesSchema } from './validate-hierarchies.schema.js';
 
-export const validateHierarchies = (() => {
+export function validateHierarchies(
+  config: Record<string, unknown>,
+  basePath: string
+): readonly TConfigOutcome[] {
   const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -46,15 +49,12 @@ export const validateHierarchies = (() => {
     return outcomes;
   };
 
-  const present = (record: Record<string, unknown>, key: string): unknown =>
-    Object.hasOwn(record, key) && record[key] !== undefined
-      ? record[key]
+  const present = (key: string): unknown =>
+    Object.hasOwn(config, key) && config[key] !== undefined
+      ? config[key]
       : undefined;
 
-  const modelOutcomes = (
-    models: unknown,
-    basePath: string
-  ): readonly TConfigOutcome[] => {
+  const modelOutcomes = (models: unknown): readonly TConfigOutcome[] => {
     if (models === undefined) {
       return [];
     }
@@ -73,8 +73,7 @@ export const validateHierarchies = (() => {
   };
 
   const horizontalOutcomes = (
-    horizontal: unknown,
-    basePath: string
+    horizontal: unknown
   ): readonly TConfigOutcome[] => {
     if (horizontal === undefined || basePath === 'faf.common') {
       return [];
@@ -100,13 +99,8 @@ export const validateHierarchies = (() => {
     return outcomes;
   };
 
-  return function validateHierarchies(
-    config: Record<string, unknown>,
-    basePath: string
-  ): readonly TConfigOutcome[] {
-    return [
-      ...modelOutcomes(present(config, 'horizontalHierarchyModels'), basePath),
-      ...horizontalOutcomes(present(config, 'horizontalHierarchies'), basePath),
-    ];
-  };
-})();
+  return [
+    ...modelOutcomes(present('horizontalHierarchyModels')),
+    ...horizontalOutcomes(present('horizontalHierarchies')),
+  ];
+}

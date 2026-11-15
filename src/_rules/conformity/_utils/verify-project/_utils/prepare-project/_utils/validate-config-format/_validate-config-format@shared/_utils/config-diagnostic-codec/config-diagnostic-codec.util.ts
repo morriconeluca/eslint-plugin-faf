@@ -12,110 +12,31 @@ import { assertInvariant } from '../../../../../../../_verify-project@shared/_ut
 import { DIAGNOSTIC_PREFIX } from './config-diagnostic-codec.constant.js';
 import { formFields } from './config-diagnostic-codec.schema.js';
 
-export const translateConfigIssues = (() => {
-  const formatIssuePath = (segments: readonly PropertyKey[]): string => {
-    let path = '';
+export function translateConfigIssues(
+  issues: readonly ZodError['issues'][number][],
+  input: unknown,
+  basePath: string
+): readonly TConfigOutcome[] {
+  const pathOf = (segments: readonly PropertyKey[]): string => {
+    let relativePath = '';
     for (const segment of segments) {
       if (typeof segment === 'number') {
-        path += `[${segment}]`;
-      } else if (typeof segment === 'string' && path.length === 0) {
-        path += segment;
+        relativePath += `[${segment}]`;
+      } else if (typeof segment === 'string' && relativePath.length === 0) {
+        relativePath += segment;
       } else {
-        path += `.${String(segment)}`;
+        relativePath += `.${String(segment)}`;
       }
     }
-    return path;
-  };
-
-  const hasExplicitProperty = (
-    parent: null | object,
-    key: PropertyKey | undefined
-  ): boolean =>
-    parent !== null &&
-    !Array.isArray(parent) &&
-    typeof key === 'string' &&
-    Object.hasOwn(parent, key);
-
-  const joinPropertyPath = (prefix: string, relativePath: string): string => {
     if (relativePath.length === 0) {
-      return prefix;
+      return basePath;
     }
-    if (prefix.length === 0) {
+    if (basePath.length === 0) {
       return relativePath;
     }
     return relativePath.startsWith('[')
-      ? `${prefix}${relativePath}`
-      : `${prefix}.${relativePath}`;
-  };
-
-  const isConfigDiagnostic = (value: unknown): value is TConfigDiagnostic => {
-    const isObject = typeof value === 'object' && value !== null;
-    const record = isObject && !Array.isArray(value) ? value : null;
-    if (record === null || !('kind' in record)) {
-      return false;
-    }
-    const kind = record.kind;
-    const kinds = new Set(['absent', 'fixed', 'keys']);
-    return formFields.isNonEmptyString(kind) && kinds.has(kind);
-  };
-
-  const decodeConfigDiagnostic = (message: string): TConfigDiagnostic => {
-    assertInvariant(
-      message.startsWith(DIAGNOSTIC_PREFIX),
-      'Zod issue is missing a configuration diagnostic.'
-    );
-    const parsed: unknown = JSON.parse(message.slice(DIAGNOSTIC_PREFIX.length));
-    assertInvariant(
-      isConfigDiagnostic(parsed),
-      'Configuration diagnostic payload is invalid.'
-    );
-    return parsed;
-  };
-
-  const chooseAbsentDiagnostic = (
-    diagnostic: TAbsentDiagnostic,
-    isEmptyArray: boolean,
-    hasExplicitKey: boolean
-  ): TFixedDiagnostic => {
-    if (isEmptyArray && diagnostic.emptyList !== null) {
-      return diagnostic.emptyList;
-    }
-    if (hasExplicitKey) {
-      return diagnostic.explicit;
-    }
-    return diagnostic.missing;
-  };
-
-  const isStringKeyedRecord = (
-    value: unknown,
-    key: string
-  ): value is Record<string, unknown> => {
-    const objectValue =
-      typeof value === 'object' && value !== null && !Array.isArray(value)
-        ? value
-        : null;
-    return objectValue !== null && Object.hasOwn(objectValue, key);
-  };
-
-  const readConfigValue = (
-    value: unknown,
-    segments: readonly PropertyKey[]
-  ): unknown => {
-    let current = value;
-    for (const segment of segments) {
-      if (typeof segment === 'number' && Array.isArray(current)) {
-        current = current[segment];
-        continue;
-      }
-      if (
-        typeof segment !== 'string' ||
-        !isStringKeyedRecord(current, segment)
-      ) {
-        return undefined;
-      }
-      current = current[segment];
-    }
-    return current;
+      ? `${basePath}${relativePath}`
+      : `${basePath}.${relativePath}`;
   };
 
   const toFixedOutcome = (
@@ -126,49 +47,112 @@ export const translateConfigIssues = (() => {
       propertyPath,
     });
 
-  return function translateConfigIssues(
-    issues: readonly ZodError['issues'][number][],
-    input: unknown,
-    basePath: string
-  ): readonly TConfigOutcome[] {
-    const pathOf = (segments: readonly PropertyKey[]): string =>
-      joinPropertyPath(basePath, formatIssuePath(segments));
-
-    return issues.flatMap((issue) => {
-      const diagnostic = decodeConfigDiagnostic(issue.message);
-      const propertyPath = pathOf(issue.path);
-      if (diagnostic.kind === 'keys') {
-        assertInvariant(
-          issue.code === 'unrecognized_keys',
-          'Key diagnostic requires unrecognized keys.'
-        );
-        return issue.keys.map((key) =>
-          toFixedOutcome(
-            {
-              constraint: diagnostic.constraint,
-              kind: 'fixed',
-            },
-            joinPropertyPath(propertyPath, key)
-          )
-        );
+  const readParentValue = (parentSegments: readonly PropertyKey[]): unknown => {
+    let parent: unknown = input;
+    for (const segment of parentSegments) {
+      if (typeof segment === 'number' && Array.isArray(parent)) {
+        parent = parent[segment];
+      } else {
+        const objectValue =
+          typeof parent === 'object' &&
+          parent !== null &&
+          !Array.isArray(parent)
+            ? parent
+            : null;
+        if (
+          typeof segment !== 'string' ||
+          objectValue === null ||
+          !Object.hasOwn(objectValue, segment)
+        ) {
+          return null;
+        }
+        parent = Object.getOwnPropertyDescriptor(objectValue, segment)?.value;
       }
-      if (diagnostic.kind === 'fixed') {
-        return [toFixedOutcome(diagnostic, propertyPath)];
-      }
-      const parent = readConfigValue(input, issue.path.slice(0, -1));
-      const parentObject = typeof parent === 'object' ? parent : null;
-      const isEmptyArray = Array.isArray(parent) && parent.length === 0;
-      const chosen = chooseAbsentDiagnostic(
-        diagnostic,
-        isEmptyArray,
-        hasExplicitProperty(parentObject, issue.path.at(-1))
-      );
-      return [
-        toFixedOutcome(
-          chosen,
-          isEmptyArray ? pathOf(issue.path.slice(0, -1)) : propertyPath
-        ),
-      ];
-    });
+    }
+    return parent;
   };
-})();
+
+  const resolveAbsentOutcome = (
+    issue: ZodError['issues'][number],
+    diagnostic: TAbsentDiagnostic,
+    propertyPath: string
+  ): TConfigOutcome => {
+    const parentSegments = issue.path.slice(0, -1);
+    const parent = readParentValue(parentSegments);
+    const isEmptyArray = Array.isArray(parent) && parent.length === 0;
+    const lastSegment = issue.path.at(-1);
+    const isPlainParent =
+      typeof parent === 'object' && parent !== null && !Array.isArray(parent);
+    const hasExplicitKey =
+      isPlainParent &&
+      typeof lastSegment === 'string' &&
+      Object.hasOwn(parent, lastSegment);
+
+    let chosen: TFixedDiagnostic;
+    if (isEmptyArray && diagnostic.emptyList !== null) {
+      chosen = diagnostic.emptyList;
+    } else if (hasExplicitKey) {
+      chosen = diagnostic.explicit;
+    } else {
+      chosen = diagnostic.missing;
+    }
+
+    return toFixedOutcome(
+      chosen,
+      isEmptyArray ? pathOf(parentSegments) : propertyPath
+    );
+  };
+
+  const translateIssue = (
+    issue: ZodError['issues'][number]
+  ): readonly TConfigOutcome[] => {
+    const decodeIssue = (): TConfigDiagnostic => {
+      assertInvariant(
+        issue.message.startsWith(DIAGNOSTIC_PREFIX),
+        'Zod issue is missing a configuration diagnostic.'
+      );
+      const parsed: unknown = JSON.parse(
+        issue.message.slice(DIAGNOSTIC_PREFIX.length)
+      );
+      const record =
+        typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+          ? parsed
+          : null;
+      const kind =
+        record !== null && 'kind' in record ? record.kind : undefined;
+      const kinds = new Set(['absent', 'fixed', 'keys']);
+      const isValidDiagnostic = (value: unknown): value is TConfigDiagnostic =>
+        formFields.isNonEmptyString(kind) && kinds.has(kind) && value !== null;
+      assertInvariant(
+        isValidDiagnostic(record),
+        'Configuration diagnostic payload is invalid.'
+      );
+      return record;
+    };
+
+    const record = decodeIssue();
+    const propertyPath = pathOf(issue.path);
+    if (record.kind === 'keys') {
+      assertInvariant(
+        issue.code === 'unrecognized_keys',
+        'Key diagnostic requires unrecognized keys.'
+      );
+      return issue.keys.map((key) =>
+        toFixedOutcome(
+          {
+            constraint: record.constraint,
+            kind: 'fixed',
+          },
+          propertyPath.length === 0 ? key : `${propertyPath}.${key}`
+        )
+      );
+    }
+    return [
+      record.kind === 'fixed'
+        ? toFixedOutcome(record, propertyPath)
+        : resolveAbsentOutcome(issue, record, propertyPath),
+    ];
+  };
+
+  return issues.flatMap((issue) => translateIssue(issue));
+}

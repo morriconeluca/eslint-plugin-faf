@@ -48,12 +48,17 @@ ruleTester.run('no-unknown-parameters', noUnknownParametersRule, {
     {
       code: 'export function read(x: unknown): void {}',
       errors: [{ messageId: 'unknownParameter' }],
-      filename: 'src/read.adapter.ts',
+      filename: 'src/read.config.ts',
     },
     {
       code: 'export function read(x: unknown): void {}',
       errors: [{ messageId: 'unknownParameter' }],
-      filename: 'src/read.service.ts',
+      filename: 'src/read.constant.ts',
+    },
+    {
+      code: 'export function read(x: unknown): void {}',
+      errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/read.mock.ts',
     },
     {
       code: 'export function read(x: unknown): void {}',

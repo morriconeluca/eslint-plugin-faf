@@ -49,14 +49,14 @@ describe('filterByTreeContainment', () => {
       externalDependencies: [
         {
           from: [
-            'app/src/z-adapter.ts',
-            'app/src/a-adapter.ts',
-            'lib/src/adapter.ts',
+            'app/src/z-gateway.ts',
+            'app/src/a-gateway.ts',
+            'lib/src/gateway.ts',
           ],
           to: ['vendor/z.ts', 'vendor/a.ts'],
         },
         {
-          from: ['app/src/a-adapter.ts'],
+          from: ['app/src/a-gateway.ts'],
           to: ['vendor/a.ts'],
         },
       ],
@@ -140,10 +140,10 @@ describe('filterByTreeContainment', () => {
       },
     ]);
     expect(appResult.externalDependencyPairs).toEqual([
-      { from: 'app/src/a-adapter.ts', to: 'vendor/a.ts' },
-      { from: 'app/src/a-adapter.ts', to: 'vendor/z.ts' },
-      { from: 'app/src/z-adapter.ts', to: 'vendor/a.ts' },
-      { from: 'app/src/z-adapter.ts', to: 'vendor/z.ts' },
+      { from: 'app/src/a-gateway.ts', to: 'vendor/a.ts' },
+      { from: 'app/src/a-gateway.ts', to: 'vendor/z.ts' },
+      { from: 'app/src/z-gateway.ts', to: 'vendor/a.ts' },
+      { from: 'app/src/z-gateway.ts', to: 'vendor/z.ts' },
     ]);
     expect(appResult.treeDependencyPairs).toEqual([
       { from: 'app', to: 'a-target' },
@@ -171,8 +171,8 @@ describe('filterByTreeContainment', () => {
       },
     ]);
     expect(libraryResult.externalDependencyPairs).toEqual([
-      { from: 'lib/src/adapter.ts', to: 'vendor/a.ts' },
-      { from: 'lib/src/adapter.ts', to: 'vendor/z.ts' },
+      { from: 'lib/src/gateway.ts', to: 'vendor/a.ts' },
+      { from: 'lib/src/gateway.ts', to: 'vendor/z.ts' },
     ]);
     expect(libraryResult.treeDependencyPairs).toEqual([
       { from: 'lib', to: 'a-target' },

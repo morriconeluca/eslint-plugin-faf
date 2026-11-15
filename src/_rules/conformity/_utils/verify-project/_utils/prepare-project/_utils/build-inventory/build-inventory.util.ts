@@ -11,41 +11,36 @@ import { populateEntryMap } from './_utils/populate-entry-map/index.js';
 import { resolveTreeOrigin } from './_utils/resolve-tree-origin/index.js';
 import { traverseInventoryTree } from './_utils/traverse-inventory-tree/index.js';
 
-export const buildInventory = (() => {
-  const normalizeOrigins = (origins: readonly string[]): readonly string[] =>
-    origins.map((rawOrigin) => {
-      const posix = toPosixPath(rawOrigin);
-      const withoutPrefix = posix.startsWith('./') ? posix.slice(2) : posix;
-      return withoutPrefix.endsWith('/') && withoutPrefix.length > 1
-        ? withoutPrefix.slice(0, -1)
-        : withoutPrefix;
-    });
+export function buildInventory(
+  entries: readonly TRawInventoryEntry[],
+  origins: readonly string[]
+): TBuildInventoryResult {
+  const normalizedOrigins = origins.map((rawOrigin) => {
+    const posix = toPosixPath(rawOrigin);
+    const withoutPrefix = posix.startsWith('./') ? posix.slice(2) : posix;
+    return withoutPrefix.endsWith('/') && withoutPrefix.length > 1
+      ? withoutPrefix.slice(0, -1)
+      : withoutPrefix;
+  });
 
-  return function buildInventory(
-    entries: readonly TRawInventoryEntry[],
-    origins: readonly string[]
-  ): TBuildInventoryResult {
-    const normalizedOrigins = normalizeOrigins(origins);
-
-    const filteredEntries: TInProgressInventoryEntry[] = [];
-    for (const entry of entries) {
-      const treeOrigin = resolveTreeOrigin(entry.path, normalizedOrigins);
-      if (treeOrigin !== null) {
-        filteredEntries.push({
-          isSymlink: entry.isSymlink,
-          kind: entry.kind,
-          path: entry.path,
-          realPath: entry.realPath,
-          treeOrigin,
-        });
-      }
+  const filteredEntries: TInProgressInventoryEntry[] = [];
+  for (const entry of entries) {
+    const treeOrigin = resolveTreeOrigin(entry.path, normalizedOrigins);
+    if (treeOrigin !== null) {
+      filteredEntries.push({
+        isSymlink: entry.isSymlink,
+        kind: entry.kind,
+        path: entry.path,
+        realPath: entry.realPath,
+        treeOrigin,
+      });
     }
+  }
 
-    const entryMap = populateEntryMap(filteredEntries, normalizedOrigins);
-    const { childrenMap, roots } = groupTreeNodes(entryMap);
-    const inventory = traverseInventoryTree(entryMap, roots, childrenMap);
-    const outcomes = collectSymlinkOutcomes(inventory.items);
+  const entryMap = populateEntryMap(filteredEntries, normalizedOrigins);
+  const { childrenMap, roots } = groupTreeNodes(entryMap);
+  const inventory = traverseInventoryTree(entryMap, roots, childrenMap);
+  const outcomes = collectSymlinkOutcomes(inventory.items);
 
-    return { inventory, outcomes };
-  };
-})();
+  return { inventory, outcomes };
+}

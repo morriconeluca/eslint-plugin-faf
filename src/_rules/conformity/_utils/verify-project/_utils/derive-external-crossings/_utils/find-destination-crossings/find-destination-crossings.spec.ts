@@ -50,12 +50,12 @@ const createTestGraph = (
   }
 
   let currentEdge = 0;
-  for (let u = 0; u < paths.length; u += 1) {
-    rowOffsets[u] = currentEdge;
+  for (let vertexIndex = 0; vertexIndex < paths.length; vertexIndex += 1) {
+    rowOffsets[vertexIndex] = currentEdge;
     const indices: number[] = [];
-    const sourcePath = paths[u] ?? '';
+    const sourcePath = paths[vertexIndex] ?? '';
     for (const raw of rawEdges) {
-      if (raw.source !== u) {
+      if (raw.source !== vertexIndex) {
         continue;
       }
       const destinationPath = paths[raw.destination] ?? '';

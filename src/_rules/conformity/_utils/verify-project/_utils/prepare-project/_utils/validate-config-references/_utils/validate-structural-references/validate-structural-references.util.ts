@@ -7,18 +7,20 @@ import type { TConfigOutcome } from '../../../../../../../../../../_src@shared/_
 import type {
   TReferenceContext,
   TScopeBinding,
-} from '../../_validate-config-references@shared/_utils/reference-scope/index.js';
+} from '../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 import { rejectHierarchyPaths } from './_utils/reject-hierarchy-paths/index.js';
 import { rejectMimeticStructures } from './_utils/reject-mimetic-structures/index.js';
 
-export const validateStructuralReferences = (() => {
+export function validateStructuralReferences(
+  config: TFAFConfig,
+  context: TReferenceContext
+): readonly TConfigOutcome[] {
   const validateStructuralSection = (
     hierarchies: readonly TFAFHorizontalHierarchy[] | undefined,
     structures: readonly TFAFMimeticPathStructure[] | undefined,
     basePath: string,
-    scope: TScopeBinding,
-    context: TReferenceContext
+    scope: TScopeBinding
   ): readonly TConfigOutcome[] => [
     ...rejectHierarchyPaths(
       hierarchies ?? [],
@@ -34,26 +36,19 @@ export const validateStructuralReferences = (() => {
     ),
   ];
 
-  return function validateStructuralReferences(
-    config: TFAFConfig,
-    context: TReferenceContext
-  ): readonly TConfigOutcome[] {
-    const commonOutcomes = validateStructuralSection(
-      undefined,
-      config.faf.common?.mimeticPathStructures,
-      'faf.common',
-      { kind: 'common' },
-      context
-    );
-    const localOutcomes = config.faf.locals.flatMap((local, localIndex) =>
-      validateStructuralSection(
-        local.horizontalHierarchies,
-        local.mimeticPathStructures,
-        `faf.locals[${localIndex}]`,
-        { kind: 'local', localIndex },
-        context
-      )
-    );
-    return [...commonOutcomes, ...localOutcomes];
-  };
-})();
+  const commonOutcomes = validateStructuralSection(
+    undefined,
+    config.faf.common?.mimeticPathStructures,
+    'faf.common',
+    { kind: 'common' }
+  );
+  const localOutcomes = config.faf.locals.flatMap((local, localIndex) =>
+    validateStructuralSection(
+      local.horizontalHierarchies,
+      local.mimeticPathStructures,
+      `faf.locals[${localIndex}]`,
+      { kind: 'local', localIndex }
+    )
+  );
+  return [...commonOutcomes, ...localOutcomes];
+}

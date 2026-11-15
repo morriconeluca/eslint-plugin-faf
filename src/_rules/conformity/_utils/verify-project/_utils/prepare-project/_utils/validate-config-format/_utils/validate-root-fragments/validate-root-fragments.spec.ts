@@ -451,7 +451,9 @@ describe('validateRootFragments', () => {
       const outcomes = validateRootFragments(payload, 'faf.locals[0]');
       expect(outcomes.length).toBeGreaterThanOrEqual(1);
       const outcome = outcomes.find(
-        (o) => o.constraint === constraint && o.propertyPath === propertyPath
+        (outcome) =>
+          outcome.constraint === constraint &&
+          outcome.propertyPath === propertyPath
       );
       expect(outcome).toBeDefined();
       expect(outcome?.family).toBe('configuration');
@@ -472,10 +474,12 @@ describe('validateRootFragments', () => {
     });
     const outcomes = validateRootFragments([withUndefined], 'faf.locals[0]');
     expect(
-      outcomes.some((o) => o.constraint === 'configuration/explicit-undefined')
+      outcomes.some(
+        (outcome) => outcome.constraint === 'configuration/explicit-undefined'
+      )
     ).toBe(true);
     const outcome = outcomes.find(
-      (o) => o.constraint === 'configuration/explicit-undefined'
+      (outcome) => outcome.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');

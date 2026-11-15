@@ -136,8 +136,18 @@ const createModel = ({
   const classifications = files.map(([path, nodeKind], id) =>
     buildClassification(path, nodeKind, id)
   );
-  const byItemId = new Map(classifications.map((c) => [c.itemId, c]));
-  const byPath = new Map(classifications.map((c) => [c.path, c]));
+  const byItemId = new Map(
+    classifications.map((classification) => [
+      classification.itemId,
+      classification,
+    ])
+  );
+  const byPath = new Map(
+    classifications.map((classification) => [
+      classification.path,
+      classification,
+    ])
+  );
   const taxonomy: TTaxonomyModel = {
     byItemId,
     byPath,

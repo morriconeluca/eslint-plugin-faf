@@ -20,7 +20,12 @@ import {
   LOCAL_SYMBOL_ORIGIN,
 } from '../../_extract-module-exports@shared/_constants/module-exports.constant.js';
 
-export const extractDeclarationExports = (() => {
+export function extractDeclarationExports(
+  declaration: Statement,
+  locator: TSourceLocator,
+  exports: TModuleExport[],
+  seenExportNames: Set<string>
+): void {
   type TPatternIdentifier = {
     readonly name: string;
     readonly start: number;
@@ -62,14 +67,9 @@ export const extractDeclarationExports = (() => {
     }
   };
 
-  const extractVariableExports = (
-    declaration: VariableDeclaration,
-    locator: TSourceLocator,
-    exports: TModuleExport[],
-    seenExportNames: Set<string>
-  ): void => {
+  const extractVariableExports = (target: VariableDeclaration): void => {
     const identifiers: TPatternIdentifier[] = [];
-    for (const declarator of declaration.declarations) {
+    for (const declarator of target.declarations) {
       collectPatternIdentifiers(declarator.id, identifiers);
     }
     for (const item of identifiers) {
@@ -84,27 +84,19 @@ export const extractDeclarationExports = (() => {
   };
 
   const extractTypeExports = (
-    declaration: TSInterfaceDeclaration | TSTypeAliasDeclaration,
-    locator: TSourceLocator,
-    exports: TModuleExport[],
-    seenExportNames: Set<string>
+    target: TSInterfaceDeclaration | TSTypeAliasDeclaration
   ): void => {
-    seenExportNames.add(declaration.id.name);
+    seenExportNames.add(target.id.name);
     exports.push({
-      exportedName: declaration.id.name,
+      exportedName: target.id.name,
       isTypeOnly: true,
-      origin: { symbolName: declaration.id.name, type: LOCAL_SYMBOL_ORIGIN },
-      position: locator(declaration.id.start),
+      origin: { symbolName: target.id.name, type: LOCAL_SYMBOL_ORIGIN },
+      position: locator(target.id.start),
     });
   };
 
-  const extractFunctionExports = (
-    declaration: OxcFunction,
-    locator: TSourceLocator,
-    exports: TModuleExport[],
-    seenExportNames: Set<string>
-  ): void => {
-    const name = declaration.id?.name ?? DEFAULT_NAME;
+  const extractFunctionExports = (target: OxcFunction): void => {
+    const name = target.id?.name ?? DEFAULT_NAME;
     if (seenExportNames.has(name)) {
       return;
     }
@@ -113,84 +105,66 @@ export const extractDeclarationExports = (() => {
       exportedName: name,
       isTypeOnly: false,
       origin: { symbolName: name, type: LOCAL_SYMBOL_ORIGIN },
-      position: locator(declaration.start),
+      position: locator(target.start),
     });
   };
 
-  const extractClassExports = (
-    declaration: Class | TSEnumDeclaration,
-    locator: TSourceLocator,
-    exports: TModuleExport[],
-    seenExportNames: Set<string>
-  ): void => {
-    const name = declaration.id?.name ?? DEFAULT_NAME;
+  const extractClassExports = (target: Class | TSEnumDeclaration): void => {
+    const name = target.id?.name ?? DEFAULT_NAME;
     seenExportNames.add(name);
     exports.push({
       exportedName: name,
       isTypeOnly: false,
       origin: { symbolName: name, type: LOCAL_SYMBOL_ORIGIN },
-      position: locator(declaration.start),
+      position: locator(target.start),
     });
   };
 
   const extractNamespaceExports = (
-    declaration: TSGlobalDeclaration | TSModuleDeclaration,
-    locator: TSourceLocator,
-    exports: TModuleExport[],
-    seenExportNames: Set<string>
+    target: TSGlobalDeclaration | TSModuleDeclaration
   ): void => {
-    if (
-      declaration.kind !== 'namespace' ||
-      declaration.id.type !== 'Identifier'
-    ) {
+    if (target.kind !== 'namespace' || target.id.type !== 'Identifier') {
       return;
     }
-    seenExportNames.add(declaration.id.name);
+    seenExportNames.add(target.id.name);
     exports.push({
-      exportedName: declaration.id.name,
+      exportedName: target.id.name,
       isTypeOnly: false,
-      origin: { symbolName: declaration.id.name, type: LOCAL_SYMBOL_ORIGIN },
-      position: locator(declaration.id.start),
+      origin: { symbolName: target.id.name, type: LOCAL_SYMBOL_ORIGIN },
+      position: locator(target.id.start),
     });
   };
 
-  return function extractDeclarationExports(
-    declaration: Statement,
-    locator: TSourceLocator,
-    exports: TModuleExport[],
-    seenExportNames: Set<string>
-  ): void {
+  const dispatch = (): void => {
     if (declaration.type === 'VariableDeclaration') {
-      extractVariableExports(declaration, locator, exports, seenExportNames);
+      extractVariableExports(declaration);
       return;
     }
-
     if (
       declaration.type === 'TSInterfaceDeclaration' ||
       declaration.type === 'TSTypeAliasDeclaration'
     ) {
-      extractTypeExports(declaration, locator, exports, seenExportNames);
+      extractTypeExports(declaration);
       return;
     }
-
     if (
       declaration.type === 'FunctionDeclaration' ||
       declaration.type === 'TSDeclareFunction'
     ) {
-      extractFunctionExports(declaration, locator, exports, seenExportNames);
+      extractFunctionExports(declaration);
       return;
     }
-
     if (
       declaration.type === 'ClassDeclaration' ||
       declaration.type === 'TSEnumDeclaration'
     ) {
-      extractClassExports(declaration, locator, exports, seenExportNames);
+      extractClassExports(declaration);
       return;
     }
-
     if (declaration.type === 'TSModuleDeclaration') {
-      extractNamespaceExports(declaration, locator, exports, seenExportNames);
+      extractNamespaceExports(declaration);
     }
   };
-})();
+
+  dispatch();
+}

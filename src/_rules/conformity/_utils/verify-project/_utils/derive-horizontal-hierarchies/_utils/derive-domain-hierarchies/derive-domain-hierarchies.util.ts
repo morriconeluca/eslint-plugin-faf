@@ -9,7 +9,9 @@ import type { THierarchyContext } from '../../_derive-horizontal-hierarchies@sha
 
 import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 
-export const deriveDomainHierarchies = (() => {
+export function deriveDomainHierarchies(
+  context: THierarchyContext
+): readonly Omit<THorizontalHierarchySet, 'id'>[] {
   const SUB_CATEGORY_DOMAIN = 'sub-category' as const;
 
   const isSubCategoryEligibleParent = (
@@ -39,18 +41,8 @@ export const deriveDomainHierarchies = (() => {
     );
   };
 
-  const collectRepetitions = (hierarchy: TFAFHierarchy): readonly string[] => {
-    const names = hierarchy.flat();
-    const repetitions = [
-      ...new Set(names.filter((name, index) => names.indexOf(name) !== index)),
-    ];
-    repetitions.sort(compareOrdinal);
-    return repetitions;
-  };
-
   const collectSiblings = (
     hierarchy: TFAFHierarchy,
-    context: THierarchyContext,
     isSubCategoryOnly: boolean
   ): readonly TSiblingRank[] =>
     hierarchy.flatMap((tier, rank) => {
@@ -69,47 +61,55 @@ export const deriveDomainHierarchies = (() => {
       );
     });
 
-  return function deriveDomainHierarchies(
-    context: THierarchyContext
-  ): readonly Omit<THorizontalHierarchySet, 'id'>[] {
-    const classification = context.taxonomy.byItemId.get(context.parent.id);
-    const sets: Omit<THorizontalHierarchySet, 'id'>[] = [];
+  const buildSet = (
+    hierarchy: TFAFHierarchy,
+    siblings: readonly TSiblingRank[],
+    origin: THorizontalHierarchySet['origin'],
+    isOrderable: boolean
+  ): Omit<THorizontalHierarchySet, 'id'> => {
+    const names = hierarchy.flat();
+    const repetitions = [
+      ...new Set(names.filter((name, index) => names.indexOf(name) !== index)),
+    ];
+    repetitions.sort(compareOrdinal);
+    return {
+      isOrderable,
+      origin,
+      parentPath: context.parent.path,
+      repetitions,
+      siblings,
+    };
+  };
 
-    if (isSubCategoryEligibleParent(classification?.domainKind)) {
-      for (const model of context.tree.horizontalHierarchyModels) {
-        const siblings = collectSiblings(model, context, true);
-        if (siblings.length === 0) {
-          continue;
-        }
-        sets.push({
-          isOrderable: true,
-          origin: 'horizontal-hierarchy-model',
-          parentPath: context.parent.path,
-          repetitions: collectRepetitions(model),
-          siblings,
-        });
-      }
-    }
+  const classification = context.taxonomy.byItemId.get(context.parent.id);
+  const sets: Omit<THorizontalHierarchySet, 'id'>[] = [];
 
-    for (const entry of context.tree.horizontalHierarchies) {
-      if (entry.path !== context.parent.path) {
+  if (isSubCategoryEligibleParent(classification?.domainKind)) {
+    for (const model of context.tree.horizontalHierarchyModels) {
+      const siblings = collectSiblings(model, true);
+      if (siblings.length === 0) {
         continue;
       }
-      const siblings = collectSiblings(entry.hierarchy, context, false);
-      sets.push({
-        isOrderable: isOrderableSiblingSet(
-          classification,
-          siblings.map((sibling) =>
-            context.taxonomy.byItemId.get(sibling.itemId)
-          )
-        ),
-        origin: 'horizontal-hierarchy',
-        parentPath: context.parent.path,
-        repetitions: collectRepetitions(entry.hierarchy),
-        siblings,
-      });
+      sets.push(buildSet(model, siblings, 'horizontal-hierarchy-model', true));
     }
+  }
 
-    return sets;
-  };
-})();
+  for (const entry of context.tree.horizontalHierarchies) {
+    if (entry.path !== context.parent.path) {
+      continue;
+    }
+    const siblings = collectSiblings(entry.hierarchy, false);
+    const memberClassifications = siblings.map((sibling) =>
+      context.taxonomy.byItemId.get(sibling.itemId)
+    );
+    const isOrderable = isOrderableSiblingSet(
+      classification,
+      memberClassifications
+    );
+    sets.push(
+      buildSet(entry.hierarchy, siblings, 'horizontal-hierarchy', isOrderable)
+    );
+  }
+
+  return sets;
+}

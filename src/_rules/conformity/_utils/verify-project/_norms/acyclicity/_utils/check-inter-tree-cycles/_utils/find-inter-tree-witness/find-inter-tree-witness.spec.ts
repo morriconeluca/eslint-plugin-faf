@@ -3,18 +3,25 @@ import { describe, expect, it } from 'vitest';
 import { findInterTreeWitness } from './find-inter-tree-witness.util.js';
 
 describe('findInterTreeWitness', () => {
-  it('returns null when component has fewer than 2 trees', () => {
+  it('returns null when component has fewer than 2 trees even with self-loop', () => {
     expect(findInterTreeWitness([0], [[]], [[null]], 1)).toBeNull();
+    expect(
+      findInterTreeWitness([0], [[0]], [[{ segment: ['a/1.ts', 'a/2.ts'] }]], 1)
+    ).toBeNull();
   });
 
-  it('finds shortest witness for 2-tree cycle', () => {
+  it('finds shortest witness for 2-tree cycle and preserves first step position', () => {
     const transitions = [
       [
         null,
         { position: { column: 1, line: 1 }, segment: ['a/1.ts', 'b/1.ts'] },
         null,
       ],
-      [{ segment: ['b/2.ts', 'a/2.ts'] }, null, null],
+      [
+        { position: { column: 9, line: 9 }, segment: ['b/2.ts', 'a/2.ts'] },
+        null,
+        null,
+      ],
       [null, null, null],
     ];
     const result = findInterTreeWitness(
@@ -234,6 +241,49 @@ describe('findInterTreeWitness', () => {
     expect(resultSecond?.witness).toEqual([
       ['a/1.ts', 'b/1.ts'],
       ['b/2.ts', 'a/1.ts'],
+    ]);
+
+    const betterFirst = [
+      [
+        null,
+        { segment: ['a/1.ts', 'b/1.ts'] },
+        { segment: ['a/1.ts', 'b/2.ts'] },
+      ],
+      [{ segment: ['b/1.ts', 'a/1.ts'] }, null, null],
+      [{ segment: ['b/2.ts', 'a/1.ts'] }, null, null],
+    ];
+    expect(
+      findInterTreeWitness([0, 1, 2], [[1, 2], [0], [0]], betterFirst, 3)
+        ?.witness
+    ).toEqual([
+      ['a/1.ts', 'b/1.ts'],
+      ['b/1.ts', 'a/1.ts'],
+    ]);
+
+    const equalThreeCycles = [
+      [
+        null,
+        { segment: ['a/1.ts', 'b/1.ts'] },
+        { segment: ['a/1.ts', 'c/1.ts'] },
+        null,
+        null,
+      ],
+      [null, null, null, { segment: ['b/1.ts', 'd/1.ts'] }, null],
+      [null, null, null, null, { segment: ['c/1.ts', 'e/1.ts'] }],
+      [{ segment: ['d/1.ts', 'a/1.ts'] }, null, null, null, null],
+      [{ segment: ['e/1.ts', 'a/1.ts'] }, null, null, null, null],
+    ];
+    expect(
+      findInterTreeWitness(
+        [0, 1, 2, 3, 4],
+        [[1, 2], [3], [4], [0], [0]],
+        equalThreeCycles,
+        5
+      )?.witness
+    ).toEqual([
+      ['a/1.ts', 'b/1.ts'],
+      ['b/1.ts', 'd/1.ts'],
+      ['d/1.ts', 'a/1.ts'],
     ]);
   });
 });

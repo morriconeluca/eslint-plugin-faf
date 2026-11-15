@@ -10,11 +10,15 @@ import type {
   TEnumeratedRootNode,
   TOwnedOrigin,
   TReferenceContext,
-} from '../../_validate-config-references@shared/_utils/reference-scope/index.js';
+} from '../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 import { toPosixPath } from '../../../../../../../../../../_src@shared/_utils/to-posix-path/index.js';
 
-export const createReferenceContext = (() => {
+export function createReferenceContext(
+  config: TFAFConfig,
+  declarations: TEffectiveDeclarations,
+  inventory: TInventory
+): TReferenceContext {
   const UNASSIGNED_LOCAL_INDEX = -1;
 
   const collectFragmentRootNodes = (
@@ -39,9 +43,10 @@ export const createReferenceContext = (() => {
     return new Map([...directEntries, ...nestedEntries]);
   };
 
-  const collectEnumeratedRootNodes = (
-    config: TFAFConfig
-  ): ReadonlyMap<string, TEnumeratedRootNode> => {
+  const collectEnumeratedRootNodes = (): ReadonlyMap<
+    string,
+    TEnumeratedRootNode
+  > => {
     const maps = config.faf.locals.flatMap((local) => {
       const rootFragments = local.rootFragments ?? [];
       return rootFragments.map((rootFragment) =>
@@ -52,10 +57,7 @@ export const createReferenceContext = (() => {
     return new Map(entries);
   };
 
-  const collectOwnedOrigins = (
-    config: TFAFConfig,
-    declarations: TEffectiveDeclarations
-  ): ReadonlyMap<string, TOwnedOrigin> => {
+  const collectOwnedOrigins = (): ReadonlyMap<string, TOwnedOrigin> => {
     const entries: [string, TOwnedOrigin][] = [];
     for (const [localIndex, local] of config.faf.locals.entries()) {
       const layers = local.rootLayers ?? [];
@@ -87,17 +89,11 @@ export const createReferenceContext = (() => {
     return new Map(entries);
   };
 
-  return function createReferenceContext(
-    config: TFAFConfig,
-    declarations: TEffectiveDeclarations,
-    inventory: TInventory
-  ): TReferenceContext {
-    return {
-      aliasPrefixes: declarations.aliases.map((alias) => alias.prefix),
-      baseDirectory: toPosixPath(declarations.baseDirectory),
-      enumeratedRootNodes: collectEnumeratedRootNodes(config),
-      inventory,
-      ownedOrigins: collectOwnedOrigins(config, declarations),
-    };
+  return {
+    aliasPrefixes: declarations.aliases.map((alias) => alias.prefix),
+    baseDirectory: toPosixPath(declarations.baseDirectory),
+    enumeratedRootNodes: collectEnumeratedRootNodes(),
+    inventory,
+    ownedOrigins: collectOwnedOrigins(),
   };
-})();
+}

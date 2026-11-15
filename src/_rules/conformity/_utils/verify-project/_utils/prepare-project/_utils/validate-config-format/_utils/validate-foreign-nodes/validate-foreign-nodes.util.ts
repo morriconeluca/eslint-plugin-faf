@@ -8,7 +8,10 @@ import { collectStringDuplicates } from '../../_validate-config-format@shared/_u
 import { translateConfigIssues } from '../../_validate-config-format@shared/_utils/config-diagnostic-codec/index.js';
 import { foreignNodesSchema } from './validate-foreign-nodes.schema.js';
 
-export const validateForeignNodes = (() => {
+export function validateForeignNodes(
+  config: Record<string, unknown>,
+  basePath: string
+): readonly TConfigOutcome[] {
   type TSchema = {
     safeParse: (
       value: unknown
@@ -95,31 +98,26 @@ export const validateForeignNodes = (() => {
     return outcomes;
   };
 
-  return function validateForeignNodes(
-    config: Record<string, unknown>,
-    basePath: string
-  ): readonly TConfigOutcome[] {
-    const outcomes: TConfigOutcome[] = [];
-    if (config['foreignDomains'] !== undefined) {
-      const domainsPath = `${basePath}.foreignDomains`;
-      outcomes.push(
-        ...parseProperty(
-          foreignNodesSchema.domains,
-          config['foreignDomains'],
-          domainsPath
-        ),
-        ...pathDuplicates(config['foreignDomains'], domainsPath)
-      );
-    }
-    if (config['foreignNodes'] !== undefined) {
-      const nodesPath = `${basePath}.foreignNodes`;
-      const nodes = config['foreignNodes'];
-      outcomes.push(
-        ...parseProperty(foreignNodesSchema.nodes, nodes, nodesPath),
-        ...pathDuplicates(nodes, nodesPath),
-        ...familyOutcomes(nodes, nodesPath)
-      );
-    }
-    return outcomes;
-  };
-})();
+  const outcomes: TConfigOutcome[] = [];
+  if (config['foreignDomains'] !== undefined) {
+    const domainsPath = `${basePath}.foreignDomains`;
+    outcomes.push(
+      ...parseProperty(
+        foreignNodesSchema.domains,
+        config['foreignDomains'],
+        domainsPath
+      ),
+      ...pathDuplicates(config['foreignDomains'], domainsPath)
+    );
+  }
+  if (config['foreignNodes'] !== undefined) {
+    const nodesPath = `${basePath}.foreignNodes`;
+    const nodes = config['foreignNodes'];
+    outcomes.push(
+      ...parseProperty(foreignNodesSchema.nodes, nodes, nodesPath),
+      ...pathDuplicates(nodes, nodesPath),
+      ...familyOutcomes(nodes, nodesPath)
+    );
+  }
+  return outcomes;
+}

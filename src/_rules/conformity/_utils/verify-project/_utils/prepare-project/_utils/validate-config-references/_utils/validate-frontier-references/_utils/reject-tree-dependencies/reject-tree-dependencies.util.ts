@@ -4,15 +4,19 @@ import type {
   TOwnedOrigin,
   TReferenceContext,
   TScopeBinding,
-} from '../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+} from '../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 import { createOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 
-export const rejectTreeDependencies = (() => {
+export function rejectTreeDependencies(
+  dependencies: readonly TFAFTreeDependency[],
+  basePath: string,
+  scope: TScopeBinding,
+  context: TReferenceContext
+): readonly TConfigOutcome[] {
   const rejectTreeDependencySource = (
     path: string,
     propertyPath: string,
-    scope: TScopeBinding,
     owned: TOwnedOrigin | undefined
   ): readonly TConfigOutcome[] => {
     if (owned === undefined) {
@@ -40,9 +44,7 @@ export const rejectTreeDependencies = (() => {
   const rejectTreeDependencyEnd = (
     path: string,
     propertyPath: string,
-    endKind: 'source' | 'target',
-    scope: TScopeBinding,
-    context: TReferenceContext
+    endKind: 'source' | 'target'
   ): readonly TConfigOutcome[] => {
     const id = context.inventory.pathToId.get(path);
     if (id === undefined) {
@@ -76,7 +78,7 @@ export const rejectTreeDependencies = (() => {
 
     const owned = context.ownedOrigins.get(path);
     if (endKind === 'source') {
-      return rejectTreeDependencySource(path, propertyPath, scope, owned);
+      return rejectTreeDependencySource(path, propertyPath, owned);
     }
     if (owned !== undefined || item.treeOrigin === path) {
       return [];
@@ -91,27 +93,13 @@ export const rejectTreeDependencies = (() => {
 
   const rejectOneTreeDependency = (
     dependency: TFAFTreeDependency,
-    prefix: string,
-    scope: TScopeBinding,
-    context: TReferenceContext
+    prefix: string
   ): readonly TConfigOutcome[] => {
     const fromOutcomes = dependency.from.flatMap((path, index) =>
-      rejectTreeDependencyEnd(
-        path,
-        `${prefix}.from[${index}]`,
-        'source',
-        scope,
-        context
-      )
+      rejectTreeDependencyEnd(path, `${prefix}.from[${index}]`, 'source')
     );
     const toOutcomes = dependency.to.flatMap((path, index) =>
-      rejectTreeDependencyEnd(
-        path,
-        `${prefix}.to[${index}]`,
-        'target',
-        scope,
-        context
-      )
+      rejectTreeDependencyEnd(path, `${prefix}.to[${index}]`, 'target')
     );
     const selfOutcomes: TConfigOutcome[] = [];
     for (const [index, path] of dependency.to.entries()) {
@@ -127,19 +115,7 @@ export const rejectTreeDependencies = (() => {
     return [...fromOutcomes, ...toOutcomes, ...selfOutcomes];
   };
 
-  return function rejectTreeDependencies(
-    dependencies: readonly TFAFTreeDependency[],
-    basePath: string,
-    scope: TScopeBinding,
-    context: TReferenceContext
-  ): readonly TConfigOutcome[] {
-    return dependencies.flatMap((dependency, index) =>
-      rejectOneTreeDependency(
-        dependency,
-        `${basePath}[${index}]`,
-        scope,
-        context
-      )
-    );
-  };
-})();
+  return dependencies.flatMap((dependency, index) =>
+    rejectOneTreeDependency(dependency, `${basePath}[${index}]`)
+  );
+}

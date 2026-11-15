@@ -210,7 +210,7 @@ describe('validateConfigFormat', () => {
                   ['_schemas'],
                   ['_utils'],
                   ['_norms'],
-                  ['_adapters'],
+                  ['_apis'],
                   ['_services'],
                   ['_stores'],
                   ['_rules'],
@@ -255,7 +255,7 @@ describe('validateConfigFormat', () => {
               { category: '_schemas', name: 'schema' },
               { category: '_utils', name: 'util' },
               { category: '_norms', name: 'norm' },
-              { category: '_adapters', name: 'adapter' },
+              { category: '_apis', name: 'api' },
               { category: '_services', name: 'service' },
               { category: '_stores', name: 'store' },
               { category: '_rules', name: 'rule' },
@@ -890,10 +890,10 @@ describe('validateConfigFormat', () => {
         return;
       }
       const outcome = result.outcomes.find(
-        (o) =>
-          o.family === 'configuration' &&
-          o.constraint === constraint &&
-          o.propertyPath === propertyPath
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.constraint === constraint &&
+          outcome.propertyPath === propertyPath
       );
       expect(outcome).toBeDefined();
       expect(outcome?.element).toBe(propertyPath);
@@ -941,16 +941,16 @@ describe('validateConfigFormat', () => {
     }
     expect(
       result.outcomes.some(
-        (o) =>
-          o.family === 'configuration' &&
-          o.constraint === 'configuration/explicit-undefined' &&
-          o.propertyPath === 'faf.common'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.constraint === 'configuration/explicit-undefined' &&
+          outcome.propertyPath === 'faf.common'
       )
     ).toBe(true);
     const outcome = result.outcomes.find(
-      (o) =>
-        o.family === 'configuration' &&
-        o.constraint === 'configuration/explicit-undefined'
+      (outcome) =>
+        outcome.family === 'configuration' &&
+        outcome.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
     if (outcome?.family !== 'configuration') {
@@ -975,16 +975,16 @@ describe('validateConfigFormat', () => {
     }
     expect(
       result.outcomes.some(
-        (o) =>
-          o.family === 'configuration' &&
-          o.constraint === 'configuration/explicit-undefined' &&
-          o.propertyPath === 'faf'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.constraint === 'configuration/explicit-undefined' &&
+          outcome.propertyPath === 'faf'
       )
     ).toBe(true);
     const outcome = result.outcomes.find(
-      (o) =>
-        o.family === 'configuration' &&
-        o.constraint === 'configuration/explicit-undefined'
+      (outcome) =>
+        outcome.family === 'configuration' &&
+        outcome.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
     if (outcome?.family !== 'configuration') {
@@ -1009,14 +1009,14 @@ describe('validateConfigFormat', () => {
     }
     expect(
       result.outcomes.some(
-        (o) =>
-          o.family === 'configuration' &&
-          o.constraint === 'configuration/explicit-undefined' &&
-          o.propertyPath === 'faf.locals[0].roles'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.constraint === 'configuration/explicit-undefined' &&
+          outcome.propertyPath === 'faf.locals[0].roles'
       )
     ).toBe(true);
     const outcome = result.outcomes.find(
-      (o) => o.constraint === 'configuration/explicit-undefined'
+      (outcome) => outcome.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
@@ -1040,14 +1040,14 @@ describe('validateConfigFormat', () => {
     }
     expect(
       result.outcomes.some(
-        (o) =>
-          o.family === 'configuration' &&
-          o.constraint === 'configuration/explicit-undefined' &&
-          o.propertyPath === 'faf.common.roles'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.constraint === 'configuration/explicit-undefined' &&
+          outcome.propertyPath === 'faf.common.roles'
       )
     ).toBe(true);
     const outcome = result.outcomes.find(
-      (o) => o.constraint === 'configuration/explicit-undefined'
+      (outcome) => outcome.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');
@@ -1084,40 +1084,44 @@ describe('validateConfigFormat', () => {
     expect(result.outcomes.length).toBeGreaterThanOrEqual(6);
     expect(
       result.outcomes.some(
-        (o) => o.family === 'configuration' && o.propertyPath === 'extraRoot'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.propertyPath === 'extraRoot'
       )
     ).toBe(true);
     expect(
       result.outcomes.some(
-        (o) => o.family === 'configuration' && o.propertyPath === 'faf.extraFaf'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.propertyPath === 'faf.extraFaf'
       )
     ).toBe(true);
     expect(
       result.outcomes.some(
-        (o) =>
-          o.family === 'configuration' &&
-          o.propertyPath === 'faf.common.rootLayers'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.propertyPath === 'faf.common.rootLayers'
       )
     ).toBe(true);
     expect(
       result.outcomes.some(
-        (o) =>
-          o.family === 'configuration' &&
-          o.propertyPath === 'faf.common.unknownInCommon'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.propertyPath === 'faf.common.unknownInCommon'
       )
     ).toBe(true);
     expect(
       result.outcomes.some(
-        (o) =>
-          o.family === 'configuration' &&
-          o.propertyPath === 'faf.locals[0].aliases'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.propertyPath === 'faf.locals[0].aliases'
       )
     ).toBe(true);
     expect(
       result.outcomes.some(
-        (o) =>
-          o.family === 'configuration' &&
-          o.propertyPath === 'faf.locals[0].extraLocal'
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.propertyPath === 'faf.locals[0].extraLocal'
       )
     ).toBe(true);
     for (const outcome of result.outcomes) {
@@ -1148,8 +1152,8 @@ describe('validateConfigFormat', () => {
         return;
       }
       const conflicts = result.outcomes.filter(
-        (o) =>
-          o.constraint ===
+        (outcome) =>
+          outcome.constraint ===
           'configuration/horizontal-hierarchy-model-category-conflict'
       );
       expect(conflicts).toHaveLength(1);
@@ -1191,14 +1195,14 @@ describe('validateConfigFormat', () => {
         return;
       }
       const conflicts = result.outcomes.filter(
-        (o) =>
-          o.family === 'configuration' &&
-          o.constraint ===
+        (outcome) =>
+          outcome.family === 'configuration' &&
+          outcome.constraint ===
             'configuration/horizontal-hierarchy-model-category-conflict'
       );
       expect(
-        conflicts.map((c) =>
-          c.family === 'configuration' ? c.propertyPath : ''
+        conflicts.map((conflict) =>
+          conflict.family === 'configuration' ? conflict.propertyPath : ''
         )
       ).toEqual([
         'faf.common.horizontalHierarchyModels[0][0][0]',
@@ -1223,8 +1227,8 @@ describe('validateConfigFormat', () => {
       expect(inheritedRolesConflict.ok).toBe(false);
       if (!inheritedRolesConflict.ok) {
         expect(
-          inheritedRolesConflict.outcomes.map((o) =>
-            o.family === 'configuration' ? o.propertyPath : ''
+          inheritedRolesConflict.outcomes.map((outcome) =>
+            outcome.family === 'configuration' ? outcome.propertyPath : ''
           )
         ).toEqual(['faf.locals[0].horizontalHierarchyModels[0][1][0]']);
       }
@@ -1267,9 +1271,9 @@ describe('validateConfigFormat', () => {
       }
       expect(
         result.outcomes.some(
-          (o) =>
-            o.constraint === 'configuration/scope-mismatch' &&
-            o.propertyPath === 'faf.common.horizontalHierarchies'
+          (outcome) =>
+            outcome.constraint === 'configuration/scope-mismatch' &&
+            outcome.propertyPath === 'faf.common.horizontalHierarchies'
         )
       ).toBe(true);
     });

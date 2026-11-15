@@ -10,12 +10,12 @@ import {
   STATE_ORGANIZER,
 } from './collect-layer-surface.constant.js';
 
-export const collectLayerSurface = (() => {
-  const isExposedLayerNode = (
-    path: string,
-    originPath: string,
-    taxonomy: TTaxonomyModel
-  ): boolean => {
+export function collectLayerSurface(
+  originPath: string,
+  taxonomy: TTaxonomyModel,
+  inventory: TInventory
+): readonly string[] {
+  const isExposedLayerNode = (path: string): boolean => {
     const prefix = originPath === '.' ? '' : `${originPath}/`;
     if (!path.startsWith(prefix)) {
       return false;
@@ -43,21 +43,15 @@ export const collectLayerSurface = (() => {
     return false;
   };
 
-  return function collectLayerSurface(
-    originPath: string,
-    taxonomy: TTaxonomyModel,
-    inventory: TInventory
-  ): readonly string[] {
-    const nodes: string[] = [];
-    for (const item of inventory.items) {
-      if (item.treeOrigin !== originPath) {
-        continue;
-      }
-      if (isExposedLayerNode(item.path, originPath, taxonomy)) {
-        nodes.push(item.path);
-      }
+  const nodes: string[] = [];
+  for (const item of inventory.items) {
+    if (item.treeOrigin !== originPath) {
+      continue;
     }
-    nodes.sort(compareOrdinal);
-    return nodes;
-  };
-})();
+    if (isExposedLayerNode(item.path)) {
+      nodes.push(item.path);
+    }
+  }
+  nodes.sort(compareOrdinal);
+  return nodes;
+}

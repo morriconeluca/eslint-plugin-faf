@@ -3,29 +3,24 @@ import type { TConfigOutcome } from '../../../../../../../../../../../../_src@sh
 import type {
   TReferenceContext,
   TScopeBinding,
-} from '../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+} from '../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 import { createOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
-import { referenceScope } from '../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+import { rejectReferenceScope } from '../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
-export const rejectExternalDependencies = (() => {
-  const isAliasReference = (
-    path: string,
-    prefixes: readonly string[]
-  ): boolean =>
-    prefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
-
-  const isLibraryPath = (path: string): boolean =>
-    path.split('/').includes('node_modules');
-
+export function rejectExternalDependencies(
+  dependencies: readonly TFAFExternalDependency[],
+  basePath: string,
+  scope: TScopeBinding,
+  context: TReferenceContext
+): readonly TConfigOutcome[] {
   const rejectExternalSource = (
     path: string,
-    propertyPath: string,
-    scope: TScopeBinding,
-    context: TReferenceContext
+    propertyPath: string
   ): readonly TConfigOutcome[] =>
-    referenceScope.rejectFileInScope({
+    rejectReferenceScope({
       context,
+      expectedKind: 'file',
       label: 'External dependency source',
       path,
       propertyPath,
@@ -34,10 +29,13 @@ export const rejectExternalDependencies = (() => {
 
   const rejectExternalTarget = (
     path: string,
-    propertyPath: string,
-    context: TReferenceContext
+    propertyPath: string
   ): readonly TConfigOutcome[] => {
-    if (isAliasReference(path, context.aliasPrefixes)) {
+    if (
+      context.aliasPrefixes.some(
+        (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+      )
+    ) {
       return [
         createOutcome('configuration/external-dependency-to-alias', {
           element: path,
@@ -45,7 +43,7 @@ export const rejectExternalDependencies = (() => {
         }),
       ];
     }
-    if (isLibraryPath(path)) {
+    if (path.split('/').includes('node_modules')) {
       return [
         createOutcome('configuration/external-dependency-to-library', {
           element: path,
@@ -94,27 +92,15 @@ export const rejectExternalDependencies = (() => {
     return [];
   };
 
-  return function rejectExternalDependencies(
-    dependencies: readonly TFAFExternalDependency[],
-    basePath: string,
-    scope: TScopeBinding,
-    context: TReferenceContext
-  ): readonly TConfigOutcome[] {
-    return dependencies.flatMap((dependency, index) => {
-      const prefix = `${basePath}[${index}]`;
-      return [
-        ...dependency.from.flatMap((path, fromIndex) =>
-          rejectExternalSource(
-            path,
-            `${prefix}.from[${fromIndex}]`,
-            scope,
-            context
-          )
-        ),
-        ...dependency.to.flatMap((path, toIndex) =>
-          rejectExternalTarget(path, `${prefix}.to[${toIndex}]`, context)
-        ),
-      ];
-    });
-  };
-})();
+  return dependencies.flatMap((dependency, index) => {
+    const prefix = `${basePath}[${index}]`;
+    return [
+      ...dependency.from.flatMap((path, fromIndex) =>
+        rejectExternalSource(path, `${prefix}.from[${fromIndex}]`)
+      ),
+      ...dependency.to.flatMap((path, toIndex) =>
+        rejectExternalTarget(path, `${prefix}.to[${toIndex}]`)
+      ),
+    ];
+  });
+}

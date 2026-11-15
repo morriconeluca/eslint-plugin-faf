@@ -44,7 +44,7 @@ const createTree = (
   ]
 ): TEffectiveTree => ({
   catalog: {
-    categoryToRole: new Map(roles.map((r) => [r.category, r])),
+    categoryToRole: new Map(roles.map((role) => [role.category, role])),
     extensionToRole: new Map(),
     roles,
     subGraphRoles: ['spec', 'story'],
@@ -759,14 +759,26 @@ describe('verifySymbolUniqueness', () => {
         modules: { ...base.modules, records },
         taxonomy: {
           ...base.taxonomy,
-          byItemId: new Map(classifications.map((c) => [c.itemId, c])),
-          byPath: new Map(classifications.map((c) => [c.path, c])),
+          byItemId: new Map(
+            classifications.map((classification) => [
+              classification.itemId,
+              classification,
+            ])
+          ),
+          byPath: new Map(
+            classifications.map((classification) => [
+              classification.path,
+              classification,
+            ])
+          ),
           classifications,
         },
       };
 
       const outcomes = verifySymbolUniqueness(model);
-      expect(outcomes.map((o) => [o.element, o.constraint])).toEqual([
+      expect(
+        outcomes.map((outcome) => [outcome.element, outcome.constraint])
+      ).toEqual([
         [uncatalogedPath, 'symbol/symbol-uniqueness'],
         [badMasterPath, 'symbol/master-symbol'],
         [unauthorizedNodePath, 'symbol/symbol-uniqueness'],

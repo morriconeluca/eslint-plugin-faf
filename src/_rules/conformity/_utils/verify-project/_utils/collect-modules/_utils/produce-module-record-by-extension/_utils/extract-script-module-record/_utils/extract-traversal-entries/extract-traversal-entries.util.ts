@@ -17,27 +17,18 @@ import { isAstNode } from './_extract-traversal-entries@shared/_utils/is-ast-nod
 import { doesNodeDeclareRequire } from './_utils/does-node-declare-require/index.js';
 import { handleSpecificNode } from './_utils/handle-specific-node/index.js';
 
-export const extractTraversalEntries = (() => {
-  const visitChildren = (
-    node: TAstNode,
-    visitor: (child: TAstNode) => void
-  ): void => {
-    const elements = Object.values(node).flat();
-    for (const item of elements) {
-      if (isAstNode(item)) {
-        visitor(item);
-      }
-    }
-  };
+export function extractTraversalEntries(
+  program: Program,
+  locator: TSourceLocator
+): TTraversalResult {
+  const inlineImports: TModuleImport[] = [];
+  const unsupportedSyntaxes: TUnsupportedSyntax[] = [];
 
   const traverseAst = (
     node: Program | TAstNode,
     isRequireShadowed: boolean,
     isModuleShadowed: boolean,
-    isExportsShadowed: boolean,
-    locator: TSourceLocator,
-    inlineImports: TModuleImport[],
-    unsupportedSyntaxes: TUnsupportedSyntax[]
+    isExportsShadowed: boolean
   ): void => {
     const astNode: TAstNode = { ...node, type: node.type };
     const isNextRequireShadowed =
@@ -57,39 +48,22 @@ export const extractTraversalEntries = (() => {
       unsupportedSyntaxes
     );
 
-    visitChildren(astNode, (child) => {
-      traverseAst(
-        child,
-        isNextRequireShadowed,
-        isNextModuleShadowed,
-        isNextExportsShadowed,
-        locator,
-        inlineImports,
-        unsupportedSyntaxes
-      );
-    });
+    for (const item of Object.values(astNode).flat()) {
+      if (isAstNode(item)) {
+        traverseAst(
+          item,
+          isNextRequireShadowed,
+          isNextModuleShadowed,
+          isNextExportsShadowed
+        );
+      }
+    }
   };
 
-  return function extractTraversalEntries(
-    program: Program,
-    locator: TSourceLocator
-  ): TTraversalResult {
-    const inlineImports: TModuleImport[] = [];
-    const unsupportedSyntaxes: TUnsupportedSyntax[] = [];
+  traverseAst(program, false, false, false);
 
-    traverseAst(
-      program,
-      false,
-      false,
-      false,
-      locator,
-      inlineImports,
-      unsupportedSyntaxes
-    );
-
-    return {
-      inlineImports,
-      unsupportedSyntaxes,
-    };
+  return {
+    inlineImports,
+    unsupportedSyntaxes,
   };
-})();
+}

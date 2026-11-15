@@ -14,27 +14,19 @@ import {
 } from '../../../../_classify-taxonomy@shared/_constants/classification-constraints.constant.js';
 import { isDescendantOrSelf } from '../../_select-foreign-nodes@shared/_utils/is-descendant-or-self/index.js';
 
-export const collectForeignFamilies = (() => {
-  const compileFamilyMatchers = (
-    patterns: readonly string[]
-  ): readonly TForeignPatternMatcher[] => {
-    const matchers: TForeignPatternMatcher[] = [];
-    for (const pattern of patterns) {
-      const compiled = compileForeignPattern(pattern);
-      if (compiled.ok) {
-        matchers.push(compiled.matcher);
-      }
-    }
-    return matchers;
-  };
+export function collectForeignFamilies(
+  inventory: TInventory,
+  treeItems: readonly TInventoryItem[],
+  originItem: TInventoryItem,
+  families: readonly TEffectiveForeignFamily[]
+): TCollectedForeignFamilies {
+  const nodeItemIds = new Set<number>();
+  const nodePaths = new Set<string>();
 
   const recordScopeMatches = (
-    treeItems: readonly TInventoryItem[],
     scopeItem: TInventoryItem,
     scopePath: string,
-    matchers: readonly TForeignPatternMatcher[],
-    nodeItemIds: Set<number>,
-    nodePaths: Set<string>
+    matchers: readonly TForeignPatternMatcher[]
   ): void => {
     for (const item of treeItems) {
       const prefix = `${scopePath}${SLASH}`;
@@ -56,14 +48,16 @@ export const collectForeignFamilies = (() => {
   };
 
   const collectFamilyMatches = (
-    inventory: TInventory,
-    treeItems: readonly TInventoryItem[],
-    originItem: TInventoryItem,
     scopePaths: readonly string[],
-    matchers: readonly TForeignPatternMatcher[],
-    nodeItemIds: Set<number>,
-    nodePaths: Set<string>
+    patterns: readonly string[]
   ): void => {
+    const matchers: TForeignPatternMatcher[] = [];
+    for (const pattern of patterns) {
+      const compiled = compileForeignPattern(pattern);
+      if (compiled.ok) {
+        matchers.push(compiled.matcher);
+      }
+    }
     for (const scopePath of scopePaths) {
       const scopeItemId = inventory.pathToId.get(scopePath);
       if (scopeItemId === undefined) {
@@ -72,39 +66,14 @@ export const collectForeignFamilies = (() => {
       const scopeItem = inventory.items[scopeItemId];
       assertInvariant(scopeItem !== undefined, 'scope id is indexed');
       if (isDescendantOrSelf(scopeItem, originItem)) {
-        recordScopeMatches(
-          treeItems,
-          scopeItem,
-          scopePath,
-          matchers,
-          nodeItemIds,
-          nodePaths
-        );
+        recordScopeMatches(scopeItem, scopePath, matchers);
       }
     }
   };
 
-  return function collectForeignFamilies(
-    inventory: TInventory,
-    treeItems: readonly TInventoryItem[],
-    originItem: TInventoryItem,
-    families: readonly TEffectiveForeignFamily[]
-  ): TCollectedForeignFamilies {
-    const nodeItemIds = new Set<number>();
-    const nodePaths = new Set<string>();
+  for (const family of families) {
+    collectFamilyMatches(family.paths, family.patterns);
+  }
 
-    for (const family of families) {
-      collectFamilyMatches(
-        inventory,
-        treeItems,
-        originItem,
-        family.paths,
-        compileFamilyMatchers(family.patterns),
-        nodeItemIds,
-        nodePaths
-      );
-    }
-
-    return { nodeItemIds, nodePaths };
-  };
-})();
+  return { nodeItemIds, nodePaths };
+}

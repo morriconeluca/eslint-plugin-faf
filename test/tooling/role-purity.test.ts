@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import eslintConfig from '../../eslint.config.js';
+import eslintConfig, { HOST_IO_BOUNDARY_FILES } from '../../eslint.config.js';
 
 const fixtureRoot = path.resolve(
   import.meta.dirname,
@@ -247,5 +247,20 @@ describe('role purity', { timeout: 30_000 }, () => {
       )
     );
     expect(errors).toEqual([]);
+  });
+
+  it('requires every HOST_IO_BOUNDARY_FILES entry to exist on disk and use a restricted host effect or process', () => {
+    const repositoryRoot = path.resolve(import.meta.dirname, '../..');
+    const hostEffectPattern =
+      /from\s+['"](?:node:fs|fs|node:worker_threads|worker_threads|oxc-resolver)['"]|\bprocess\b/;
+    const invalidEntries = HOST_IO_BOUNDARY_FILES.filter((relativePath) => {
+      const fullPath = path.resolve(repositoryRoot, relativePath);
+      if (!fs.existsSync(fullPath)) {
+        return true;
+      }
+      const source = fs.readFileSync(fullPath, 'utf8');
+      return !hostEffectPattern.test(source);
+    });
+    expect(invalidEntries).toEqual([]);
   });
 });

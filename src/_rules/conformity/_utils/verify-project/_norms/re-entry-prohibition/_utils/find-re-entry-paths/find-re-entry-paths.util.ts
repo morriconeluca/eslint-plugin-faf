@@ -18,10 +18,7 @@ export function findReEntryPaths(
   const { inventory } = model.basis;
   const getTreeOrigin = (path: string): null | string => {
     const id = inventory.pathToId.get(path);
-    if (id === undefined) {
-      return null;
-    }
-    const item = inventory.items[id];
+    const item = id === undefined ? undefined : inventory.items[id];
     return item?.treeOrigin ?? null;
   };
 
@@ -164,8 +161,11 @@ export function findReEntryPaths(
       candidate: TCandidatePath,
       existing: TCandidatePath
     ): boolean => {
-      if (candidate.distance !== existing.distance) {
-        return candidate.distance < existing.distance;
+      if (candidate.distance < existing.distance) {
+        return true;
+      }
+      if (candidate.distance > existing.distance) {
+        return false;
       }
       const minLength = Math.min(candidate.chain.length, existing.chain.length);
       for (let index = 0; index < minLength; index += 1) {
@@ -204,8 +204,11 @@ export function findReEntryPaths(
       candidate: TSearchState,
       incumbent: TSearchState
     ): boolean => {
-      if (candidate.distance !== incumbent.distance) {
-        return candidate.distance < incumbent.distance;
+      if (candidate.distance < incumbent.distance) {
+        return true;
+      }
+      if (candidate.distance > incumbent.distance) {
+        return false;
       }
       const minLength = Math.min(
         candidate.chain.length,
@@ -225,9 +228,6 @@ export function findReEntryPaths(
 
     const queue: TPriorityQueue = {
       pop: (): TSearchState | undefined => {
-        if (states.length === 0) {
-          return undefined;
-        }
         let bestIndex = 0;
         for (let index = 1; index < states.length; index += 1) {
           const current = states[index];

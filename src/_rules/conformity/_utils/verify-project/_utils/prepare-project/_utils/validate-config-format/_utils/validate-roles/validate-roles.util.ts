@@ -19,7 +19,14 @@ import {
 } from './validate-roles.constant.js';
 import { rolesSchema } from './validate-roles.schema.js';
 
-export const validateRoles = (() => {
+export function validateRoles(
+  roles: unknown,
+  basePath: string
+): TRolesValidationResult & { readonly outcomes: readonly TConfigOutcome[] } {
+  if (roles === undefined) {
+    return { extensionEntries: [], outcomes: [], roleEntries: [] };
+  }
+
   const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -59,15 +66,6 @@ export const validateRoles = (() => {
     return outcomes;
   };
 
-  const readIdentity = (
-    record: Record<string, unknown>
-  ): null | { category: string; name: string } => {
-    const { category, name } = record;
-    const isName = typeof name === 'string' && name.length > 0;
-    const isCategory = typeof category === 'string' && category.length > 0;
-    return isName && isCategory ? { category, name } : null;
-  };
-
   const recordExtension = (
     extension: unknown,
     extensionPath: string,
@@ -104,7 +102,10 @@ export const validateRoles = (() => {
     extensionEntries: TExtensionEntry[],
     outcomes: TConfigOutcome[]
   ): void => {
-    const identity = readIdentity(record);
+    const { category, name } = record;
+    const hasName = typeof name === 'string' && name.length > 0;
+    const hasCategory = typeof category === 'string' && category.length > 0;
+    const identity = hasName && hasCategory ? { category, name } : null;
     if (identity !== null) {
       roleEntries.push({ ...identity, path: rolePath });
     }
@@ -154,7 +155,7 @@ export const validateRoles = (() => {
   };
 
   const collectRoles = (
-    roles: readonly unknown[],
+    roleList: readonly unknown[],
     rolesPath: string
   ): TRolesValidationResult & {
     readonly outcomes: readonly TConfigOutcome[];
@@ -162,7 +163,7 @@ export const validateRoles = (() => {
     const roleEntries: TRoleEntry[] = [];
     const extensionEntries: TExtensionEntry[] = [];
     const outcomes: TConfigOutcome[] = [];
-    for (const [index, item] of roles.entries()) {
+    for (const [index, item] of roleList.entries()) {
       const itemPath = `${rolesPath}[${index}]`;
       if (Array.isArray(item)) {
         collectGroup(item, itemPath, roleEntries, extensionEntries, outcomes);
@@ -174,26 +175,18 @@ export const validateRoles = (() => {
     return { extensionEntries, outcomes, roleEntries };
   };
 
-  return function validateRoles(
-    roles: unknown,
-    basePath: string
-  ): TRolesValidationResult & { readonly outcomes: readonly TConfigOutcome[] } {
-    if (roles === undefined) {
-      return { extensionEntries: [], outcomes: [], roleEntries: [] };
-    }
-    const rolesPath = `${basePath}.roles`;
-    const parsed = rolesSchema.safeParse(roles);
-    const formOutcomes = parsed.success
-      ? []
-      : translateConfigIssues(parsed.error.issues, roles, rolesPath);
-    if (!Array.isArray(roles)) {
-      return { extensionEntries: [], outcomes: formOutcomes, roleEntries: [] };
-    }
-    const collected = collectRoles(roles, rolesPath);
-    return {
-      extensionEntries: collected.extensionEntries,
-      outcomes: [...formOutcomes, ...collected.outcomes],
-      roleEntries: collected.roleEntries,
-    };
+  const rolesPath = `${basePath}.roles`;
+  const parsed = rolesSchema.safeParse(roles);
+  const formOutcomes = parsed.success
+    ? []
+    : translateConfigIssues(parsed.error.issues, roles, rolesPath);
+  if (!Array.isArray(roles)) {
+    return { extensionEntries: [], outcomes: formOutcomes, roleEntries: [] };
+  }
+  const collected = collectRoles(roles, rolesPath);
+  return {
+    extensionEntries: collected.extensionEntries,
+    outcomes: [...formOutcomes, ...collected.outcomes],
+    roleEntries: collected.roleEntries,
   };
-})();
+}

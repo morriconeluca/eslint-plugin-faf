@@ -1,5 +1,3 @@
-import type { BindingPattern, BindingRestElement, Statement } from 'oxc-parser';
-
 import type { TAstNode } from '../../_extract-traversal-entries@shared/_types/traversal-entries.type.js';
 
 import {
@@ -9,91 +7,107 @@ import {
 } from '../../_extract-traversal-entries@shared/_constants/traversal-entries.constant.js';
 import { isAstNode } from '../../_extract-traversal-entries@shared/_utils/is-ast-node/index.js';
 
-export const doesNodeDeclareRequire = (() => {
-  const isStatement = (value: unknown): value is Statement => isAstNode(value);
-
-  const isBindingPattern = (
-    value: unknown
-  ): value is BindingPattern | BindingRestElement =>
-    isAstNode(value) && BINDING_PATTERN_TYPES.has(value.type);
-
-  const doesPatternBindRequire = (
-    pattern: BindingPattern | BindingRestElement,
-    name: string
-  ): boolean => {
-    let current: BindingPattern | BindingRestElement = pattern;
+export function doesNodeDeclareRequire(
+  node: TAstNode,
+  name: string = REQUIRE_NAME
+): boolean {
+  const doesPatternBindRequire = (pattern: TAstNode): boolean => {
+    let current = pattern;
     while (
       current.type === 'AssignmentPattern' ||
       current.type === 'RestElement'
     ) {
-      current =
-        current.type === 'AssignmentPattern' ? current.left : current.argument;
+      const inner =
+        current.type === 'AssignmentPattern'
+          ? current['left']
+          : current['argument'];
+      if (!isAstNode(inner)) {
+        return false;
+      }
+      current = inner;
     }
 
     if (current.type === 'Identifier') {
-      return current.name === name;
+      return current['name'] === name;
     }
 
     if (current.type === 'ArrayPattern') {
-      return current.elements.some(
-        (element) => element !== null && doesPatternBindRequire(element, name)
+      const elements = current['elements'];
+      return (
+        Array.isArray(elements) &&
+        elements.some(
+          (element) => isAstNode(element) && doesPatternBindRequire(element)
+        )
       );
     }
 
-    return current.properties.some((property) => {
-      const next =
-        property.type === 'Property' ? property.value : property.argument;
-      return doesPatternBindRequire(next, name);
-    });
+    const properties = current['properties'];
+    return (
+      Array.isArray(properties) &&
+      properties.some((property) => {
+        if (!isAstNode(property)) {
+          return false;
+        }
+        const next =
+          property.type === 'Property'
+            ? property['value']
+            : property['argument'];
+        return isAstNode(next) && doesPatternBindRequire(next);
+      })
+    );
   };
 
-  const doesTargetDeclareRequire = (
-    statement: Statement,
-    name: string
-  ): boolean => {
-    if (statement.type === 'TSModuleDeclaration') {
-      return 'name' in statement.id && statement.id.name === name;
-    }
-    if (
-      statement.type === 'ClassDeclaration' ||
-      statement.type === 'FunctionDeclaration' ||
-      statement.type === 'TSEnumDeclaration'
-    ) {
-      return statement.id?.name === name;
+  const doesTargetDeclareRequire = (statement: TAstNode): boolean => {
+    const targetTypes = new Set([
+      'ClassDeclaration',
+      'FunctionDeclaration',
+      'TSEnumDeclaration',
+      'TSModuleDeclaration',
+    ]);
+    if (targetTypes.has(statement.type)) {
+      const id = statement['id'];
+      return isAstNode(id) && id['name'] === name;
     }
     return false;
   };
 
-  const doesStatementDeclareRequire = (
-    statement: Statement,
-    name: string
-  ): boolean => {
+  const doesStatementDeclareRequire = (statement: TAstNode): boolean => {
     if (statement.type === 'ExportNamedDeclaration') {
-      return (
-        statement.declaration !== null &&
-        doesStatementDeclareRequire(statement.declaration, name)
-      );
+      const declaration = statement['declaration'];
+      return isAstNode(declaration) && doesStatementDeclareRequire(declaration);
     }
     if (statement.type === 'VariableDeclaration') {
-      return statement.declarations.some((declarator) =>
-        doesPatternBindRequire(declarator.id, name)
+      const declarations = statement['declarations'];
+      return (
+        Array.isArray(declarations) &&
+        declarations.some(
+          (declarator) =>
+            isAstNode(declarator) &&
+            isAstNode(declarator['id']) &&
+            doesPatternBindRequire(declarator['id'])
+        )
       );
     }
     if (statement.type === 'ImportDeclaration') {
-      return statement.specifiers.some(
-        (specifier) => specifier.local.name === name
+      const specifiers = statement['specifiers'];
+      return (
+        Array.isArray(specifiers) &&
+        specifiers.some(
+          (specifier) =>
+            isAstNode(specifier) &&
+            isAstNode(specifier['local']) &&
+            specifier['local']['name'] === name
+        )
       );
     }
     if (statement.type === 'TSImportEqualsDeclaration') {
-      return statement.id.name === name;
+      const id = statement['id'];
+      return isAstNode(id) && id['name'] === name;
     }
-    return doesTargetDeclareRequire(statement, name);
+    return doesTargetDeclareRequire(statement);
   };
 
-  const doesFunctionDeclareRequire = (
-    functionNode: TAstNode,
-    name: string
-  ): boolean => {
+  const doesFunctionDeclareRequire = (functionNode: TAstNode): boolean => {
     const id = functionNode['id'];
     if (isAstNode(id) && id['name'] === name) {
       return true;
@@ -103,7 +117,9 @@ export const doesNodeDeclareRequire = (() => {
       Array.isArray(parameters) &&
       parameters.some(
         (parameter) =>
-          isBindingPattern(parameter) && doesPatternBindRequire(parameter, name)
+          isAstNode(parameter) &&
+          BINDING_PATTERN_TYPES.has(parameter.type) &&
+          doesPatternBindRequire(parameter)
       )
     ) {
       return true;
@@ -112,39 +128,39 @@ export const doesNodeDeclareRequire = (() => {
     if (isAstNode(body)) {
       const inner = body['body'];
       if (Array.isArray(inner)) {
-        return inner
-          .filter(isStatement)
-          .some((statement) => doesStatementDeclareRequire(statement, name));
+        return inner.some(
+          (statement) =>
+            isAstNode(statement) && doesStatementDeclareRequire(statement)
+        );
       }
     }
     return false;
   };
 
-  return function doesNodeDeclareRequire(
-    node: TAstNode,
-    name: string = REQUIRE_NAME
-  ): boolean {
+  const doesTargetNodeDeclareRequire = (): boolean => {
     if (node.type === 'Program' || node.type === 'BlockStatement') {
       const body = node['body'];
       return (
         Array.isArray(body) &&
-        body
-          .filter(isStatement)
-          .some((statement) => doesStatementDeclareRequire(statement, name))
+        body.some(
+          (statement) =>
+            isAstNode(statement) && doesStatementDeclareRequire(statement)
+        )
       );
     }
-
     if (FUNCTION_AST_TYPES.has(node.type)) {
-      return doesFunctionDeclareRequire(node, name);
+      return doesFunctionDeclareRequire(node);
     }
-
     if (node.type === 'CatchClause') {
       const parameter = node['param'];
       return (
-        isBindingPattern(parameter) && doesPatternBindRequire(parameter, name)
+        isAstNode(parameter) &&
+        BINDING_PATTERN_TYPES.has(parameter.type) &&
+        doesPatternBindRequire(parameter)
       );
     }
-
     return false;
   };
-})();
+
+  return doesTargetNodeDeclareRequire();
+}

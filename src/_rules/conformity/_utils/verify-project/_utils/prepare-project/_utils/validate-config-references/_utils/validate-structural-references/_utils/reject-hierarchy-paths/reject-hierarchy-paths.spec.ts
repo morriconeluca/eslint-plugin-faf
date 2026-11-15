@@ -5,7 +5,7 @@ import type {
   TInventory,
   TInventoryItem,
 } from '../../../../../../../../_verify-project@shared/_types/verification-model.type.js';
-import type { TReferenceContext } from '../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+import type { TReferenceContext } from '../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 import { rejectHierarchyPaths } from './reject-hierarchy-paths.util.js';
 

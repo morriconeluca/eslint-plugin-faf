@@ -117,8 +117,39 @@ describe('scanCssAtImport', () => {
     expect(result.raw).toBe('reset');
     expect(result.nextIndex).toBe(13);
 
-    const interpolated = scanCssAtImport('@import #{$theme}/a.css;', 0, false);
-    expect(interpolated.raw).toBe('#{$theme}/a.css');
+    const cssMultiline = scanCssAtImport(
+      '@import "a.css"\n  screen;',
+      0,
+      false
+    );
+    expect(cssMultiline.raw).toBe('a.css');
+    expect(cssMultiline.nextIndex).toBe(25);
+
+    const sassUnclosed = scanCssAtImport(
+      '@import "unclosed\n@import "b"',
+      0,
+      true
+    );
+    expect(sassUnclosed.raw).toBe('unclosed');
+    expect(sassUnclosed.nextIndex).toBe(17);
+
+    const interpolated = scanCssAtImport(
+      '@import #{ $theme }/a.css;',
+      0,
+      false
+    );
+    expect(interpolated.raw).toBe('#{ $theme }/a.css');
+
+    const bareTrimmed = scanCssAtImport('@import theme.css  ;', 0, false);
+    expect(bareTrimmed.raw).toBe('theme.css');
+
+    const tabSeparated = scanCssAtImport('@import\t"tab.css";', 0, false);
+    expect(tabSeparated.raw).toBe('tab.css');
+    expect(tabSeparated.nextIndex).toBe(18);
+
+    const trailingSpacesAtEof = scanCssAtImport('@import   ', 0, false);
+    expect(trailingSpacesAtEof.raw).toBeUndefined();
+    expect(trailingSpacesAtEof.nextIndex).toBe(0);
 
     const invalidUrl = scanCssAtImport('@import url = bad;', 0, false);
     expect(invalidUrl.raw).toBe('');

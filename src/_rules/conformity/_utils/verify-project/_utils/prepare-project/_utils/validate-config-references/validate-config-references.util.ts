@@ -10,7 +10,7 @@ import { sortConfigOutcomes } from './_utils/sort-config-outcomes/index.js';
 import { validateAliasReferences } from './_utils/validate-alias-references/index.js';
 import { validateForeignReferences } from './_utils/validate-foreign-references/index.js';
 import { validateFrontierReferences } from './_utils/validate-frontier-references/index.js';
-import { validateRootReferences } from './_utils/validate-root-references/index.js';
+import { validateLocalRootFragments } from './_utils/validate-local-root-fragments/index.js';
 import { validateStructuralReferences } from './_utils/validate-structural-references/index.js';
 
 export function validateConfigReferences(
@@ -20,7 +20,7 @@ export function validateConfigReferences(
 ): readonly TConfigOutcome[] {
   const context = createReferenceContext(config, declarations, inventory);
   return sortConfigOutcomes([
-    ...validateRootReferences(config, context),
+    ...validateLocalRootFragments(config, context),
     ...validateForeignReferences(config, context),
     ...validateStructuralReferences(config, context),
     ...validateFrontierReferences(config, context),

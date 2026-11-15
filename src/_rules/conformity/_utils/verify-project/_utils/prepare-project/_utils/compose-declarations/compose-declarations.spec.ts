@@ -195,7 +195,7 @@ describe('composeDeclarations', () => {
     expect(result.value.aliases).toEqual([]);
     expect(result.value.trees).toHaveLength(3);
 
-    const origins = result.value.trees.map((t) => t.originPath);
+    const origins = result.value.trees.map((tree) => tree.originPath);
     expect(origins).toEqual(['packages/a/src', 'packages/b/src', 'app']);
 
     for (const tree of result.value.trees) {
@@ -269,7 +269,7 @@ describe('composeDeclarations', () => {
     }
 
     const [tree] = result.value.trees;
-    const role = tree?.catalog.roles.find((r) => r.name === 'service');
+    const role = tree?.catalog.roles.find((role) => role.name === 'service');
     expect(role?.allowMultipleSymbols).toBe(false);
   });
 
@@ -467,10 +467,12 @@ describe('composeDeclarations', () => {
     }
 
     const [tree] = result.value.trees;
-    const font = tree?.catalog.roles.find((r) => r.name === 'font');
-    const image = tree?.catalog.roles.find((r) => r.name === 'image');
-    const type = tree?.catalog.roles.find((r) => r.name === 'type');
-    const component = tree?.catalog.roles.find((r) => r.name === 'component');
+    const font = tree?.catalog.roles.find((role) => role.name === 'font');
+    const image = tree?.catalog.roles.find((role) => role.name === 'image');
+    const type = tree?.catalog.roles.find((role) => role.name === 'type');
+    const component = tree?.catalog.roles.find(
+      (role) => role.name === 'component'
+    );
 
     expect(font?.rank).toBe(0);
     expect(image?.rank).toBe(0);
@@ -561,10 +563,10 @@ describe('composeDeclarations', () => {
     }
 
     const clientTree = result.value.trees.find(
-      (t) => t.originPath === 'client/src'
+      (tree) => tree.originPath === 'client/src'
     );
     const serverTree = result.value.trees.find(
-      (t) => t.originPath === 'server/src'
+      (tree) => tree.originPath === 'server/src'
     );
 
     expect(clientTree?.originKind).toBe('root-fragment');
@@ -596,8 +598,12 @@ describe('composeDeclarations', () => {
       return;
     }
 
-    const tree1 = result.value.trees.find((t) => t.originPath === 'tree1');
-    const tree2 = result.value.trees.find((t) => t.originPath === 'tree2');
+    const tree1 = result.value.trees.find(
+      (tree) => tree.originPath === 'tree1'
+    );
+    const tree2 = result.value.trees.find(
+      (tree) => tree.originPath === 'tree2'
+    );
 
     expect(tree1?.catalog.roles[0]?.form).toBe('fragments');
     expect(tree2?.catalog.roles[0]?.form).toBe('category-nodes');
@@ -692,7 +698,7 @@ describe('composeDeclarations', () => {
       return;
     }
 
-    const treeA = result.value.trees.find((t) => t.originPath === 'a');
+    const treeA = result.value.trees.find((tree) => tree.originPath === 'a');
     expect(treeA?.treeDependencyPairs).toEqual([
       { from: 'a', to: 'c' },
       { from: 'a', to: 'd' },
@@ -724,8 +730,12 @@ describe('composeDeclarations', () => {
       return;
     }
 
-    const appTree = result.value.trees.find((t) => t.originPath === 'app');
-    const libraryTree = result.value.trees.find((t) => t.originPath === 'lib');
+    const appTree = result.value.trees.find(
+      (tree) => tree.originPath === 'app'
+    );
+    const libraryTree = result.value.trees.find(
+      (tree) => tree.originPath === 'lib'
+    );
 
     expect(appTree?.publicRootNodes).toEqual(['app/main.ts']);
     expect(libraryTree?.publicRootNodes).toEqual([]);
@@ -751,20 +761,32 @@ describe('composeDeclarations', () => {
       expect(catalog.topRank).toBe(14);
       expect(catalog.subGraphRoles).toEqual(['spec', 'story']);
 
-      expect(catalog.roles.find((r) => r.name === 'font')?.rank).toBe(0);
-      expect(catalog.roles.find((r) => r.name === 'image')?.rank).toBe(0);
-      expect(catalog.roles.find((r) => r.name === 'style')?.rank).toBe(1);
-      expect(catalog.roles.find((r) => r.name === 'constant')?.rank).toBe(2);
-      expect(catalog.roles.find((r) => r.name === 'recipe')?.rank).toBe(3);
-      expect(catalog.roles.find((r) => r.name === 'schema')?.rank).toBe(4);
-      expect(catalog.roles.find((r) => r.name === 'type')?.rank).toBe(5);
-      expect(catalog.roles.find((r) => r.name === 'mock')?.rank).toBe(6);
-      expect(catalog.roles.find((r) => r.name === 'config')?.rank).toBe(7);
-      expect(catalog.roles.find((r) => r.name === 'util')?.rank).toBe(8);
-      expect(catalog.roles.find((r) => r.name === 'class')?.rank).toBe(9);
-      expect(catalog.roles.find((r) => r.name === 'factory')?.rank).toBe(10);
-      expect(catalog.roles.find((r) => r.name === 'instance')?.rank).toBe(11);
-      expect(catalog.roles.find((r) => r.name === 'hook')?.rank).toBe(12);
+      expect(catalog.roles.find((role) => role.name === 'font')?.rank).toBe(0);
+      expect(catalog.roles.find((role) => role.name === 'image')?.rank).toBe(0);
+      expect(catalog.roles.find((role) => role.name === 'style')?.rank).toBe(1);
+      expect(catalog.roles.find((role) => role.name === 'constant')?.rank).toBe(
+        2
+      );
+      expect(catalog.roles.find((role) => role.name === 'recipe')?.rank).toBe(
+        3
+      );
+      expect(catalog.roles.find((role) => role.name === 'schema')?.rank).toBe(
+        4
+      );
+      expect(catalog.roles.find((role) => role.name === 'type')?.rank).toBe(5);
+      expect(catalog.roles.find((role) => role.name === 'mock')?.rank).toBe(6);
+      expect(catalog.roles.find((role) => role.name === 'config')?.rank).toBe(
+        7
+      );
+      expect(catalog.roles.find((role) => role.name === 'util')?.rank).toBe(8);
+      expect(catalog.roles.find((role) => role.name === 'class')?.rank).toBe(9);
+      expect(catalog.roles.find((role) => role.name === 'factory')?.rank).toBe(
+        10
+      );
+      expect(catalog.roles.find((role) => role.name === 'instance')?.rank).toBe(
+        11
+      );
+      expect(catalog.roles.find((role) => role.name === 'hook')?.rank).toBe(12);
 
       const tier13 = [
         'api',
@@ -777,11 +799,13 @@ describe('composeDeclarations', () => {
         'store',
       ];
       for (const name of tier13) {
-        expect(catalog.roles.find((r) => r.name === name)?.rank).toBe(13);
+        expect(catalog.roles.find((role) => role.name === name)?.rank).toBe(13);
       }
     }
 
-    const srcTree = result.value.trees.find((t) => t.originPath === 'src');
+    const srcTree = result.value.trees.find(
+      (tree) => tree.originPath === 'src'
+    );
     expect(srcTree?.foreignDomains).toEqual(['src/_configs']);
   });
 
@@ -792,12 +816,14 @@ describe('composeDeclarations', () => {
       return;
     }
 
-    const srcTree = result.value.trees.find((t) => t.originPath === 'src');
+    const srcTree = result.value.trees.find(
+      (tree) => tree.originPath === 'src'
+    );
     const contractsTree = result.value.trees.find(
-      (t) => t.originPath === 'packages/contracts/src'
+      (tree) => tree.originPath === 'packages/contracts/src'
     );
     const formattersTree = result.value.trees.find(
-      (t) => t.originPath === 'packages/formatters/src'
+      (tree) => tree.originPath === 'packages/formatters/src'
     );
 
     expect(srcTree?.horizontalHierarchyModels).toEqual([

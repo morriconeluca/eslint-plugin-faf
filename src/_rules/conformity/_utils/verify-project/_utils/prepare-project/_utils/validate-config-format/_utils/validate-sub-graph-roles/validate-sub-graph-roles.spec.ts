@@ -147,10 +147,12 @@ describe('validateSubGraphRoles', () => {
       'faf.common'
     ).outcomes;
     expect(
-      outcomes.some((o) => o.constraint === 'configuration/explicit-undefined')
+      outcomes.some(
+        (outcome) => outcome.constraint === 'configuration/explicit-undefined'
+      )
     ).toBe(true);
     const outcome = outcomes.find(
-      (o) => o.constraint === 'configuration/explicit-undefined'
+      (outcome) => outcome.constraint === 'configuration/explicit-undefined'
     );
     expect(outcome?.family).toBe('configuration');
     expect(outcome?.normativeReference).toBe('FAF §1.2, §6.9');

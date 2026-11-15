@@ -1218,13 +1218,15 @@ describe('verifyAccessNodeContract', () => {
       },
     };
 
-    expect(collectSourceOutcomes(model).map((o) => [o.from, o.to])).toEqual([
+    expect(
+      collectSourceOutcomes(model).map((outcome) => [outcome.from, outcome.to])
+    ).toEqual([
       ['src/phantom/index.ts', 'src/_utils/w/w.util.ts'],
       ['src/_utils/w/index.ts', 'src/orphan-master.ts'],
     ]);
-    expect(collectSymbolOutcomes(model).map((o) => o.element)).toEqual([
-      'src/_utils/w/index.ts',
-    ]);
+    expect(
+      collectSymbolOutcomes(model).map((outcome) => outcome.element)
+    ).toEqual(['src/_utils/w/index.ts']);
 
     const outcomeA = {
       constraint: 'symbol/access-node-master-export' as const,

@@ -196,7 +196,7 @@ describe('verifyExternalDependencies', () => {
     {
       id: 4,
       nodeKind: 'category-node',
-      path: 'src/_types/adapter.type.ts',
+      path: 'src/_types/gateway.type.ts',
       treeOrigin: 'src',
     },
     { id: 5, nodeKind: 'root-node', path: 'src/main.ts', treeOrigin: 'src' },
@@ -217,7 +217,7 @@ describe('verifyExternalDependencies', () => {
     },
     {
       nature: { inventoryId: 4, kind: 'tree-node' },
-      path: 'src/_types/adapter.type.ts',
+      path: 'src/_types/gateway.type.ts',
     },
     { nature: { inventoryId: 5, kind: 'tree-node' }, path: 'src/main.ts' },
     { nature: { kind: 'external-local-file' }, path: 'outside.ts' },
@@ -357,7 +357,7 @@ describe('verifyExternalDependencies', () => {
     });
   });
 
-  it('adversarial: Fragment adapter authorized while caller is not', () => {
+  it('adversarial: Fragment gateway authorized while caller is not', () => {
     const model = buildVerificationModel({
       edges: [
         createEdge('src/main.ts', 'outside.ts', '../outside.js', 1, {
@@ -399,7 +399,7 @@ describe('verifyExternalDependencies', () => {
     });
   });
 
-  it('adversarial: Category Node adapter authorized while caller is not', () => {
+  it('adversarial: Category Node gateway authorized while caller is not', () => {
     const model = buildVerificationModel({
       edges: [
         createEdge('src/main.ts', 'outside.ts', '../outside.js', 1, {
@@ -407,7 +407,7 @@ describe('verifyExternalDependencies', () => {
           line: 2,
         }),
         createEdge(
-          'src/_types/adapter.type.ts',
+          'src/_types/gateway.type.ts',
           'outside.ts',
           '../../outside.js',
           0,
@@ -417,7 +417,7 @@ describe('verifyExternalDependencies', () => {
       items: commonItems,
       trees: [
         createTree('src', [
-          { from: 'src/_types/adapter.type.ts', to: 'outside.ts' },
+          { from: 'src/_types/gateway.type.ts', to: 'outside.ts' },
         ]),
       ],
       vertices: commonVertices,

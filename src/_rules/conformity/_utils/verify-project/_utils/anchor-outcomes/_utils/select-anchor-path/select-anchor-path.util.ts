@@ -12,11 +12,13 @@ import { LINTABLE_EXTENSIONS } from '../../../../../../../../_src@shared/_consta
 import { toPosixPath } from '../../../../../../../../_src@shared/_utils/to-posix-path/index.js';
 import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 
-export const selectAnchorPath = (() => {
-  const isLintablePath = (filePath: string): boolean => {
-    const extension = nodePathPosix.extname(filePath);
-    return LINTABLE_EXTENSIONS.some((candidate) => candidate === extension);
-  };
+export function selectAnchorPath(input: TSelectAnchorPathInput): string {
+  if (
+    input.outcome.family === 'configuration' ||
+    input.inventory === undefined
+  ) {
+    return input.configPath;
+  }
 
   const findInventoryItem = (
     inventory: TInventory,
@@ -41,13 +43,14 @@ export const selectAnchorPath = (() => {
     parentId: number
   ): readonly TInventoryItem[] => {
     const children: TInventoryItem[] = [];
-    for (const item of inventory.items) {
+    for (const candidate of inventory.items) {
+      const extension = nodePathPosix.extname(candidate.path);
       if (
-        item.parentId === parentId &&
-        item.kind === 'file' &&
-        isLintablePath(item.path)
+        candidate.parentId === parentId &&
+        candidate.kind === 'file' &&
+        LINTABLE_EXTENSIONS.some((allowed) => allowed === extension)
       ) {
-        children.push(item);
+        children.push(candidate);
       }
     }
     const ordered = [...children];
@@ -87,37 +90,29 @@ export const selectAnchorPath = (() => {
     return undefined;
   };
 
-  return function selectAnchorPath(input: TSelectAnchorPathInput): string {
-    if (
-      input.outcome.family === 'configuration' ||
-      input.inventory === undefined
-    ) {
-      return input.configPath;
-    }
-    const item = findInventoryItem(
-      input.inventory,
-      input.baseDirectory,
-      input.outcome.element
-    );
-    if (item === undefined) {
-      return input.configPath;
-    }
-    if (item.kind === 'file' && isLintablePath(item.path)) {
-      return nodePath.resolve(input.baseDirectory, item.path);
-    }
-    const parent =
-      item.parentId === null ? undefined : input.inventory.items[item.parentId];
-    const domain = item.kind === 'directory' ? item : parent;
-    if (domain === undefined) {
-      return input.configPath;
-    }
-    const relativeAnchor = anchorDomainPath(
-      input.inventory,
-      input.model,
-      domain
-    );
-    return relativeAnchor === undefined
-      ? input.configPath
-      : nodePath.resolve(input.baseDirectory, relativeAnchor);
-  };
-})();
+  const item = findInventoryItem(
+    input.inventory,
+    input.baseDirectory,
+    input.outcome.element
+  );
+  if (item === undefined) {
+    return input.configPath;
+  }
+  const itemExtension = nodePathPosix.extname(item.path);
+  if (
+    item.kind === 'file' &&
+    LINTABLE_EXTENSIONS.some((allowed) => allowed === itemExtension)
+  ) {
+    return nodePath.resolve(input.baseDirectory, item.path);
+  }
+  const parent =
+    item.parentId === null ? undefined : input.inventory.items[item.parentId];
+  const domain = item.kind === 'directory' ? item : parent;
+  if (domain === undefined) {
+    return input.configPath;
+  }
+  const relativeAnchor = anchorDomainPath(input.inventory, input.model, domain);
+  return relativeAnchor === undefined
+    ? input.configPath
+    : nodePath.resolve(input.baseDirectory, relativeAnchor);
+}

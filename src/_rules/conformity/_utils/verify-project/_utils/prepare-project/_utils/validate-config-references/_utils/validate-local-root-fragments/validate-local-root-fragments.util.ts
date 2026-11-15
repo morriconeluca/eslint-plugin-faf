@@ -1,0 +1,36 @@
+import type { TFAFConfig } from '../../../../../../../../../../_src@shared/_types/faf-config.type.js';
+import type { TConfigOutcome } from '../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
+import type { TReferenceContext } from '../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
+
+import { validateRootFragmentTree } from './_utils/validate-root-fragment-tree/index.js';
+import { rejectOriginDirectory } from './_validate-local-root-fragments@shared/_utils/reject-origin-directory/index.js';
+
+export function validateLocalRootFragments(
+  config: TFAFConfig,
+  context: TReferenceContext
+): readonly TConfigOutcome[] {
+  return config.faf.locals.flatMap((local, localIndex) => {
+    const layers = local.rootLayers ?? [];
+    const layerOutcomes = layers.flatMap((path, layerIndex) =>
+      rejectOriginDirectory({
+        context,
+        label: 'Origin directory',
+        path,
+        propertyPath: `faf.locals[${localIndex}].rootLayers[${layerIndex}]`,
+      })
+    );
+    const rootFragments = local.rootFragments ?? [];
+    const fragmentOutcomes = rootFragments.flatMap(
+      (rootFragment, rootFragmentIndex) =>
+        validateRootFragmentTree(
+          rootFragment,
+          null,
+          rootFragment.path,
+          localIndex,
+          `faf.locals[${localIndex}].rootFragments[${rootFragmentIndex}]`,
+          context
+        )
+    );
+    return [...layerOutcomes, ...fragmentOutcomes];
+  });
+}

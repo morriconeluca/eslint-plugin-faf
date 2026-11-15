@@ -3,10 +3,10 @@ import type { TConfigOutcome } from '../../../../../../../../../../../../_src@sh
 import type {
   TReferenceContext,
   TScopeBinding,
-} from '../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+} from '../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 import { createOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
-import { referenceScope } from '../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+import { rejectReferenceScope } from '../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 export function rejectMimeticStructures(
   structures: readonly TFAFMimeticPathStructure[],
@@ -30,8 +30,9 @@ export function rejectMimeticStructures(
         seen.add(path);
       }
       outcomes.push(
-        ...referenceScope.rejectDirectoryInScope({
+        ...rejectReferenceScope({
           context,
+          expectedKind: 'directory',
           label: 'Mimetic path',
           path,
           propertyPath,

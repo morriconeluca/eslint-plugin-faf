@@ -304,4 +304,127 @@ describe('handleSpecificNode', () => {
     ]);
     expect(ignoredUnsupported).toEqual([]);
   });
+
+  it('handles defensive AST shapes for templates, require arguments, TSImportType, and missing positions', () => {
+    const locator = createSourceLocator('');
+    const inlineImports: TModuleImport[] = [];
+    const unsupported: TUnsupportedSyntax[] = [];
+
+    handleSpecificNode(
+      {
+        arguments: [
+          {
+            expressions: [],
+            quasis: [{ value: { cooked: null, raw: './raw-fallback.js' } }],
+            type: 'TemplateLiteral',
+          },
+        ],
+        callee: { name: 'require', type: 'Identifier' },
+        type: 'CallExpression',
+      },
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
+    expect(inlineImports[0]?.specifier).toBe('./raw-fallback.js');
+
+    handleSpecificNode(
+      {
+        arguments: [
+          {
+            expressions: [],
+            quasis: [],
+            type: 'TemplateLiteral',
+          },
+        ],
+        callee: { name: 'require', type: 'Identifier' },
+        start: 0,
+        type: 'CallExpression',
+      },
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
+    handleSpecificNode(
+      {
+        arguments: [
+          {
+            expressions: [],
+            quasis: [{ value: { cooked: 123, raw: 456 } }],
+            type: 'TemplateLiteral',
+          },
+        ],
+        callee: { name: 'require', type: 'Identifier' },
+        start: 0,
+        type: 'CallExpression',
+      },
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
+    handleSpecificNode(
+      {
+        arguments: [null],
+        callee: { name: 'require', type: 'Identifier' },
+        start: 0,
+        type: 'CallExpression',
+      },
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
+    handleSpecificNode(
+      {
+        source: null,
+        type: 'TSImportType',
+      },
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
+    handleSpecificNode(
+      { type: 'TSExportAssignment' },
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
+    handleSpecificNode(
+      {
+        left: {
+          computed: false,
+          object: { name: 'exports', type: 'Identifier' },
+          property: { name: 'x', type: 'Identifier' },
+          type: 'MemberExpression',
+        },
+        type: 'AssignmentExpression',
+      },
+      false,
+      false,
+      false,
+      locator,
+      inlineImports,
+      unsupported
+    );
+
+    expect(inlineImports[1]?.specifier).toBe('');
+    expect(unsupported).toHaveLength(5);
+  });
 });

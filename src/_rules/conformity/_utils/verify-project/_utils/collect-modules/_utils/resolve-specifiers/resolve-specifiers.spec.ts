@@ -744,7 +744,7 @@ describe('resolveSpecifiers', () => {
     expect(result[0]?.target.type).toBe('unresolved');
   });
 
-  it('catches oxc-resolver exceptions without letting them escape the adapter', async () => {
+  it('catches oxc-resolver exceptions without letting them escape resolveSpecifiers', async () => {
     const fixture = await createFixture({
       'src/main.ts': 'export const a = 1;',
     });

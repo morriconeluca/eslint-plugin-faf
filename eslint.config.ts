@@ -63,7 +63,7 @@ const HOST_EFFECT_IMPORT_PATHS = [
   { message: RESOLVER_RESTRICTION, name: 'oxc-resolver' },
 ] as const;
 
-const HOST_IO_BOUNDARY_FILES = [
+export const HOST_IO_BOUNDARY_FILES = [
   'src/_rules/conformity/_stores/session/_session@shared/_utils/read-file-snapshot/read-file-snapshot.util.ts',
   'src/_rules/conformity/_stores/session/_session@shared/_utils/read-origin-dirents/read-origin-dirents.util.ts',
   'src/_rules/conformity/_stores/session/_utils/match-file-fingerprints/_utils/has-matching-tree-origin/has-matching-tree-origin.util.ts',

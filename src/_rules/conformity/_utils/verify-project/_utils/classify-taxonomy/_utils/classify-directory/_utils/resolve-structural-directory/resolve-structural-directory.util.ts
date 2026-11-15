@@ -19,11 +19,12 @@ import {
 import { readPathName } from '../../../../_classify-taxonomy@shared/_utils/read-path-name/index.js';
 import { createDirectoryBase } from '../../_classify-directory@shared/_utils/create-directory-base/index.js';
 
-export const resolveStructuralDirectory = (() => {
-  const resolveMimeticChild = (
-    path: string,
-    parent: TDirectoryParent
-  ): null | TDirectoryClassification => {
+export function resolveStructuralDirectory(
+  path: string,
+  parent: TDirectoryParent,
+  context: TTreeClassificationContext
+): null | TDirectoryClassification {
+  const resolveMimeticChild = (): null | TDirectoryClassification => {
     const name = readPathName(path);
     if (!parent.isMimeticContext || !name.startsWith(UNDERSCORE)) {
       return null;
@@ -37,11 +38,7 @@ export const resolveStructuralDirectory = (() => {
     };
   };
 
-  const resolveCatalogCategory = (
-    path: string,
-    parent: TDirectoryParent,
-    context: TTreeClassificationContext
-  ): null | TDirectoryClassification => {
+  const resolveCatalogCategory = (): null | TDirectoryClassification => {
     const categoryRole = context.catalog.categoryToRole.get(readPathName(path));
     if (categoryRole === undefined) {
       return null;
@@ -65,10 +62,7 @@ export const resolveStructuralDirectory = (() => {
     };
   };
 
-  const resolveFragmentChild = (
-    path: string,
-    parent: TDirectoryParent
-  ): null | TDirectoryClassification => {
+  const resolveFragmentChild = (): null | TDirectoryClassification => {
     if (
       readPathName(path).startsWith(UNDERSCORE) ||
       parent.form !== FORM_FRAGMENTS
@@ -86,10 +80,7 @@ export const resolveStructuralDirectory = (() => {
     };
   };
 
-  const resolveLayerChild = (
-    path: string,
-    parent: TDirectoryParent
-  ): null | TDirectoryClassification => {
+  const resolveLayerChild = (): null | TDirectoryClassification => {
     if (!readPathName(path).startsWith(UNDERSCORE)) {
       return null;
     }
@@ -107,10 +98,7 @@ export const resolveStructuralDirectory = (() => {
     };
   };
 
-  const resolveSubCategoryChild = (
-    path: string,
-    parent: TDirectoryParent
-  ): null | TDirectoryClassification => {
+  const resolveSubCategoryChild = (): null | TDirectoryClassification => {
     if (!readPathName(path).startsWith(UNDERSCORE) || parent.isMimeticContext) {
       return null;
     }
@@ -128,24 +116,18 @@ export const resolveStructuralDirectory = (() => {
     };
   };
 
-  return function resolveStructuralDirectory(
-    path: string,
-    parent: TDirectoryParent,
-    context: TTreeClassificationContext
-  ): null | TDirectoryClassification {
-    const mimeticChild = resolveMimeticChild(path, parent);
-    if (mimeticChild !== null) {
-      return mimeticChild;
-    }
-    const category = resolveCatalogCategory(path, parent, context);
-    if (category !== null) {
-      return category;
-    }
-    const fragment = resolveFragmentChild(path, parent);
-    if (fragment !== null) {
-      return fragment;
-    }
-    const layer = resolveLayerChild(path, parent);
-    return layer ?? resolveSubCategoryChild(path, parent);
-  };
-})();
+  const mimeticChild = resolveMimeticChild();
+  if (mimeticChild !== null) {
+    return mimeticChild;
+  }
+  const category = resolveCatalogCategory();
+  if (category !== null) {
+    return category;
+  }
+  const fragment = resolveFragmentChild();
+  if (fragment !== null) {
+    return fragment;
+  }
+  const layer = resolveLayerChild();
+  return layer ?? resolveSubCategoryChild();
+}

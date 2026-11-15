@@ -10,11 +10,12 @@ import {
   ROLE_EXPLICIT,
 } from '../../_classify-taxonomy@shared/_constants/classification-constraints.constant.js';
 
-export const finalizeClassifications = (() => {
-  const collectMasterIds = (
-    drafts: ReadonlyMap<number, TClassificationDraft>,
-    childrenByParentId: ReadonlyMap<number, readonly number[]>
-  ): ReadonlySet<number> => {
+export function finalizeClassifications(
+  drafts: ReadonlyMap<number, TClassificationDraft>,
+  childrenByParentId: ReadonlyMap<number, readonly number[]>,
+  mimeticPaths: ReadonlySet<string>
+): readonly TItemClassification[] {
+  const collectMasterIds = (): ReadonlySet<number> => {
     const masterIds = new Set<number>();
     for (const draft of drafts.values()) {
       const childIds = childrenByParentId.get(draft.itemId);
@@ -39,11 +40,7 @@ export const finalizeClassifications = (() => {
     return masterIds;
   };
 
-  const collectParentCategoryIds = (
-    drafts: ReadonlyMap<number, TClassificationDraft>,
-    childrenByParentId: ReadonlyMap<number, readonly number[]>,
-    mimeticPaths: ReadonlySet<string>
-  ): ReadonlySet<number> => {
+  const collectParentCategoryIds = (): ReadonlySet<number> => {
     const parentCategoryIds = new Set<number>();
     for (const draft of drafts.values()) {
       if (draft.domainKind !== DOMAIN_CATEGORY) {
@@ -67,42 +64,30 @@ export const finalizeClassifications = (() => {
     return parentCategoryIds;
   };
 
-  return function finalizeClassifications(
-    drafts: ReadonlyMap<number, TClassificationDraft>,
-    childrenByParentId: ReadonlyMap<number, readonly number[]>,
-    mimeticPaths: ReadonlySet<string>
-  ): readonly TItemClassification[] {
-    const masterIds = collectMasterIds(drafts, childrenByParentId);
-    const parentCategoryIds = collectParentCategoryIds(
-      drafts,
-      childrenByParentId,
-      mimeticPaths
-    );
-    const classifications: TItemClassification[] = [];
-    for (const draft of drafts.values()) {
-      const nodeKind = masterIds.has(draft.itemId)
-        ? NODE_MASTER
-        : draft.nodeKind;
-      classifications.push({
-        domainKind: draft.domainKind,
-        entryKind: draft.entryKind,
-        fragmentInternalRank: draft.fragmentInternalRank,
-        imposedRoleName: draft.imposedRoleName,
-        itemId: draft.itemId,
-        nodeKind,
-        path: draft.path,
-        relationalQualifications: {
-          isParentCategory: parentCategoryIds.has(draft.itemId),
-          isPathFragment: draft.isPathFragment,
-          isPrivateCategory: draft.isPrivateCategory,
-          isSubFragment: draft.isSubFragment,
-          isSubLayer: draft.isSubLayer,
-          parentFragmentPath: draft.parentFragmentPath,
-        },
-        role: draft.role,
-      });
-    }
-    classifications.sort((left, right) => left.itemId - right.itemId);
-    return classifications;
-  };
-})();
+  const masterIds = collectMasterIds();
+  const parentCategoryIds = collectParentCategoryIds();
+  const classifications: TItemClassification[] = [];
+  for (const draft of drafts.values()) {
+    const nodeKind = masterIds.has(draft.itemId) ? NODE_MASTER : draft.nodeKind;
+    classifications.push({
+      domainKind: draft.domainKind,
+      entryKind: draft.entryKind,
+      fragmentInternalRank: draft.fragmentInternalRank,
+      imposedRoleName: draft.imposedRoleName,
+      itemId: draft.itemId,
+      nodeKind,
+      path: draft.path,
+      relationalQualifications: {
+        isParentCategory: parentCategoryIds.has(draft.itemId),
+        isPathFragment: draft.isPathFragment,
+        isPrivateCategory: draft.isPrivateCategory,
+        isSubFragment: draft.isSubFragment,
+        isSubLayer: draft.isSubLayer,
+        parentFragmentPath: draft.parentFragmentPath,
+      },
+      role: draft.role,
+    });
+  }
+  classifications.sort((left, right) => left.itemId - right.itemId);
+  return classifications;
+}

@@ -75,7 +75,9 @@ describe('processDirent', () => {
       const directoryEntries = fs.readdirSync(fixture.path, {
         withFileTypes: true,
       });
-      const dirent = directoryEntries.find((d) => d.name === 'link-dir');
+      const dirent = directoryEntries.find(
+        (dirent) => dirent.name === 'link-dir'
+      );
       if (dirent === undefined) {
         return;
       }
@@ -108,7 +110,9 @@ describe('processDirent', () => {
       const directoryEntries = fs.readdirSync(fixture.path, {
         withFileTypes: true,
       });
-      const dirent = directoryEntries.find((d) => d.name === 'link-file.ts');
+      const dirent = directoryEntries.find(
+        (dirent) => dirent.name === 'link-file.ts'
+      );
       expect(dirent).toBeDefined();
       if (dirent === undefined) {
         return;

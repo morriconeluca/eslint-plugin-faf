@@ -1,4 +1,4 @@
-import type { ExportNamedDeclaration, ExportSpecifier } from 'oxc-parser';
+import type { ExportNamedDeclaration } from 'oxc-parser';
 
 import type {
   TModuleExport,
@@ -13,14 +13,14 @@ import {
   NAMESPACE_ORIGIN,
 } from '../../_extract-module-exports@shared/_constants/module-exports.constant.js';
 
-export const extractNamedSpecifiersExports = (() => {
-  const getExportedName = (node: ExportSpecifier['exported']): string =>
-    node.type === 'Literal' ? node.value : node.name;
-
-  const isAllTypeSpace = (
-    name: string,
-    rootSymbols: readonly TRootSymbol[]
-  ): boolean => {
+export function extractNamedSpecifiersExports(
+  statement: ExportNamedDeclaration,
+  rootSymbols: readonly TRootSymbol[],
+  importedBindings: ReadonlyMap<string, TImportedBinding>,
+  locator: TSourceLocator,
+  exports: TModuleExport[]
+): void {
+  const isAllTypeSpace = (name: string): boolean => {
     const matching = rootSymbols.filter((symbol) => symbol.name === name);
     return (
       matching.length > 0 && matching.every((symbol) => symbol.space === 'type')
@@ -30,8 +30,7 @@ export const extractNamedSpecifiersExports = (() => {
   const isLocalTypeExport = (
     isExplicitlyTypeOnly: boolean,
     binding: TImportedBinding | undefined,
-    localName: string,
-    rootSymbols: readonly TRootSymbol[]
+    localName: string
   ): boolean =>
     isExplicitlyTypeOnly &&
     binding !== undefined &&
@@ -40,16 +39,17 @@ export const extractNamedSpecifiersExports = (() => {
       (symbol) => symbol.name === localName && symbol.space === 'type'
     );
 
-  const extractReExportSpecifiers = (
-    statement: ExportNamedDeclaration,
-    sourceSpecifier: string,
-    locator: TSourceLocator,
-    exports: TModuleExport[]
-  ): void => {
+  const extractReExportSpecifiers = (sourceSpecifier: string): void => {
     const isDeclarationTypeOnly = statement.exportKind === 'type';
     for (const specifier of statement.specifiers) {
-      const exportedName = getExportedName(specifier.exported);
-      const importedName = getExportedName(specifier.local);
+      const exportedName =
+        specifier.exported.type === 'Literal'
+          ? specifier.exported.value
+          : specifier.exported.name;
+      const importedName =
+        specifier.local.type === 'Literal'
+          ? specifier.local.value
+          : specifier.local.name;
       const isTypeOnly =
         isDeclarationTypeOnly || specifier.exportKind === 'type';
       exports.push({
@@ -65,18 +65,18 @@ export const extractNamedSpecifiersExports = (() => {
     }
   };
 
-  const extractLocalSpecifiers = (
-    statement: ExportNamedDeclaration,
-    rootSymbols: readonly TRootSymbol[],
-    importedBindings: ReadonlyMap<string, TImportedBinding>,
-    locator: TSourceLocator,
-    exports: TModuleExport[]
-  ): void => {
+  const extractLocalSpecifiers = (): void => {
     const isDeclarationTypeOnly = statement.exportKind === 'type';
 
     for (const specifier of statement.specifiers) {
-      const exportedName = getExportedName(specifier.exported);
-      const localName = getExportedName(specifier.local);
+      const exportedName =
+        specifier.exported.type === 'Literal'
+          ? specifier.exported.value
+          : specifier.exported.name;
+      const localName =
+        specifier.local.type === 'Literal'
+          ? specifier.local.value
+          : specifier.local.name;
       const position = locator(specifier.start);
       const binding = importedBindings.get(localName);
       const isExplicitlyTypeOnly =
@@ -84,10 +84,9 @@ export const extractNamedSpecifiersExports = (() => {
 
       if (
         binding === undefined ||
-        isLocalTypeExport(isExplicitlyTypeOnly, binding, localName, rootSymbols)
+        isLocalTypeExport(isExplicitlyTypeOnly, binding, localName)
       ) {
-        const isTypeOnly =
-          isExplicitlyTypeOnly || isAllTypeSpace(localName, rootSymbols);
+        const isTypeOnly = isExplicitlyTypeOnly || isAllTypeSpace(localName);
 
         exports.push({
           exportedName,
@@ -111,29 +110,9 @@ export const extractNamedSpecifiersExports = (() => {
     }
   };
 
-  return function extractNamedSpecifiersExports(
-    statement: ExportNamedDeclaration,
-    rootSymbols: readonly TRootSymbol[],
-    importedBindings: ReadonlyMap<string, TImportedBinding>,
-    locator: TSourceLocator,
-    exports: TModuleExport[]
-  ): void {
-    if (statement.source !== null) {
-      extractReExportSpecifiers(
-        statement,
-        statement.source.value,
-        locator,
-        exports
-      );
-      return;
-    }
-
-    extractLocalSpecifiers(
-      statement,
-      rootSymbols,
-      importedBindings,
-      locator,
-      exports
-    );
-  };
-})();
+  if (statement.source === null) {
+    extractLocalSpecifiers();
+  } else {
+    extractReExportSpecifiers(statement.source.value);
+  }
+}

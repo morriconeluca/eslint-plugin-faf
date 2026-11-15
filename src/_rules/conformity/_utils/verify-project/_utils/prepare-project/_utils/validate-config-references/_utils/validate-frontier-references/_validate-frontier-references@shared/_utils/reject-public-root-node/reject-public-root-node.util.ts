@@ -2,7 +2,7 @@ import type { TConfigOutcome } from '../../../../../../../../../../../../../_src
 import type {
   TReferenceContext,
   TScopeBinding,
-} from '../../../../../_validate-config-references@shared/_utils/reference-scope/index.js';
+} from '../../../../../_validate-config-references@shared/_utils/reject-reference-scope/index.js';
 
 import { createOutcome } from '../../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 

@@ -15,9 +15,11 @@ import {
   SINGLE_LINE_EXTENSIONS,
 } from './produce-style-module-record.constant.js';
 
-export const produceStyleModuleRecord = (() => {
+export function produceStyleModuleRecord(
+  path: string,
+  text: string
+): TModuleRecord {
   const advanceCoordinates = (
-    text: string,
     startIndex: number,
     endIndex: number,
     startLine: number,
@@ -47,10 +49,7 @@ export const produceStyleModuleRecord = (() => {
     return { column, line };
   };
 
-  const skipCssBlockComment = (
-    text: string,
-    startIndex: number
-  ): null | number => {
+  const skipCssBlockComment = (startIndex: number): null | number => {
     const isBlockStart =
       text[startIndex] === '/' && text[startIndex + 1] === '*';
     if (!isBlockStart) {
@@ -61,10 +60,7 @@ export const produceStyleModuleRecord = (() => {
     return closingIndex === -1 ? text.length : closingIndex + 2;
   };
 
-  const skipCssLineComment = (
-    text: string,
-    startIndex: number
-  ): null | number => {
+  const skipCssLineComment = (startIndex: number): null | number => {
     const isLineStart =
       text[startIndex] === '/' && text[startIndex + 1] === '/';
     if (!isLineStart) {
@@ -75,7 +71,7 @@ export const produceStyleModuleRecord = (() => {
     return newlineIndex === -1 ? text.length : newlineIndex + 1;
   };
 
-  const skipCssString = (text: string, startIndex: number): null | number => {
+  const skipCssString = (startIndex: number): null | number => {
     const quote = text[startIndex];
     if (quote !== '"' && quote !== "'") {
       return null;
@@ -97,108 +93,99 @@ export const produceStyleModuleRecord = (() => {
     return Math.min(index, text.length);
   };
 
-  return function produceStyleModuleRecord(
-    path: string,
-    text: string
-  ): TModuleRecord {
-    const imports: TModuleImport[] = [];
-    const unsupportedSyntaxes: TUnsupportedSyntax[] = [];
+  const imports: TModuleImport[] = [];
+  const unsupportedSyntaxes: TUnsupportedSyntax[] = [];
 
-    const lowerPath = path.toLowerCase();
-    const isSass = SASS_EXTENSIONS.some((extension) =>
-      lowerPath.endsWith(extension)
-    );
-    const hasSingleLineComments = SINGLE_LINE_EXTENSIONS.some((extension) =>
-      lowerPath.endsWith(extension)
-    );
+  const lowerPath = path.toLowerCase();
+  const isSass = SASS_EXTENSIONS.some((extension) =>
+    lowerPath.endsWith(extension)
+  );
+  const hasSingleLineComments = SINGLE_LINE_EXTENSIONS.some((extension) =>
+    lowerPath.endsWith(extension)
+  );
 
-    let index = 0;
-    let line = 1;
-    let column = 1;
+  let index = 0;
+  let line = 1;
+  let column = 1;
 
-    const advanceTo = (nextIndex: number): void => {
-      const coords = advanceCoordinates(text, index, nextIndex, line, column);
-      line = coords.line;
-      column = coords.column;
-      index = nextIndex;
-    };
+  const advanceTo = (nextIndex: number): void => {
+    const coords = advanceCoordinates(index, nextIndex, line, column);
+    line = coords.line;
+    column = coords.column;
+    index = nextIndex;
+  };
 
-    const recordClassified = (classified: TClassifiedStyleReference): void => {
-      if (classified.importItem !== undefined) {
-        imports.push(classified.importItem);
-      }
-      if (classified.unsupportedSyntax !== undefined) {
-        unsupportedSyntaxes.push(classified.unsupportedSyntax);
-      }
-    };
+  const recordClassified = (classified: TClassifiedStyleReference): void => {
+    if (classified.importItem !== undefined) {
+      imports.push(classified.importItem);
+    }
+    if (classified.unsupportedSyntax !== undefined) {
+      unsupportedSyntaxes.push(classified.unsupportedSyntax);
+    }
+  };
 
-    const advanceOneChar = (): void => {
-      const char = text[index];
-      index += 1;
-      if (char === '\n') {
-        line += 1;
-        column = 1;
-      } else {
-        column += 1;
-      }
-    };
+  const advanceOneChar = (): void => {
+    const char = text[index];
+    index += 1;
+    if (char === '\n') {
+      line += 1;
+      column = 1;
+    } else {
+      column += 1;
+    }
+  };
 
-    const processScannerStep = (): void => {
-      const blockEnd = skipCssBlockComment(text, index);
-      if (blockEnd !== null) {
-        advanceTo(blockEnd);
-        return;
-      }
-
-      if (hasSingleLineComments) {
-        const lineEnd = skipCssLineComment(text, index);
-        if (lineEnd !== null) {
-          advanceTo(lineEnd);
-          return;
-        }
-      }
-
-      const stringEnd = skipCssString(text, index);
-      if (stringEnd !== null) {
-        advanceTo(stringEnd);
-        return;
-      }
-
-      const atImport = scanCssAtImport(text, index, isSass);
-      if (atImport.raw !== undefined) {
-        recordClassified(
-          classifyStyleReference(
-            'css-at-import',
-            { column, line },
-            atImport.raw
-          )
-        );
-        advanceTo(atImport.nextIndex);
-        return;
-      }
-
-      const urlMatch = scanCssUrl(text, index);
-      if (urlMatch.raw !== undefined) {
-        recordClassified(
-          classifyStyleReference('css-url', { column, line }, urlMatch.raw)
-        );
-        advanceTo(urlMatch.nextIndex);
-        return;
-      }
-
-      advanceOneChar();
-    };
-
-    while (index < text.length) {
-      processScannerStep();
+  const processScannerStep = (): void => {
+    const blockEnd = skipCssBlockComment(index);
+    if (blockEnd !== null) {
+      advanceTo(blockEnd);
+      return;
     }
 
-    return {
-      exports: EMPTY_STYLE_EXPORTS,
-      imports,
-      language: 'style',
-      symbols: EMPTY_STYLE_SYMBOLS,
-      unsupportedSyntaxes,
-    };
+    if (hasSingleLineComments) {
+      const lineEnd = skipCssLineComment(index);
+      if (lineEnd !== null) {
+        advanceTo(lineEnd);
+        return;
+      }
+    }
+
+    const stringEnd = skipCssString(index);
+    if (stringEnd !== null) {
+      advanceTo(stringEnd);
+      return;
+    }
+
+    const atImport = scanCssAtImport(text, index, isSass);
+    if (atImport.raw !== undefined) {
+      recordClassified(
+        classifyStyleReference('css-at-import', { column, line }, atImport.raw)
+      );
+      advanceTo(atImport.nextIndex);
+      return;
+    }
+
+    const urlMatch = scanCssUrl(text, index);
+    if (urlMatch.raw !== undefined) {
+      recordClassified(
+        classifyStyleReference('css-url', { column, line }, urlMatch.raw)
+      );
+      advanceTo(urlMatch.nextIndex);
+      return;
+    }
+
+    advanceOneChar();
   };
-})();
+
+  while (index < text.length) {
+    processScannerStep();
+  }
+
+  return {
+    exports: EMPTY_STYLE_EXPORTS,
+    imports,
+    language: 'style',
+    symbols: EMPTY_STYLE_SYMBOLS,
+    unsupportedSyntaxes,
+  };
+}

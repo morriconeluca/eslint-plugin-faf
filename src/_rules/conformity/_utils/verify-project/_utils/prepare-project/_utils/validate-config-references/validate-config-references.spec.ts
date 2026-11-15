@@ -1380,7 +1380,10 @@ describe('validateConfigReferences', () => {
         customInventory
       );
       expect(
-        outcomes.map((o) => `${o.propertyPath}|${o.constraint}|${o.element}`)
+        outcomes.map(
+          (outcome) =>
+            `${outcome.propertyPath}|${outcome.constraint}|${outcome.element}`
+        )
       ).toEqual([
         'faf.locals[0].horizontalHierarchies[0].hierarchy[0][1]|configuration/non-existent-path|_missing',
         'faf.locals[0].horizontalHierarchies[0].hierarchy[1][1]|configuration/non-existent-path|nested',

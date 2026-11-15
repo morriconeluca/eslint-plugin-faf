@@ -71,35 +71,52 @@ export function createOutcome(
     | Record<string, never>
     | { readonly position: TSourceLocation };
 
-  const isAcyclicity = (c: TConstraint): c is TAcyclicityConstraint =>
-    c.startsWith('acyclicity/');
-  const isClassification = (c: TConstraint): c is TClassificationConstraint =>
-    c.startsWith('classification/');
-  const isConfig = (c: TConstraint): c is TConfigConstraint =>
-    c.startsWith('configuration/');
-  const isDependency = (c: TConstraint): c is TDependencyConstraint =>
-    c.startsWith('dependency/');
-  const isSymbol = (c: TConstraint): c is TSymbolConstraint =>
-    c.startsWith('symbol/');
-  const isUnverified = (c: TConstraint): c is TUnverifiedConstraint =>
-    c.startsWith('unverified/');
+  const isAcyclicity = (
+    constraint: TConstraint
+  ): constraint is TAcyclicityConstraint =>
+    constraint.startsWith('acyclicity/');
+  const isClassification = (
+    constraint: TConstraint
+  ): constraint is TClassificationConstraint =>
+    constraint.startsWith('classification/');
+  const isConfig = (constraint: TConstraint): constraint is TConfigConstraint =>
+    constraint.startsWith('configuration/');
+  const isDependency = (
+    constraint: TConstraint
+  ): constraint is TDependencyConstraint =>
+    constraint.startsWith('dependency/');
+  const isSymbol = (constraint: TConstraint): constraint is TSymbolConstraint =>
+    constraint.startsWith('symbol/');
+  const isUnverified = (
+    constraint: TConstraint
+  ): constraint is TUnverifiedConstraint =>
+    constraint.startsWith('unverified/');
 
-  const isCycleFacts = (f: TOutcomeFacts): f is TCycleFacts => 'cycle' in f;
-  const isConfigFacts = (f: TOutcomeFacts): f is TConfigFacts =>
-    'propertyPath' in f;
-  const isDependencyFacts = (f: TOutcomeFacts): f is TEdgeFacts | TPathFacts =>
-    'from' in f;
-  const isUnverifiedFacts = (f: TOutcomeFacts): f is TUnverifiedFacts =>
-    'reason' in f;
-  const hasElement = (f: TOutcomeFacts): f is TElementFacts | TSymbolFacts =>
-    'element' in f && typeof f.element === 'string';
+  const isCycleFacts = (
+    candidateFacts: TOutcomeFacts
+  ): candidateFacts is TCycleFacts => 'cycle' in candidateFacts;
+  const isConfigFacts = (
+    candidateFacts: TOutcomeFacts
+  ): candidateFacts is TConfigFacts => 'propertyPath' in candidateFacts;
+  const isDependencyFacts = (
+    candidateFacts: TOutcomeFacts
+  ): candidateFacts is TEdgeFacts | TPathFacts => 'from' in candidateFacts;
+  const isUnverifiedFacts = (
+    candidateFacts: TOutcomeFacts
+  ): candidateFacts is TUnverifiedFacts => 'reason' in candidateFacts;
+  const hasElement = (
+    candidateFacts: TOutcomeFacts
+  ): candidateFacts is TElementFacts | TSymbolFacts =>
+    'element' in candidateFacts && typeof candidateFacts.element === 'string';
 
   const formatOutcomeMessage = (
     predicate: string,
     formatFacts: TFormatFacts
   ): string => {
     if (formatFacts.cycle !== undefined) {
-      const segments = formatFacts.cycle.map((s) => s.join(' -> ')).join('; ');
+      const segments = formatFacts.cycle
+        .map((segment) => segment.join(' -> '))
+        .join('; ');
       return `'${formatFacts.element}' ${predicate}: ${segments}`;
     }
     if (formatFacts.chain !== undefined) {

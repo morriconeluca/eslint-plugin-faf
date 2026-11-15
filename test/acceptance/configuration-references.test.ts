@@ -343,11 +343,11 @@ const fullHypotheticalTree: FileTree = {
   'src/_src@shared/_domain/_utils/dom/index.ts':
     "export { dom } from './dom.util.js';\n",
   'src/_src@shared/_network/_apis/_apis@shared/_utils/legacy-client/index.ts':
-    "export { legacyClientAdapter } from './legacy-client.util.js';\n",
+    "export { legacyClientGateway } from './legacy-client.util.js';\n",
   'src/_src@shared/_network/_apis/_apis@shared/_utils/legacy-client/legacy-client.util.ts':
-    "import { legacyClient } from '../../../../../../../legacy/client.js';\nexport const legacyClientAdapter = () => legacyClient;\n",
+    "import { legacyClient } from '../../../../../../../legacy/client.js';\nexport const legacyClientGateway = () => legacyClient;\n",
   'src/_src@shared/_network/_apis/_health/get-health/get-health.api.ts':
-    "import { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport type { TTodo } from '../../../../../../packages/contracts/src/_types/todo.type.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientAdapter() });\n",
+    "import { legacyClientGateway } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport type { TTodo } from '../../../../../../packages/contracts/src/_types/todo.type.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientGateway() });\n",
   'src/_src@shared/_network/_apis/_health/get-health/index.ts':
     "export { getHealth } from './get-health.api.js';\n",
   'src/_src@shared/_network/_classes': {},
@@ -3496,7 +3496,7 @@ describe('acceptance: multi-tree configuration verification on a synthetic inven
       'packages/contracts/src/_types/todo.type.ts':
         "import '../../../../src/app/app.js';\nexport type TTodo = string;\n",
       'src/_src@shared/_network/_apis/_health/get-health/get-health.api.ts':
-        "import { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientAdapter() });\n",
+        "import { legacyClientGateway } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientGateway() });\n",
     };
     const inverseTreeFixture = await createProject(
       inverseTreeTree,
@@ -3522,7 +3522,7 @@ describe('acceptance: multi-tree configuration verification on a synthetic inven
     const deepImportTree: FileTree = {
       ...fullHypotheticalTree,
       'src/_src@shared/_network/_apis/_health/get-health/get-health.api.ts':
-        "import { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/format-label.util.js';\nimport { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport type { TTodo } from '../../../../../../packages/contracts/src/_types/todo.type.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientAdapter() });\n",
+        "import { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/format-label.util.js';\nimport { legacyClientGateway } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport type { TTodo } from '../../../../../../packages/contracts/src/_types/todo.type.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientGateway() });\n",
     };
     const deepImportFixture = await createProject(
       deepImportTree,
@@ -3550,7 +3550,7 @@ describe('acceptance: multi-tree configuration verification on a synthetic inven
       'packages/contracts/src/_types/todo.type.ts':
         "import '../../../../src/_src@shared/_domain/_utils/dom/dom.util.js';\nexport type TTodo = string;\n",
       'src/_src@shared/_network/_apis/_health/get-health/get-health.api.ts':
-        "import { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientAdapter() });\n",
+        "import { legacyClientGateway } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport { formatLabel } from '../../../../../../packages/formatters/src/_utils/format-label/index.js';\nexport const getHealth = (): unknown => ({ a: formatLabel, b: legacyClientGateway() });\n",
     };
     const branchImportFixture = await createProject(
       branchImportTree,
@@ -3670,7 +3670,7 @@ describe('acceptance: multi-tree configuration verification on a synthetic inven
     }
   });
 
-  it('encapsulates contact with legacy module through api branch adapter', async () => {
+  it('encapsulates contact with legacy module through api branch gateway', async () => {
     const fixture = await createProject(
       fullHypotheticalTree,
       fullHypotheticalConfig
@@ -3712,7 +3712,7 @@ describe('acceptance: multi-tree configuration verification on a synthetic inven
     const indexImportTree: FileTree = {
       ...fullHypotheticalTree,
       'src/_src@shared/_network/_apis/_apis@shared/_utils/legacy-client/index.ts':
-        "import '../../../../../../../legacy/client.js';\nexport { legacyClientAdapter } from './legacy-client.util.js';\n",
+        "import '../../../../../../../legacy/client.js';\nexport { legacyClientGateway } from './legacy-client.util.js';\n",
     };
     const indexImportFixture = await createProject(
       indexImportTree,
@@ -3738,7 +3738,7 @@ describe('acceptance: multi-tree configuration verification on a synthetic inven
     const branchVisibilityTree: FileTree = {
       ...fullHypotheticalTree,
       'src/main.tsx':
-        "import { legacyClientAdapter } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport './main.css';\nimport { App } from './app/app.js';\nexport const Main = App;\n",
+        "import { legacyClientGateway } from '#/_apis@shared/_utils/legacy-client/index.js';\nimport './main.css';\nimport { App } from './app/app.js';\nexport const Main = App;\n",
     };
     const branchVisibilityFixture = await createProject(
       branchVisibilityTree,

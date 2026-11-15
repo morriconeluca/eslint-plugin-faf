@@ -2,16 +2,18 @@ import type { TReadUrlSpecifierResult } from './read-url-specifier.type.js';
 
 import { URL_HEADER_PATTERN } from './read-url-specifier.constant.js';
 
-export const readUrlSpecifier = (() => {
+export function readUrlSpecifier(
+  text: string,
+  startIndex: number
+): null | TReadUrlSpecifierResult {
   const readQuotedUrl = (
-    text: string,
-    startIndex: number,
+    contentStart: number,
     quote: string
   ): TReadUrlSpecifierResult => {
     const isTerminatingChar = (char: string | undefined): boolean =>
       char === undefined || char === quote || char === '\n' || char === '\r';
 
-    let index = startIndex;
+    let index = contentStart;
     while (index < text.length) {
       const char = text[index];
       const isTrailingEscape = char === '\\' && index + 1 >= text.length;
@@ -27,19 +29,16 @@ export const readUrlSpecifier = (() => {
       }
     }
 
-    const raw = text.slice(startIndex, index).replaceAll(/\\(.)/g, '$1');
+    const raw = text.slice(contentStart, index).replaceAll(/\\(.)/g, '$1');
     const closingParen = text.indexOf(')', index);
     const nextIndex = closingParen === -1 ? text.length : closingParen + 1;
 
     return { nextIndex, raw };
   };
 
-  const readUnquotedUrl = (
-    text: string,
-    startIndex: number
-  ): TReadUrlSpecifierResult => {
+  const readUnquotedUrl = (contentStart: number): TReadUrlSpecifierResult => {
     let parenDepth = 0;
-    let index = startIndex;
+    let index = contentStart;
 
     while (index < text.length) {
       const char = text[index];
@@ -56,27 +55,22 @@ export const readUrlSpecifier = (() => {
       }
     }
 
-    const raw = text.slice(startIndex, index).trim();
+    const raw = text.slice(contentStart, index).trim();
     const nextIndex = index < text.length ? index + 1 : text.length;
 
     return { nextIndex, raw };
   };
 
-  return function readUrlSpecifier(
-    text: string,
-    startIndex: number
-  ): null | TReadUrlSpecifierResult {
-    URL_HEADER_PATTERN.lastIndex = startIndex;
-    const match = URL_HEADER_PATTERN.exec(text);
-    if (match === null) {
-      return null;
-    }
+  URL_HEADER_PATTERN.lastIndex = startIndex;
+  const match = URL_HEADER_PATTERN.exec(text);
+  if (match === null) {
+    return null;
+  }
 
-    const contentStart = startIndex + match[0].length;
-    const quote = text[contentStart];
-    const isQuoted = quote === '"' || quote === "'";
-    return isQuoted
-      ? readQuotedUrl(text, contentStart + 1, quote)
-      : readUnquotedUrl(text, contentStart);
-  };
-})();
+  const contentStart = startIndex + match[0].length;
+  const quote = text[contentStart];
+  const isQuoted = quote === '"' || quote === "'";
+  return isQuoted
+    ? readQuotedUrl(contentStart + 1, quote)
+    : readUnquotedUrl(contentStart);
+}

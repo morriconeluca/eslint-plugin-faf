@@ -432,6 +432,40 @@ describe('findReEntryPaths', () => {
     expect(outcomes).toHaveLength(1);
     expect(outcomes[0]?.chain).toEqual(['a/start.ts', 'x1.ts', 'a/end.ts']);
     expect(outcomes[0]?.importIndex).toBe(5);
+
+    const longerFirstModel = buildModel({
+      crossings: [
+        {
+          chain: ['a/start.ts', 'y1.ts', 'y2.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'a/start.ts',
+          specifier: '../a-longer.js',
+        },
+        {
+          chain: ['a/start.ts', 'x1.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 1,
+          position: { column: 1, line: 2 },
+          sourcePath: 'a/start.ts',
+          specifier: '../b-shorter.js',
+        },
+      ],
+      nodes: [
+        { path: 'a/start.ts', treeOrigin: 'a' },
+        { path: 'a/end.ts', treeOrigin: 'a' },
+        { path: 'x1.ts', treeOrigin: null },
+        { path: 'y1.ts', treeOrigin: null },
+        { path: 'y2.ts', treeOrigin: null },
+      ],
+      trees: ['a'],
+    });
+    expect(findReEntryPaths(longerFirstModel)[0]?.chain).toEqual([
+      'a/start.ts',
+      'x1.ts',
+      'a/end.ts',
+    ]);
   });
 
   it('breaks ties deterministically between equal-length candidate paths by chain comparison', () => {
@@ -1166,5 +1200,223 @@ describe('findReEntryPaths', () => {
       'y.ts',
       'a/target.ts',
     ]);
+  });
+
+  it('weights crossing by chain.length - 1 against multi-edge paths', () => {
+    const model = buildModel({
+      crossings: [
+        {
+          chain: ['a/start.ts', 'x.ts', 'b/mid.ts'],
+          destinationPath: 'b/mid.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'a/start.ts',
+          specifier: '../x.js',
+        },
+        {
+          chain: ['b/mid.ts', 'y.ts', 'a/target.ts'],
+          destinationPath: 'a/target.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'b/mid.ts',
+          specifier: '../y.js',
+        },
+      ],
+      edges: [
+        makeEdge('a/start.ts', 'b/hop1.ts'),
+        makeEdge('b/hop1.ts', 'b/hop2.ts'),
+        makeEdge('b/hop2.ts', 'b/mid.ts'),
+      ],
+      nodes: [
+        { path: 'a/start.ts', treeOrigin: 'a' },
+        { path: 'a/target.ts', treeOrigin: 'a' },
+        { path: 'b/hop1.ts', treeOrigin: 'b' },
+        { path: 'b/hop2.ts', treeOrigin: 'b' },
+        { path: 'b/mid.ts', treeOrigin: 'b' },
+        { path: 'x.ts', treeOrigin: null },
+        { path: 'y.ts', treeOrigin: null },
+      ],
+      trees: ['a', 'b'],
+    });
+
+    const outcomes = findReEntryPaths(model);
+    expect(outcomes).toHaveLength(1);
+    expect(outcomes[0]?.chain).toEqual([
+      'a/start.ts',
+      'x.ts',
+      'b/mid.ts',
+      'y.ts',
+      'a/target.ts',
+    ]);
+  });
+
+  it('keeps the first candidate when equal-length candidates are ordered better-first by chain, position, importIndex, and specifier', () => {
+    const byChain = buildModel({
+      crossings: [
+        {
+          chain: ['a/start.ts', 'alpha.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'a/start.ts',
+          specifier: '../same.js',
+        },
+        {
+          chain: ['a/start.ts', 'beta.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'a/start.ts',
+          specifier: '../same.js',
+        },
+      ],
+      nodes: [
+        { path: 'a/start.ts', treeOrigin: 'a' },
+        { path: 'a/end.ts', treeOrigin: 'a' },
+        { path: 'alpha.ts', treeOrigin: null },
+        { path: 'beta.ts', treeOrigin: null },
+      ],
+      trees: ['a'],
+    });
+    expect(findReEntryPaths(byChain)[0]?.chain).toEqual([
+      'a/start.ts',
+      'alpha.ts',
+      'a/end.ts',
+    ]);
+
+    const byPosition = buildModel({
+      crossings: [
+        {
+          chain: ['a/start.ts', 'x.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 0,
+          position: { column: 1, line: 2 },
+          sourcePath: 'a/start.ts',
+          specifier: '../x.js',
+        },
+        {
+          chain: ['a/start.ts', 'x.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 0,
+          position: { column: 1, line: 5 },
+          sourcePath: 'a/start.ts',
+          specifier: '../x.js',
+        },
+      ],
+      nodes: [
+        { path: 'a/start.ts', treeOrigin: 'a' },
+        { path: 'a/end.ts', treeOrigin: 'a' },
+        { path: 'x.ts', treeOrigin: null },
+      ],
+      trees: ['a'],
+    });
+    expect(findReEntryPaths(byPosition)[0]?.position).toEqual({
+      column: 1,
+      line: 2,
+    });
+
+    const byImportIndex = buildModel({
+      crossings: [
+        {
+          chain: ['a/start.ts', 'x.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 1,
+          position: { column: 1, line: 1 },
+          sourcePath: 'a/start.ts',
+          specifier: '../x.js',
+        },
+        {
+          chain: ['a/start.ts', 'x.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 2,
+          position: { column: 1, line: 1 },
+          sourcePath: 'a/start.ts',
+          specifier: '../x.js',
+        },
+      ],
+      nodes: [
+        { path: 'a/start.ts', treeOrigin: 'a' },
+        { path: 'a/end.ts', treeOrigin: 'a' },
+        { path: 'x.ts', treeOrigin: null },
+      ],
+      trees: ['a'],
+    });
+    expect(findReEntryPaths(byImportIndex)[0]?.importIndex).toBe(1);
+
+    const bySpecifier = buildModel({
+      crossings: [
+        {
+          chain: ['a/start.ts', 'x.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'a/start.ts',
+          specifier: '../first.js',
+        },
+        {
+          chain: ['a/start.ts', 'x.ts', 'a/end.ts'],
+          destinationPath: 'a/end.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'a/start.ts',
+          specifier: '../second.js',
+        },
+      ],
+      nodes: [
+        { path: 'a/start.ts', treeOrigin: 'a' },
+        { path: 'a/end.ts', treeOrigin: 'a' },
+        { path: 'x.ts', treeOrigin: null },
+      ],
+      trees: ['a'],
+    });
+    expect(findReEntryPaths(bySpecifier)[0]?.specifier).toBe('../first.js');
+
+    const byQueueStateOrder = buildModel({
+      crossings: [
+        {
+          chain: ['a/start.ts', 'x.ts', 'b/alpha.ts'],
+          destinationPath: 'b/alpha.ts',
+          importIndex: 0,
+          position: { column: 1, line: 1 },
+          sourcePath: 'a/start.ts',
+          specifier: '../first.js',
+        },
+        {
+          chain: ['a/start.ts', 'x.ts', 'b/alpha.ts'],
+          destinationPath: 'b/alpha.ts',
+          importIndex: 1,
+          position: { column: 1, line: 2 },
+          sourcePath: 'a/start.ts',
+          specifier: '../second.js',
+        },
+        {
+          chain: ['a/start.ts', 'x.ts', 'b/beta.ts'],
+          destinationPath: 'b/beta.ts',
+          importIndex: 2,
+          position: { column: 1, line: 3 },
+          sourcePath: 'a/start.ts',
+          specifier: '../third.js',
+        },
+      ],
+      edges: [
+        makeEdge('b/alpha.ts', 'a/target-alpha.ts'),
+        makeEdge('b/beta.ts', 'a/target-beta.ts'),
+      ],
+      nodes: [
+        { path: 'a/start.ts', treeOrigin: 'a' },
+        { path: 'a/target-alpha.ts', treeOrigin: 'a' },
+        { path: 'a/target-beta.ts', treeOrigin: 'a' },
+        { path: 'b/alpha.ts', treeOrigin: 'b' },
+        { path: 'b/beta.ts', treeOrigin: 'b' },
+        { path: 'x.ts', treeOrigin: null },
+      ],
+      trees: ['a', 'b'],
+    });
+    const queueOutcomes = findReEntryPaths(byQueueStateOrder);
+    expect(queueOutcomes.map((item) => item.to)).toEqual([
+      'a/target-alpha.ts',
+      'a/target-beta.ts',
+    ]);
+    expect(queueOutcomes[0]?.importIndex).toBe(0);
   });
 });

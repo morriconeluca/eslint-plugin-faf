@@ -4,7 +4,10 @@ import { collectStringDuplicates } from '../../_validate-config-format@shared/_u
 import { translateConfigIssues } from '../../_validate-config-format@shared/_utils/config-diagnostic-codec/index.js';
 import { rootFragmentsSchema } from './validate-root-fragments.schema.js';
 
-export const validateRootFragments = (() => {
+export function validateRootFragments(
+  rootFragments: unknown,
+  basePath: string
+): readonly TConfigOutcome[] {
   const isRecord = (value: unknown): value is Record<string, unknown> =>
     typeof value === 'object' && value !== null && !Array.isArray(value);
 
@@ -89,20 +92,15 @@ export const validateRootFragments = (() => {
     return outcomes;
   };
 
-  return function validateRootFragments(
-    rootFragments: unknown,
-    basePath: string
-  ): readonly TConfigOutcome[] {
-    if (rootFragments === undefined) {
-      return [];
-    }
-    const propertyPath = `${basePath}.rootFragments`;
-    const parsed = rootFragmentsSchema.safeParse(rootFragments);
-    const formOutcomes = parsed.success
-      ? []
-      : translateConfigIssues(parsed.error.issues, rootFragments, propertyPath);
-    return Array.isArray(rootFragments)
-      ? [...formOutcomes, ...fragmentDuplicates(rootFragments, propertyPath)]
-      : formOutcomes;
-  };
-})();
+  if (rootFragments === undefined) {
+    return [];
+  }
+  const propertyPath = `${basePath}.rootFragments`;
+  const parsed = rootFragmentsSchema.safeParse(rootFragments);
+  const formOutcomes = parsed.success
+    ? []
+    : translateConfigIssues(parsed.error.issues, rootFragments, propertyPath);
+  return Array.isArray(rootFragments)
+    ? [...formOutcomes, ...fragmentDuplicates(rootFragments, propertyPath)]
+    : formOutcomes;
+}

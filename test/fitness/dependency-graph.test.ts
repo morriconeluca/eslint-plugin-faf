@@ -6,6 +6,7 @@ import type {
 
 import { cruise } from 'dependency-cruiser';
 import { createFixture } from 'fs-fixture';
+import fs from 'node:fs';
 import path from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 
@@ -300,5 +301,34 @@ describe('fitness: dependency graph', () => {
     } finally {
       await fixture.rm();
     }
+  });
+
+  it('requires every Fragment directory under src/ containing index.ts to also contain <name>.spec.ts', () => {
+    const sourceRoot = path.resolve(repositoryRoot, 'src');
+    const missingSpecs: string[] = [];
+
+    const walk = (directory: string): void => {
+      const entries = fs.readdirSync(directory, { withFileTypes: true });
+      const fileNames = new Set(
+        entries.filter((entry) => entry.isFile()).map((entry) => entry.name)
+      );
+      const directoryName = path.basename(directory);
+      if (
+        fileNames.has('index.ts') &&
+        !fileNames.has(`${directoryName}.spec.ts`)
+      ) {
+        missingSpecs.push(
+          path.relative(repositoryRoot, directory).replaceAll('\\', '/')
+        );
+      }
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          walk(path.join(directory, entry.name));
+        }
+      }
+    };
+
+    walk(sourceRoot);
+    expect(missingSpecs).toEqual([]);
   });
 });
