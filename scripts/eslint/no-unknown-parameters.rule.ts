@@ -1,7 +1,7 @@
 import type { Rule } from 'eslint';
 
 const SKIPPED_CHILD_KEYS = new Set(['end', 'loc', 'parent', 'range', 'start']);
-const EXEMPT_ROLES = new Set(['adapter', 'schema']);
+const EXEMPT_ROLES = new Set(['schema']);
 
 const isNode = (value: unknown): value is Rule.Node =>
   typeof value === 'object' &&
@@ -193,11 +193,11 @@ export const noUnknownParametersRule: Rule.RuleModule = {
   meta: {
     docs: {
       description:
-        'Forbid unknown in function parameter type annotations unless the parameter is the subject of a type predicate or the file Role is adapter or schema.',
+        'Forbid unknown in function parameter type annotations unless the parameter is the subject of a type predicate, the file Role is schema, or a util imports a runtime schema.',
     },
     messages: {
       unknownParameter:
-        'Function parameters must not use unknown unless the function is a type guard or assertion on that parameter, or the file Role is adapter or schema.',
+        'Function parameters must not use unknown unless the function is a type guard or assertion on that parameter, the file Role is schema, or a util imports a runtime schema.',
     },
     schema: [],
     type: 'problem',

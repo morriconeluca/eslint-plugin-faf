@@ -48,6 +48,11 @@ ruleTester.run('no-unknown-parameters', noUnknownParametersRule, {
     {
       code: 'export function read(x: unknown): void {}',
       errors: [{ messageId: 'unknownParameter' }],
+      filename: 'src/read.adapter.ts',
+    },
+    {
+      code: 'export function read(x: unknown): void {}',
+      errors: [{ messageId: 'unknownParameter' }],
       filename: 'src/read.service.ts',
     },
     {
@@ -130,10 +135,6 @@ ruleTester.run('no-unknown-parameters', noUnknownParametersRule, {
     },
     {
       code: 'export function read(raw: unknown): void {}',
-      filename: 'src/load.adapter.ts',
-    },
-    {
-      code: 'export function read(raw: unknown): void {}',
       filename: 'src/parse.schema.ts',
     },
     {
@@ -142,6 +143,10 @@ ruleTester.run('no-unknown-parameters', noUnknownParametersRule, {
     },
     {
       code: 'import { payloadSchema } from "./_schemas/payload-schema/index.js"; export function validate(raw: unknown): boolean { return payloadSchema.safeParse(raw).success; }',
+      filename: 'src/validate.util.ts',
+    },
+    {
+      code: 'import { validatePayloadSchema } from "./validate.schema.js"; export function validate(raw: unknown): boolean { return validatePayloadSchema.safeParse(raw).success; }',
       filename: 'src/validate.util.ts',
     },
   ],

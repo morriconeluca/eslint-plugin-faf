@@ -1,12 +1,54 @@
 import type { Rule } from 'eslint';
 
-import { discoverConfig } from './_adapters/discover-config/index.js';
+import nodePath from 'node:path';
+
+import type { TAnchoredOutcome } from './_conformity@shared/_types/anchored-outcome.type.js';
+
 import { session } from './_stores/session/index.js';
+import { discoverConfig } from './_utils/discover-config/index.js';
 import { readConfigFileSetting } from './_utils/read-config-file-setting/index.js';
+import { verifyProject } from './_utils/verify-project/index.js';
 
 export function createConformity(packageVersion: string): Rule.RuleModule {
   const message = '{{constraint}}: {{message}} ({{reference}}).';
   const fileStart = { column: 0, line: 1 };
+
+  const resolveAnchoredOutcomes = (
+    configPath: string,
+    context: Rule.RuleContext
+  ): readonly TAnchoredOutcome[] => {
+    const cached = session.lookup({
+      configPath,
+      filename: context.filename,
+      sourceText: context.sourceCode.text,
+      workingDirectory: context.cwd,
+    });
+    if (cached.hit) {
+      return cached.outcomes;
+    }
+
+    const fileOverlays = new Map<string, string>();
+    if (cached.overlayText !== null) {
+      fileOverlays.set(nodePath.resolve(context.filename), cached.overlayText);
+    }
+    const result = verifyProject({
+      configPath: cached.configPath,
+      fileOverlays,
+      packageVersion,
+      workingDirectory: context.cwd,
+    });
+    session.save({
+      baseDirectory: result.baseDirectory,
+      byFile: result.byFile,
+      configPath: cached.configPath,
+      externalFiles: result.externalFiles,
+      loadedFiles: result.loadedFiles,
+      overrideKey: cached.overlayKey,
+      treeOrigins: result.treeOrigins,
+    });
+    return result.byFile.get(nodePath.resolve(context.filename)) ?? [];
+  };
+
   return {
     create(context) {
       return {
@@ -29,14 +71,10 @@ export function createConformity(packageVersion: string): Rule.RuleModule {
             }
             return;
           }
-          const anchored = session.outcomesFor({
-            configPath: discovered.value.configPath,
-            filename: context.filename,
-            packageVersion,
-            sourceText: context.sourceCode.text,
-            workingDirectory: context.cwd,
-          });
-          for (const item of anchored) {
+          for (const item of resolveAnchoredOutcomes(
+            discovered.value.configPath,
+            context
+          )) {
             const start = {
               column: Math.max(0, item.position.column - 1),
               line: item.position.line,

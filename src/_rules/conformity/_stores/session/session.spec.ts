@@ -1,160 +1,170 @@
 import { createFixture } from 'fs-fixture';
 import nodeFs from 'node:fs';
 import nodePath from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { TModuleRecordProducer } from './_session@shared/_types/module-record.type.js';
+import type { TAnchoredOutcome } from '../../_conformity@shared/_types/anchored-outcome.type.js';
 
-import { moduleRecordStore } from './_session@shared/_stores/module-record-store/index.js';
+import { createOutcome } from '../../../../_src@shared/_utils/create-outcome/index.js';
 import { session } from './session.store.js';
 
 const configSource = `export default { faf: { locals: [{ roles: [{ name: "util", category: "_utils" }], rootLayers: ["src"] }] } };`;
 
 const conformingTree = {
+  'external/helper.ts': 'export const helper = 1;\n',
   'faf.config.ts': configSource,
   'package.json': JSON.stringify({ type: 'module' }),
+  'shared.js': 'export const shared = 1;\n',
   'src/_utils/widget/index.ts': "export { widget } from './widget.util.js';\n",
   'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
 };
 
-const cachePathOf = (directory: string): string =>
-  nodePath.join(
-    directory,
-    'node_modules/.cache/eslint-plugin-faf/records.cache'
-  );
-
-const countCacheWrites = async (
-  directory: string,
-  action: () => Promise<void> | void
-): Promise<number> => {
-  const cachePath = cachePathOf(directory);
-  const originalRename = nodeFs.renameSync;
-  let writes = 0;
-  nodeFs.renameSync = (from, to) => {
-    if (to === cachePath) {
-      writes += 1;
-    }
-    originalRename(from, to);
-  };
-  try {
-    await action();
-  } finally {
-    nodeFs.renameSync = originalRename;
-  }
-  return writes;
-};
-
-const countProductions = (
-  action: () => void
-): { readonly productions: number } => {
-  const original = moduleRecordStore.wrapProducer;
-  let productions = 0;
-  const countingProducer = (
-    producer: TModuleRecordProducer,
-    options: Parameters<typeof moduleRecordStore.wrapProducer>[1]
-  ): TModuleRecordProducer =>
-    original((path, text) => {
-      productions += 1;
-      return producer(path, text);
-    }, options);
-  Reflect.set(moduleRecordStore, 'wrapProducer', countingProducer);
-  try {
-    action();
-  } finally {
-    Reflect.set(moduleRecordStore, 'wrapProducer', original);
-  }
-  return { productions };
-};
-
 describe('session', () => {
-  it('clears the module record cache owned by the session', () => {
-    const producer = moduleRecordStore.wrapProducer(() => ({
-      exports: [],
-      imports: [],
-      language: 'binary',
-      symbols: [],
-      unsupportedSyntaxes: [],
-    }));
-    producer('src/a.ts', 'text');
-    expect(moduleRecordStore.getAllEntries().size).toBe(1);
-    session.clearModuleRecords();
-    expect(moduleRecordStore.getAllEntries().size).toBe(0);
+  beforeEach(() => {
+    session.clear();
   });
 
-  it('reuses a memo and invalidates it when the linted text changes', async () => {
+  it('returns a miss before saving and a hit afterwards for matching files', async () => {
     const fixture = await createFixture(conformingTree);
 
     try {
       const configPath = nodePath.join(fixture.path, 'faf.config.ts');
-      const filename = nodePath.join(
+      const indexFile = nodePath.join(
         fixture.path,
         'src/_utils/widget/index.ts'
       );
-      const query = {
-        configPath,
-        filename,
-        packageVersion: '0.5.0',
-        sourceText: "export { widget } from './widget.util.js';\n",
+      const widgetFile = nodePath.join(
+        fixture.path,
+        'src/_utils/widget/widget.util.ts'
+      );
+      const indexText = "export { widget } from './widget.util.js';\n";
+
+      const initial = session.lookup({
+        configPath: 'faf.config.ts',
+        filename: indexFile,
+        sourceText: indexText,
         workingDirectory: fixture.path,
-      };
-      const first = session.outcomesFor(query);
-      const secondWrites = await countCacheWrites(fixture.path, () => {
-        expect(session.outcomesFor(query)).toEqual(first);
       });
-      expect(secondWrites).toBe(0);
-      expect(nodeFs.existsSync(cachePathOf(fixture.path))).toBe(true);
-      const changed = session.outcomesFor({
-        ...query,
-        sourceText:
-          "import { missing } from './missing.js';\nexport { widget } from './widget.util.js';\n",
+      expect(initial).toEqual({
+        configPath,
+        hit: false,
+        overlayKey: '',
+        overlayText: null,
       });
-      expect(
-        changed.some(
-          (item) => item.outcome.constraint === 'unverified/unresolved-import'
-        )
-      ).toBe(true);
-    } finally {
-      session.clearModuleRecords();
-      await fixture.rm();
-    }
-  });
+      if (initial.hit) {
+        return;
+      }
 
-  it('verifies a conforming project once for every linted file', async () => {
-    const fixture = await createFixture(conformingTree);
-
-    try {
-      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
-      const files = [
-        'faf.config.ts',
-        'src/_utils/widget/index.ts',
-        'src/_utils/widget/widget.util.ts',
+      const anchored: readonly TAnchoredOutcome[] = [
+        {
+          anchorPath: indexFile,
+          outcome: createOutcome('unverified/unresolved-import', {
+            element: 'src/_utils/widget/index.ts',
+            reason: 'missing',
+          }),
+          position: { column: 1, line: 1 },
+        },
       ];
-      const writes = await countCacheWrites(fixture.path, () => {
-        for (const file of files) {
-          const filename = nodePath.join(fixture.path, file);
-          const outcomes = session.outcomesFor({
-            configPath,
-            filename,
-            packageVersion: '0.5.0',
-            sourceText: nodeFs.readFileSync(filename, 'utf8'),
-            workingDirectory: fixture.path,
-          });
-          expect(outcomes).toEqual([]);
-        }
+      session.save({
+        baseDirectory: fixture.path,
+        byFile: new Map([[indexFile, anchored]]),
+        configPath: initial.configPath,
+        externalFiles: [nodePath.join(fixture.path, 'external/helper.ts')],
+        loadedFiles: [nodePath.join(fixture.path, 'shared.js')],
+        overrideKey: initial.overlayKey,
+        treeOrigins: [nodePath.join(fixture.path, 'src')],
       });
-      expect(writes).toBe(1);
+
+      const hitOnIndex = session.lookup({
+        configPath,
+        filename: indexFile,
+        sourceText: indexText,
+        workingDirectory: fixture.path,
+      });
+      expect(hitOnIndex).toEqual({ hit: true, outcomes: anchored });
+
+      const hitOnWidget = session.lookup({
+        configPath,
+        filename: widgetFile,
+        sourceText: 'export const widget = 1;\n',
+        workingDirectory: fixture.path,
+      });
+      expect(hitOnWidget).toEqual({ hit: true, outcomes: [] });
     } finally {
-      session.clearModuleRecords();
       await fixture.rm();
     }
   });
 
-  it('invalidates the memo when faf.config.ts or a loaded file changes', async () => {
-    const fixture = await createFixture({
-      ...conformingTree,
-      'faf.config.ts': `import './shared.js';\n${configSource}`,
-      'shared.js': 'export const shared = 1;\n',
-    });
+  it('invalidates the memo when the linted source overlay changes', async () => {
+    const fixture = await createFixture(conformingTree);
+
+    try {
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
+      const filename = nodePath.join(
+        fixture.path,
+        'src/_utils/widget/index.ts'
+      );
+      const diskText = "export { widget } from './widget.util.js';\n";
+
+      session.save({
+        baseDirectory: fixture.path,
+        byFile: new Map(),
+        configPath,
+        externalFiles: [],
+        loadedFiles: [],
+        overrideKey: '',
+        treeOrigins: [nodePath.join(fixture.path, 'src')],
+      });
+
+      const unsavedText = 'export const edited = 2;\n';
+      const miss = session.lookup({
+        configPath,
+        filename,
+        sourceText: unsavedText,
+        workingDirectory: fixture.path,
+      });
+      expect(miss).toEqual({
+        configPath,
+        hit: false,
+        overlayKey: `${nodePath.resolve(filename)}\0${unsavedText}`,
+        overlayText: unsavedText,
+      });
+
+      if (!miss.hit) {
+        session.save({
+          baseDirectory: fixture.path,
+          byFile: new Map(),
+          configPath: miss.configPath,
+          externalFiles: [],
+          loadedFiles: [],
+          overrideKey: miss.overlayKey,
+          treeOrigins: [nodePath.join(fixture.path, 'src')],
+        });
+      }
+
+      expect(
+        session.lookup({
+          configPath,
+          filename,
+          sourceText: unsavedText,
+          workingDirectory: fixture.path,
+        }).hit
+      ).toBe(true);
+      expect(
+        session.lookup({
+          configPath,
+          filename,
+          sourceText: diskText,
+          workingDirectory: fixture.path,
+        }).hit
+      ).toBe(false);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('invalidates the memo when watched configuration, loaded, package, or external files change', async () => {
+    const fixture = await createFixture(conformingTree);
 
     try {
       const configPath = nodePath.join(fixture.path, 'faf.config.ts');
@@ -165,40 +175,49 @@ describe('session', () => {
       const query = {
         configPath,
         filename,
-        packageVersion: '0.5.0',
         sourceText: "export { widget } from './widget.util.js';\n",
         workingDirectory: fixture.path,
       };
-      expect(session.outcomesFor(query)).toEqual([]);
+      const saveSnapshot = (): void => {
+        session.save({
+          baseDirectory: fixture.path,
+          byFile: new Map(),
+          configPath,
+          externalFiles: [nodePath.join(fixture.path, 'external/helper.ts')],
+          loadedFiles: [nodePath.join(fixture.path, 'shared.js')],
+          overrideKey: '',
+          treeOrigins: [nodePath.join(fixture.path, 'src')],
+        });
+      };
+
+      saveSnapshot();
+      expect(session.lookup(query).hit).toBe(true);
+
       nodeFs.writeFileSync(
         nodePath.join(fixture.path, 'shared.js'),
         'export const shared = 2;\n'
       );
-      const afterImport = await countCacheWrites(fixture.path, () => {
-        expect(session.outcomesFor(query)).toEqual([]);
-      });
-      expect(afterImport).toBe(1);
+      expect(session.lookup(query).hit).toBe(false);
+
+      saveSnapshot();
       nodeFs.writeFileSync(
-        configPath,
-        `${configSource.slice(0, -3)}, extra: true };`
+        nodePath.join(fixture.path, 'package.json'),
+        JSON.stringify({ description: 'updated', type: 'module' })
       );
-      const changed = session.outcomesFor({
-        ...query,
-        filename: configPath,
-        sourceText: nodeFs.readFileSync(configPath, 'utf8'),
-      });
-      expect(
-        changed.some(
-          (item) => item.outcome.constraint === 'configuration/unknown-property'
-        )
-      ).toBe(true);
+      expect(session.lookup(query).hit).toBe(false);
+
+      saveSnapshot();
+      nodeFs.writeFileSync(
+        nodePath.join(fixture.path, 'external/helper.ts'),
+        'export const helper = 2;\n'
+      );
+      expect(session.lookup(query).hit).toBe(false);
     } finally {
-      session.clearModuleRecords();
       await fixture.rm();
     }
   });
 
-  it('drops the memo when the session clears and reloads module records from disk', async () => {
+  it('invalidates the memo when a tree file is added, modified, or removed and when cleared', async () => {
     const fixture = await createFixture(conformingTree);
 
     try {
@@ -210,139 +229,45 @@ describe('session', () => {
       const query = {
         configPath,
         filename,
-        packageVersion: '0.5.0',
         sourceText: "export { widget } from './widget.util.js';\n",
         workingDirectory: fixture.path,
       };
-      session.outcomesFor(query);
-      session.clearModuleRecords();
-      const writes = await countCacheWrites(fixture.path, () => {
-        expect(session.outcomesFor(query)).toEqual([]);
-      });
-      expect(writes).toBe(1);
-      session.clearModuleRecords();
-      const reloaded = countProductions(() => {
-        expect(session.outcomesFor(query)).toEqual([]);
-      });
-      expect(reloaded.productions).toBe(0);
-    } finally {
-      session.clearModuleRecords();
-      await fixture.rm();
-    }
-  });
-
-  it('clears in-memory module records before verifying another configuration', async () => {
-    const first = await createFixture(conformingTree);
-    const second = await createFixture(conformingTree);
-
-    try {
-      const queryFor = (directory: string) => ({
-        configPath: nodePath.join(directory, 'faf.config.ts'),
-        filename: nodePath.join(directory, 'src/_utils/widget/index.ts'),
-        packageVersion: '0.5.0',
-        sourceText: "export { widget } from './widget.util.js';\n",
-        workingDirectory: directory,
-      });
-      session.outcomesFor(queryFor(first.path));
-      const next = countProductions(() => {
-        expect(session.outcomesFor(queryFor(second.path))).toEqual([]);
-      });
-      expect(next.productions).toBeGreaterThan(0);
-    } finally {
-      session.clearModuleRecords();
-      await first.rm();
-      await second.rm();
-    }
-  });
-
-  it('invalidates the memo when a tree file is added, modified, or removed', async () => {
-    const fixture = await createFixture(conformingTree);
-
-    try {
-      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
-      const filename = nodePath.join(
-        fixture.path,
-        'src/_utils/widget/index.ts'
-      );
-      const query = {
-        configPath,
-        filename,
-        packageVersion: '0.5.0',
-        sourceText: "export { widget } from './widget.util.js';\n",
-        workingDirectory: fixture.path,
+      const saveSnapshot = (): void => {
+        session.save({
+          baseDirectory: fixture.path,
+          byFile: new Map(),
+          configPath,
+          externalFiles: [],
+          loadedFiles: [],
+          overrideKey: '',
+          treeOrigins: [nodePath.join(fixture.path, 'src')],
+        });
       };
 
-      expect(session.outcomesFor(query)).toEqual([]);
-
+      saveSnapshot();
       const extraFile = nodePath.join(
         fixture.path,
         'src/_utils/widget/extra.ts'
       );
       nodeFs.writeFileSync(extraFile, 'export const extra = 1;\n');
+      expect(session.lookup(query).hit).toBe(false);
 
-      const afterAdd = await countCacheWrites(fixture.path, () => {
-        expect(session.outcomesFor(query)).toEqual([]);
-      });
-      expect(afterAdd).toBe(1);
-
+      saveSnapshot();
       nodeFs.writeFileSync(
         nodePath.join(fixture.path, 'src/_utils/widget/widget.util.ts'),
         'export const widget = 2;\n'
       );
+      expect(session.lookup(query).hit).toBe(false);
 
-      const afterModify = await countCacheWrites(fixture.path, () => {
-        expect(session.outcomesFor(query)).toEqual([]);
-      });
-      expect(afterModify).toBe(1);
-
+      saveSnapshot();
       nodeFs.rmSync(extraFile);
-      const afterRemove = await countCacheWrites(fixture.path, () => {
-        expect(session.outcomesFor(query)).toEqual([]);
-      });
-      expect(afterRemove).toBe(1);
+      expect(session.lookup(query).hit).toBe(false);
+
+      saveSnapshot();
+      expect(session.lookup(query).hit).toBe(true);
+      session.clear();
+      expect(session.lookup(query).hit).toBe(false);
     } finally {
-      session.clearModuleRecords();
-      await fixture.rm();
-    }
-  });
-
-  it('invalidates the memo when package.json is modified and reuses unchanged module records', async () => {
-    const fixture = await createFixture(conformingTree);
-
-    try {
-      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
-      const filename = nodePath.join(
-        fixture.path,
-        'src/_utils/widget/index.ts'
-      );
-      const query = {
-        configPath,
-        filename,
-        packageVersion: '0.5.0',
-        sourceText: "export { widget } from './widget.util.js';\n",
-        workingDirectory: fixture.path,
-      };
-
-      expect(session.outcomesFor(query)).toEqual([]);
-
-      nodeFs.writeFileSync(
-        nodePath.join(fixture.path, 'package.json'),
-        JSON.stringify({ description: 'updated', type: 'module' })
-      );
-      nodeFs.rmSync(cachePathOf(fixture.path));
-
-      let reloadedProductions = 0;
-      const writes = await countCacheWrites(fixture.path, () => {
-        const result = countProductions(() => {
-          expect(session.outcomesFor(query)).toEqual([]);
-        });
-        reloadedProductions = result.productions;
-      });
-
-      expect(writes).toBe(1);
-      expect(reloadedProductions).toBe(0);
-    } finally {
-      session.clearModuleRecords();
       await fixture.rm();
     }
   });

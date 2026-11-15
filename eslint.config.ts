@@ -39,25 +39,49 @@ const THROW_RESTRICTION = {
 } as const;
 
 const FILE_SYSTEM_RESTRICTION =
-  'File system access is allowed only in adapter files.';
-const WORKER_RESTRICTION = 'Worker threads are allowed only in adapter files.';
-const CHILD_PROCESS_RESTRICTION =
-  'Child processes are allowed only in adapter files.';
+  'File system access is allowed only in dedicated host I/O boundary files.';
+const WORKER_RESTRICTION =
+  'Worker threads are allowed only in dedicated host I/O boundary files.';
+const CHILD_PROCESS_RESTRICTION = 'Child processes are forbidden in src/.';
 const RESOLVER_RESTRICTION =
-  'oxc-resolver is an effect and is allowed only in adapter files.';
-const PROCESS_RESTRICTION = 'process is allowed only in adapter files.';
-const PURE_ADAPTER_RESTRICTION = 'Pure units must not depend on effects.';
+  'oxc-resolver is an effect and is allowed only in dedicated host I/O boundary files.';
+const PROCESS_RESTRICTION =
+  'process is allowed only in dedicated host I/O boundary files.';
 const SRC_SPEC_GLOB = 'src/**/*.spec.ts';
 const SRC_GLOB = 'src/**/*.ts';
 
-const EFFECT_IMPORT_PATHS = [
+const CHILD_PROCESS_IMPORT_PATHS = [
+  { message: CHILD_PROCESS_RESTRICTION, name: 'node:child_process' },
+  { message: CHILD_PROCESS_RESTRICTION, name: 'child_process' },
+] as const;
+
+const HOST_EFFECT_IMPORT_PATHS = [
   { message: FILE_SYSTEM_RESTRICTION, name: 'node:fs' },
   { message: FILE_SYSTEM_RESTRICTION, name: 'fs' },
   { message: WORKER_RESTRICTION, name: 'node:worker_threads' },
   { message: WORKER_RESTRICTION, name: 'worker_threads' },
-  { message: CHILD_PROCESS_RESTRICTION, name: 'node:child_process' },
-  { message: CHILD_PROCESS_RESTRICTION, name: 'child_process' },
   { message: RESOLVER_RESTRICTION, name: 'oxc-resolver' },
+] as const;
+
+const HOST_IO_BOUNDARY_FILES = [
+  'src/_rules/conformity/_stores/session/_session@shared/_utils/read-file-snapshot/read-file-snapshot.util.ts',
+  'src/_rules/conformity/_stores/session/_session@shared/_utils/read-origin-dirents/read-origin-dirents.util.ts',
+  'src/_rules/conformity/_stores/session/_utils/match-file-fingerprints/_utils/has-matching-tree-origin/_utils/has-matching-origin-dirents/has-matching-origin-dirents.util.ts',
+  'src/_rules/conformity/_stores/session/_utils/match-file-fingerprints/_utils/has-matching-tree-origin/has-matching-tree-origin.util.ts',
+  'src/_rules/conformity/_stores/session/_utils/match-file-fingerprints/_utils/has-matching-watched-files/has-matching-watched-files.util.ts',
+  'src/_rules/conformity/_stores/session/_utils/read-file-fingerprints/read-file-fingerprints.util.ts',
+  'src/_rules/conformity/_utils/discover-config/discover-config.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_collect-modules@shared/_utils/canonicalize-directory/canonicalize-directory.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_stores/module-record-store/_utils/read-module-record-cache/read-module-record-cache.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_stores/module-record-store/_utils/write-module-record-cache/write-module-record-cache.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_utils/analyze-queued-module/_utils/read-module-text/read-module-text.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_utils/resolve-specifiers/resolve-specifiers.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_prepare-project@shared/_utils/read-package-json/read-package-json.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/include-external-targets/include-external-targets.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/list-entries/_utils/scan-tree-origin/_utils/inspect-origin/inspect-origin.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/list-entries/_utils/scan-tree-origin/_utils/process-dirent/process-dirent.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/list-entries/_utils/scan-tree-origin/scan-tree-origin.util.ts',
+  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/load-config/load-config.util.ts',
 ] as const;
 
 const TYPE_FILE_RESTRICTIONS = [
@@ -261,7 +285,7 @@ export default defineConfig([
   },
   {
     files: [
-      'src/_rules/conformity/_stores/session/_services/verify-project/_verify-project@shared/_utils/assert-invariant/assert-invariant.util.ts',
+      'src/_rules/conformity/_utils/verify-project/_verify-project@shared/_utils/assert-invariant/assert-invariant.util.ts',
     ],
     rules: {
       'no-restricted-syntax': ['error', ...COMMON_FUNCTIONAL_RESTRICTIONS],
@@ -327,7 +351,19 @@ export default defineConfig([
   },
   {
     files: [SRC_GLOB],
-    ignores: [SRC_SPEC_GLOB, 'src/**/*.adapter.ts'],
+    ignores: [SRC_SPEC_GLOB],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [...CHILD_PROCESS_IMPORT_PATHS],
+        },
+      ],
+    },
+  },
+  {
+    files: [SRC_GLOB],
+    ignores: [SRC_SPEC_GLOB, ...HOST_IO_BOUNDARY_FILES],
     rules: {
       'no-restricted-globals': [
         'error',
@@ -339,7 +375,7 @@ export default defineConfig([
       'no-restricted-imports': [
         'error',
         {
-          paths: [...EFFECT_IMPORT_PATHS],
+          paths: [...HOST_EFFECT_IMPORT_PATHS, ...CHILD_PROCESS_IMPORT_PATHS],
         },
       ],
       'no-restricted-properties': [
@@ -347,32 +383,6 @@ export default defineConfig([
         {
           message: PROCESS_RESTRICTION,
           object: 'process',
-        },
-      ],
-    },
-  },
-  {
-    files: [
-      'src/**/*.util.ts',
-      'src/**/*.schema.ts',
-      'src/**/*.norm.ts',
-      'src/**/*.config.ts',
-      'src/**/*.constant.ts',
-      'src/**/*.type.ts',
-      'src/**/*.mock.ts',
-    ],
-    ignores: [SRC_SPEC_GLOB],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [...EFFECT_IMPORT_PATHS],
-          patterns: [
-            {
-              group: ['**/_adapters/**'],
-              message: PURE_ADAPTER_RESTRICTION,
-            },
-          ],
         },
       ],
     },
