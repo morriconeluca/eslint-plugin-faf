@@ -4,8 +4,8 @@ import type {
 } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import type { TVerificationModel } from '../../_verify-project@shared/_types/verification-model.type.js';
 
-import { checkEdgeRootDiscipline } from './_utils/check-edge-root-discipline/index.js';
-import { compareEdgeOutcomes } from './_utils/compare-edge-outcomes/index.js';
+import { compareEdgeOutcomes } from '../_norms@shared/_utils/compare-edge-outcomes/index.js';
+import { checkEdgeRootDiscipline } from './root-node-discipline.util.js';
 
 export function verifyRootNodeDiscipline(
   model: TVerificationModel

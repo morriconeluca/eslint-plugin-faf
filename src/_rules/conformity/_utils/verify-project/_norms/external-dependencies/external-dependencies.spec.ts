@@ -576,4 +576,44 @@ describe('verifyExternalDependencies', () => {
 
     expect(outcomes).toEqual([]);
   });
+
+  it('ignores edges with missing graph vertices, missing inventory items, foreign sources, or null treeOrigin', () => {
+    const items: readonly TModelItemSpec[] = [
+      {
+        id: 0,
+        nodeKind: 'foreign-node',
+        path: 'src/README.md',
+        treeOrigin: 'src',
+      },
+      { id: 1, nodeKind: 'root-node', path: 'src/orphan.ts', treeOrigin: null },
+      { id: 2, nodeKind: null, path: 'src/dir', treeOrigin: 'src' },
+      { id: 3, nodeKind: null, path: 'outside.ts', treeOrigin: null },
+    ];
+    const vertices: readonly TVertexSpec[] = [
+      { nature: { inventoryId: 0, kind: 'tree-node' }, path: 'src/README.md' },
+      { nature: { inventoryId: 1, kind: 'tree-node' }, path: 'src/orphan.ts' },
+      { nature: { inventoryId: 2, kind: 'tree-node' }, path: 'src/dir' },
+      {
+        nature: { inventoryId: 99, kind: 'tree-node' },
+        path: 'src/missing-inv.ts',
+      },
+      { nature: { kind: 'external-local-file' }, path: 'outside.ts' },
+    ];
+
+    const model = buildVerificationModel({
+      edges: [
+        createEdge('src/high.ts', 'missing.ts'),
+        createEdge('src/missing-vertex.ts', 'outside.ts'),
+        createEdge('src/README.md', 'outside.ts'),
+        createEdge('src/orphan.ts', 'outside.ts'),
+        createEdge('src/dir', 'outside.ts'),
+        createEdge('src/missing-inv.ts', 'outside.ts'),
+      ],
+      items,
+      trees: [createTree('src', [])],
+      vertices,
+    });
+
+    expect(verifyExternalDependencies(model)).toEqual([]);
+  });
 });

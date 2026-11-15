@@ -14,6 +14,11 @@ import type {
 
 import { verificationModel } from '../_norms@shared/_mocks/verification-model.mock.js';
 import { verifyFractalBranchVisibility } from './fractal-branch-visibility.norm.js';
+import {
+  checkBranchVisibility,
+  collectCrossedBranches,
+  isBranchAccessForbidden,
+} from './fractal-branch-visibility.util.js';
 
 type TModelEntry = {
   readonly depth: number;
@@ -922,5 +927,370 @@ describe('verifyFractalBranchVisibility', () => {
     expect(outcomesNormal).toHaveLength(2);
     expect(outcomesNormal[0]?.element).toBe('src/app/index.ts');
     expect(outcomesNormal[1]?.element).toBe('src/main.ts');
+  });
+
+  it('handles missing endpoints, root-level branches, foreign sources, and cross-tree non-branch targets', () => {
+    const entries: readonly TModelEntry[] = [
+      {
+        depth: 0,
+        domainKind: 'fractal-branch',
+        id: 0,
+        kind: 'directory',
+        parentId: null,
+        path: 'src',
+        preorderEnd: 2,
+        preorderStart: 0,
+      },
+      {
+        depth: 1,
+        id: 1,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 0,
+        path: 'src/shared.type.ts',
+        preorderEnd: 1,
+        preorderStart: 1,
+      },
+      {
+        depth: 1,
+        id: 2,
+        kind: 'file',
+        nodeKind: 'foreign-node',
+        parentId: 0,
+        path: 'src/foreign.ts',
+        preorderEnd: 2,
+        preorderStart: 2,
+      },
+      {
+        depth: 0,
+        domainKind: 'root-layer',
+        id: 3,
+        kind: 'directory',
+        parentId: null,
+        path: 'other',
+        preorderEnd: 4,
+        preorderStart: 3,
+        treeOrigin: 'other',
+      },
+      {
+        depth: 1,
+        id: 4,
+        kind: 'file',
+        nodeKind: 'root-node',
+        parentId: 3,
+        path: 'other/main.ts',
+        preorderEnd: 4,
+        preorderStart: 4,
+        treeOrigin: 'other',
+      },
+    ];
+
+    const model = buildTestModel(entries, [
+      createEdge('src/missing.ts', 'src/shared.type.ts', './shared.type.js', 0),
+      createEdge('other/main.ts', 'src/missing.ts', './missing.js', 1),
+      createEdge('other/main.ts', 'src/shared.type.ts', './shared.type.js', 2),
+      createEdge('src/foreign.ts', 'other/main.ts', '../other/main.js', 3),
+    ]);
+
+    expect(verifyFractalBranchVisibility(model)).toEqual([]);
+
+    const entriesWithBranch: readonly TModelEntry[] = [
+      {
+        depth: 0,
+        domainKind: 'root-layer',
+        id: 0,
+        kind: 'directory',
+        parentId: null,
+        path: 'src',
+        preorderEnd: 4,
+        preorderStart: 0,
+      },
+      {
+        depth: 1,
+        id: 1,
+        kind: 'file',
+        nodeKind: 'foreign-node',
+        parentId: 0,
+        path: 'src/foreign.ts',
+        preorderEnd: 1,
+        preorderStart: 1,
+      },
+      {
+        depth: 1,
+        domainKind: 'fractal-branch',
+        id: 2,
+        kind: 'directory',
+        parentId: 0,
+        path: 'src/_src@shared',
+        preorderEnd: 4,
+        preorderStart: 2,
+      },
+      {
+        depth: 2,
+        domainKind: 'category',
+        id: 3,
+        kind: 'directory',
+        parentId: 2,
+        path: 'src/_src@shared/_types',
+        preorderEnd: 4,
+        preorderStart: 3,
+      },
+      {
+        depth: 3,
+        id: 4,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 3,
+        path: 'src/_src@shared/_types/a.type.ts',
+        preorderEnd: 4,
+        preorderStart: 4,
+      },
+    ];
+    const foreignOutcomes = verifyFractalBranchVisibility(
+      buildTestModel(entriesWithBranch, [
+        createEdge(
+          'src/foreign.ts',
+          'src/_src@shared/_types/a.type.ts',
+          './_src@shared/_types/a.type.js'
+        ),
+      ])
+    );
+    expect(foreignOutcomes).toHaveLength(1);
+    expect(foreignOutcomes[0]?.constraint).toBe(
+      'dependency/fractal-branch-visibility'
+    );
+  });
+
+  it('handles broken parent chains, non-fragment branch parents, and missing branch items cleanly', () => {
+    const entries: readonly TModelEntry[] = [
+      {
+        depth: 0,
+        domainKind: 'root-layer',
+        id: 0,
+        kind: 'directory',
+        parentId: null,
+        path: 'src',
+        preorderEnd: 4,
+        preorderStart: 0,
+      },
+      {
+        depth: 1,
+        domainKind: 'fractal-branch',
+        id: 1,
+        kind: 'directory',
+        parentId: 0,
+        path: 'src/_src@shared',
+        preorderEnd: 3,
+        preorderStart: 1,
+      },
+      {
+        depth: 2,
+        domainKind: 'category',
+        id: 2,
+        kind: 'directory',
+        parentId: 1,
+        path: 'src/_src@shared/_types',
+        preorderEnd: 3,
+        preorderStart: 2,
+      },
+      {
+        depth: 3,
+        id: 3,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 2,
+        path: 'src/_src@shared/_types/a.type.ts',
+        preorderEnd: 3,
+        preorderStart: 3,
+      },
+      {
+        depth: 1,
+        id: 4,
+        kind: 'file',
+        nodeKind: 'root-node',
+        parentId: 0,
+        path: 'src/main.ts',
+        preorderEnd: 4,
+        preorderStart: 4,
+      },
+      {
+        depth: 0,
+        domainKind: 'root-layer',
+        id: 5,
+        kind: 'directory',
+        parentId: null,
+        path: 'other',
+        preorderEnd: 7,
+        preorderStart: 5,
+        treeOrigin: 'other',
+      },
+      {
+        depth: 1,
+        domainKind: 'fractal-branch',
+        id: 6,
+        kind: 'directory',
+        parentId: 99,
+        path: 'other/_other@shared',
+        preorderEnd: 7,
+        preorderStart: 6,
+        treeOrigin: 'other',
+      },
+      {
+        depth: 2,
+        id: 7,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 6,
+        path: 'other/_other@shared/x.type.ts',
+        preorderEnd: 7,
+        preorderStart: 7,
+        treeOrigin: 'other',
+      },
+    ];
+    const model = buildTestModel(entries, []);
+    const { inventory } = model.basis;
+    const { taxonomy } = model;
+
+    const brokenDestination = inventory.items[7];
+    if (brokenDestination !== undefined) {
+      const crossed = collectCrossedBranches(
+        brokenDestination,
+        {
+          descendingDomains: [],
+          differentTrees: true,
+          firstStepDestination: null,
+          firstStepSource: null,
+          isSourceInside: () => false,
+          lowestCommonAncestor: null,
+          sameTree: false,
+        },
+        inventory,
+        taxonomy
+      );
+      expect(crossed.map((item) => item.path)).toEqual(['other/_other@shared']);
+    }
+
+    expect(
+      checkBranchVisibility(
+        createEdge(
+          'src/main.ts',
+          'other/_other@shared/x.type.ts',
+          './x.type.js'
+        ),
+        inventory,
+        taxonomy
+      )
+    ).toBeUndefined();
+
+    expect(
+      checkBranchVisibility(
+        createEdge('src/main.ts', 'src/missing.ts', './missing.js'),
+        inventory,
+        taxonomy
+      )
+    ).toBeUndefined();
+    expect(
+      checkBranchVisibility(
+        createEdge(
+          'src/missing.ts',
+          'src/_src@shared/_types/a.type.ts',
+          './a.type.js'
+        ),
+        inventory,
+        taxonomy
+      )
+    ).toBeUndefined();
+
+    const rootItem = inventory.items.at(0);
+    const mainItem = inventory.items.at(4);
+    const branchItem = inventory.items.at(1);
+    if (
+      rootItem === undefined ||
+      mainItem === undefined ||
+      branchItem === undefined
+    ) {
+      return;
+    }
+
+    expect(
+      isBranchAccessForbidden(
+        rootItem,
+        mainItem,
+        taxonomy.byItemId.get(4),
+        {
+          descendingDomains: [],
+          differentTrees: false,
+          firstStepDestination: null,
+          firstStepSource: null,
+          isSourceInside: () => true,
+          lowestCommonAncestor: rootItem,
+          sameTree: true,
+        },
+        taxonomy
+      )
+    ).toBe(false);
+
+    const rootFragmentAccessModel = buildTestModel(
+      [
+        {
+          depth: 0,
+          domainKind: 'root-fragment',
+          id: 0,
+          kind: 'directory',
+          parentId: null,
+          path: 'src',
+          preorderEnd: 3,
+          preorderStart: 0,
+        },
+        {
+          depth: 1,
+          id: 1,
+          kind: 'file',
+          nodeKind: 'access-node',
+          parentId: 0,
+          path: 'src/index.ts',
+          preorderEnd: 1,
+          preorderStart: 1,
+        },
+      ],
+      []
+    );
+    const [rfRoot, rfAccess] = rootFragmentAccessModel.basis.inventory.items;
+    if (rfRoot !== undefined && rfAccess !== undefined) {
+      expect(
+        isBranchAccessForbidden(
+          rfRoot,
+          rfAccess,
+          rootFragmentAccessModel.taxonomy.byItemId.get(1),
+          {
+            descendingDomains: [],
+            differentTrees: false,
+            firstStepDestination: null,
+            firstStepSource: null,
+            isSourceInside: () => true,
+            lowestCommonAncestor: rfRoot,
+            sameTree: true,
+          },
+          rootFragmentAccessModel.taxonomy
+        )
+      ).toBe(true);
+    }
+    expect(
+      isBranchAccessForbidden(
+        rootItem,
+        undefined,
+        taxonomy.byItemId.get(4),
+        {
+          descendingDomains: [],
+          differentTrees: false,
+          firstStepDestination: null,
+          firstStepSource: null,
+          isSourceInside: () => true,
+          lowestCommonAncestor: rootItem,
+          sameTree: true,
+        },
+        { ...taxonomy, byItemId: new Map() }
+      )
+    ).toBe(false);
   });
 });

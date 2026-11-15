@@ -33,9 +33,10 @@ describe('buildTreeAuthorizationGraph', () => {
     expect(buildTreeAuthorizationGraph([]).treeCount).toBe(0);
   });
 
-  it('indexes tree dependency pairs and skips unknown trees or self-loops', () => {
+  it('indexes tree dependency pairs, deduplicates parallel pairs, and skips unknown trees or self-loops', () => {
     const trees = [
       createTree('a', [
+        { from: 'a', to: 'b' },
         { from: 'a', to: 'b' },
         { from: 'a', to: 'a' },
         { from: 'a', to: 'unknown' },

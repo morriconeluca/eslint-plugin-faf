@@ -681,4 +681,149 @@ describe('verifyCategoryRole', () => {
 
     expect(() => verifyCategoryRole(model)).not.toThrow();
   });
+
+  it('ignores items whose tree origin or imposed role is missing from declarations', () => {
+    const model = buildModel({
+      classifications: [
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'missing-role',
+          itemId: 0,
+          path: 'src/_missing',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 1,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_missing/file.ts',
+        }),
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'type',
+          itemId: 2,
+          path: 'other/_types',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 3,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'other/_types/file.ts',
+        }),
+      ],
+      inventoryItems: [
+        createInventoryItem(0, 'src/_missing', 'directory', null),
+        createInventoryItem(1, 'src/_missing/file.ts', 'file', 0),
+        {
+          ...createInventoryItem(2, 'other/_types', 'directory', null),
+          treeOrigin: 'other',
+        },
+        {
+          ...createInventoryItem(3, 'other/_types/file.ts', 'file', 2),
+          treeOrigin: 'other',
+        },
+      ],
+      roles: [typeRoleNodes],
+    });
+
+    expect(verifyCategoryRole(model)).toEqual([]);
+  });
+
+  it('ignores root-level files, null-treeOrigin files, foreign nodes, unclassified files, and non-category containers', () => {
+    const model = buildModel({
+      classifications: [
+        createItem({
+          domainKind: 'fragment',
+          entryKind: 'directory',
+          imposedRoleName: 'type',
+          itemId: 0,
+          path: 'src/_types/box',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 1,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_types/box/box.ts',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 2,
+          nodeKind: 'foreign-node',
+          path: 'src/README.md',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 3,
+          nodeKind: null,
+          path: 'src/unknown.ts',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 4,
+          nodeKind: 'root-node',
+          path: 'src/main.ts',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 5,
+          nodeKind: 'root-node',
+          path: 'external.ts',
+        }),
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: null,
+          itemId: 6,
+          path: 'src/_unimposed',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 7,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_unimposed/item.ts',
+        }),
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'util',
+          itemId: 8,
+          path: 'src/_utils',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 9,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/index.ts',
+        }),
+      ],
+      inventoryItems: [
+        createInventoryItem(0, 'src/_types/box', 'directory', null),
+        createInventoryItem(1, 'src/_types/box/box.ts', 'file', 0),
+        createInventoryItem(2, 'src/README.md', 'file', null),
+        createInventoryItem(3, 'src/unknown.ts', 'file', 0),
+        createInventoryItem(4, 'src/main.ts', 'file', null),
+        {
+          ...createInventoryItem(5, 'external.ts', 'file', 0),
+          treeOrigin: null,
+        },
+        createInventoryItem(6, 'src/_unimposed', 'directory', null),
+        createInventoryItem(7, 'src/_unimposed/item.ts', 'file', 6),
+        createInventoryItem(8, 'src/_utils', 'directory', null),
+        createInventoryItem(9, 'src/_utils/index.ts', 'file', 8),
+      ],
+      roles: [typeRoleNodes, utilRole],
+    });
+
+    expect(verifyCategoryRole(model)).toEqual([
+      {
+        constraint: 'classification/category-role',
+        element: 'src/_utils/index.ts',
+        family: 'classification',
+        message:
+          "'src/_utils/index.ts' does not have the form or the Role imposed by its Category",
+        normativeReference: 'FAF §6.3.1',
+      },
+    ]);
+  });
 });

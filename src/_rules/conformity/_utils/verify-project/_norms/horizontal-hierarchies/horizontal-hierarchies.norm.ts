@@ -2,8 +2,10 @@ import type { TClassificationOutcome } from '../../../../../../_src@shared/_util
 import type { TVerificationModel } from '../../_verify-project@shared/_types/verification-model.type.js';
 
 import { compareOrdinal } from '../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { collectMemberOutcomes } from './_utils/collect-member-outcomes/index.js';
-import { collectOverlapOutcomes } from './_utils/collect-overlap-outcomes/index.js';
+import {
+  collectMemberOutcomes,
+  collectOverlapOutcomes,
+} from './horizontal-hierarchies.util.js';
 
 export function verifyHorizontalHierarchies(
   model: TVerificationModel

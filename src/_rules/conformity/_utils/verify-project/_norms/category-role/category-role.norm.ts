@@ -3,8 +3,10 @@ import type { TVerificationModel } from '../../_verify-project@shared/_types/ver
 
 import { createOutcome } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import { compareOrdinal } from '../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { isViolatingFragmentsForm } from './_utils/is-violating-fragments-form/index.js';
-import { isViolatingNodeForm } from './_utils/is-violating-node-form/index.js';
+import {
+  isViolatingCategoryNodesForm,
+  isViolatingFragmentsForm,
+} from './category-role.util.js';
 
 export function verifyCategoryRole(
   model: TVerificationModel
@@ -28,8 +30,12 @@ export function verifyCategoryRole(
 
   for (const classification of taxonomy.classifications) {
     const isViolation =
-      isViolatingNodeForm(classification, taxonomy, inventory, trees) ||
-      isViolatingFragmentsForm(classification, taxonomy, inventory, trees);
+      isViolatingCategoryNodesForm(
+        classification,
+        taxonomy,
+        inventory,
+        trees
+      ) || isViolatingFragmentsForm(classification, taxonomy, inventory, trees);
 
     if (isViolation) {
       report(classification.path);

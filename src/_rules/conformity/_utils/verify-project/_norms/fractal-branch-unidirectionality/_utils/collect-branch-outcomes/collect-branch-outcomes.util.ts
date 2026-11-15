@@ -13,7 +13,9 @@ import { createOutcome } from '../../../../../../../../_src@shared/_utils/create
 import { compareOrdinal } from '../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 import { describeEdgeGeometry } from '../../../_norms@shared/_utils/describe-edge-geometry/index.js';
 
-export const collectBranchOutcomes = (() => {
+export function collectBranchOutcomes(
+  model: TVerificationModel
+): readonly TDependencyOutcome[] {
   const FRACTAL_BRANCH = 'fractal-branch';
 
   type TCandidateSource = {
@@ -137,22 +139,6 @@ export const collectBranchOutcomes = (() => {
     );
   };
 
-  const isBetterPath = (
-    candidate: readonly string[],
-    current: readonly string[]
-  ): boolean =>
-    candidate.length < current.length ||
-    (candidate.length === current.length &&
-      candidate.join('\0') < current.join('\0'));
-
-  const hasCycle = (
-    left: readonly string[],
-    right: readonly string[]
-  ): boolean => {
-    const seen = new Set(left);
-    return right.slice(1).some((element) => seen.has(element));
-  };
-
   const sortOutgoingEdges = (
     vertex: number,
     graph: TDependencyGraph
@@ -164,17 +150,17 @@ export const collectBranchOutcomes = (() => {
       indices.push(index);
     }
     indices.sort((first, second) => {
-      const edgeA = graph.edgeMetadata[first];
-      const edgeB = graph.edgeMetadata[second];
-      if (edgeA === undefined || edgeB === undefined) {
+      const leftEdge = graph.edgeMetadata[first];
+      const rightEdge = graph.edgeMetadata[second];
+      if (leftEdge === undefined || rightEdge === undefined) {
         return 0;
       }
       const toComparison = compareOrdinal(
-        edgeA.destinationPath,
-        edgeB.destinationPath
+        leftEdge.destinationPath,
+        rightEdge.destinationPath
       );
       return toComparison === 0
-        ? edgeA.importIndex - edgeB.importIndex
+        ? leftEdge.importIndex - rightEdge.importIndex
         : toComparison;
     });
     return indices;
@@ -187,7 +173,12 @@ export const collectBranchOutcomes = (() => {
     violations: Map<number, TViolationPath>
   ): void => {
     const existing = violations.get(next);
-    if (existing === undefined || isBetterPath(chain, existing.chain)) {
+    const isBetter =
+      existing === undefined ||
+      chain.length < existing.chain.length ||
+      (chain.length === existing.chain.length &&
+        chain.join('\0') < existing.chain.join('\0'));
+    if (isBetter) {
       violations.set(next, {
         chain,
         firstEdge,
@@ -204,17 +195,21 @@ export const collectBranchOutcomes = (() => {
     violations: Map<number, TViolationPath>,
     environment: TBfsEnvironment
   ): void => {
+    const seen = new Set(pathToNext);
     for (const entry of memoized) {
       const destinationPath =
         environment.graph.vertexToPath[entry.targetVertex] ?? '';
+      const hasCycle = entry.chain
+        .slice(1)
+        .some((element) => seen.has(element));
       if (
+        hasCycle ||
         !isViolation(
           source.path,
           destinationPath,
           environment.inventory,
           environment.taxonomy
-        ) ||
-        hasCycle(pathToNext, entry.chain)
+        )
       ) {
         continue;
       }
@@ -358,44 +353,40 @@ export const collectBranchOutcomes = (() => {
     return recorded;
   };
 
-  return function collectBranchOutcomes(
-    model: TVerificationModel
-  ): readonly TDependencyOutcome[] {
-    const {
-      basis: { inventory },
-      graph,
-      taxonomy,
-    } = model;
+  const {
+    basis: { inventory },
+    graph,
+    taxonomy,
+  } = model;
 
-    const sortedEdges = Array.from({ length: graph.vertexCount }, (_, vertex) =>
-      sortOutgoingEdges(vertex, graph)
-    );
+  const sortedEdges = Array.from({ length: graph.vertexCount }, (_, vertex) =>
+    sortOutgoingEdges(vertex, graph)
+  );
 
-    const candidateSources: TCandidateSource[] = [];
-    for (let vertex = 0; vertex < graph.vertexCount; vertex += 1) {
-      const source = getCandidateSource(vertex, graph, inventory, taxonomy);
-      if (source !== undefined) {
-        candidateSources.push(source);
-      }
+  const candidateSources: TCandidateSource[] = [];
+  for (let vertex = 0; vertex < graph.vertexCount; vertex += 1) {
+    const source = getCandidateSource(vertex, graph, inventory, taxonomy);
+    if (source !== undefined) {
+      candidateSources.push(source);
     }
+  }
 
-    candidateSources.sort((first, second) =>
-      first.depth === second.depth
-        ? compareOrdinal(first.path, second.path)
-        : second.depth - first.depth
-    );
+  candidateSources.sort((first, second) =>
+    first.depth === second.depth
+      ? compareOrdinal(first.path, second.path)
+      : second.depth - first.depth
+  );
 
-    const memo = new Map<number, readonly TViolationPath[]>();
-    const environment: TBfsEnvironment = { graph, inventory, memo, taxonomy };
-    const outcomes: TDependencyOutcome[] = [];
+  const memo = new Map<number, readonly TViolationPath[]>();
+  const environment: TBfsEnvironment = { graph, inventory, memo, taxonomy };
+  const outcomes: TDependencyOutcome[] = [];
 
-    for (const source of candidateSources) {
-      const recorded = exploreBfs(source, sortedEdges, environment);
-      for (const violation of recorded) {
-        outcomes.push(buildOutcome(violation, source.path));
-      }
+  for (const source of candidateSources) {
+    const recorded = exploreBfs(source, sortedEdges, environment);
+    for (const violation of recorded) {
+      outcomes.push(buildOutcome(violation, source.path));
     }
+  }
 
-    return outcomes;
-  };
-})();
+  return outcomes;
+}

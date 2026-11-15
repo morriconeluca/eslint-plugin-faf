@@ -16,6 +16,7 @@ import type {
 
 import { verificationModel } from '../_norms@shared/_mocks/verification-model.mock.js';
 import { verifyTreeFrontier } from './tree-frontier.norm.js';
+import { compareTreeFrontierOutcomes } from './tree-frontier.util.js';
 
 type TEntrySpec = {
   readonly path: string;
@@ -453,5 +454,139 @@ describe('verifyTreeFrontier', () => {
     verifyTreeFrontier(model);
     const serializedAfter = JSON.stringify(model);
     expect(serializedAfter).toBe(serializedBefore);
+  });
+
+  it('ignores edges or crossings with missing endpoints, null treeOrigin, or same-tree endpoints, and sorts all tie-breakers', () => {
+    const inventory = createInventory([
+      { path: 'a/start.ts', treeOrigin: 'a' },
+      { path: 'a/end.ts', treeOrigin: 'a' },
+      { path: 'outside.ts', treeOrigin: null },
+    ]);
+    const base = verificationModel();
+    const model: TVerificationModel = {
+      ...base,
+      basis: {
+        ...base.basis,
+        declarations: {
+          ...base.basis.declarations,
+          trees: [createTree('a')],
+        },
+        inventory,
+      },
+      crossings: [
+        createCrossing('missing.ts', 'a/end.ts', ['missing.ts', 'a/end.ts']),
+        createCrossing('a/start.ts', 'missing.ts', [
+          'a/start.ts',
+          'missing.ts',
+        ]),
+        createCrossing('a/start.ts', 'a/end.ts', [
+          'a/start.ts',
+          'outside.ts',
+          'a/end.ts',
+        ]),
+      ],
+      graph: {
+        ...base.graph,
+        edgeMetadata: [
+          createEdge('a/start.ts', 'missing.ts'),
+          createEdge('a/start.ts', 'outside.ts'),
+          createEdge('missing-source.ts', 'a/end.ts'),
+          createEdge('a/start.ts', 'a/end.ts'),
+        ],
+      },
+      surface: {
+        trees: [{ nodes: [], originPath: 'a' }],
+      },
+    };
+
+    expect(verifyTreeFrontier(model)).toEqual([
+      expect.objectContaining({
+        constraint: 'dependency/tree-opacity',
+        from: 'missing-source.ts',
+        to: 'a/end.ts',
+      }),
+    ]);
+
+    const baseOutcome = {
+      chain: ['a/1.ts', 'x.ts', 'b/1.ts'],
+      constraint: 'dependency/tree-authorization' as const,
+      element: 'a/1.ts',
+      family: 'dependency' as const,
+      from: 'a/1.ts',
+      importIndex: 0,
+      message: 'msg',
+      normativeReference: 'FAF §7.2',
+      position: { column: 1, line: 1 },
+      specifier: './a.js',
+      to: 'b/1.ts',
+    };
+    const bareOutcome = {
+      constraint: 'dependency/tree-authorization' as const,
+      element: 'a/1.ts',
+      family: 'dependency' as const,
+      from: 'a/1.ts',
+      importIndex: 0,
+      message: 'msg',
+      normativeReference: 'FAF §7.2',
+      to: 'b/1.ts',
+    };
+    expect(compareTreeFrontierOutcomes(baseOutcome, { ...baseOutcome })).toBe(
+      0
+    );
+    expect(compareTreeFrontierOutcomes(bareOutcome, baseOutcome)).toBeLessThan(
+      0
+    );
+    expect(
+      compareTreeFrontierOutcomes(baseOutcome, bareOutcome)
+    ).toBeGreaterThan(0);
+    expect(
+      compareTreeFrontierOutcomes(
+        { ...bareOutcome, position: { column: 1, line: 1 } },
+        {
+          ...bareOutcome,
+          position: { column: 1, line: 1 },
+          specifier: './a.js',
+        }
+      )
+    ).toBeLessThan(0);
+    expect(
+      compareTreeFrontierOutcomes(
+        {
+          ...bareOutcome,
+          position: { column: 1, line: 1 },
+          specifier: './a.js',
+        },
+        { ...bareOutcome, position: { column: 1, line: 1 } }
+      )
+    ).toBeGreaterThan(0);
+    expect(
+      compareTreeFrontierOutcomes(
+        {
+          ...bareOutcome,
+          position: { column: 1, line: 1 },
+          specifier: './a.js',
+        },
+        baseOutcome
+      )
+    ).toBeLessThan(0);
+    expect(
+      compareTreeFrontierOutcomes(baseOutcome, {
+        ...bareOutcome,
+        position: { column: 1, line: 1 },
+        specifier: './a.js',
+      })
+    ).toBeGreaterThan(0);
+    expect(
+      compareTreeFrontierOutcomes(baseOutcome, {
+        ...baseOutcome,
+        chain: ['a/1.ts', 'y.ts', 'b/1.ts'],
+      })
+    ).toBeLessThan(0);
+    expect(
+      compareTreeFrontierOutcomes(baseOutcome, {
+        ...baseOutcome,
+        message: 'z',
+      })
+    ).toBeLessThan(0);
   });
 });

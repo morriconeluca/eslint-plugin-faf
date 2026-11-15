@@ -6,27 +6,29 @@ import type { TVerificationModel } from '../../_verify-project@shared/_types/ver
 
 import { createOutcome } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import { compareOrdinal } from '../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { groupChildrenByParentId } from './_utils/group-children-by-parent-id/index.js';
-import { hasStratifiedConflict } from './_utils/has-stratified-conflict/index.js';
-import { hasTaxonomicConflict } from './_utils/has-taxonomic-conflict/index.js';
+import {
+  groupChildrenByParentId,
+  hasCategoryContentConflict,
+  hasLayerCategoryConflict,
+} from './exclusive-forms.util.js';
 
 export function verifyExclusiveForms(
   model: TVerificationModel
 ): readonly TOutcome[] {
+  const layerOrBranchDomains = new Set<null | string | undefined>([
+    'fractal-branch',
+    'layer',
+    'root-layer',
+  ]);
+  const categoryOrSubCategoryDomains = new Set<null | string | undefined>([
+    'category',
+    'sub-category',
+  ]);
   const mimeticPaths = new Set(
     model.basis.declarations.trees.flatMap((tree) =>
       tree.mimeticPathStructures.flatMap((structure) => structure.paths)
     )
   );
-  const stratifiedDomains = new Set<null | string | undefined>([
-    'fractal-branch',
-    'layer',
-    'root-layer',
-  ]);
-  const taxonomicDomains = new Set<null | string | undefined>([
-    'category',
-    'sub-category',
-  ]);
   const childrenByParentId = groupChildrenByParentId(
     model.basis.inventory.items
   );
@@ -41,13 +43,15 @@ export function verifyExclusiveForms(
     const classification = model.taxonomy.byItemId.get(item.id);
     const domainKind = classification?.domainKind;
 
-    const isStratified = stratifiedDomains.has(domainKind);
-    const isTaxonomic =
-      taxonomicDomains.has(domainKind) && !mimeticPaths.has(item.path);
+    const isLayerOrBranchContainer = layerOrBranchDomains.has(domainKind);
+    const isCategoryContainer =
+      categoryOrSubCategoryDomains.has(domainKind) &&
+      !mimeticPaths.has(item.path);
 
-    const hasConflict = isStratified
-      ? hasStratifiedConflict(children, model.taxonomy)
-      : isTaxonomic && hasTaxonomicConflict(children, model.taxonomy);
+    const hasConflict = isLayerOrBranchContainer
+      ? hasLayerCategoryConflict(children, model.taxonomy)
+      : isCategoryContainer &&
+        hasCategoryContentConflict(children, model.taxonomy);
 
     if (hasConflict) {
       outcomes.push(

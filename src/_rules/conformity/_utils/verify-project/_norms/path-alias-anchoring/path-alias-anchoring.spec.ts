@@ -681,4 +681,89 @@ describe('verifyPathAliasAnchoring', () => {
 
     expect(verifyPathAliasAnchoring(model)).toEqual([]);
   });
+
+  it('handles missing inventory endpoints, external origins, empty targets, missing bases, cross-tree bases, and aliasAlternatives fallback', () => {
+    const items: readonly TItemSpec[] = [
+      { id: 0, path: 'src/high.ts', treeOrigin: 'src' },
+      { id: 1, path: 'src/_src@shared/low.ts', treeOrigin: 'src' },
+      {
+        domainKind: 'fractal-branch',
+        id: 2,
+        path: 'src/_src@shared',
+        treeOrigin: 'src',
+      },
+      {
+        domainKind: 'fractal-branch',
+        id: 3,
+        path: 'other/_other@shared',
+        treeOrigin: 'other',
+      },
+      { id: 4, path: 'outside.ts', treeOrigin: null },
+    ];
+
+    const model = createTestModel({
+      aliases: [
+        { prefix: '#empty', source: 'common.aliases', targets: [] },
+        {
+          prefix: '#missing-base',
+          source: 'common.aliases',
+          targets: ['src/nonexistent'],
+        },
+        {
+          prefix: '#other-base',
+          source: 'common.aliases',
+          targets: ['other/_other@shared'],
+        },
+      ],
+      edges: [
+        createEdge({
+          aliasUsed: '#missing-source',
+          destinationPath: 'src/_src@shared/low.ts',
+          sourcePath: 'src/nonexistent.ts',
+        }),
+        createEdge({
+          aliasUsed: '#outside',
+          destinationPath: 'src/_src@shared/low.ts',
+          sourcePath: 'outside.ts',
+        }),
+        createEdge({
+          aliasUsed: '#empty',
+          destinationPath: 'src/_src@shared/low.ts',
+          importIndex: 0,
+          sourcePath: 'src/high.ts',
+          specifier: '#empty/low.js',
+        }),
+        createEdge({
+          aliasUsed: '#missing-base',
+          destinationPath: 'src/_src@shared/low.ts',
+          importIndex: 1,
+          sourcePath: 'src/high.ts',
+          specifier: '#missing-base/low.js',
+        }),
+        createEdge({
+          aliasUsed: '#other-base',
+          destinationPath: 'src/_src@shared/low.ts',
+          importIndex: 2,
+          sourcePath: 'src/high.ts',
+          specifier: '#other-base/low.js',
+        }),
+        createEdge({
+          aliasAlternatives: ['src/_src@shared'],
+          aliasUsed: '#fallback',
+          destinationPath: 'src/_src@shared/low.ts',
+          importIndex: 3,
+          sourcePath: 'src/high.ts',
+          specifier: '#fallback/low.js',
+        }),
+      ],
+      items,
+    });
+
+    const outcomes = verifyPathAliasAnchoring(model);
+    expect(outcomes).toMatchObject([
+      { specifier: '#empty/low.js' },
+      { specifier: '#missing-base/low.js' },
+      { specifier: '#other-base/low.js' },
+    ]);
+  });
 });

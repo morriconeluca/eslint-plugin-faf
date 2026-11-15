@@ -12,8 +12,8 @@ import type { TParentDomainType } from './containment-matrix.type.js';
 
 import { createOutcome } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import { compareOrdinal } from '../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { resolveChildType } from './_utils/resolve-child-type/index.js';
 import { CONTAINMENT_MATRIX } from './containment-matrix.config.js';
+import { resolveChildType } from './containment-matrix.util.js';
 
 export function verifyContainmentMatrix(
   model: TVerificationModel

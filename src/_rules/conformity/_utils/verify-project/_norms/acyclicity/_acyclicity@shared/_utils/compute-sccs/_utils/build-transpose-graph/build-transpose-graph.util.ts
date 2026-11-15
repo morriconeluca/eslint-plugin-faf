@@ -2,20 +2,23 @@ export function buildTransposeGraph(
   nodeCount: number,
   adjacency: readonly (readonly number[])[]
 ): readonly (readonly number[])[] {
-  const revAdjacency: number[][] = Array.from({ length: nodeCount }, () => []);
+  const reverseAdjacency: number[][] = Array.from(
+    { length: nodeCount },
+    () => []
+  );
 
-  for (let u = 0; u < nodeCount; u += 1) {
-    const neighbors = adjacency[u];
+  for (let sourceVertex = 0; sourceVertex < nodeCount; sourceVertex += 1) {
+    const neighbors = adjacency[sourceVertex];
     if (neighbors === undefined) {
       continue;
     }
-    for (const v of neighbors) {
-      const row = revAdjacency[v];
+    for (const targetVertex of neighbors) {
+      const row = reverseAdjacency[targetVertex];
       if (row !== undefined) {
-        row.push(u);
+        row.push(sourceVertex);
       }
     }
   }
 
-  return revAdjacency;
+  return reverseAdjacency;
 }

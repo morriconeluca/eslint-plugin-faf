@@ -4,8 +4,8 @@ import type {
 } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import type { TVerificationModel } from '../../_verify-project@shared/_types/verification-model.type.js';
 
-import { checkEdgePeerSeparation } from './_utils/check-edge-peer-separation/index.js';
-import { compareEdgeOutcomes } from './_utils/compare-edge-outcomes/index.js';
+import { compareEdgeOutcomes } from '../_norms@shared/_utils/compare-edge-outcomes/index.js';
+import { checkEdgePeerSeparation } from './peer-separation.util.js';
 
 export function verifyPeerSeparation(
   model: TVerificationModel

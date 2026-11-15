@@ -11,6 +11,7 @@ import type {
 
 import { verificationModel } from '../_norms@shared/_mocks/verification-model.mock.js';
 import { verifyReExportProhibition } from './re-export-prohibition.norm.js';
+import { compareSymbolOutcomes } from './re-export-prohibition.util.js';
 
 const createItem = (
   overrides: Partial<TItemClassification> &
@@ -1027,6 +1028,158 @@ describe('verifyReExportProhibition', () => {
       );
 
       expect(afterSnapshot).toBe(snapshot);
+    });
+
+    it('deduplicates re-export positions on the same line, handles unmatched direct re-export specifiers, and sorts outcomes by line within the same file', () => {
+      const model = buildModel([
+        {
+          classification: createItem({
+            entryKind: 'file',
+            itemId: 1,
+            path: 'src/_utils/multi-line.util.ts',
+          }),
+          record: createRecord(
+            [
+              {
+                exportedName: 'later',
+                isTypeOnly: false,
+                origin: {
+                  importedName: 'later',
+                  specifier: './c.js',
+                  type: 'imported-binding',
+                },
+                position: { column: 10, line: 10 },
+              },
+              {
+                exportedName: 'firstA',
+                isTypeOnly: false,
+                origin: {
+                  importedName: 'firstA',
+                  specifier: './a.js',
+                  type: 'imported-binding',
+                },
+                position: { column: 3, line: 6 },
+              },
+              {
+                exportedName: 'firstB',
+                isTypeOnly: false,
+                origin: {
+                  importedName: 'firstB',
+                  specifier: './a.js',
+                  type: 'imported-binding',
+                },
+                position: { column: 3, line: 7 },
+              },
+              {
+                exportedName: 'second',
+                isTypeOnly: false,
+                origin: {
+                  importedName: 'second',
+                  specifier: './b.js',
+                  type: 'imported-binding',
+                },
+                position: { column: 10, line: 2 },
+              },
+              {
+                exportedName: 'third',
+                isTypeOnly: false,
+                origin: {
+                  importedName: 'third',
+                  specifier: './b.js',
+                  type: 'imported-binding',
+                },
+                position: { column: 20, line: 2 },
+              },
+              {
+                exportedName: 'afterDirect',
+                isTypeOnly: false,
+                origin: {
+                  importedName: 'afterDirect',
+                  specifier: './a.js',
+                  type: 'imported-binding',
+                },
+                position: { column: 10, line: 8 },
+              },
+              {
+                exportedName: 'beforeLaterDirect',
+                isTypeOnly: false,
+                origin: {
+                  importedName: 'beforeLaterDirect',
+                  specifier: './d.js',
+                  type: 'imported-binding',
+                },
+                position: { column: 10, line: 11 },
+              },
+            ],
+            [
+              {
+                isTypeOnly: false,
+                kind: 'export-named-from',
+                position: { column: 1, line: 1 },
+                specifier: './unused.js',
+              },
+              {
+                isTypeOnly: false,
+                kind: 'export-named-from',
+                position: { column: 1, line: 5 },
+                specifier: './a.js',
+              },
+              {
+                isTypeOnly: false,
+                kind: 'export-named-from',
+                position: { column: 1, line: 8 },
+                specifier: './a.js',
+              },
+              {
+                isTypeOnly: false,
+                kind: 'export-named-from',
+                position: { column: 1, line: 12 },
+                specifier: './d.js',
+              },
+            ]
+          ),
+        },
+      ]);
+
+      const outcomes = verifyReExportProhibition(model);
+      expect(outcomes.map((outcome) => outcome.position)).toEqual([
+        { column: 1, line: 2 },
+        { column: 1, line: 5 },
+        { column: 1, line: 10 },
+        { column: 1, line: 11 },
+      ]);
+
+      const baseSymbolOutcome = {
+        constraint: 'symbol/re-export-prohibition' as const,
+        element: 'src/_utils/a.util.ts',
+        family: 'symbol' as const,
+        message: 'msg-a',
+        normativeReference: 'FAF §5',
+      };
+      expect(
+        compareSymbolOutcomes(baseSymbolOutcome, {
+          ...baseSymbolOutcome,
+          element: 'src/_utils/b.util.ts',
+        })
+      ).toBeLessThan(0);
+      expect(
+        compareSymbolOutcomes(baseSymbolOutcome, {
+          ...baseSymbolOutcome,
+          position: { column: 1, line: 1 },
+        })
+      ).toBeLessThan(0);
+      expect(
+        compareSymbolOutcomes(
+          { ...baseSymbolOutcome, position: { column: 1, line: 1 } },
+          baseSymbolOutcome
+        )
+      ).toBeGreaterThan(0);
+      expect(
+        compareSymbolOutcomes(baseSymbolOutcome, {
+          ...baseSymbolOutcome,
+          message: 'msg-b',
+        })
+      ).toBeLessThan(0);
     });
   });
 });

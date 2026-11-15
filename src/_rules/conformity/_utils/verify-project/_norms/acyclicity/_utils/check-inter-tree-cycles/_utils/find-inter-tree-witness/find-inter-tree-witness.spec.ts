@@ -42,10 +42,16 @@ describe('findInterTreeWitness', () => {
 
   it('handles empty segment in witness transitions', () => {
     const transitions = [
-      [null, { segment: [] }],
-      [{ segment: [] }, null],
+      [null, { segment: [] }, { segment: [] }],
+      [{ segment: [] }, null, null],
+      [{ segment: ['c/1.ts', 'a/1.ts'] }, null, null],
     ];
-    const result = findInterTreeWitness([0, 1], [[1], [0]], transitions, 2);
+    const result = findInterTreeWitness(
+      [0, 1, 2],
+      [[1, 2], [0], [0]],
+      transitions,
+      3
+    );
     expect(result?.element).toBe('');
   });
 
@@ -163,5 +169,71 @@ describe('findInterTreeWitness', () => {
     ];
     expect(findInterTreeWitness([0, 1], [[1], [0]], transitions, 2)).toBeNull();
     expect(findInterTreeWitness([0, 1], [[1]], transitions, 2)).toBeNull();
+  });
+
+  it('prunes BFS queue when currentDepth reaches bestLength', () => {
+    const transitions = [
+      [
+        null,
+        { segment: ['a/1.ts', 'b/1.ts'] },
+        { segment: ['a/2.ts', 'c/2.ts'] },
+        null,
+      ],
+      [{ segment: ['b/1.ts', 'a/1.ts'] }, null, null, null],
+      [null, null, null, { segment: ['c/1.ts', 'd/1.ts'] }],
+      [{ segment: ['d/1.ts', 'a/1.ts'] }, null, null, null],
+    ];
+    const result = findInterTreeWitness(
+      [0, 1, 2, 3],
+      [[1, 2], [0], [3], [0]],
+      transitions,
+      4
+    );
+    expect(result?.witness).toEqual([
+      ['a/1.ts', 'b/1.ts'],
+      ['b/1.ts', 'a/1.ts'],
+    ]);
+  });
+
+  it('tie-breaks equal-length cycles by segment destination and subsequent segments', () => {
+    const transitions = [
+      [
+        null,
+        { segment: ['a/1.ts', 'b/9.ts'] },
+        { segment: ['a/1.ts', 'c/1.ts'] },
+      ],
+      [{ segment: ['b/9.ts', 'a/1.ts'] }, null, null],
+      [{ segment: ['c/1.ts', 'a/1.ts'] }, null, null],
+    ];
+    const result = findInterTreeWitness(
+      [0, 1, 2],
+      [[1, 2], [0], [0]],
+      transitions,
+      3
+    );
+    expect(result?.witness).toEqual([
+      ['a/1.ts', 'b/9.ts'],
+      ['b/9.ts', 'a/1.ts'],
+    ]);
+
+    const secondSegmentTieBreak = [
+      [
+        null,
+        { segment: ['a/1.ts', 'b/1.ts'] },
+        { segment: ['a/1.ts', 'b/1.ts'] },
+      ],
+      [{ segment: ['b/2.ts', 'a/1.ts'] }, null, null],
+      [{ segment: ['c/1.ts', 'a/1.ts'] }, null, null],
+    ];
+    const resultSecond = findInterTreeWitness(
+      [0, 1, 2],
+      [[1, 2], [0], [0]],
+      secondSegmentTieBreak,
+      3
+    );
+    expect(resultSecond?.witness).toEqual([
+      ['a/1.ts', 'b/1.ts'],
+      ['b/2.ts', 'a/1.ts'],
+    ]);
   });
 });

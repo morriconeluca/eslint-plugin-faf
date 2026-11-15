@@ -7,9 +7,6 @@ import type {
   TEdgeGeometryElement,
 } from './describe-edge-geometry.type.js';
 
-import { collectAncestors } from './_utils/collect-ancestors/index.js';
-import { findLowestCommonAncestor } from './_utils/find-lowest-common-ancestor/index.js';
-
 export function describeEdgeGeometry(
   source: TEdgeGeometryElement,
   destination: TEdgeGeometryElement,
@@ -38,6 +35,44 @@ export function describeEdgeGeometry(
     return element;
   };
 
+  const collectAncestors = (
+    item: TInventoryItem
+  ): readonly TInventoryItem[] => {
+    const chain: TInventoryItem[] = [];
+    let current: TInventoryItem | undefined = item;
+    while (current !== undefined) {
+      chain.unshift(current);
+      current =
+        current.parentId === null
+          ? undefined
+          : inventory.items[current.parentId];
+    }
+    return chain;
+  };
+
+  const findLowestCommonAncestor = (
+    sourceAncestors: readonly TInventoryItem[],
+    destinationAncestors: readonly TInventoryItem[]
+  ): number => {
+    if (sourceAncestors[0]?.id !== destinationAncestors[0]?.id) {
+      return -1;
+    }
+
+    let lcaIndex = 0;
+    let nextSource = sourceAncestors[1];
+    let nextDestination = destinationAncestors[1];
+    while (
+      nextSource !== undefined &&
+      nextDestination !== undefined &&
+      nextSource.id === nextDestination.id
+    ) {
+      lcaIndex += 1;
+      nextSource = sourceAncestors[lcaIndex + 1];
+      nextDestination = destinationAncestors[lcaIndex + 1];
+    }
+    return lcaIndex;
+  };
+
   const sourceItem = resolveItem(source);
   const destinationItem = resolveItem(destination);
 
@@ -50,8 +85,8 @@ export function describeEdgeGeometry(
     return interTreeGeometry();
   }
 
-  const sourceAncestors = collectAncestors(sourceItem, inventory);
-  const destinationAncestors = collectAncestors(destinationItem, inventory);
+  const sourceAncestors = collectAncestors(sourceItem);
+  const destinationAncestors = collectAncestors(destinationItem);
 
   const lcaIndex = findLowestCommonAncestor(
     sourceAncestors,

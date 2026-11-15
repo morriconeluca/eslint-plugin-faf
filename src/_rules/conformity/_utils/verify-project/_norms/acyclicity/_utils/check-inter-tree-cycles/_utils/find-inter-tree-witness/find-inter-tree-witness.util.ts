@@ -1,8 +1,6 @@
 import type { TSourceLocation } from '../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 
-import { buildTreePathWitness } from './_utils/build-tree-path-witness/index.js';
-import { compareTreeWitnesses } from './_utils/compare-tree-witnesses/index.js';
-import { reconstructTreeCycle } from './_utils/reconstruct-tree-cycle/index.js';
+import { compareOrdinal } from '../../../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 
 export function findInterTreeWitness(
   component: readonly number[],
@@ -17,28 +15,103 @@ export function findInterTreeWitness(
   readonly position?: TSourceLocation;
   readonly witness: readonly (readonly string[])[];
 } {
+  if (component.length < 2) {
+    return null;
+  }
+
   type TTreeBfsState = {
     bestLength: number;
     bestPosition?: TSourceLocation;
     bestWitness: null | readonly (readonly string[])[];
   };
 
-  if (component.length < 2) {
-    return null;
-  }
+  type TQueueEntry = {
+    readonly depth: number;
+    readonly node: number;
+  };
 
   const componentSet = new Set(component);
+  const state: TTreeBfsState = {
+    bestLength: component.length,
+    bestWitness: null,
+  };
 
-  function evaluateTreeCycle(
+  const isWitnessSmaller = (
+    candidate: readonly (readonly string[])[]
+  ): boolean => {
+    const incumbent = state.bestWitness;
+    if (incumbent === null) {
+      return true;
+    }
+    for (const [index, leftSegment] of candidate.entries()) {
+      const rightSegment = incumbent[index];
+      if (rightSegment === undefined) {
+        return false;
+      }
+      const sourceComparison = compareOrdinal(
+        leftSegment[0] ?? '',
+        rightSegment[0] ?? ''
+      );
+      const segmentComparison =
+        sourceComparison === 0
+          ? compareOrdinal(leftSegment.at(-1) ?? '', rightSegment.at(-1) ?? '')
+          : sourceComparison;
+      if (segmentComparison !== 0) {
+        return segmentComparison < 0;
+      }
+    }
+    return candidate.length < incumbent.length;
+  };
+
+  const buildCycleWitness = (
+    start: number,
+    lastNode: number,
+    parent: Int32Array
+  ): null | {
+    readonly position?: TSourceLocation;
+    readonly witness: readonly (readonly string[])[];
+  } => {
+    const reversedTrees: number[] = [];
+    let trace = lastNode;
+    while (trace !== start) {
+      reversedTrees.push(trace);
+      trace = parent[trace] ?? start;
+    }
+    reversedTrees.reverse();
+    const treePath: readonly [number, ...number[]] = [
+      start,
+      ...reversedTrees,
+      start,
+    ];
+
+    const [initialTreeIndex, ...remainingTreeIndices] = treePath;
+    const witness: (readonly string[])[] = [];
+    let firstPosition: TSourceLocation | undefined;
+    let previousTreeIndex = initialTreeIndex;
+
+    for (const [stepIndex, nextTreeIndex] of remainingTreeIndices.entries()) {
+      const transition = transitions[previousTreeIndex]?.[nextTreeIndex];
+      if (transition === null || transition === undefined) {
+        return null;
+      }
+      if (stepIndex === 0) {
+        firstPosition = transition.position;
+      }
+      witness.push(transition.segment);
+      previousTreeIndex = nextTreeIndex;
+    }
+
+    return { position: firstPosition, witness };
+  };
+
+  const evaluateTreeCycle = (
     start: number,
     currentNode: number,
     currentDepth: number,
-    parent: Int32Array,
-    state: TTreeBfsState
-  ): void {
+    parent: Int32Array
+  ): void => {
     const cycleLength = currentDepth + 1;
-    const treePath = reconstructTreeCycle(start, currentNode, parent);
-    const built = buildTreePathWitness(treePath, transitions);
+    const built = buildCycleWitness(start, currentNode, parent);
     if (built === null) {
       return;
     }
@@ -48,25 +121,22 @@ export function findInterTreeWitness(
       state.bestPosition = built.position;
       return;
     }
-    if (
-      state.bestWitness !== null &&
-      compareTreeWitnesses(built.witness, state.bestWitness) >= 0
-    ) {
+    if (!isWitnessSmaller(built.witness)) {
       return;
     }
+
     state.bestWitness = built.witness;
     state.bestPosition = built.position;
-  }
+  };
 
-  function exploreTreeNeighbors(
+  const exploreTreeNeighbors = (
     currentNode: number,
     start: number,
     currentDepth: number,
-    depth: Int32Array,
+    visited: Uint8Array,
     parent: Int32Array,
-    queue: number[],
-    state: TTreeBfsState
-  ): void {
+    queue: TQueueEntry[]
+  ): void => {
     const neighbors = adjacency[currentNode] ?? [];
 
     for (const nextNode of neighbors) {
@@ -74,62 +144,52 @@ export function findInterTreeWitness(
         continue;
       }
       if (nextNode === start) {
-        evaluateTreeCycle(start, currentNode, currentDepth, parent, state);
+        evaluateTreeCycle(start, currentNode, currentDepth, parent);
       } else {
-        const recordedDepth = depth[nextNode];
-        if (recordedDepth === -1) {
-          depth[nextNode] = currentDepth + 1;
+        if (visited[nextNode] === 0) {
+          visited[nextNode] = 1;
           parent[nextNode] = currentNode;
-          queue.push(nextNode);
+          queue.push({ depth: currentDepth + 1, node: nextNode });
         }
       }
     }
-  }
+  };
 
-  function runTreeBfsFromStart(start: number, state: TTreeBfsState): void {
-    const depth = new Int32Array(treeCount);
-    depth.fill(-1);
+  const runTreeBfsFromStart = (start: number): void => {
+    const visited = new Uint8Array(treeCount);
     const parent = new Int32Array(treeCount);
     parent.fill(-1);
 
-    const queue: number[] = [start];
-    depth[start] = 0;
-    let queueHead = 0;
+    const queue: TQueueEntry[] = [{ depth: 0, node: start }];
+    visited[start] = 1;
 
-    while (queueHead < queue.length) {
-      const currentNode = queue[queueHead] ?? 0;
-      queueHead += 1;
-      const currentDepth = depth[currentNode] ?? 0;
-      if (currentDepth >= state.bestLength) {
+    let entry = queue.shift();
+    while (entry !== undefined) {
+      if (entry.depth >= state.bestLength) {
         break;
       }
       exploreTreeNeighbors(
-        currentNode,
+        entry.node,
         start,
-        currentDepth,
-        depth,
+        entry.depth,
+        visited,
         parent,
-        queue,
-        state
+        queue
       );
+      entry = queue.shift();
     }
-  }
-
-  const state: TTreeBfsState = {
-    bestLength: component.length,
-    bestWitness: null,
   };
 
   for (const start of component) {
-    runTreeBfsFromStart(start, state);
+    runTreeBfsFromStart(start);
   }
 
   if (state.bestWitness === null) {
     return null;
   }
 
-  const firstSegment = state.bestWitness[0] ?? [];
-  const element = firstSegment[0] ?? '';
+  const firstSegment = state.bestWitness[0];
+  const element = firstSegment?.[0] ?? '';
 
   return {
     element,

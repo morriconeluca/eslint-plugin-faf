@@ -12,6 +12,10 @@ import type {
 
 import { verificationModel } from '../_norms@shared/_mocks/verification-model.mock.js';
 import { verifyPrivateCategoryVisibility } from './private-category-visibility.norm.js';
+import {
+  checkPrivateCategoryUnidirectionality,
+  checkPrivateCategoryVisibility,
+} from './private-category-visibility.util.js';
 
 type TModelEntry = {
   readonly depth: number;
@@ -21,6 +25,7 @@ type TModelEntry = {
   readonly kind: 'directory' | 'file';
   readonly nodeKind?:
     | 'access-node'
+    | 'foreign-node'
     | 'fragment-node'
     | 'master-node'
     | 'root-node'
@@ -674,5 +679,179 @@ describe('verifyPrivateCategoryVisibility', () => {
     Object.freeze(model.graph.edgeMetadata);
 
     expect(() => verifyPrivateCategoryVisibility(model)).not.toThrow();
+  });
+
+  it('handles missing endpoints, cross-tree edges, directory targets, foreign targets, and same-private-category collaboration', () => {
+    const entries: readonly TModelEntry[] = [
+      ...compoundEntries,
+      {
+        depth: 0,
+        id: 19,
+        kind: 'file',
+        nodeKind: 'root-node',
+        parentId: null,
+        path: 'pkg/index.ts',
+        preorderEnd: 19,
+        preorderStart: 19,
+        treeOrigin: 'pkg',
+      },
+      {
+        depth: 2,
+        id: 20,
+        kind: 'file',
+        nodeKind: 'root-node',
+        parentId: 2,
+        path: 'src/table/alien.ts',
+        preorderEnd: 20,
+        preorderStart: 20,
+      },
+    ];
+
+    const model = buildTestModel(entries, [
+      createEdge(
+        'src/table/table.component.ts',
+        'src/missing.ts',
+        './missing.js'
+      ),
+      createEdge(
+        'src/missing.ts',
+        'src/table/_components/table-body/index.ts',
+        './index.js'
+      ),
+      createEdge(
+        'src/table/table.component.ts',
+        'pkg/index.ts',
+        '../../pkg/index.js'
+      ),
+      createEdge(
+        'src/table/_components/table-body/table-body.component.ts',
+        'src/table',
+        '../..'
+      ),
+      createEdge(
+        'src/table/_components/table-body/table-body.component.ts',
+        'src/table/_components/table-body/index.ts',
+        './index.js'
+      ),
+      createEdge(
+        'src/table/_components/table-body/table-body.component.ts',
+        'src/table/alien.ts',
+        '../../alien.js'
+      ),
+      createEdge(
+        'src/table/_components/table-body/table-body.component.ts',
+        'src/table/README.md',
+        '../../README.md'
+      ),
+      createEdge(
+        'src/table/_table@shared/shared.type.ts',
+        'src/table/table.component.ts',
+        '../table.component.js'
+      ),
+    ]);
+
+    const entriesWithForeign: readonly TModelEntry[] = [
+      ...entries,
+      {
+        depth: 2,
+        id: 21,
+        kind: 'file',
+        nodeKind: 'foreign-node',
+        parentId: 2,
+        path: 'src/table/README.md',
+        preorderEnd: 21,
+        preorderStart: 21,
+      },
+    ];
+    const foreignModel = buildTestModel(
+      entriesWithForeign,
+      model.graph.edgeMetadata
+    );
+    const withoutAlienByItemId = new Map(foreignModel.taxonomy.byItemId);
+    withoutAlienByItemId.delete(20);
+    const withoutAlien = {
+      ...foreignModel,
+      taxonomy: {
+        ...foreignModel.taxonomy,
+        byItemId: withoutAlienByItemId,
+      },
+    };
+    expect(verifyPrivateCategoryVisibility(withoutAlien)).toEqual([]);
+
+    const phantomEdge = createEdge(
+      'src/table/phantom.ts',
+      'src/table/_components/table-body/index.ts'
+    );
+    const withPhantom = {
+      ...foreignModel,
+      basis: {
+        ...foreignModel.basis,
+        inventory: {
+          ...foreignModel.basis.inventory,
+          pathToId: new Map([
+            ...foreignModel.basis.inventory.pathToId,
+            ['src/table/phantom.ts', 999],
+          ]),
+        },
+      },
+    };
+    expect(
+      checkPrivateCategoryVisibility(
+        phantomEdge,
+        withPhantom.basis.inventory,
+        withPhantom.taxonomy
+      )
+    ).toBeUndefined();
+
+    const missingTaxonomy = {
+      ...foreignModel.taxonomy,
+      byItemId: new Map(
+        [...foreignModel.taxonomy.byItemId].filter(
+          ([id]) => id !== 2 && id !== 3
+        )
+      ),
+    };
+    const missingParentOutcome = checkPrivateCategoryVisibility(
+      createEdge(
+        'src/table/table.component.ts',
+        'src/table/_components/table-body/index.ts'
+      ),
+      foreignModel.basis.inventory,
+      missingTaxonomy
+    );
+    expect(missingParentOutcome?.constraint).toBe(
+      'dependency/private-category-visibility'
+    );
+
+    const rootNonRootConsumer: readonly TModelEntry[] = [
+      ...rootEntries,
+      {
+        depth: 2,
+        id: 13,
+        kind: 'file',
+        nodeKind: 'fragment-node',
+        parentId: 2,
+        path: 'src/app/extra.util.ts',
+        preorderEnd: 13,
+        preorderStart: 13,
+      },
+    ];
+    const rootExtraModel = buildTestModel(rootNonRootConsumer, []);
+    const rootExtraOutcome = checkPrivateCategoryVisibility(
+      createEdge('src/app/extra.util.ts', 'src/app/_components/shell/index.ts'),
+      rootExtraModel.basis.inventory,
+      rootExtraModel.taxonomy
+    );
+    expect(rootExtraOutcome?.constraint).toBe(
+      'dependency/private-category-visibility'
+    );
+
+    expect(
+      checkPrivateCategoryUnidirectionality(
+        createEdge('src/table/table.component.ts', 'src/table/phantom.ts'),
+        withPhantom.basis.inventory,
+        withPhantom.taxonomy
+      )
+    ).toBeUndefined();
   });
 });

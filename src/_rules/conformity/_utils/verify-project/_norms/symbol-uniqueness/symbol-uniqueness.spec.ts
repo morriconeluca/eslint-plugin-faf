@@ -668,5 +668,110 @@ describe('verifySymbolUniqueness', () => {
 
       expect(model).toEqual(snapshotBefore);
     });
+
+    it('handles directory entries, fragment/unauthorized nodeKinds, implicit roles, uncataloged roles, and master non-local exports', () => {
+      const base = verificationModel();
+      const tree = createTree([createRole('type', true)]);
+
+      const directoryPath = 'src/_utils';
+      const fragmentNodePath = 'src/widget/widget.util.ts';
+      const unauthorizedNodePath = 'src/widget/extra.util.ts';
+      const implicitPath = 'src/_styles/theme.css';
+      const uncatalogedPath = 'src/_custom/item.custom.ts';
+      const badMasterPath = 'src/bad/bad.component.ts';
+
+      const items = [
+        {
+          ...createInventoryItem(0, directoryPath),
+          kind: 'directory' as const,
+        },
+        createInventoryItem(1, fragmentNodePath),
+        createInventoryItem(2, unauthorizedNodePath),
+        createInventoryItem(3, implicitPath),
+        createInventoryItem(4, uncatalogedPath),
+        createInventoryItem(5, badMasterPath),
+      ];
+
+      const classifications: TItemClassification[] = [
+        {
+          ...createClassification(0, directoryPath, null, null),
+          domainKind: 'category',
+          entryKind: 'directory',
+          role: { kind: 'absent', roleName: null },
+        },
+        createClassification(1, fragmentNodePath, 'fragment-node', 'util'),
+        createClassification(
+          2,
+          unauthorizedNodePath,
+          'unauthorized-logical-node',
+          'util'
+        ),
+        {
+          ...createClassification(3, implicitPath, 'category-node', 'style'),
+          role: { kind: 'implicit', roleName: 'style' },
+        },
+        createClassification(4, uncatalogedPath, 'category-node', 'custom'),
+        createClassification(5, badMasterPath, 'master-node', 'component'),
+      ];
+
+      const records = new Map<string, TModuleRecord>([
+        [
+          badMasterPath,
+          {
+            exports: [
+              {
+                exportedName: 'Bad',
+                isTypeOnly: false,
+                origin: {
+                  importedName: 'Bad',
+                  specifier: './other.js',
+                  type: 'imported-binding',
+                },
+                position: { column: 1, line: 1 },
+              },
+            ],
+            imports: [],
+            language: 'script',
+            symbols: [
+              { name: 'Bad', position: { column: 1, line: 1 }, space: 'value' },
+            ],
+            unsupportedSyntaxes: [],
+          },
+        ],
+        [directoryPath, createRecord(['a', 'b'])],
+        [fragmentNodePath, createRecord(['a', 'b'])],
+        [implicitPath, createRecord(['a', 'b'])],
+        [unauthorizedNodePath, createRecord(['a', 'b'])],
+        [uncatalogedPath, createRecord(['a', 'b'])],
+      ]);
+
+      const model: TVerificationModel = {
+        ...base,
+        basis: {
+          ...base.basis,
+          declarations: { ...base.basis.declarations, trees: [tree] },
+          inventory: {
+            ...base.basis.inventory,
+            items,
+            pathToId: new Map(items.map((item) => [item.path, item.id])),
+          },
+        },
+        modules: { ...base.modules, records },
+        taxonomy: {
+          ...base.taxonomy,
+          byItemId: new Map(classifications.map((c) => [c.itemId, c])),
+          byPath: new Map(classifications.map((c) => [c.path, c])),
+          classifications,
+        },
+      };
+
+      const outcomes = verifySymbolUniqueness(model);
+      expect(outcomes.map((o) => [o.element, o.constraint])).toEqual([
+        [uncatalogedPath, 'symbol/symbol-uniqueness'],
+        [badMasterPath, 'symbol/master-symbol'],
+        [unauthorizedNodePath, 'symbol/symbol-uniqueness'],
+        [fragmentNodePath, 'symbol/symbol-uniqueness'],
+      ]);
+    });
   });
 });

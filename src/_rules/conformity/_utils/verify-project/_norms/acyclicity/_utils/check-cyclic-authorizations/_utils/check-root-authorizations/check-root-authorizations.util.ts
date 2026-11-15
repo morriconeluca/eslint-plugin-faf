@@ -9,7 +9,6 @@ import { compareOrdinal } from '../../../../../../_verify-project@shared/_utils/
 import { computeSccs } from '../../../../_acyclicity@shared/_utils/compute-sccs/index.js';
 import { buildRootAuthorizationGraph } from './_utils/build-root-authorization-graph/index.js';
 import { isRootCycleExercised } from './_utils/is-root-cycle-exercised/index.js';
-import { selectMinElement } from './_utils/select-min-element/index.js';
 
 export function checkRootAuthorizations(
   model: TVerificationModel,
@@ -22,14 +21,14 @@ export function checkRootAuthorizations(
   }
 
   const sccs = computeSccs(fragmentCount, adjacency);
-  const cyclicFragSccs = sccs.filter((c) => c.length >= 2);
-  if (cyclicFragSccs.length === 0) {
+  const cyclicFragmentSccs = sccs.filter((component) => component.length >= 2);
+  if (cyclicFragmentSccs.length === 0) {
     return [];
   }
 
   const outcomes: TUnverifiedOutcome[] = [];
 
-  for (const component of cyclicFragSccs) {
+  for (const component of cyclicFragmentSccs) {
     const names = fragmentPaths.filter((_, index) => component.includes(index));
     names.sort(compareOrdinal);
 
@@ -37,7 +36,7 @@ export function checkRootAuthorizations(
       continue;
     }
 
-    const minPath = selectMinElement(names);
+    const [minPath = ''] = names;
     outcomes.push(
       createOutcome('unverified/cyclic-root-authorization', {
         element: minPath,

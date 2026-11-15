@@ -419,4 +419,24 @@ describe('verifySubGraphNodeIsolation', () => {
     verifySubGraphNodeIsolation(model);
     expect(JSON.stringify(model)).toBe(snapshot);
   });
+
+  it('ignores edges with unindexed endpoints or directory sources without nodeKind', () => {
+    const model = buildTestModel([
+      createEdge('src/main.ts', 'src/missing.spec.ts', './missing.spec.js', 0),
+      createEdge(
+        'src/missing.ts',
+        'src/_components/table/table.spec.ts',
+        './_components/table/table.spec.js',
+        1
+      ),
+      createEdge(
+        'src/_components/table',
+        'src/_components/table/table.spec.ts',
+        './table.spec.js',
+        2
+      ),
+    ]);
+
+    expect(verifySubGraphNodeIsolation(model)).toEqual([]);
+  });
 });

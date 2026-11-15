@@ -739,4 +739,71 @@ describe('verifyFragmentEncapsulation', () => {
     verifyFragmentEncapsulation(model);
     expect(JSON.stringify(model)).toBe(snapshot);
   });
+
+  it('ignores missing destinations, root-level files without parent, and non-fragment parents', () => {
+    const entries: TModelEntry[] = [
+      {
+        depth: 0,
+        id: 0,
+        kind: 'file',
+        nodeKind: 'master-node',
+        parentId: null,
+        path: 'src/root-master.ts',
+        preorderEnd: 0,
+        preorderStart: 0,
+      },
+      {
+        depth: 0,
+        domainKind: 'category',
+        id: 1,
+        kind: 'directory',
+        parentId: null,
+        path: 'src/_utils',
+        preorderEnd: 2,
+        preorderStart: 1,
+      },
+      {
+        depth: 1,
+        id: 2,
+        kind: 'file',
+        nodeKind: 'master-node',
+        parentId: 1,
+        path: 'src/_utils/loose.util.ts',
+        preorderEnd: 2,
+        preorderStart: 2,
+      },
+      {
+        depth: 0,
+        id: 3,
+        kind: 'file',
+        nodeKind: 'master-node',
+        parentId: 99,
+        path: 'src/orphan.util.ts',
+        preorderEnd: 3,
+        preorderStart: 3,
+      },
+      {
+        depth: 0,
+        id: 4,
+        kind: 'file',
+        nodeKind: 'root-node',
+        parentId: null,
+        path: 'src/main.ts',
+        preorderEnd: 4,
+        preorderStart: 4,
+      },
+    ];
+    const model = buildTestModel(entries, [
+      createEdge('src/main.ts', 'src/missing.ts', './missing.js'),
+      createEdge('src/main.ts', 'src/root-master.ts', './root-master.js'),
+      createEdge(
+        'src/main.ts',
+        'src/_utils/loose.util.ts',
+        './_utils/loose.util.js'
+      ),
+      createEdge('src/main.ts', 'src/orphan.util.ts', './orphan.util.js'),
+    ]);
+
+    expect(verifyFragmentEncapsulation(model)).toEqual([]);
+  });
 });

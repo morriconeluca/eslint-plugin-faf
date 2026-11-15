@@ -903,5 +903,142 @@ describe('verifyRootNodeDiscipline', () => {
 
       expect(() => verifyRootNodeDiscipline(model)).not.toThrow();
     });
+
+    it('ignores self-imports, foreign sources, cross-tree edges, and rejects path-aliased, conflicted, or unorderable root edges', () => {
+      const model = buildFullModel({
+        edges: [
+          makeEdge('src/high.ts', 'src/high.ts'),
+          makeEdge('src/foreign.ts', 'src/low.ts'),
+          makeEdge('lib/main.ts', 'src/low.ts'),
+          makeEdge('src/high.ts', 'src/low.ts', { aliasUsed: '#root' }),
+          makeEdge('src/mid.ts', 'src/low.ts'),
+        ],
+        items: [
+          { id: 0, kind: 'directory', path: 'src' },
+          { id: 1, nodeKind: 'root-node', parentId: 0, path: 'src/high.ts' },
+          { id: 2, nodeKind: 'root-node', parentId: 0, path: 'src/low.ts' },
+          {
+            id: 3,
+            nodeKind: 'foreign-node',
+            parentId: 0,
+            path: 'src/foreign.ts',
+          },
+          {
+            id: 4,
+            nodeKind: 'root-node',
+            parentId: null,
+            path: 'lib/main.ts',
+            treeOrigin: 'lib',
+          },
+          { id: 5, nodeKind: 'root-node', parentId: 0, path: 'src/mid.ts' },
+        ],
+        sets: [
+          {
+            id: 0,
+            isOrderable: false,
+            origin: 'root-nodes',
+            parentPath: 'src',
+            repetitions: [],
+            siblings: [
+              { itemId: 1, rank: 2 },
+              { itemId: 5, rank: 1 },
+              { itemId: 2, rank: 0 },
+            ],
+          },
+        ],
+      });
+
+      const outcomes = verifyRootNodeDiscipline(model);
+      expect(outcomes).toHaveLength(2);
+      expect(outcomes.map((outcome) => outcome.element)).toEqual([
+        'src/high.ts',
+        'src/mid.ts',
+      ]);
+
+      const conflictedModel: TVerificationModel = {
+        ...model,
+        graph: {
+          ...model.graph,
+          edgeMetadata: [makeEdge('src/high.ts', 'src/low.ts')],
+        },
+        hierarchies: {
+          conflicts: [{ hierarchyIds: [0, 1], itemId: 1 }],
+          sets: [
+            {
+              id: 0,
+              isOrderable: true,
+              origin: 'root-nodes',
+              parentPath: 'src',
+              repetitions: [],
+              siblings: [
+                { itemId: 1, rank: 1 },
+                { itemId: 2, rank: 0 },
+              ],
+            },
+          ],
+        },
+      };
+      expect(verifyRootNodeDiscipline(conflictedModel)).toHaveLength(1);
+    });
+
+    it('resolves nested subRootFragments, rejects missing parent or tree declaration, and rejects hierarchies with repetitions', () => {
+      const nestedModel = buildFullModel({
+        edges: [makeEdge('src/a/sub/main.ts', 'src/b/main.ts')],
+        items: [
+          { id: 0, kind: 'directory', path: 'src' },
+          { id: 1, kind: 'directory', parentId: 0, path: 'src/a' },
+          { id: 2, kind: 'directory', parentId: 1, path: 'src/a/sub' },
+          {
+            id: 3,
+            nodeKind: 'root-node',
+            parentId: 2,
+            path: 'src/a/sub/main.ts',
+          },
+          { id: 4, kind: 'directory', parentId: 0, path: 'src/b' },
+          { id: 5, nodeKind: 'root-node', parentId: 4, path: 'src/b/main.ts' },
+        ],
+        rootFragments: [
+          {
+            dependencyPairs: [],
+            path: 'src/a',
+            rootNodes: [],
+            subRootFragments: [
+              {
+                dependencyPairs: [
+                  { from: 'src/a/sub/main.ts', to: 'src/b/main.ts' },
+                ],
+                path: 'src/a/sub',
+                rootNodes: [{ name: 'main.ts', rank: 0 }],
+                subRootFragments: [],
+              },
+            ],
+          },
+        ],
+      });
+      expect(verifyRootNodeDiscipline(nestedModel)).toEqual([]);
+
+      const nullParentModel = buildFullModel({
+        edges: [makeEdge('src/high.ts', 'src/low.ts')],
+        items: [
+          { id: 0, kind: 'directory', path: 'src' },
+          { id: 1, nodeKind: 'root-node', parentId: null, path: 'src/high.ts' },
+          { id: 2, nodeKind: 'root-node', parentId: 0, path: 'src/low.ts' },
+        ],
+      });
+      expect(verifyRootNodeDiscipline(nullParentModel)).toHaveLength(1);
+
+      const unknownTreeModel = buildFullModel({
+        edges: [makeEdge('src/a/main.ts', 'src/b/main.ts')],
+        items: [
+          { id: 0, kind: 'directory', path: 'src' },
+          { id: 1, kind: 'directory', parentId: 0, path: 'src/a' },
+          { id: 2, nodeKind: 'root-node', parentId: 1, path: 'src/a/main.ts' },
+          { id: 3, kind: 'directory', parentId: 0, path: 'src/b' },
+          { id: 4, nodeKind: 'root-node', parentId: 3, path: 'src/b/main.ts' },
+        ],
+        treeOrigin: 'other',
+      });
+      expect(verifyRootNodeDiscipline(unknownTreeModel)).toHaveLength(1);
+    });
   });
 });

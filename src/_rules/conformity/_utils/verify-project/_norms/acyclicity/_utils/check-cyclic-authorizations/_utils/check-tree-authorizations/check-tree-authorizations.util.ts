@@ -9,7 +9,6 @@ import { compareOrdinal } from '../../../../../../_verify-project@shared/_utils/
 import { computeSccs } from '../../../../_acyclicity@shared/_utils/compute-sccs/index.js';
 import { buildTreeAuthorizationGraph } from './_utils/build-tree-authorization-graph/index.js';
 import { isTreeCycleExercised } from './_utils/is-tree-cycle-exercised/index.js';
-import { selectMinElement } from './_utils/select-min-element/index.js';
 
 export function checkTreeAuthorizations(
   model: TVerificationModel,
@@ -23,7 +22,7 @@ export function checkTreeAuthorizations(
   }
 
   const sccs = computeSccs(treeCount, adjacency);
-  const cyclicTreeSccs = sccs.filter((c) => c.length >= 2);
+  const cyclicTreeSccs = sccs.filter((component) => component.length >= 2);
   if (cyclicTreeSccs.length === 0) {
     return [];
   }
@@ -47,7 +46,7 @@ export function checkTreeAuthorizations(
       continue;
     }
 
-    const minOrigin = selectMinElement(originNames);
+    const [minOrigin = ''] = originNames;
     outcomes.push(
       createOutcome('unverified/cyclic-tree-authorization', {
         element: minOrigin,

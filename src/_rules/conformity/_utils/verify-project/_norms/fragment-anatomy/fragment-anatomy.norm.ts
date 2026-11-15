@@ -5,9 +5,11 @@ import type {
 import type { TVerificationModel } from '../../_verify-project@shared/_types/verification-model.type.js';
 
 import { compareOrdinal } from '../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { collectFragmentItems } from './_utils/collect-fragment-items/index.js';
-import { inspectFragmentDomain } from './_utils/inspect-fragment-domain/index.js';
-import { inspectFragmentNodes } from './_utils/inspect-fragment-nodes/index.js';
+import {
+  collectFragmentItems,
+  inspectFragmentDomain,
+  inspectFragmentNodes,
+} from './fragment-anatomy.util.js';
 
 export function verifyFragmentAnatomy(
   model: TVerificationModel

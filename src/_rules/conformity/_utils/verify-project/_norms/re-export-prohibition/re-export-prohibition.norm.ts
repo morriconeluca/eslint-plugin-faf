@@ -5,19 +5,21 @@ import type {
 import type { TVerificationModel } from '../../_verify-project@shared/_types/verification-model.type.js';
 
 import { createOutcome } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
-import { collectReExportPositions } from './_utils/collect-re-export-positions/index.js';
-import { compareSymbolOutcomes } from './_utils/compare-symbol-outcomes/index.js';
+import {
+  collectReExportPositions,
+  compareSymbolOutcomes,
+} from './re-export-prohibition.util.js';
 
 export function verifyReExportProhibition(
   model: TVerificationModel
 ): readonly TOutcome[] {
   const outcomes: TSymbolOutcome[] = [];
 
-  for (const item of model.taxonomy.classifications) {
-    const record = model.modules.records.get(item.path);
+  for (const classification of model.taxonomy.classifications) {
+    const record = model.modules.records.get(classification.path);
     const isSubject =
-      item.entryKind === 'file' &&
-      item.role.kind === 'explicit' &&
+      classification.entryKind === 'file' &&
+      classification.role.kind === 'explicit' &&
       record !== undefined &&
       record.language === 'script';
 
@@ -29,7 +31,7 @@ export function verifyReExportProhibition(
     for (const position of positions) {
       outcomes.push(
         createOutcome('symbol/re-export-prohibition', {
-          element: item.path,
+          element: classification.path,
           position,
         })
       );

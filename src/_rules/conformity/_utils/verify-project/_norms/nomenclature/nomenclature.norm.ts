@@ -3,9 +3,11 @@ import type { TVerificationModel } from '../../_verify-project@shared/_types/ver
 
 import { createOutcome } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import { compareOrdinal } from '../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { isViolatingCoordinateName } from './_utils/is-violating-coordinate-name/index.js';
-import { isViolatingDomainName } from './_utils/is-violating-domain-name/index.js';
-import { isViolatingUnitName } from './_utils/is-violating-unit-name/index.js';
+import {
+  isViolatingDomainName,
+  isViolatingPathFragmentOrNodeName,
+  isViolatingPathSubCategoryName,
+} from './nomenclature.util.js';
 
 export function verifyNomenclature(
   model: TVerificationModel
@@ -29,9 +31,14 @@ export function verifyNomenclature(
 
   for (const classification of taxonomy.classifications) {
     const isViolation =
-      isViolatingCoordinateName(classification) ||
+      isViolatingPathSubCategoryName(classification) ||
       isViolatingDomainName(classification, inventory, trees) ||
-      isViolatingUnitName(classification, taxonomy, inventory, trees);
+      isViolatingPathFragmentOrNodeName(
+        classification,
+        taxonomy,
+        inventory,
+        trees
+      );
 
     if (isViolation) {
       report(classification.path);

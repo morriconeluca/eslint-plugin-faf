@@ -12,6 +12,7 @@ import type {
 
 import { verificationModel } from '../_norms@shared/_mocks/verification-model.mock.js';
 import { verifyReEntryProhibition } from './re-entry-prohibition.norm.js';
+import { compareReEntryOutcomes } from './re-entry-prohibition.util.js';
 
 const makeTree = (originPath: string): TEffectiveTree => ({
   catalog: {
@@ -487,5 +488,80 @@ describe('verifyReEntryProhibition', () => {
     const afterSnapshot = JSON.stringify(model);
 
     expect(afterSnapshot).toBe(snapshot);
+  });
+
+  it('orders re-entry outcomes deterministically across all compareReEntryOutcomes tie-breakers', () => {
+    const baseOutcome = {
+      chain: ['a/1.ts', 'x.ts', 'a/2.ts'],
+      constraint: 'dependency/re-entry-prohibition' as const,
+      element: 'a/1.ts',
+      family: 'dependency' as const,
+      from: 'a/1.ts',
+      importIndex: 0,
+      message: 'msg',
+      normativeReference: 'FAF §7.3',
+      position: { column: 1, line: 1 },
+      specifier: './x.js',
+      to: 'a/2.ts',
+    };
+
+    expect(
+      compareReEntryOutcomes(baseOutcome, { ...baseOutcome, from: 'b/1.ts' })
+    ).toBeLessThan(0);
+    expect(
+      compareReEntryOutcomes(baseOutcome, { ...baseOutcome, to: 'a/3.ts' })
+    ).toBeLessThan(0);
+    const withoutPosition = {
+      chain: ['a/1.ts', 'x.ts', 'a/2.ts'],
+      constraint: 'dependency/re-entry-prohibition' as const,
+      element: 'a/1.ts',
+      family: 'dependency' as const,
+      from: 'a/1.ts',
+      importIndex: 0,
+      message: 'msg',
+      normativeReference: 'FAF §7.3',
+      specifier: './x.js',
+      to: 'a/2.ts',
+    };
+    expect(compareReEntryOutcomes(withoutPosition, baseOutcome)).toBeLessThan(
+      0
+    );
+    expect(
+      compareReEntryOutcomes(baseOutcome, withoutPosition)
+    ).toBeGreaterThan(0);
+    const withoutSpecifier = {
+      chain: ['a/1.ts', 'x.ts', 'a/2.ts'],
+      constraint: 'dependency/re-entry-prohibition' as const,
+      element: 'a/1.ts',
+      family: 'dependency' as const,
+      from: 'a/1.ts',
+      importIndex: 0,
+      message: 'msg',
+      normativeReference: 'FAF §7.3',
+      position: { column: 1, line: 1 },
+      to: 'a/2.ts',
+    };
+    expect(compareReEntryOutcomes(withoutSpecifier, baseOutcome)).toBeLessThan(
+      0
+    );
+    expect(
+      compareReEntryOutcomes(baseOutcome, withoutSpecifier)
+    ).toBeGreaterThan(0);
+    expect(
+      compareReEntryOutcomes(baseOutcome, {
+        ...baseOutcome,
+        position: { column: 1, line: 2 },
+      })
+    ).toBeLessThan(0);
+    expect(
+      compareReEntryOutcomes(baseOutcome, { ...baseOutcome, importIndex: 1 })
+    ).toBeLessThan(0);
+    expect(
+      compareReEntryOutcomes(baseOutcome, {
+        ...baseOutcome,
+        specifier: './z.js',
+      })
+    ).toBeLessThan(0);
+    expect(compareReEntryOutcomes(baseOutcome, { ...baseOutcome })).toBe(0);
   });
 });

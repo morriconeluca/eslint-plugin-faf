@@ -4,8 +4,8 @@ import type {
 } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import type { TVerificationModel } from '../../_verify-project@shared/_types/verification-model.type.js';
 
-import { compareReEntryOutcomes } from './_utils/compare-re-entry-outcomes/index.js';
 import { findReEntryPaths } from './_utils/find-re-entry-paths/index.js';
+import { compareReEntryOutcomes } from './re-entry-prohibition.util.js';
 
 export function verifyReEntryProhibition(
   model: TVerificationModel

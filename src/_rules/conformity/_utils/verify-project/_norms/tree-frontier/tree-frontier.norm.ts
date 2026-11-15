@@ -4,9 +4,11 @@ import type {
 } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import type { TVerificationModel } from '../../_verify-project@shared/_types/verification-model.type.js';
 
-import { checkCrossingTreeAuthorization } from './_utils/check-crossing-tree-authorization/index.js';
-import { checkEdgeTreeFrontier } from './_utils/check-edge-tree-frontier/index.js';
-import { compareTreeFrontierOutcomes } from './_utils/compare-tree-frontier-outcomes/index.js';
+import {
+  checkCrossingTreeAuthorization,
+  checkEdgeTreeFrontier,
+  compareTreeFrontierOutcomes,
+} from './tree-frontier.util.js';
 
 export function verifyTreeFrontier(
   model: TVerificationModel

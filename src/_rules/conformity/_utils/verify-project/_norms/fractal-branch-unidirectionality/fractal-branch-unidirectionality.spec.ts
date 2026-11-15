@@ -14,6 +14,7 @@ import type {
 
 import { verificationModel } from '../_norms@shared/_mocks/verification-model.mock.js';
 import { verifyFractalBranchUnidirectionality } from './fractal-branch-unidirectionality.norm.js';
+import { compareBranchOutcomes } from './fractal-branch-unidirectionality.util.js';
 
 type TModelEntry = {
   readonly depth: number;
@@ -813,5 +814,106 @@ describe('verifyFractalBranchUnidirectionality', () => {
     verifyFractalBranchUnidirectionality(model);
 
     expect(JSON.stringify(model)).toBe(snapshot);
+  });
+
+  it('orders dependency outcomes deterministically across all compareBranchOutcomes tie-breakers', () => {
+    const baseOutcome = {
+      constraint: 'dependency/fractal-branch-unidirectionality' as const,
+      element: 'src/_src@shared/a.ts',
+      family: 'dependency' as const,
+      from: 'src/_src@shared/a.ts',
+      importIndex: 0,
+      message: 'msg',
+      normativeReference: 'FAF §6.6.2',
+      position: { column: 1, line: 1 },
+      specifier: './target.js',
+      to: 'src/a.ts',
+    };
+
+    expect(
+      compareBranchOutcomes(baseOutcome, {
+        ...baseOutcome,
+        from: 'src/_src@shared/b.ts',
+      })
+    ).toBeLessThan(0);
+    expect(
+      compareBranchOutcomes(baseOutcome, {
+        ...baseOutcome,
+        position: { column: 1, line: 2 },
+      })
+    ).toBeLessThan(0);
+    const withoutPosition = {
+      constraint: 'dependency/fractal-branch-unidirectionality' as const,
+      element: 'src/_src@shared/a.ts',
+      family: 'dependency' as const,
+      from: 'src/_src@shared/a.ts',
+      importIndex: 0,
+      message: 'msg',
+      normativeReference: 'FAF §6.6.2',
+      specifier: './target.js',
+      to: 'src/a.ts',
+    };
+    expect(compareBranchOutcomes(withoutPosition, baseOutcome)).toBeLessThan(0);
+    expect(compareBranchOutcomes(baseOutcome, withoutPosition)).toBeGreaterThan(
+      0
+    );
+    const withoutSpecifier = {
+      chain: ['a', 'b'],
+      constraint: 'dependency/fractal-branch-unidirectionality' as const,
+      element: 'src/_src@shared/a.ts',
+      family: 'dependency' as const,
+      from: 'src/_src@shared/a.ts',
+      importIndex: 0,
+      message: 'msg',
+      normativeReference: 'FAF §6.6.2',
+      position: { column: 1, line: 1 },
+      to: 'src/a.ts',
+    };
+    expect(
+      compareBranchOutcomes(withoutSpecifier, {
+        ...withoutSpecifier,
+        specifier: './a.js',
+      })
+    ).toBeLessThan(0);
+    expect(
+      compareBranchOutcomes(
+        { ...withoutSpecifier, specifier: './a.js' },
+        withoutSpecifier
+      )
+    ).toBeGreaterThan(0);
+    expect(
+      compareBranchOutcomes(baseOutcome, { ...baseOutcome, importIndex: 1 })
+    ).toBeLessThan(0);
+    expect(
+      compareBranchOutcomes(baseOutcome, { ...baseOutcome, to: 'src/b.ts' })
+    ).toBeLessThan(0);
+    expect(
+      compareBranchOutcomes(baseOutcome, {
+        ...baseOutcome,
+        chain: ['a', 'b'],
+      })
+    ).toBeLessThan(0);
+    expect(
+      compareBranchOutcomes({ ...baseOutcome, chain: ['a', 'b'] }, baseOutcome)
+    ).toBeGreaterThan(0);
+    expect(
+      compareBranchOutcomes(
+        { ...baseOutcome, chain: ['a', 'b'] },
+        { ...baseOutcome, chain: ['a', 'b', 'c'] }
+      )
+    ).toBeLessThan(0);
+    expect(
+      compareBranchOutcomes(
+        { ...baseOutcome, chain: ['a', 'b'] },
+        { ...baseOutcome, chain: ['a', 'c'] }
+      )
+    ).toBeLessThan(0);
+    expect(
+      compareBranchOutcomes(
+        { ...baseOutcome, chain: ['a', 'b'], specifier: './a.js' },
+        { ...baseOutcome, chain: ['a', 'b'], specifier: './b.js' }
+      )
+    ).toBeLessThan(0);
+    expect(compareBranchOutcomes(baseOutcome, { ...baseOutcome })).toBe(0);
   });
 });

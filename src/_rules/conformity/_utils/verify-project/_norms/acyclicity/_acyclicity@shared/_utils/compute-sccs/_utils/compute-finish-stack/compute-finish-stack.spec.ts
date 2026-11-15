@@ -14,4 +14,9 @@ describe('computeFinishStack', () => {
   it('skips already visited roots', () => {
     expect(computeFinishStack(2, [[1], []])).toEqual([1, 0]);
   });
+
+  it('handles cyclic neighbors and sparse adjacency', () => {
+    expect(computeFinishStack(2, [[1], [0]])).toEqual([1, 0]);
+    expect(computeFinishStack(2, [[]])).toEqual([0, 1]);
+  });
 });

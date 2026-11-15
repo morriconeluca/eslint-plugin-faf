@@ -365,4 +365,147 @@ describe('verifyNomenclature', () => {
     expect(outcomes).toHaveLength(1);
     expect(outcomes[0]?.element).toBe('src/components');
   });
+
+  it('validates fractal-branch naming, layer/sub-category naming, path-sub-category static vs dynamic naming, and missing tree/item guards', () => {
+    const classifications = [
+      createClassification({
+        domainKind: 'root-layer',
+        entryKind: 'directory',
+        itemId: 0,
+        path: 'src_invalid_origin',
+      }),
+      createClassification({
+        domainKind: 'category',
+        entryKind: 'directory',
+        itemId: 1,
+        path: 'src/_components',
+      }),
+      createClassification({
+        domainKind: 'fractal-branch',
+        entryKind: 'directory',
+        itemId: 2,
+        path: 'src/_components/_wrong@shared',
+      }),
+      createClassification({
+        domainKind: 'layer',
+        entryKind: 'directory',
+        itemId: 3,
+        path: 'src/BadLayer',
+      }),
+      createClassification({
+        domainKind: 'sub-category',
+        entryKind: 'directory',
+        itemId: 4,
+        path: 'src/_components/BadSub',
+      }),
+      createClassification({
+        domainKind: 'path-sub-category',
+        entryKind: 'directory',
+        itemId: 5,
+        path: 'src/_apis/no-underscore',
+      }),
+      createClassification({
+        domainKind: 'path-sub-category',
+        entryKind: 'directory',
+        itemId: 6,
+        path: 'src/_apis/_valid-static',
+      }),
+      createClassification({
+        domainKind: 'path-sub-category',
+        entryKind: 'directory',
+        itemId: 7,
+        path: 'src/_apis/_[valid-param]',
+      }),
+      createClassification({
+        domainKind: 'fragment',
+        entryKind: 'directory',
+        itemId: 8,
+        path: 'src/_apis/get',
+        relationalQualifications: { ...qualifications, isPathFragment: true },
+      }),
+      createClassification({
+        entryKind: 'file',
+        itemId: 9,
+        nodeKind: 'access-node',
+        path: 'src/_apis/get/index.ts',
+      }),
+      createClassification({
+        domainKind: 'fragment',
+        entryKind: 'directory',
+        itemId: 10,
+        path: 'src/_pages/ValidPage',
+        relationalQualifications: { ...qualifications, isPathFragment: true },
+      }),
+      createClassification({
+        domainKind: 'fragment',
+        entryKind: 'directory',
+        itemId: 11,
+        path: 'src/_pages/valid-page',
+        relationalQualifications: { ...qualifications, isPathFragment: true },
+      }),
+      createClassification({
+        entryKind: 'file',
+        itemId: 12,
+        nodeKind: 'master-node',
+        path: 'src/_apis/get/get.api.ts',
+      }),
+      createClassification({
+        entryKind: 'file',
+        itemId: 13,
+        nodeKind: 'master-node',
+        path: 'missing-tree/BadFile.util.ts',
+      }),
+      createClassification({
+        domainKind: 'category',
+        entryKind: 'directory',
+        itemId: 99,
+        path: 'src/_missing_from_inventory',
+      }),
+    ];
+    const items = [
+      createInventoryItem(0, 'src_invalid_origin', 'directory'),
+      createInventoryItem(1, 'src/_components', 'directory'),
+      createInventoryItem(2, 'src/_components/_wrong@shared', 'directory', 1),
+      createInventoryItem(3, 'src/BadLayer', 'directory'),
+      createInventoryItem(4, 'src/_components/BadSub', 'directory', 1),
+      createInventoryItem(5, 'src/_apis/no-underscore', 'directory'),
+      createInventoryItem(6, 'src/_apis/_valid-static', 'directory'),
+      createInventoryItem(7, 'src/_apis/_[valid-param]', 'directory'),
+      createInventoryItem(8, 'src/_apis/get', 'directory'),
+      createInventoryItem(9, 'src/_apis/get/index.ts', 'file', 8),
+      createInventoryItem(10, 'src/_pages/ValidPage', 'directory'),
+      createInventoryItem(11, 'src/_pages/valid-page', 'directory'),
+      createInventoryItem(12, 'src/_apis/get/get.api.ts', 'file', 8),
+      {
+        ...createInventoryItem(13, 'missing-tree/BadFile.util.ts', 'file'),
+        treeOrigin: 'unknown-origin',
+      },
+    ];
+    const treeWithCustomOrigin: TEffectiveTree = {
+      ...defaultTree,
+      originPath: 'src_invalid_origin',
+    };
+    const baseModel = buildModel(classifications, items);
+    const model: TVerificationModel = {
+      ...baseModel,
+      basis: {
+        ...baseModel.basis,
+        declarations: {
+          ...baseModel.basis.declarations,
+          trees: [defaultTree, treeWithCustomOrigin],
+        },
+      },
+    };
+
+    const outcomes = verifyNomenclature(model);
+    expect(outcomes.map((item) => item.element)).toEqual([
+      'src/BadLayer',
+      'src/_apis/get',
+      'src/_apis/get/get.api.ts',
+      'src/_apis/no-underscore',
+      'src/_components/BadSub',
+      'src/_components/_wrong@shared',
+      'src/_pages/ValidPage',
+    ]);
+  });
 });

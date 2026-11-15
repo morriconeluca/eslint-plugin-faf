@@ -6,8 +6,10 @@ import type { TVerificationModel } from '../../_verify-project@shared/_types/ver
 
 import { createOutcome } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import { compareOrdinal } from '../../_verify-project@shared/_utils/compare-ordinal/index.js';
-import { isViolatingMasterSymbol } from './_utils/is-violating-master-symbol/index.js';
-import { isViolatingSymbolUniqueness } from './_utils/is-violating-symbol-uniqueness/index.js';
+import {
+  isViolatingMasterSymbol,
+  isViolatingSymbolUniqueness,
+} from './symbol-uniqueness.util.js';
 
 export function verifySymbolUniqueness(
   model: TVerificationModel

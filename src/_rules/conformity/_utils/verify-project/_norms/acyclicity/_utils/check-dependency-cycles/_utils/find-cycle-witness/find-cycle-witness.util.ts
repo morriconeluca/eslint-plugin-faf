@@ -1,6 +1,4 @@
-import { buildWitnessPayload } from './_utils/build-witness-payload/index.js';
-import { comparePaths } from './_utils/compare-paths/index.js';
-import { findSelfLoopWitness } from './_utils/find-self-loop-witness/index.js';
+import { compareOrdinal } from '../../../../../../_verify-project@shared/_utils/compare-ordinal/index.js';
 
 export function findCycleWitness(
   component: readonly number[],
@@ -18,17 +16,62 @@ export function findCycleWitness(
     bestLength: number;
   };
 
-  function reconstructCyclePath(
+  for (const nodeIndex of component) {
+    if (selfLoopSet.has(nodeIndex)) {
+      const pathString = indexToPath[nodeIndex];
+      return pathString === undefined
+        ? null
+        : {
+            element: pathString,
+            secondNode: pathString,
+            witness: [pathString, pathString],
+          };
+    }
+  }
+
+  if (component.length <= 1) {
+    return null;
+  }
+
+  const componentSet = new Set(component);
+  const state: TBfsState = {
+    bestCycle: null,
+    bestLength: component.length,
+  };
+
+  const isLexicographicallySmaller = (
+    candidate: readonly string[]
+  ): boolean => {
+    const incumbent = state.bestCycle;
+    if (incumbent === null) {
+      return true;
+    }
+    const leftCopy = [...candidate];
+    const rightCopy = [...incumbent];
+    let leftPath = leftCopy.shift();
+    let rightPath = rightCopy.shift();
+    while (leftPath !== undefined && rightPath !== undefined) {
+      const comparison = compareOrdinal(leftPath, rightPath);
+      if (comparison !== 0) {
+        return comparison < 0;
+      }
+      leftPath = leftCopy.shift();
+      rightPath = rightCopy.shift();
+    }
+    return candidate.length < incumbent.length;
+  };
+
+  const reconstructCyclePath = (
     start: number,
     lastNode: number,
     parent: Int32Array
-  ): readonly string[] {
+  ): readonly string[] => {
     const reversedNodes: string[] = [];
     let trace = lastNode;
     while (trace !== start && trace !== -1) {
-      const p = indexToPath[trace];
-      if (p !== undefined) {
-        reversedNodes.push(p);
+      const nodePath = indexToPath[trace];
+      if (nodePath !== undefined) {
+        reversedNodes.push(nodePath);
       }
       const nextTrace = parent[trace];
       trace = nextTrace ?? -1;
@@ -42,15 +85,14 @@ export function findCycleWitness(
       reversedNodes.push(startPath);
     }
     return reversedNodes;
-  }
+  };
 
-  function evaluateCycleCandidate(
+  const evaluateCycleCandidate = (
     start: number,
     currentNode: number,
     currentDepth: number,
-    parent: Int32Array,
-    state: TBfsState
-  ): void {
+    parent: Int32Array
+  ): void => {
     const cycleLength = currentDepth + 1;
     const candidate = reconstructCyclePath(start, currentNode, parent);
     if (cycleLength < state.bestLength) {
@@ -58,23 +100,19 @@ export function findCycleWitness(
       state.bestCycle = candidate;
       return;
     }
-    if (
-      state.bestCycle === null ||
-      comparePaths(candidate, state.bestCycle) < 0
-    ) {
+    if (isLexicographicallySmaller(candidate)) {
       state.bestCycle = candidate;
     }
-  }
+  };
 
-  function exploreBfsNeighbors(
+  const exploreBfsNeighbors = (
     currentNode: number,
     start: number,
     currentDepth: number,
     depth: Int32Array,
     parent: Int32Array,
-    queue: number[],
-    state: TBfsState
-  ): void {
+    queue: number[]
+  ): void => {
     const neighbors = adjacency[currentNode] ?? [];
 
     for (const nextNode of neighbors) {
@@ -82,7 +120,7 @@ export function findCycleWitness(
         continue;
       }
       if (nextNode === start) {
-        evaluateCycleCandidate(start, currentNode, currentDepth, parent, state);
+        evaluateCycleCandidate(start, currentNode, currentDepth, parent);
       } else {
         const recordedDepth = depth[nextNode];
         if (recordedDepth === -1) {
@@ -92,9 +130,9 @@ export function findCycleWitness(
         }
       }
     }
-  }
+  };
 
-  function runBfsFromStart(start: number, state: TBfsState): void {
+  const runBfsFromStart = (start: number): void => {
     const depth = new Int32Array(nodeCount);
     depth.fill(-1);
     const parent = new Int32Array(nodeCount);
@@ -117,34 +155,20 @@ export function findCycleWitness(
         currentDepth,
         depth,
         parent,
-        queue,
-        state
+        queue
       );
     }
-  }
-
-  const selfLoopWitness = findSelfLoopWitness(
-    component,
-    selfLoopSet,
-    indexToPath
-  );
-  if (selfLoopWitness !== null) {
-    return buildWitnessPayload(selfLoopWitness);
-  }
-
-  if (component.length <= 1) {
-    return null;
-  }
-
-  const componentSet = new Set(component);
-  const state: TBfsState = {
-    bestCycle: null,
-    bestLength: component.length,
   };
 
   for (const start of component) {
-    runBfsFromStart(start, state);
+    runBfsFromStart(start);
   }
 
-  return state.bestCycle === null ? null : buildWitnessPayload(state.bestCycle);
+  return state.bestCycle === null
+    ? null
+    : {
+        element: state.bestCycle[0] ?? '',
+        secondNode: state.bestCycle[1] ?? '',
+        witness: state.bestCycle,
+      };
 }

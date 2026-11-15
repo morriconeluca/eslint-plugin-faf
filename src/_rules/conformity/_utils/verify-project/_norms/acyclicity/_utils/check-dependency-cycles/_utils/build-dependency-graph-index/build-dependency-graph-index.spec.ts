@@ -161,4 +161,62 @@ describe('buildDependencyGraphIndex', () => {
     expect(index.adjacency[0]).toEqual([1]);
     expect(index.adjacency[1]).toEqual([0]);
   });
+
+  it('ignores directories, external files, foreign nodes, unclassified nodes, sorts multi-neighbor rows, and preserves first parallel edge metadata', () => {
+    const base = createModel({
+      edges: [
+        ['src/a.ts', 'src/c.ts'],
+        ['src/a.ts', 'src/b.ts'],
+        ['src/a.ts', 'src/b.ts'],
+        ['src/a.ts', 'outside.ts'],
+        ['src/foreign.ts', 'src/a.ts'],
+      ],
+      files: [
+        ['src/a.ts', 'fragment-node', 'src'],
+        ['src/b.ts', 'fragment-node', 'src'],
+        ['src/c.ts', 'fragment-node', 'src'],
+        ['src/foreign.ts', 'foreign-node', 'src'],
+        ['src/unclassified.ts', null, 'src'],
+        ['outside.ts', null, null],
+      ],
+    });
+
+    const directoryItem = {
+      depth: 0,
+      id: 6,
+      isSymlink: false,
+      kind: 'directory' as const,
+      parentId: null,
+      path: 'src',
+      preorderEnd: 6,
+      preorderStart: 6,
+      realPath: '/workspace/src',
+      treeOrigin: 'src',
+    };
+    const model: TVerificationModel = {
+      ...base,
+      basis: {
+        ...base.basis,
+        inventory: {
+          ...base.basis.inventory,
+          items: [...base.basis.inventory.items, directoryItem],
+          pathToId: new Map([...base.basis.inventory.pathToId, ['src', 6]]),
+        },
+      },
+      graph: {
+        ...base.graph,
+        edgeMetadata: base.graph.edgeMetadata.map((edge, index_) => ({
+          ...edge,
+          position: { column: 1, line: index_ + 10 },
+        })),
+      },
+    };
+
+    const index = buildDependencyGraphIndex(model);
+    expect(index.logicalPaths).toEqual(['src/a.ts', 'src/b.ts', 'src/c.ts']);
+    expect(index.adjacency[0]).toEqual([1, 2]);
+    expect(
+      index.edgeBySourceAndDestination.get('src/a.ts\0src/b.ts')?.position
+    ).toEqual({ column: 1, line: 11 });
+  });
 });

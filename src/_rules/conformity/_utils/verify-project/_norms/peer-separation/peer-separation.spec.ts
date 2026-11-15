@@ -920,4 +920,173 @@ describe('verifyPeerSeparation', () => {
     verifyPeerSeparation(model);
     expect(JSON.stringify(model)).toBe(snapshot);
   });
+
+  it('handles cross-tree edges, ancestor-descendant edges, fractal branch targets, root-node peers, and hierarchy conflicts', () => {
+    const entries: TModelEntry[] = [
+      {
+        depth: 0,
+        domainKind: 'root-fragment',
+        id: 0,
+        kind: 'directory',
+        parentId: null,
+        path: 'src',
+        preorderEnd: 8,
+        preorderStart: 0,
+      },
+      {
+        depth: 1,
+        id: 1,
+        kind: 'file',
+        nodeKind: 'root-node',
+        parentId: 0,
+        path: 'src/main.ts',
+        preorderEnd: 1,
+        preorderStart: 1,
+      },
+      {
+        depth: 1,
+        id: 2,
+        kind: 'file',
+        nodeKind: 'root-node',
+        parentId: 0,
+        path: 'src/other.ts',
+        preorderEnd: 2,
+        preorderStart: 2,
+      },
+      {
+        depth: 1,
+        domainKind: 'fractal-branch',
+        id: 3,
+        kind: 'directory',
+        parentId: 0,
+        path: 'src/_src@shared',
+        preorderEnd: 4,
+        preorderStart: 3,
+      },
+      {
+        depth: 2,
+        id: 4,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 3,
+        path: 'src/_src@shared/shared.type.ts',
+        preorderEnd: 4,
+        preorderStart: 4,
+      },
+      {
+        depth: 1,
+        domainKind: 'category',
+        id: 5,
+        kind: 'directory',
+        parentId: 0,
+        path: 'src/_high',
+        preorderEnd: 6,
+        preorderStart: 5,
+      },
+      {
+        depth: 2,
+        id: 6,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 5,
+        path: 'src/_high/a.type.ts',
+        preorderEnd: 6,
+        preorderStart: 6,
+      },
+      {
+        depth: 1,
+        domainKind: 'category',
+        id: 7,
+        kind: 'directory',
+        parentId: 0,
+        path: 'src/_low',
+        preorderEnd: 8,
+        preorderStart: 7,
+      },
+      {
+        depth: 2,
+        id: 8,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 7,
+        path: 'src/_low/b.type.ts',
+        preorderEnd: 8,
+        preorderStart: 8,
+      },
+      {
+        depth: 0,
+        domainKind: 'root-fragment',
+        id: 9,
+        kind: 'directory',
+        parentId: null,
+        path: 'lib',
+        preorderEnd: 10,
+        preorderStart: 9,
+        treeOrigin: 'lib',
+      },
+      {
+        depth: 1,
+        id: 10,
+        kind: 'file',
+        nodeKind: 'root-node',
+        parentId: 9,
+        path: 'lib/index.ts',
+        preorderEnd: 10,
+        preorderStart: 10,
+        treeOrigin: 'lib',
+      },
+    ];
+
+    const hierarchiesWithConflict: THorizontalHierarchies = {
+      conflicts: [{ hierarchyIds: [1, 2], itemId: 5 }],
+      sets: [
+        {
+          id: 1,
+          isOrderable: true,
+          origin: 'horizontal-hierarchy',
+          parentPath: 'src',
+          repetitions: [],
+          siblings: [
+            { itemId: 7, rank: 0 },
+            { itemId: 5, rank: 1 },
+          ],
+        },
+      ],
+    };
+
+    const model = buildTestModel(
+      entries,
+      [
+        createEdge('src/main.ts', 'lib/index.ts', '../lib/index.js', 0),
+        createEdge('src', 'src/main.ts', './main.js', 1),
+        createEdge('src/main.ts', 'src', '.', 2),
+        createEdge('src/main.ts', 'src/other.ts', './other.js', 3),
+        createEdge(
+          'src/_high/a.type.ts',
+          'src/_src@shared/shared.type.ts',
+          '../_src@shared/shared.type.js',
+          4
+        ),
+        createEdge(
+          'src/_src@shared/shared.type.ts',
+          'src/_high/a.type.ts',
+          '../_high/a.type.js',
+          5
+        ),
+        createEdge(
+          'src/_high/a.type.ts',
+          'src/_low/b.type.ts',
+          '../_low/b.type.js',
+          6
+        ),
+      ],
+      hierarchiesWithConflict
+    );
+
+    const outcomes = verifyPeerSeparation(model);
+    expect(outcomes.map((outcome) => outcome.element)).toEqual([
+      'src/_high/a.type.ts',
+      'src/_src@shared/shared.type.ts',
+    ]);
+  });
 });
