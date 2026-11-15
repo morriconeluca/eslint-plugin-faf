@@ -58,7 +58,7 @@ describe('session', () => {
       const anchored: readonly TAnchoredOutcome[] = [
         {
           anchorPath: indexFile,
-          outcome: createOutcome('unverified/unresolved-import', {
+          outcome: createOutcome.unverified('unverified/unresolved-import', {
             element: 'src/_utils/widget/index.ts',
             reason: 'missing',
           }),

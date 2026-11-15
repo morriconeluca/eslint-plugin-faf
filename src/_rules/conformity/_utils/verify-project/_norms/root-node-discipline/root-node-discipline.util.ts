@@ -34,7 +34,7 @@ export function checkEdgeRootDiscipline(
     return undefined;
   }
 
-  return createOutcome('dependency/root-node-discipline', {
+  return createOutcome.edge('dependency/root-node-discipline', {
     from: edge.sourcePath,
     importIndex: edge.importIndex,
     position: edge.position,

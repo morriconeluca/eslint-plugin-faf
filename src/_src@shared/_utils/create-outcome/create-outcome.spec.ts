@@ -5,7 +5,7 @@ import { createOutcome } from './create-outcome.util.js';
 describe('createOutcome', () => {
   describe('four message forms as literal assertions', () => {
     it('formats the element form without detail as a literal message', () => {
-      const outcome = createOutcome('unverified/symbolic-link', {
+      const outcome = createOutcome.unverified('unverified/symbolic-link', {
         element: 'src/_utils/link.ts',
         reason: 'symlink',
       });
@@ -16,35 +16,93 @@ describe('createOutcome', () => {
       expect(outcome.normativeReference).toBe('FAF §3, §6.9');
     });
 
-    it('formats the element form with detail and strips trailing period', () => {
-      const withPeriod = createOutcome('unverified/unresolved-import', {
-        detail: 'Cannot find module ./missing.js.',
-        element: 'src/main.ts',
-        reason: 'missing',
-      });
+    it('formats the element form with detail and strips trailing period across families', () => {
+      const withPeriod = createOutcome.unverified(
+        'unverified/unresolved-import',
+        {
+          detail: 'Cannot find module ./missing.js.',
+          element: 'src/main.ts',
+          reason: 'missing',
+        }
+      );
       expect(withPeriod.message).toBe(
         "'src/main.ts' contains an import that could not be resolved: Cannot find module ./missing.js"
       );
 
-      const withEmptyDetail = createOutcome('configuration/missing-property', {
-        detail: '',
-        propertyPath: 'faf.locals[0].origin',
-      });
+      const withEmptyDetail = createOutcome.configuration(
+        'configuration/missing-property',
+        {
+          detail: '',
+          propertyPath: 'faf.locals[0].origin',
+        }
+      );
       expect(withEmptyDetail.message).toBe(
         "'faf.locals[0].origin' is required and missing"
       );
 
-      const withNullDetail = createOutcome('configuration/missing-property', {
-        detail: null,
-        propertyPath: 'faf.locals[0].origin',
-      });
+      const withNullDetail = createOutcome.configuration(
+        'configuration/missing-property',
+        {
+          detail: null,
+          propertyPath: 'faf.locals[0].origin',
+        }
+      );
       expect(withNullDetail.message).toBe(
         "'faf.locals[0].origin' is required and missing"
+      );
+
+      const configWithPeriod = createOutcome.configuration(
+        'configuration/missing-property',
+        {
+          detail: 'Property missing.',
+          propertyPath: 'faf.locals[0].origin',
+        }
+      );
+      expect(configWithPeriod.message).toBe(
+        "'faf.locals[0].origin' is required and missing: Property missing"
+      );
+
+      const clsWithPeriod = createOutcome.classification(
+        'classification/unclassifiable-file',
+        {
+          detail: 'Unexpected extension.',
+          element: 'src/weird.xyz',
+        }
+      );
+      expect(clsWithPeriod.message).toBe(
+        "'src/weird.xyz' is neither a uniquely classified Logical Node nor a Foreign Node: Unexpected extension"
+      );
+
+      const clsEmpty = createOutcome.classification(
+        'classification/unclassifiable-file',
+        {
+          detail: '',
+          element: 'src/weird.xyz',
+        }
+      );
+      expect(clsEmpty.message).toBe(
+        "'src/weird.xyz' is neither a uniquely classified Logical Node nor a Foreign Node"
+      );
+
+      const symWithPeriod = createOutcome.symbol('symbol/symbol-uniqueness', {
+        detail: 'Two functions declared.',
+        element: 'src/file.ts',
+      });
+      expect(symWithPeriod.message).toBe(
+        "'src/file.ts' defines more than one Symbol in its root scope: Two functions declared"
+      );
+
+      const symEmpty = createOutcome.symbol('symbol/symbol-uniqueness', {
+        detail: '',
+        element: 'src/file.ts',
+      });
+      expect(symEmpty.message).toBe(
+        "'src/file.ts' defines more than one Symbol in its root scope"
       );
     });
 
     it('formats the edge form as a literal message', () => {
-      const outcome = createOutcome('dependency/peer-separation', {
+      const outcome = createOutcome.edge('dependency/peer-separation', {
         from: 'src/first/first.util.ts',
         importIndex: 0,
         specifier: '../second/second.util.js',
@@ -57,7 +115,7 @@ describe('createOutcome', () => {
     });
 
     it('formats the path form as a literal message', () => {
-      const outcome = createOutcome('dependency/re-entry-prohibition', {
+      const outcome = createOutcome.path('dependency/re-entry-prohibition', {
         chain: ['src/a.ts', 'external/lib.ts', 'src/b.ts'],
         from: 'src/a.ts',
         importIndex: 2,
@@ -69,7 +127,7 @@ describe('createOutcome', () => {
     });
 
     it('formats the cycle form with single and multiple segments', () => {
-      const single = createOutcome('acyclicity/dependency-cycle', {
+      const single = createOutcome.acyclicity('acyclicity/dependency-cycle', {
         cycle: [['src/a.ts', 'src/b.ts', 'src/a.ts']],
         element: 'src/a.ts',
       });
@@ -77,7 +135,7 @@ describe('createOutcome', () => {
         "'src/a.ts' is part of a dependency cycle: src/a.ts -> src/b.ts -> src/a.ts"
       );
 
-      const multiple = createOutcome('acyclicity/inter-tree-cycle', {
+      const multiple = createOutcome.acyclicity('acyclicity/inter-tree-cycle', {
         cycle: [
           ['treeA', 'treeB'],
           ['treeB', 'treeA'],
@@ -94,7 +152,7 @@ describe('createOutcome', () => {
     it('preserves optional position across acyclicity, classification, configuration, symbol, and unverified outcomes', () => {
       const pos = { column: 5, line: 12 };
 
-      const acyc = createOutcome('acyclicity/dependency-cycle', {
+      const acyc = createOutcome.acyclicity('acyclicity/dependency-cycle', {
         cycle: [['a.ts', 'b.ts', 'a.ts']],
         element: 'a.ts',
         position: pos,
@@ -102,29 +160,47 @@ describe('createOutcome', () => {
       expect(acyc.position).toEqual(pos);
       expect(acyc.family).toBe('acyclicity');
 
-      const cls = createOutcome('classification/unclassifiable-file', {
-        element: 'unknown.txt',
-        position: pos,
-      });
+      const acycNoPos = createOutcome.acyclicity(
+        'acyclicity/dependency-cycle',
+        {
+          cycle: [['a.ts', 'b.ts', 'a.ts']],
+          element: 'a.ts',
+        }
+      );
+      expect(acycNoPos.position).toBeUndefined();
+
+      const cls = createOutcome.classification(
+        'classification/unclassifiable-file',
+        {
+          element: 'unknown.txt',
+          position: pos,
+        }
+      );
       expect(cls.position).toEqual(pos);
       expect(cls.family).toBe('classification');
 
-      const clsNoPos = createOutcome('classification/unclassifiable-file', {
-        element: 'unknown.txt',
-      });
+      const clsNoPos = createOutcome.classification(
+        'classification/unclassifiable-file',
+        {
+          element: 'unknown.txt',
+        }
+      );
       expect(clsNoPos.position).toBeUndefined();
 
-      const configOutcome = createOutcome('configuration/invalid-origin', {
-        element: 'src',
-        position: pos,
-        propertyPath: 'faf.locals[0].rootLayers[0]',
-      });
+      const configOutcome = createOutcome.configuration(
+        'configuration/invalid-origin',
+        {
+          element: 'src',
+          position: pos,
+          propertyPath: 'faf.locals[0].rootLayers[0]',
+        }
+      );
       expect(configOutcome.element).toBe('src');
       expect(configOutcome.propertyPath).toBe('faf.locals[0].rootLayers[0]');
       expect(configOutcome.position).toEqual(pos);
       expect(configOutcome.family).toBe('configuration');
 
-      const symWithDetails = createOutcome('symbol/symbol-uniqueness', {
+      const symWithDetails = createOutcome.symbol('symbol/symbol-uniqueness', {
         element: 'src/file.ts',
         position: pos,
         symbolCount: 2,
@@ -134,14 +210,14 @@ describe('createOutcome', () => {
       expect(symWithDetails.symbolName).toBe('second');
       expect(symWithDetails.position).toEqual(pos);
 
-      const symMinimal = createOutcome('symbol/re-export-prohibition', {
+      const symMinimal = createOutcome.symbol('symbol/re-export-prohibition', {
         element: 'src/node.ts',
       });
       expect(symMinimal.position).toBeUndefined();
       expect(symMinimal.symbolCount).toBeUndefined();
       expect(symMinimal.symbolName).toBeUndefined();
 
-      const unverified = createOutcome('unverified/symbolic-link', {
+      const unverified = createOutcome.unverified('unverified/symbolic-link', {
         element: 'src/link',
         position: pos,
         reason: 'target',
@@ -151,7 +227,7 @@ describe('createOutcome', () => {
     });
 
     it('handles edge-or-path constraint with path and edge facts', () => {
-      const pathOutcome = createOutcome(
+      const pathOutcome = createOutcome.path(
         'dependency/fractal-branch-unidirectionality',
         {
           chain: ['src/_shared/a.ts', 'src/master.ts'],
@@ -166,7 +242,24 @@ describe('createOutcome', () => {
       expect(pathOutcome.chain).toEqual(['src/_shared/a.ts', 'src/master.ts']);
       expect(pathOutcome.specifier).toBeUndefined();
 
-      const edgeOutcome = createOutcome('dependency/tree-authorization', {
+      const pos = { column: 2, line: 8 };
+      const pathWithPosAndSpec = createOutcome.path(
+        'dependency/tree-authorization',
+        {
+          chain: ['src/a.ts', 'ext.ts', 'lib/b.ts'],
+          element: 'custom-path-element',
+          from: 'src/a.ts',
+          importIndex: 1,
+          position: pos,
+          specifier: '../ext.js',
+          to: 'lib/b.ts',
+        }
+      );
+      expect(pathWithPosAndSpec.element).toBe('custom-path-element');
+      expect(pathWithPosAndSpec.position).toEqual(pos);
+      expect(pathWithPosAndSpec.specifier).toBe('../ext.js');
+
+      const edgeOutcome = createOutcome.edge('dependency/tree-authorization', {
         from: 'src/tree-a/a.ts',
         importIndex: 0,
         specifier: '../tree-b/b.js',
@@ -179,7 +272,7 @@ describe('createOutcome', () => {
 
     it('preserves optional element and position on dependency edge', () => {
       const pos = { column: 1, line: 5 };
-      const outcome = createOutcome('dependency/peer-separation', {
+      const outcome = createOutcome.edge('dependency/peer-separation', {
         element: 'custom-element',
         from: 'src/a.ts',
         importIndex: 0,
@@ -192,7 +285,7 @@ describe('createOutcome', () => {
     });
 
     it('formats horizontal hierarchy configuration catalog constraints', () => {
-      const insufficient = createOutcome(
+      const insufficient = createOutcome.configuration(
         'configuration/insufficient-hierarchy-tiers',
         { propertyPath: 'faf.common.horizontalHierarchyModels[0]' }
       );
@@ -201,7 +294,7 @@ describe('createOutcome', () => {
         "'faf.common.horizontalHierarchyModels[0]' must declare at least two Rank tiers"
       );
 
-      const invalidSubCategory = createOutcome(
+      const invalidSubCategory = createOutcome.configuration(
         'configuration/invalid-sub-category-name',
         { propertyPath: 'faf.common.horizontalHierarchyModels[0][0][0]' }
       );
@@ -210,7 +303,7 @@ describe('createOutcome', () => {
         "'faf.common.horizontalHierarchyModels[0][0][0]' must be an underscore-prefixed kebab-case Sub-Category name"
       );
 
-      const categoryConflict = createOutcome(
+      const categoryConflict = createOutcome.configuration(
         'configuration/horizontal-hierarchy-model-category-conflict',
         {
           detail:

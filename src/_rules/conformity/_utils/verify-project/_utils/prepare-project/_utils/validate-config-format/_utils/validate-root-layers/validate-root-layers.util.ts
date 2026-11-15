@@ -30,7 +30,7 @@ export function validateRootLayers(
     }
     if (seen.has(item)) {
       duplicates.push(
-        createOutcome('configuration/duplicate-element', {
+        createOutcome.configuration('configuration/duplicate-element', {
           propertyPath: `${basePath}.rootLayers[${index}]`,
         })
       );

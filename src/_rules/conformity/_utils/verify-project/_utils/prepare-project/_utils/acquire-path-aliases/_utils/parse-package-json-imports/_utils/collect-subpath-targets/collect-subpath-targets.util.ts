@@ -1,7 +1,7 @@
 import type { TConfigOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 import type { TCollectSubpathTargetsResult } from './collect-subpath-targets.type.js';
 
-import { createOutcome as makeOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
+import { createOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 import {
   PACKAGE_JSON_ELEMENT,
   PACKAGE_JSON_IMPORTS_PROPERTY_PATH,
@@ -29,7 +29,7 @@ export function collectSubpathTargets(
       | 'configuration/unresolvable-alias-base',
     detail: string
   ): TConfigOutcome =>
-    makeOutcome(constraint, {
+    createOutcome.configuration(constraint, {
       detail,
       element: PACKAGE_JSON_ELEMENT,
       propertyPath: `${PACKAGE_JSON_IMPORTS_PROPERTY_PATH}.${subpathKey}`,

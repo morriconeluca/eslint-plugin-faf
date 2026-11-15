@@ -1,17 +1,10 @@
 import type { Rule } from 'eslint';
 
-import { isPlainRecord } from '../../../../_src@shared/_utils/is-plain-record/index.js';
+import { configFileSettingsSchema } from './read-config-file-setting.schema.js';
 
 export function readConfigFileSetting(
   settings: Rule.RuleContext['settings'] | undefined
 ): string | undefined {
-  if (!isPlainRecord(settings)) {
-    return undefined;
-  }
-  const faf: unknown = settings['faf'];
-  if (!isPlainRecord(faf)) {
-    return undefined;
-  }
-  const configFile: unknown = faf['configFile'];
-  return typeof configFile === 'string' ? configFile : undefined;
+  const parsed = configFileSettingsSchema.safeParse(settings);
+  return parsed.success ? parsed.data.faf.configFile : undefined;
 }

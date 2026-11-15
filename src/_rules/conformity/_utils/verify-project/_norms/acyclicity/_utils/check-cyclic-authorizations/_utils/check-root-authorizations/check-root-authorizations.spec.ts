@@ -96,7 +96,7 @@ describe('checkRootAuthorizations', () => {
     };
 
     const dependencyCycles: readonly TAcyclicityOutcome[] = [
-      createOutcome('acyclicity/dependency-cycle', {
+      createOutcome.acyclicity('acyclicity/dependency-cycle', {
         cycle: [['src/a/main.ts', 'src/b/main.ts', 'src/a/main.ts']],
         element: 'src/a/main.ts',
       }),

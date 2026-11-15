@@ -3,11 +3,13 @@ import type {
   TConfigOutcome,
   TResult,
 } from '../../../../../../../../_src@shared/_utils/create-outcome/index.js';
+import type { THierarchyModelCheckScope } from './_utils/check-hierarchy-model-conflicts/index.js';
 import type { TRolesValidationResult } from './_validate-config-format@shared/_types/validate-config-format.type.js';
 
 import { createOutcome } from '../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 import { isPlainRecord } from '../../../../../../../../_src@shared/_utils/is-plain-record/index.js';
 import { checkCatalogInvariants } from './_utils/check-catalog-invariants/index.js';
+import { checkHierarchyModelConflicts } from './_utils/check-hierarchy-model-conflicts/index.js';
 import { validateAliases } from './_utils/validate-aliases/index.js';
 import { validateDependencies } from './_utils/validate-dependencies/index.js';
 import { validateForeignNodes } from './_utils/validate-foreign-nodes/index.js';
@@ -18,10 +20,7 @@ import { validateRootFragments } from './_utils/validate-root-fragments/index.js
 import { validateRootLayers } from './_utils/validate-root-layers/index.js';
 import { validateSubGraphRoles } from './_utils/validate-sub-graph-roles/index.js';
 import { translateConfigIssues } from './_validate-config-format@shared/_utils/config-diagnostic-codec/index.js';
-import {
-  CONSTRAINT_MODEL_CATEGORY_CONFLICT,
-  CONSTRAINT_SCOPE_MISMATCH,
-} from './validate-config-format.constant.js';
+import { CONSTRAINT_SCOPE_MISMATCH } from './validate-config-format.constant.js';
 import { configFormatSchema } from './validate-config-format.schema.js';
 
 export function validateConfigFormat(raw: unknown): TResult<TFAFConfig> {
@@ -41,78 +40,9 @@ export function validateConfigFormat(raw: unknown): TResult<TFAFConfig> {
     new Set(roles.roleEntries.map((entry) => entry.category));
 
   const scopeOutcome = (propertyPath: string): TConfigOutcome =>
-    createOutcome(CONSTRAINT_SCOPE_MISMATCH, {
+    createOutcome.configuration(CONSTRAINT_SCOPE_MISMATCH, {
       propertyPath,
     });
-
-  const collectTierConflicts = (
-    tier: readonly unknown[],
-    tierPath: string,
-    categoryNames: ReadonlySet<string>,
-    seenPaths: Set<string>,
-    outcomes: TConfigOutcome[]
-  ): void => {
-    for (const [memberIndex, member] of tier.entries()) {
-      const propertyPath = `${tierPath}[${memberIndex}]`;
-      if (
-        typeof member !== 'string' ||
-        !categoryNames.has(member) ||
-        seenPaths.has(propertyPath)
-      ) {
-        continue;
-      }
-      seenPaths.add(propertyPath);
-      outcomes.push(
-        createOutcome(CONSTRAINT_MODEL_CATEGORY_CONFLICT, {
-          detail: `Sub-Category "${member}" matches Category "${member}" in the role catalog.`,
-          propertyPath,
-        })
-      );
-    }
-  };
-
-  const collectHierarchyConflicts = (
-    hierarchy: readonly unknown[],
-    hierarchyPath: string,
-    categoryNames: ReadonlySet<string>,
-    seenPaths: Set<string>,
-    outcomes: TConfigOutcome[]
-  ): void => {
-    for (const [tierIndex, tier] of hierarchy.entries()) {
-      if (Array.isArray(tier)) {
-        collectTierConflicts(
-          tier,
-          `${hierarchyPath}[${tierIndex}]`,
-          categoryNames,
-          seenPaths,
-          outcomes
-        );
-      }
-    }
-  };
-
-  const collectModelCategoryConflicts = (
-    models: unknown,
-    categoryNames: ReadonlySet<string>,
-    basePropertyPath: string,
-    seenPaths: Set<string>,
-    outcomes: TConfigOutcome[]
-  ): void => {
-    if (!Array.isArray(models) || categoryNames.size === 0) {
-      return;
-    }
-    for (const [modelIndex, model] of models.entries()) {
-      if (Array.isArray(model)) {
-        collectHierarchyConflicts(
-          model,
-          `${basePropertyPath}[${modelIndex}]`,
-          categoryNames,
-          seenPaths,
-          outcomes
-        );
-      }
-    }
-  };
 
   const pushShared = (
     record: Record<string, unknown>,
@@ -137,7 +67,7 @@ export function validateConfigFormat(raw: unknown): TResult<TFAFConfig> {
 
   const collectCommon = (
     common: unknown,
-    seenConflictPaths: Set<string>,
+    modelScopes: THierarchyModelCheckScope[],
     outcomes: TConfigOutcome[]
   ): TCommonHierarchyModelsInfo => {
     if (!isPlainRecord(common)) {
@@ -162,13 +92,11 @@ export function validateConfigFormat(raw: unknown): TResult<TFAFConfig> {
         ? common['horizontalHierarchyModels']
         : null;
     if (categoryNames !== null && horizontalHierarchyModels !== null) {
-      collectModelCategoryConflicts(
-        horizontalHierarchyModels,
+      modelScopes.push({
+        basePropertyPath: 'faf.common.horizontalHierarchyModels',
         categoryNames,
-        'faf.common.horizontalHierarchyModels',
-        seenConflictPaths,
-        outcomes
-      );
+        models: horizontalHierarchyModels,
+      });
     }
     return { categoryNames, horizontalHierarchyModels };
   };
@@ -177,7 +105,7 @@ export function validateConfigFormat(raw: unknown): TResult<TFAFConfig> {
     local: unknown,
     localPath: string,
     commonInfo: TCommonHierarchyModelsInfo,
-    seenConflictPaths: Set<string>,
+    modelScopes: THierarchyModelCheckScope[],
     outcomes: TConfigOutcome[]
   ): void => {
     if (!isPlainRecord(local)) {
@@ -204,13 +132,11 @@ export function validateConfigFormat(raw: unknown): TResult<TFAFConfig> {
     const modelsPath = hasLocalModels
       ? `${localPath}.horizontalHierarchyModels`
       : 'faf.common.horizontalHierarchyModels';
-    collectModelCategoryConflicts(
-      horizontalHierarchyModels,
-      effectiveCategories,
-      modelsPath,
-      seenConflictPaths,
-      outcomes
-    );
+    modelScopes.push({
+      basePropertyPath: modelsPath,
+      categoryNames: effectiveCategories,
+      models: horizontalHierarchyModels,
+    });
   };
 
   const collectBody = (
@@ -221,25 +147,21 @@ export function validateConfigFormat(raw: unknown): TResult<TFAFConfig> {
       return;
     }
     const faf = record['faf'];
-    const seenConflictPaths = new Set<string>();
-    const commonInfo = collectCommon(
-      faf['common'],
-      seenConflictPaths,
-      outcomes
-    );
+    const modelScopes: THierarchyModelCheckScope[] = [];
+    const commonInfo = collectCommon(faf['common'], modelScopes, outcomes);
     const locals = faf['locals'];
-    if (!Array.isArray(locals)) {
-      return;
+    if (Array.isArray(locals)) {
+      for (const [index, local] of locals.entries()) {
+        collectLocal(
+          local,
+          `faf.locals[${index}]`,
+          commonInfo,
+          modelScopes,
+          outcomes
+        );
+      }
     }
-    for (const [index, local] of locals.entries()) {
-      collectLocal(
-        local,
-        `faf.locals[${index}]`,
-        commonInfo,
-        seenConflictPaths,
-        outcomes
-      );
-    }
+    outcomes.push(...checkHierarchyModelConflicts(modelScopes));
   };
 
   const shaped = configFormatSchema.safeParse(raw);

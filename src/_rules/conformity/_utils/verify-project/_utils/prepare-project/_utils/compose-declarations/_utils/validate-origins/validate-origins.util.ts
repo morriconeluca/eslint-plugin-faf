@@ -16,7 +16,7 @@ export const validateOrigins = (
     } else {
       const isDuplicate = previous.kind === entry.kind;
       outcomes.push(
-        createOutcome(
+        createOutcome.configuration(
           isDuplicate
             ? 'configuration/duplicate-origin'
             : 'configuration/conflicting-origin-kind',
@@ -38,7 +38,7 @@ export const validateOrigins = (
     );
     for (const inner of containedOrigins) {
       outcomes.push(
-        createOutcome('configuration/overlapping-origins', {
+        createOutcome.configuration('configuration/overlapping-origins', {
           detail: `Origin '${inner.path}' is contained within origin '${outer.path}'`,
           element: inner.path,
           propertyPath: inner.propertyPath,

@@ -21,10 +21,13 @@ export function rejectTreeDependencies(
   ): readonly TConfigOutcome[] => {
     if (owned === undefined) {
       return [
-        createOutcome('configuration/tree-dependency-not-tree-origin', {
-          element: path,
-          propertyPath,
-        }),
+        createOutcome.configuration(
+          'configuration/tree-dependency-not-tree-origin',
+          {
+            element: path,
+            propertyPath,
+          }
+        ),
       ];
     }
     if (scope.kind !== 'local') {
@@ -32,10 +35,13 @@ export function rejectTreeDependencies(
     }
     if (owned.localIndex !== scope.localIndex) {
       return [
-        createOutcome('configuration/tree-dependency-from-outside-scope', {
-          element: path,
-          propertyPath,
-        }),
+        createOutcome.configuration(
+          'configuration/tree-dependency-from-outside-scope',
+          {
+            element: path,
+            propertyPath,
+          }
+        ),
       ];
     }
     return [];
@@ -49,7 +55,7 @@ export function rejectTreeDependencies(
     const id = context.inventory.pathToId.get(path);
     if (id === undefined) {
       return [
-        createOutcome('configuration/non-existent-path', {
+        createOutcome.configuration('configuration/non-existent-path', {
           detail: `Tree dependency ${endKind} "${path}" does not exist under configuration base "${context.baseDirectory}".`,
           element: path,
           propertyPath,
@@ -59,7 +65,7 @@ export function rejectTreeDependencies(
     const item = context.inventory.items[id];
     if (item === undefined) {
       return [
-        createOutcome('configuration/expected-directory', {
+        createOutcome.configuration('configuration/expected-directory', {
           detail: `Tree dependency ${endKind} "${path}" is not a resolved directory in the inventory.`,
           element: path,
           propertyPath,
@@ -68,7 +74,7 @@ export function rejectTreeDependencies(
     }
     if (item.kind !== 'directory') {
       return [
-        createOutcome('configuration/expected-directory', {
+        createOutcome.configuration('configuration/expected-directory', {
           detail: `Tree dependency ${endKind} "${path}" must be a directory.`,
           element: path,
           propertyPath,
@@ -84,10 +90,13 @@ export function rejectTreeDependencies(
       return [];
     }
     return [
-      createOutcome('configuration/tree-dependency-not-tree-origin', {
-        element: path,
-        propertyPath,
-      }),
+      createOutcome.configuration(
+        'configuration/tree-dependency-not-tree-origin',
+        {
+          element: path,
+          propertyPath,
+        }
+      ),
     ];
   };
 
@@ -105,7 +114,7 @@ export function rejectTreeDependencies(
     for (const [index, path] of dependency.to.entries()) {
       if (dependency.from.includes(path)) {
         selfOutcomes.push(
-          createOutcome('configuration/tree-dependency-self', {
+          createOutcome.configuration('configuration/tree-dependency-self', {
             element: path,
             propertyPath: `${prefix}.to[${index}]`,
           })

@@ -36,6 +36,26 @@ export type TCandidatePath = {
 };
 
 /**
+ * Input parameters for shortest re-entry reachability search within one target tree.
+ */
+export type TFindReEntryPathsInput = {
+  /**
+   * Sorted source paths in the target tree with at least one leaving transition.
+   */
+  readonly candidateSources: readonly string[];
+
+  /**
+   * Predicate evaluating whether a path belongs to the originating target tree.
+   */
+  readonly isTargetTree: (path: string) => boolean;
+
+  /**
+   * Prebuilt outgoing transitions indexed by source logical node path.
+   */
+  readonly transitionsBySource: ReadonlyMap<string, readonly TTransition[]>;
+};
+
+/**
  * Priority queue encapsulation for reachability traversal states.
  */
 export type TPriorityQueue = {
@@ -48,6 +68,21 @@ export type TPriorityQueue = {
    * Inserts a newly discovered reachability traversal state into the heap.
    */
   readonly push: (state: TSearchState) => void;
+};
+
+/**
+ * Shortest re-entry match pairing an originating source node with its winning path.
+ */
+export type TReEntryMatch = {
+  /**
+   * Shortest re-entry path candidate discovered from the source node.
+   */
+  readonly candidate: TCandidatePath;
+
+  /**
+   * Originating source node path inside the target tree.
+   */
+  readonly sourcePath: string;
 };
 
 /**
@@ -76,11 +111,6 @@ export type TSearchContext = {
    * Map from source file paths to ordered outgoing transitions.
    */
   readonly transitionsBySource: ReadonlyMap<string, readonly TTransition[]>;
-
-  /**
-   * Origin root directory path of the starting fractal tree under inspection.
-   */
-  readonly treeOrigin: string;
 };
 
 /**

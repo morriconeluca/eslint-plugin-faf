@@ -34,10 +34,13 @@ export function validateForeignReferences(
 
     return [
       ...directoryOutcomes,
-      createOutcome('configuration/origin-designated-foreign-domain', {
-        element: path,
-        propertyPath,
-      }),
+      createOutcome.configuration(
+        'configuration/origin-designated-foreign-domain',
+        {
+          element: path,
+          propertyPath,
+        }
+      ),
     ];
   };
 

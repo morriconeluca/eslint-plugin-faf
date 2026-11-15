@@ -55,7 +55,7 @@ export function verifyExclusiveForms(
 
     if (hasConflict) {
       outcomes.push(
-        createOutcome('classification/exclusive-forms', {
+        createOutcome.classification('classification/exclusive-forms', {
           element: item.path,
         })
       );

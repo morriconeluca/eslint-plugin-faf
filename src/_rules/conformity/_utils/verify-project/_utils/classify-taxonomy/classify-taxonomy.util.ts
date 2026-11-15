@@ -92,7 +92,7 @@ export function classifyTaxonomy(
           : (treeBuild.rootFragmentPropertyPaths.get(parent.path) ??
             `trees[${treeIndex}].rootFragments`);
         outcomes.push(
-          createOutcome(
+          createOutcome.configuration(
             isContradictory
               ? 'configuration/contradictory-root-foreign'
               : 'configuration/unenumerated-root-file',
@@ -122,10 +122,13 @@ export function classifyTaxonomy(
         fragmentPropertyPath ?? `trees[${treeIndex}].rootFragments`;
       const propertyPath = `${fragmentBase}.subRootFragments`;
       outcomes.push(
-        createOutcome('configuration/undeclared-sub-root-fragment', {
-          element: child.path,
-          propertyPath,
-        })
+        createOutcome.configuration(
+          'configuration/undeclared-sub-root-fragment',
+          {
+            element: child.path,
+            propertyPath,
+          }
+        )
       );
       drafts.set(child.id, {
         domainKind: null,

@@ -67,7 +67,7 @@ export function collectSourceOutcomes(
       !isPermittedEdge(sourceItem, destinationItem, destinationClassification)
     ) {
       outcomes.push(
-        createOutcome('dependency/access-node-sources', {
+        createOutcome.edge('dependency/access-node-sources', {
           from: edge.sourcePath,
           importIndex: edge.importIndex,
           position: edge.position,
@@ -82,7 +82,7 @@ export function collectSourceOutcomes(
     const sourceClassification = taxonomy.byPath.get(libraryImport.sourcePath);
     if (sourceClassification?.nodeKind === ACCESS_NODE) {
       outcomes.push(
-        createOutcome('dependency/access-node-sources', {
+        createOutcome.edge('dependency/access-node-sources', {
           from: libraryImport.sourcePath,
           importIndex: libraryImport.importIndex,
           position: libraryImport.position,
@@ -207,7 +207,7 @@ const checkMasterExport = (
 
   return isReExported
     ? undefined
-    : createOutcome('symbol/access-node-master-export', {
+    : createOutcome.symbol('symbol/access-node-master-export', {
         element: accessClassification.path,
       });
 };
@@ -241,7 +241,7 @@ export function collectSymbolOutcomes(
 
     if (accessRecord.symbols.length > 0) {
       outcomes.push(
-        createOutcome('symbol/access-node-own-symbols', {
+        createOutcome.symbol('symbol/access-node-own-symbols', {
           element: classification.path,
         })
       );

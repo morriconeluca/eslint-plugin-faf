@@ -32,7 +32,7 @@ export function processDirent(
     } catch (error: unknown) {
       assertInvariant(error instanceof Error, 'Expected file system error');
       return {
-        outcome: createOutcome('unverified/unreadable-entry', {
+        outcome: createOutcome.unverified('unverified/unreadable-entry', {
           detail: error.message,
           element: itemRelative,
           reason: error.message,

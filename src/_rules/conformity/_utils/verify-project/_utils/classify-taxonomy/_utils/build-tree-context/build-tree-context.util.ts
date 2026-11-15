@@ -37,7 +37,7 @@ export function buildTreeContext(
   if (foreignDomainPaths.has(tree.originPath)) {
     foreignDomainPaths.delete(tree.originPath);
     outcomes.push(
-      createOutcome('configuration/incompatible-foreign-origin', {
+      createOutcome.configuration('configuration/incompatible-foreign-origin', {
         element: tree.originPath,
         propertyPath: `trees[${treeIndex}].foreignDomains`,
       })
@@ -81,10 +81,13 @@ export function buildTreeContext(
   for (const [rootFragmentPath, propertyPath] of rootFragmentPropertyPaths) {
     if (isPathInside(rootFragmentPath, selection.foreignDomainPaths)) {
       outcomes.push(
-        createOutcome('configuration/incompatible-root-in-foreign-domain', {
-          element: rootFragmentPath,
-          propertyPath,
-        })
+        createOutcome.configuration(
+          'configuration/incompatible-root-in-foreign-domain',
+          {
+            element: rootFragmentPath,
+            propertyPath,
+          }
+        )
       );
     }
   }
@@ -100,7 +103,7 @@ export function buildTreeContext(
       const propertyPath = `trees[${treeIndex}].mimeticPathStructures[${structureIndex}].paths[${pathIndex}]`;
       if (seenMimeticPaths.has(mimeticPath)) {
         outcomes.push(
-          createOutcome('configuration/duplicate-mimetic-path', {
+          createOutcome.configuration('configuration/duplicate-mimetic-path', {
             element: mimeticPath,
             propertyPath,
           })

@@ -38,7 +38,7 @@ export function rejectHierarchyPaths(
           return [];
         }
         return [
-          createOutcome('configuration/non-existent-path', {
+          createOutcome.configuration('configuration/non-existent-path', {
             detail: `Direct child "${member}" does not exist under "${entry.path}".`,
             element: childPath,
             propertyPath: `${entryPath}.hierarchy[${tierIndex}][${memberIndex}]`,

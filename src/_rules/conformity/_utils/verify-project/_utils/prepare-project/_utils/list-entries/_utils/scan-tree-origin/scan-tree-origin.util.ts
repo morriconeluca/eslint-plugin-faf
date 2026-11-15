@@ -69,7 +69,7 @@ export function scanTreeOrigin(
         directoriesToVisit: [],
         entries: [],
         outcomes: [
-          createOutcome('unverified/unreadable-entry', {
+          createOutcome.unverified('unverified/unreadable-entry', {
             detail: error.message,
             element: relativeDirectory,
             reason: error.message,

@@ -38,7 +38,7 @@ export function checkRootAuthorizations(
 
     const [minPath = ''] = names;
     outcomes.push(
-      createOutcome('unverified/cyclic-root-authorization', {
+      createOutcome.unverified('unverified/cyclic-root-authorization', {
         element: minPath,
         reason: 'cyclic-root-authorization',
       })

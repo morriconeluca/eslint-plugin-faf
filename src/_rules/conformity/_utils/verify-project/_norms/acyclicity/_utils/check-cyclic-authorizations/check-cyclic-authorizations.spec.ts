@@ -153,7 +153,7 @@ describe('checkCyclicAuthorizations', () => {
       ],
     });
     const interTreeCycles: readonly TAcyclicityOutcome[] = [
-      createOutcome('acyclicity/inter-tree-cycle', {
+      createOutcome.acyclicity('acyclicity/inter-tree-cycle', {
         cycle: [
           ['a/source.ts', 'b/target.ts'],
           ['b/source.ts', 'a/target.ts'],
@@ -222,7 +222,7 @@ describe('checkCyclicAuthorizations', () => {
       ],
     });
     const dependencyCycles: readonly TAcyclicityOutcome[] = [
-      createOutcome('acyclicity/dependency-cycle', {
+      createOutcome.acyclicity('acyclicity/dependency-cycle', {
         cycle: [['src/a/main.ts', 'src/b/main.ts', 'src/a/main.ts']],
         element: 'src/a/main.ts',
       }),

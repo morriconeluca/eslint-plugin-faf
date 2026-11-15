@@ -30,7 +30,7 @@ export function verifyReExportProhibition(
     const positions = collectReExportPositions(record);
     for (const position of positions) {
       outcomes.push(
-        createOutcome('symbol/re-export-prohibition', {
+        createOutcome.symbol('symbol/re-export-prohibition', {
           element: classification.path,
           position,
         })

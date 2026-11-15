@@ -33,7 +33,7 @@ export function checkDependencyCycles(
       `${witnessResult.element}\0${witnessResult.secondNode}`
     );
     outcomes.push(
-      createOutcome('acyclicity/dependency-cycle', {
+      createOutcome.acyclicity('acyclicity/dependency-cycle', {
         cycle: [witnessResult.witness],
         element: witnessResult.element,
         position: edge?.position,

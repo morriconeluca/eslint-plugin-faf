@@ -7,14 +7,14 @@ import { compareConfigOutcomes } from './compare-config-outcomes.util.js';
 
 describe('compareConfigOutcomes', () => {
   it('orders outcomes by constraint, then element, then propertyPath', () => {
-    const byConstraintA: TConfigOutcome = createOutcome(
+    const byConstraintA: TConfigOutcome = createOutcome.configuration(
       'configuration/duplicate-mimetic-path',
       {
         element: 'z',
         propertyPath: 'z.path',
       }
     );
-    const byConstraintB: TConfigOutcome = createOutcome(
+    const byConstraintB: TConfigOutcome = createOutcome.configuration(
       'configuration/incompatible-foreign-origin',
       {
         element: 'a',
@@ -26,14 +26,14 @@ describe('compareConfigOutcomes', () => {
       0
     );
 
-    const byElementA: TConfigOutcome = createOutcome(
+    const byElementA: TConfigOutcome = createOutcome.configuration(
       'configuration/duplicate-mimetic-path',
       {
         element: 'a',
         propertyPath: 'z.path',
       }
     );
-    const byElementB: TConfigOutcome = createOutcome(
+    const byElementB: TConfigOutcome = createOutcome.configuration(
       'configuration/duplicate-mimetic-path',
       {
         element: 'b',
@@ -43,14 +43,14 @@ describe('compareConfigOutcomes', () => {
     expect(compareConfigOutcomes(byElementA, byElementB)).toBeLessThan(0);
     expect(compareConfigOutcomes(byElementB, byElementA)).toBeGreaterThan(0);
 
-    const byPropertyA: TConfigOutcome = createOutcome(
+    const byPropertyA: TConfigOutcome = createOutcome.configuration(
       'configuration/duplicate-mimetic-path',
       {
         element: 'a',
         propertyPath: 'a.path',
       }
     );
-    const byPropertyB: TConfigOutcome = createOutcome(
+    const byPropertyB: TConfigOutcome = createOutcome.configuration(
       'configuration/duplicate-mimetic-path',
       {
         element: 'a',

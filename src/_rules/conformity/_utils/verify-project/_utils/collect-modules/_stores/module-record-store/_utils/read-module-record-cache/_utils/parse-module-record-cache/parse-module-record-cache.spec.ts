@@ -246,4 +246,45 @@ describe('parseModuleRecordCache', () => {
       ).toBeUndefined();
     }
   });
+
+  it('accepts binary language and every valid import syntax kind', () => {
+    const allKinds = [
+      'css-at-import',
+      'css-url',
+      'default-import',
+      'export-all-from',
+      'export-named-from',
+      'export-type-from',
+      'literal-dynamic-import',
+      'mixed-type-specifier-import',
+      'named-import',
+      'namespace-import',
+      'non-literal-dynamic-import',
+      'require-call',
+      'side-effect-import',
+      'type-only-import',
+      'typescript-import-type',
+      'typescript-require-import',
+    ] as const;
+
+    const record: TModuleRecord = {
+      exports: [],
+      imports: allKinds.map((kind, index) => ({
+        isTypeOnly: false,
+        kind,
+        position: { column: 1, line: index + 1 },
+        specifier: kind === 'non-literal-dynamic-import' ? null : './a.js',
+      })),
+      language: 'binary',
+      symbols: [],
+      unsupportedSyntaxes: [],
+    };
+
+    const parsed = parseModuleRecordCache({
+      packageVersion: '0.5.0',
+      raw: payload([['bin', record]]),
+      schemaVersion: 1,
+    });
+    expect(parsed?.get('bin')).toEqual(record);
+  });
 });

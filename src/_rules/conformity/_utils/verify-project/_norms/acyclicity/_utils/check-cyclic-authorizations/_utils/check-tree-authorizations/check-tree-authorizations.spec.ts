@@ -148,7 +148,7 @@ describe('checkTreeAuthorizations', () => {
     };
 
     const interTreeCycles: readonly TAcyclicityOutcome[] = [
-      createOutcome('acyclicity/inter-tree-cycle', {
+      createOutcome.acyclicity('acyclicity/inter-tree-cycle', {
         cycle: [
           ['a/1.ts', 'b/1.ts'],
           ['b/1.ts', 'a/1.ts'],

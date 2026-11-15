@@ -21,7 +21,7 @@ export function verifyForeignNodeIsolation(
 
     if (isSourceForeign || isDestinationForeign) {
       outcomes.push(
-        createOutcome('dependency/foreign-node-isolation', {
+        createOutcome.edge('dependency/foreign-node-isolation', {
           from: edge.sourcePath,
           importIndex: edge.importIndex,
           position: edge.position,

@@ -34,7 +34,7 @@ export function verifySubGraphNodeIsolation(
 
     if (isLogicalNode) {
       outcomes.push(
-        createOutcome('dependency/sub-graph-node-isolation', {
+        createOutcome.edge('dependency/sub-graph-node-isolation', {
           from: edge.sourcePath,
           importIndex: edge.importIndex,
           position: edge.position,

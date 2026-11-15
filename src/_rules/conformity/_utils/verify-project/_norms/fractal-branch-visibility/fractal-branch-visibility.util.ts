@@ -59,7 +59,7 @@ export function checkBranchVisibility(
         taxonomy
       )
     ) {
-      return createOutcome('dependency/fractal-branch-visibility', {
+      return createOutcome.edge('dependency/fractal-branch-visibility', {
         from: edge.sourcePath,
         importIndex: edge.importIndex,
         position: edge.position,

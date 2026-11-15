@@ -62,6 +62,25 @@ describe('classifyWorkerOutcome', () => {
     expect(result.value.loadedFiles).toEqual(['/project/faf.config.ts']);
   });
 
+  it('returns successful result when kind is value with explicit undefined value', () => {
+    const optionalHolder: { readonly value?: unknown } = {};
+    const result = classifyWorkerOutcome({
+      configPath: '/project/faf.config.ts',
+      rawMessage: {
+        kind: 'value',
+        loadedFiles: [],
+        value: optionalHolder.value,
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.value.config).toBeUndefined();
+    expect(result.value.loadedFiles).toEqual([]);
+  });
+
   it('returns configuration failure when kind is value but value property is missing', () => {
     const result = classifyWorkerOutcome({
       configPath: '/project/faf.config.ts',

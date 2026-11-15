@@ -29,7 +29,7 @@ export function acquirePathAliases(
       return {
         ok: false,
         outcomes: [
-          createOutcome('configuration/duplicate-alias-source', {
+          createOutcome.configuration('configuration/duplicate-alias-source', {
             element: FAF_CONFIG_ELEMENT,
             propertyPath: COMMON_ALIASES_PROPERTY_PATH,
           }),

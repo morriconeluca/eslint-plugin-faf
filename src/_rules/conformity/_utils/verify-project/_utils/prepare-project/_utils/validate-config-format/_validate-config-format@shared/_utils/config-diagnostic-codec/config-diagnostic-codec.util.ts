@@ -43,7 +43,7 @@ export function translateConfigIssues(
     diagnostic: TFixedDiagnostic,
     propertyPath: string
   ): TConfigOutcome =>
-    createOutcome(diagnostic.constraint, {
+    createOutcome.configuration(diagnostic.constraint, {
       propertyPath,
     });
 

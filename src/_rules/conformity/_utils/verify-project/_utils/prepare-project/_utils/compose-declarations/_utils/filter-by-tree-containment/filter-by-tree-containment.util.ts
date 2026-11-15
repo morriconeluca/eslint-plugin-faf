@@ -116,53 +116,23 @@ export const filterByTreeContainment = (
     return included;
   };
 
-  const buildExternalDependencyPairs =
-    (): readonly TEffectiveOrientedPair[] => {
-      const rawEdges =
-        local.externalDependencies ?? common?.externalDependencies;
-      if (rawEdges === undefined) {
-        return [];
-      }
-      const isInherited = local.externalDependencies === undefined;
-      const flatTargets = rawEdges.flatMap((edge) =>
-        edge.from.flatMap((from) =>
-          isInherited && !isPathInTree(from)
-            ? []
-            : edge.to.map((to) => ({ from, to }))
-        )
-      );
-
-      const seen = new Set<string>();
-      const pairs: TEffectiveOrientedPair[] = [];
-      for (const target of flatTargets) {
-        const key = `${target.from}\0${target.to}`;
-        if (seen.has(key)) {
-          continue;
-        }
-        seen.add(key);
-        pairs.push({
-          from: target.from,
-          to: target.to,
-        });
-      }
-      pairs.sort((left, right) => {
-        const fromComparison = compareOrdinal(left.from, right.from);
-        return fromComparison === 0
-          ? compareOrdinal(left.to, right.to)
-          : fromComparison;
-      });
-      return pairs;
-    };
-
-  const buildTreeDependencyPairs = (): readonly TEffectiveOrientedPair[] => {
-    const rawEdges = local.treeDependencies ?? common?.treeDependencies;
+  const buildOrientedPairs = (
+    rawEdges:
+      | readonly {
+          readonly from: readonly string[];
+          readonly to: readonly string[];
+        }[]
+      | undefined,
+    isInherited: boolean,
+    shouldIncludeSource: (from: string) => boolean
+  ): readonly TEffectiveOrientedPair[] => {
     if (rawEdges === undefined) {
       return [];
     }
-    const isInherited = local.treeDependencies === undefined;
+
     const flatTargets = rawEdges.flatMap((edge) =>
       edge.from.flatMap((from) =>
-        isInherited && from !== originPath
+        isInherited && !shouldIncludeSource(from)
           ? []
           : edge.to.map((to) => ({ from, to }))
       )
@@ -191,7 +161,11 @@ export const filterByTreeContainment = (
   };
 
   return {
-    externalDependencyPairs: buildExternalDependencyPairs(),
+    externalDependencyPairs: buildOrientedPairs(
+      local.externalDependencies ?? common?.externalDependencies,
+      local.externalDependencies === undefined,
+      isPathInTree
+    ),
     foreignDomains: buildSortedPaths(
       local.foreignDomains ?? common?.foreignDomains,
       local.foreignDomains === undefined
@@ -207,6 +181,10 @@ export const filterByTreeContainment = (
       local.publicRootNodes ?? common?.publicRootNodes,
       local.publicRootNodes === undefined
     ),
-    treeDependencyPairs: buildTreeDependencyPairs(),
+    treeDependencyPairs: buildOrientedPairs(
+      local.treeDependencies ?? common?.treeDependencies,
+      local.treeDependencies === undefined,
+      (from) => from === originPath
+    ),
   };
 };

@@ -20,12 +20,12 @@ export function collectRecordUnverifiedOutcomes(
     const isNonLiteral = importItem?.kind === 'non-literal-dynamic-import';
     const position = importItem?.position;
     return isNonLiteral
-      ? createOutcome('unverified/non-literal-dynamic-import', {
+      ? createOutcome.unverified('unverified/non-literal-dynamic-import', {
           element: relativePath,
           ...(position !== undefined && { position }),
           reason,
         })
-      : createOutcome('unverified/unresolved-import', {
+      : createOutcome.unverified('unverified/unresolved-import', {
           detail: reason,
           element: relativePath,
           ...(position !== undefined && { position }),
@@ -36,7 +36,7 @@ export function collectRecordUnverifiedOutcomes(
   const unsupportedSyntaxOutcome = (
     syntax: TUnsupportedSyntax
   ): TUnverifiedOutcome =>
-    createOutcome('unverified/unsupported-syntax', {
+    createOutcome.unverified('unverified/unsupported-syntax', {
       detail: syntax.description,
       element: relativePath,
       position: syntax.position,

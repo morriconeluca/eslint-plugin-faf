@@ -48,7 +48,7 @@ export function checkTreeAuthorizations(
 
     const [minOrigin = ''] = originNames;
     outcomes.push(
-      createOutcome('unverified/cyclic-tree-authorization', {
+      createOutcome.unverified('unverified/cyclic-tree-authorization', {
         element: minOrigin,
         reason: 'cyclic-tree-authorization',
       })

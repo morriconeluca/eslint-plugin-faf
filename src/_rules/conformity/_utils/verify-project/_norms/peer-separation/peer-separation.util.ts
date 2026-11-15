@@ -53,7 +53,7 @@ export function checkEdgePeerSeparation(
     return undefined;
   }
 
-  return createOutcome('dependency/peer-separation', {
+  return createOutcome.edge('dependency/peer-separation', {
     from: edge.sourcePath,
     importIndex: edge.importIndex,
     position: edge.position,

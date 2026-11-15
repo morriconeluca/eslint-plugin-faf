@@ -5,7 +5,10 @@ import type { TLoadConfigResult } from '../../_load-config@shared/_types/load-co
 import type { TClassifyWorkerOutcomeInput } from './classify-worker-outcome.type.js';
 
 import { createOutcome } from '../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
-import { workerMessageSchema } from './classify-worker-outcome.schema.js';
+import {
+  workerErrorSchema,
+  workerMessageSchema,
+} from './classify-worker-outcome.schema.js';
 
 export function classifyWorkerOutcome(
   input: TClassifyWorkerOutcomeInput
@@ -22,7 +25,7 @@ export function classifyWorkerOutcome(
   ): TLoadConfigResult => ({
     ok: false,
     outcomes: [
-      createOutcome(constraint, {
+      createOutcome.configuration(constraint, {
         ...(detail !== undefined && { detail }),
         element: configPath,
         propertyPath: defaultProperty,
@@ -34,24 +37,9 @@ export function classifyWorkerOutcome(
     input.packageJson?.['type'] === 'commonjs';
 
   const classifyError = (errorPayload: unknown): TLoadConfigResult => {
-    const parseDetails = (
-      error: unknown
-    ): { readonly code?: string; readonly message: string } => {
-      if (typeof error !== 'object' || error === null || Array.isArray(error)) {
-        return { message: '' };
-      }
-      const message =
-        'message' in error && typeof error.message === 'string'
-          ? error.message
-          : '';
-      const code =
-        'code' in error && typeof error.code === 'string'
-          ? error.code
-          : undefined;
-      return { code, message };
-    };
-
-    const { code, message } = parseDetails(errorPayload);
+    const parsedError = workerErrorSchema.safeParse(errorPayload);
+    const code = parsedError.success ? parsedError.data.code : undefined;
+    const message = parsedError.success ? (parsedError.data.message ?? '') : '';
     const codeSuffix = code === undefined ? '' : ` (code: ${code})`;
 
     if (
@@ -82,75 +70,45 @@ export function classifyWorkerOutcome(
         );
   };
 
-  const classifyCloneError = (payload: object): TLoadConfigResult => {
-    const cloneMessage =
-      'message' in payload && typeof payload.message === 'string'
-        ? payload.message
-        : 'Unknown data clone error';
-    return makeFailure(
-      'configuration/unclonable-config-value',
-      `Exported configuration default value could not be cloned via structured clone: ${cloneMessage}`
-    );
-  };
+  const parsedMessage = workerMessageSchema.safeParse(rawMessage);
+  if (!parsedMessage.success) {
+    return makeFailure(configLoadFailure, invalidPayloadMessage);
+  }
 
-  const classifyValue = (payload: object): TLoadConfigResult => {
-    const hasValue = 'value' in payload;
-    const loadedFiles =
-      'loadedFiles' in payload ? payload.loadedFiles : undefined;
-
-    const areLoadedFilesValid =
-      Array.isArray(loadedFiles) &&
-      loadedFiles.every((file: unknown) => typeof file === 'string');
-
-    if (hasValue && areLoadedFilesValid) {
+  const payload = parsedMessage.data;
+  switch (payload.kind) {
+    case 'clone-error': {
+      const cloneMessage =
+        typeof payload.message === 'string'
+          ? payload.message
+          : 'Unknown data clone error';
+      return makeFailure(
+        'configuration/unclonable-config-value',
+        `Exported configuration default value could not be cloned via structured clone: ${cloneMessage}`
+      );
+    }
+    case 'error': {
+      return classifyError(payload.error);
+    }
+    case 'function': {
+      return makeFailure('configuration/invalid-default-export-function');
+    }
+    case 'missing': {
+      return makeFailure('configuration/missing-default-export');
+    }
+    case 'thenable': {
+      return makeFailure('configuration/invalid-default-export-promise');
+    }
+    case 'value': {
       return {
         ok: true,
         value: {
           config: payload.value,
           configDirectory: nodePath.dirname(configPath),
           configPath,
-          loadedFiles,
+          loadedFiles: payload.loadedFiles,
         },
       };
     }
-
-    return makeFailure(configLoadFailure, invalidPayloadMessage);
-  };
-
-  const dispatchKind = (payload: object, kind: string): TLoadConfigResult => {
-    switch (kind) {
-      case 'clone-error': {
-        return classifyCloneError(payload);
-      }
-      case 'error': {
-        const errorPayload = 'error' in payload ? payload.error : undefined;
-        return classifyError(errorPayload);
-      }
-      case 'function': {
-        return makeFailure('configuration/invalid-default-export-function');
-      }
-      case 'missing': {
-        return makeFailure('configuration/missing-default-export');
-      }
-      case 'thenable': {
-        return makeFailure('configuration/invalid-default-export-promise');
-      }
-      case 'value': {
-        return classifyValue(payload);
-      }
-      default: {
-        return makeFailure(configLoadFailure, invalidPayloadMessage);
-      }
-    }
-  };
-
-  const dispatchValidKind = (payload: object): TLoadConfigResult =>
-    'kind' in payload && typeof payload.kind === 'string'
-      ? dispatchKind(payload, payload.kind)
-      : makeFailure(configLoadFailure, invalidPayloadMessage);
-
-  const parsedMessage = workerMessageSchema.safeParse(rawMessage);
-  return parsedMessage.success
-    ? dispatchValidKind(parsedMessage.data)
-    : makeFailure(configLoadFailure, invalidPayloadMessage);
+  }
 }

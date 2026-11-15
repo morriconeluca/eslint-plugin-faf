@@ -94,6 +94,7 @@ describe('readPackageJson', () => {
           expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('');
           expect(outcome.message).toContain('Failed to parse package.json');
+          expect(outcome.message).toContain('SyntaxError');
         }
       }
     } finally {

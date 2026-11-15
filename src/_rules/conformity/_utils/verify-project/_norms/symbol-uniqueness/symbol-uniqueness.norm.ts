@@ -39,7 +39,7 @@ export function verifySymbolUniqueness(
 
     if (isViolatingMasterSymbol(classification, record)) {
       outcomes.push(
-        createOutcome('symbol/master-symbol', {
+        createOutcome.symbol('symbol/master-symbol', {
           element: classification.path,
         })
       );
@@ -47,7 +47,7 @@ export function verifySymbolUniqueness(
 
     if (isViolatingSymbolUniqueness(classification, record, tree)) {
       outcomes.push(
-        createOutcome('symbol/symbol-uniqueness', {
+        createOutcome.symbol('symbol/symbol-uniqueness', {
           element: classification.path,
         })
       );

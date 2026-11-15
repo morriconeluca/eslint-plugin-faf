@@ -44,7 +44,7 @@ export function checkCrossingTreeAuthorization(
     return undefined;
   }
 
-  return createOutcome('dependency/tree-authorization', {
+  return createOutcome.path('dependency/tree-authorization', {
     chain: crossing.chain,
     from: crossing.sourcePath,
     importIndex: crossing.importIndex,
@@ -83,7 +83,7 @@ export function checkEdgeTreeFrontier(
 
   if (!publicNodes.has(edge.destinationPath)) {
     outcomes.push(
-      createOutcome('dependency/tree-opacity', {
+      createOutcome.edge('dependency/tree-opacity', {
         from: edge.sourcePath,
         importIndex: edge.importIndex,
         position: edge.position,
@@ -97,7 +97,7 @@ export function checkEdgeTreeFrontier(
     const authorizationKey = `${sourceTreeOrigin}\0${destinationTreeOrigin}`;
     if (!authorizedTreePairs.has(authorizationKey)) {
       outcomes.push(
-        createOutcome('dependency/tree-authorization', {
+        createOutcome.edge('dependency/tree-authorization', {
           from: edge.sourcePath,
           importIndex: edge.importIndex,
           position: edge.position,

@@ -19,10 +19,13 @@ export function rejectDependencyEdges(
     for (const [index, name] of fromNames.entries()) {
       if (!currentNames.has(name)) {
         outcomes.push(
-          createOutcome('configuration/invalid-root-dependency-from', {
-            element: name,
-            propertyPath: `${edgePrefix}.from[${index}]`,
-          })
+          createOutcome.configuration(
+            'configuration/invalid-root-dependency-from',
+            {
+              element: name,
+              propertyPath: `${edgePrefix}.from[${index}]`,
+            }
+          )
         );
       }
     }
@@ -39,28 +42,37 @@ export function rejectDependencyEdges(
       const location = context.enumeratedRootNodes.get(toPath);
       if (location === undefined) {
         return [
-          createOutcome('configuration/invalid-root-dependency-to', {
-            element: toPath,
-            propertyPath,
-          }),
+          createOutcome.configuration(
+            'configuration/invalid-root-dependency-to',
+            {
+              element: toPath,
+              propertyPath,
+            }
+          ),
         ];
       }
       if (location.treeOrigin !== treeOrigin) {
         return [
-          createOutcome('configuration/root-dependency-different-tree', {
-            detail: `Root dependency target "${toPath}" belongs to tree "${location.treeOrigin}", not "${treeOrigin}".`,
-            element: toPath,
-            propertyPath,
-          }),
+          createOutcome.configuration(
+            'configuration/root-dependency-different-tree',
+            {
+              detail: `Root dependency target "${toPath}" belongs to tree "${location.treeOrigin}", not "${treeOrigin}".`,
+              element: toPath,
+              propertyPath,
+            }
+          ),
         ];
       }
       if (location.rootFragmentPath === rootFragmentPath) {
         return [
-          createOutcome('configuration/root-dependency-same-fragment', {
-            detail: `Root dependency target "${toPath}" belongs to the same root fragment "${rootFragmentPath}".`,
-            element: toPath,
-            propertyPath,
-          }),
+          createOutcome.configuration(
+            'configuration/root-dependency-same-fragment',
+            {
+              detail: `Root dependency target "${toPath}" belongs to the same root fragment "${rootFragmentPath}".`,
+              element: toPath,
+              propertyPath,
+            }
+          ),
         ];
       }
       return [];

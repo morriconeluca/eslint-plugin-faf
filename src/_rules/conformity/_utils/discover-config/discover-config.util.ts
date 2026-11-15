@@ -24,7 +24,7 @@ export function discoverConfig(
       return {
         ok: false,
         outcomes: [
-          createOutcome(missingConfigFile, {
+          createOutcome.configuration(missingConfigFile, {
             element: candidatePath,
             propertyPath: configProperty,
           }),
@@ -71,7 +71,7 @@ export function discoverConfig(
   return {
     ok: false,
     outcomes: [
-      createOutcome(missingConfigFile, {
+      createOutcome.configuration(missingConfigFile, {
         element: resolvedWorkingDirectory,
         propertyPath: 'faf',
       }),

@@ -54,7 +54,7 @@ export function checkPrivateCategoryUnidirectionality(
     return undefined;
   }
 
-  return createOutcome('dependency/private-category-unidirectionality', {
+  return createOutcome.edge('dependency/private-category-unidirectionality', {
     from: edge.sourcePath,
     importIndex: edge.importIndex,
     position: edge.position,
@@ -108,7 +108,7 @@ export function checkPrivateCategoryVisibility(
       domain.parentId !== null &&
       !isAuthorizedConsumer(domain.parentId)
     ) {
-      return createOutcome('dependency/private-category-visibility', {
+      return createOutcome.edge('dependency/private-category-visibility', {
         from: edge.sourcePath,
         importIndex: edge.importIndex,
         position: edge.position,

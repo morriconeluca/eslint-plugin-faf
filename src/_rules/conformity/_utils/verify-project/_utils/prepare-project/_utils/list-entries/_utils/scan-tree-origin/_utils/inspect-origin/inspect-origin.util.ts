@@ -21,7 +21,7 @@ export function inspectOrigin(
     if (isEnoent) {
       return {
         ok: false,
-        outcome: createOutcome('configuration/missing-origin', {
+        outcome: createOutcome.configuration('configuration/missing-origin', {
           element: normalizedOrigin,
           propertyPath: 'faf.locals',
         }),
@@ -30,7 +30,7 @@ export function inspectOrigin(
 
     return {
       ok: false,
-      outcome: createOutcome('unverified/unreadable-origin', {
+      outcome: createOutcome.unverified('unverified/unreadable-origin', {
         detail: error.message,
         element: normalizedOrigin,
         reason: error.message,
@@ -52,7 +52,7 @@ export function inspectOrigin(
   if (!isDirectory) {
     return {
       ok: false,
-      outcome: createOutcome('configuration/invalid-origin', {
+      outcome: createOutcome.configuration('configuration/invalid-origin', {
         element: normalizedOrigin,
         propertyPath: 'faf.locals',
       }),

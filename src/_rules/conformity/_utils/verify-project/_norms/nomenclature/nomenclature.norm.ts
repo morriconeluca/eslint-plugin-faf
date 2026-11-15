@@ -21,7 +21,9 @@ export function verifyNomenclature(
     }
     reported.add(path);
     outcomes.push(
-      createOutcome('classification/nomenclature', { element: path })
+      createOutcome.classification('classification/nomenclature', {
+        element: path,
+      })
     );
   };
 

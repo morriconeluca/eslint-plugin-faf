@@ -21,7 +21,7 @@ export function rejectMimeticStructures(
       const propertyPath = `${basePath}[${structIndex}].paths[${pathIndex}]`;
       if (seen.has(path)) {
         outcomes.push(
-          createOutcome('configuration/duplicate-mimetic-path', {
+          createOutcome.configuration('configuration/duplicate-mimetic-path', {
             element: path,
             propertyPath,
           })

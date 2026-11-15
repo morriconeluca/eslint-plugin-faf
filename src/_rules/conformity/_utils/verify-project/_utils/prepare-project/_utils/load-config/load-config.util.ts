@@ -27,7 +27,7 @@ export function loadConfig(input: TLoadConfigInput): TLoadConfigResult {
     return {
       ok: false,
       outcomes: [
-        createOutcome('configuration/missing-config-file', {
+        createOutcome.configuration('configuration/missing-config-file', {
           element: resolvedConfigPath,
           propertyPath: 'faf',
         }),
@@ -123,7 +123,7 @@ export function loadConfig(input: TLoadConfigInput): TLoadConfigResult {
       return {
         ok: false,
         outcomes: [
-          createOutcome('unverified/config-loading-timeout', {
+          createOutcome.unverified('unverified/config-loading-timeout', {
             element: resolvedConfigPath,
             reason: `Worker execution exceeded timeout budget of ${timeoutBudget}ms`,
           }),

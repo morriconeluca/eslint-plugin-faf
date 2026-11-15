@@ -23,7 +23,7 @@ export function analyzeModuleSource(
       ? 'unverified/unreadable-entry'
       : 'unverified/unreadable-external-file';
 
-    return createOutcome(constraint, {
+    return createOutcome.unverified(constraint, {
       detail: reason,
       element: input.relativePath,
       reason,

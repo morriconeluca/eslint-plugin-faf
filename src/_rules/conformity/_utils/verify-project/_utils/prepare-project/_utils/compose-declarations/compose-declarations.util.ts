@@ -59,7 +59,7 @@ export const composeDeclarations = (
           config.faf.common.roles === undefined)
       ) {
         outcomes.push(
-          createOutcome('configuration/missing-roles', {
+          createOutcome.configuration('configuration/missing-roles', {
             element: CONFIG_FILE_NAME,
             propertyPath: `faf.locals[${localIndex}]`,
           })

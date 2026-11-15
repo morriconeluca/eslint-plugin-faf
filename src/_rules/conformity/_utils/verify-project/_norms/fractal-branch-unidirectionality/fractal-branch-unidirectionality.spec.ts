@@ -14,7 +14,12 @@ import type {
 
 import { verificationModel } from '../_norms@shared/_mocks/verification-model.mock.js';
 import { verifyFractalBranchUnidirectionality } from './fractal-branch-unidirectionality.norm.js';
-import { compareBranchOutcomes } from './fractal-branch-unidirectionality.util.js';
+import {
+  buildBranchUnidirectionalityOutcome,
+  collectBranchCandidateSources,
+  compareBranchOutcomes,
+  isFractalBranchUnidirectionalityViolation,
+} from './fractal-branch-unidirectionality.util.js';
 
 type TModelEntry = {
   readonly depth: number;
@@ -915,5 +920,128 @@ describe('verifyFractalBranchUnidirectionality', () => {
       )
     ).toBeLessThan(0);
     expect(compareBranchOutcomes(baseOutcome, { ...baseOutcome })).toBe(0);
+  });
+
+  it('ignores foreign nodes, access nodes, unclassified nodes, invalid parents, and non-file destinations', () => {
+    const entries: TModelEntry[] = [
+      ...branchTreeEntries,
+      {
+        depth: 1,
+        id: 16,
+        kind: 'file',
+        nodeKind: 'foreign-node',
+        parentId: 0,
+        path: 'src/foreign.ts',
+        preorderEnd: 16,
+        preorderStart: 16,
+      },
+      {
+        depth: 3,
+        id: 17,
+        kind: 'file',
+        nodeKind: 'access-node',
+        parentId: 7,
+        path: 'src/_src@shared/_types/index.ts',
+        preorderEnd: 8,
+        preorderStart: 8,
+      },
+      {
+        depth: 3,
+        id: 18,
+        kind: 'file',
+        parentId: 7,
+        path: 'src/_src@shared/_types/unclassified.ts',
+        preorderEnd: 8,
+        preorderStart: 8,
+      },
+      {
+        depth: 3,
+        id: 19,
+        kind: 'file',
+        nodeKind: 'category-node',
+        parentId: 999,
+        path: 'src/_src@shared/_types/orphan.type.ts',
+        preorderEnd: 8,
+        preorderStart: 8,
+      },
+    ];
+    const edges = [
+      createEdge(
+        'src/_src@shared/_types/start.type.ts',
+        'src/foreign.ts',
+        '../../foreign.js'
+      ),
+      createEdge(
+        'src/_src@shared/_types/start.type.ts',
+        'src/_src@shared/_types/unclassified.ts',
+        './unclassified.js'
+      ),
+      createEdge(
+        'src/_src@shared/_types/start.type.ts',
+        'src',
+        '../../index.js'
+      ),
+      createEdge(
+        'src/_src@shared/_types/start.type.ts',
+        'src/dangling.ts',
+        '../../dangling.js'
+      ),
+      createEdge(
+        'src/_src@shared/_types/index.ts',
+        'src/main.ts',
+        '../../main.js'
+      ),
+      createEdge(
+        'src/_src@shared/_types/orphan.type.ts',
+        'src/main.ts',
+        '../../main.js'
+      ),
+    ];
+    const model = buildTestModel(entries, edges, ['src', 'src/dangling.ts']);
+    const danglingModel: TVerificationModel = {
+      ...model,
+      basis: {
+        ...model.basis,
+        inventory: {
+          ...model.basis.inventory,
+          pathToId: new Map([
+            ...model.basis.inventory.pathToId,
+            ['src/dangling.ts', 999],
+          ]),
+        },
+      },
+      graph: {
+        ...model.graph,
+        vertexCount: model.graph.vertexCount + 1,
+      },
+    };
+    expect(verifyFractalBranchUnidirectionality(danglingModel)).toEqual([]);
+    expect(
+      collectBranchCandidateSources(
+        danglingModel.graph,
+        danglingModel.basis.inventory,
+        danglingModel.taxonomy
+      ).some((source) => source.path === 'src/_src@shared/_types/start.type.ts')
+    ).toBe(true);
+    expect(
+      isFractalBranchUnidirectionalityViolation(
+        'src/_src@shared/_types/start.type.ts',
+        'src/foreign.ts',
+        danglingModel.basis.inventory,
+        danglingModel.taxonomy
+      )
+    ).toBe(false);
+    expect(
+      buildBranchUnidirectionalityOutcome({
+        chain: ['src/_src@shared/_types/start.type.ts'],
+        firstEdge: createEdge(
+          'src/_src@shared/_types/start.type.ts',
+          'src/main.ts',
+          '../../main.js'
+        ),
+        sourcePath: 'src/_src@shared/_types/start.type.ts',
+        targetVertex: 1,
+      }).to
+    ).toBe('src/_src@shared/_types/start.type.ts');
   });
 });

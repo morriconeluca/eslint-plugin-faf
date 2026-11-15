@@ -33,9 +33,12 @@ export function collectMemberOutcomes(
     }
     reported.add(set.parentPath);
     outcomes.push(
-      createOutcome('classification/horizontal-hierarchy-members', {
-        element: set.parentPath,
-      })
+      createOutcome.classification(
+        'classification/horizontal-hierarchy-members',
+        {
+          element: set.parentPath,
+        }
+      )
     );
   }
 
@@ -60,9 +63,12 @@ export function collectOverlapOutcomes(
     }
     reported.add(child.path);
     outcomes.push(
-      createOutcome('classification/horizontal-hierarchy-overlap', {
-        element: child.path,
-      })
+      createOutcome.classification(
+        'classification/horizontal-hierarchy-overlap',
+        {
+          element: child.path,
+        }
+      )
     );
   }
 

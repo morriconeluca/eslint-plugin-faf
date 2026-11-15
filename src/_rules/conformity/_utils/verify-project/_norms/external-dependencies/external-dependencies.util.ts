@@ -56,7 +56,7 @@ export function checkEdgeExternalDependency(
     return undefined;
   }
 
-  return createOutcome('dependency/external-dependencies', {
+  return createOutcome.edge('dependency/external-dependencies', {
     from: edge.sourcePath,
     importIndex: edge.importIndex,
     position: edge.position,

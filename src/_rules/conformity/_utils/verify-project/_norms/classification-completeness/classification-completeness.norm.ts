@@ -15,9 +15,12 @@ export function verifyClassificationCompleteness(
       classification.domainKind === null
     ) {
       outcomes.push(
-        createOutcome('classification/unclassifiable-directory', {
-          element: classification.path,
-        })
+        createOutcome.classification(
+          'classification/unclassifiable-directory',
+          {
+            element: classification.path,
+          }
+        )
       );
     }
     if (
@@ -25,7 +28,7 @@ export function verifyClassificationCompleteness(
       classification.nodeKind === null
     ) {
       outcomes.push(
-        createOutcome('classification/unclassifiable-file', {
+        createOutcome.classification('classification/unclassifiable-file', {
           element: classification.path,
         })
       );

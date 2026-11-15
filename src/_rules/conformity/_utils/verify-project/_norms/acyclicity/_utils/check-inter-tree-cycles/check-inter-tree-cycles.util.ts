@@ -29,7 +29,7 @@ export function checkInterTreeCycles(
       continue;
     }
     outcomes.push(
-      createOutcome('acyclicity/inter-tree-cycle', {
+      createOutcome.acyclicity('acyclicity/inter-tree-cycle', {
         cycle: witnessResult.witness,
         element: witnessResult.element,
         position: witnessResult.position,

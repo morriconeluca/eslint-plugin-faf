@@ -36,10 +36,13 @@ export function verifyClassificationReferences(
         role?.form === FORM_FRAGMENTS;
       if (!isValidParent) {
         outcomes.push(
-          createOutcome('configuration/incompatible-mimetic-designation', {
-            element: mimeticPath,
-            propertyPath,
-          })
+          createOutcome.configuration(
+            'configuration/incompatible-mimetic-designation',
+            {
+              element: mimeticPath,
+              propertyPath,
+            }
+          )
         );
       }
     }
@@ -61,10 +64,13 @@ export function verifyClassificationReferences(
         classification.nodeKind === NODE_FOREIGN;
       if (isRejectedSource) {
         outcomes.push(
-          createOutcome('configuration/invalid-external-dependency-source', {
-            element: pair.from,
-            propertyPath: `trees[${treeIndex}].externalDependencyPairs[${pairIndex}].from`,
-          })
+          createOutcome.configuration(
+            'configuration/invalid-external-dependency-source',
+            {
+              element: pair.from,
+              propertyPath: `trees[${treeIndex}].externalDependencyPairs[${pairIndex}].from`,
+            }
+          )
         );
       }
     }
@@ -82,10 +88,13 @@ export function verifyClassificationReferences(
         classification.nodeKind !== NODE_ROOT
       ) {
         outcomes.push(
-          createOutcome('configuration/invalid-public-root-node', {
-            element: nodePath,
-            propertyPath: `trees[${treeIndex}].publicRootNodes[${nodeIndex}]`,
-          })
+          createOutcome.configuration(
+            'configuration/invalid-public-root-node',
+            {
+              element: nodePath,
+              propertyPath: `trees[${treeIndex}].publicRootNodes[${nodeIndex}]`,
+            }
+          )
         );
       }
     }

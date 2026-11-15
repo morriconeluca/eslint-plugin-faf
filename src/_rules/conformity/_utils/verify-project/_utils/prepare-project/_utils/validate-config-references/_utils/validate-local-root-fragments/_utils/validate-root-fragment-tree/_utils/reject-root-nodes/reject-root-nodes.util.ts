@@ -33,7 +33,7 @@ export function rejectRootNodes(
 
     return [
       ...fileOutcomes,
-      createOutcome('configuration/root-node-not-direct-child', {
+      createOutcome.configuration('configuration/root-node-not-direct-child', {
         element: fullPath,
         propertyPath,
       }),

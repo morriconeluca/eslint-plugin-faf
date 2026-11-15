@@ -11,7 +11,7 @@ export function collectSymlinkOutcomes(
   for (const item of items) {
     if (item.isSymlink && item.treeOrigin !== null) {
       outcomes.push(
-        createOutcome('unverified/symbolic-link', {
+        createOutcome.unverified('unverified/symbolic-link', {
           detail: item.realPath,
           element: item.path,
           reason: item.realPath,

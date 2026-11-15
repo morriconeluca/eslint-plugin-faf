@@ -20,7 +20,9 @@ export function verifyCategoryRole(
     }
     reported.add(path);
     outcomes.push(
-      createOutcome('classification/category-role', { element: path })
+      createOutcome.classification('classification/category-role', {
+        element: path,
+      })
     );
   };
 

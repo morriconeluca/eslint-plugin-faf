@@ -115,7 +115,7 @@ export function inspectFragmentDomain(
   );
   if (!hasAccessNode) {
     outcomes.push(
-      createOutcome('classification/missing-access-node', {
+      createOutcome.classification('classification/missing-access-node', {
         element: fragmentPath,
       })
     );
@@ -128,7 +128,7 @@ export function inspectFragmentDomain(
   );
   if (!hasMasterCandidate) {
     outcomes.push(
-      createOutcome('classification/missing-master-node', {
+      createOutcome.classification('classification/missing-master-node', {
         element: fragmentPath,
       })
     );
@@ -153,7 +153,7 @@ export function inspectFragmentDomain(
   duplicatedRoleNames.sort(compareOrdinal);
 
   const duplicateOutcomes = duplicatedRoleNames.map(() =>
-    createOutcome('classification/duplicate-fragment-role', {
+    createOutcome.classification('classification/duplicate-fragment-role', {
       element: fragmentPath,
     })
   );
@@ -170,7 +170,7 @@ export function inspectFragmentNodes(
   for (const child of inspection.logicalChildren) {
     if (!ADMITTED_NODE_KINDS.has(child.nodeKind)) {
       outcomes.push(
-        createOutcome('classification/fragment-node-anatomy', {
+        createOutcome.classification('classification/fragment-node-anatomy', {
           element: child.path,
         })
       );
@@ -192,7 +192,7 @@ export function inspectFragmentNodes(
         child.fragmentInternalRank >= masterRank
       ) {
         outcomes.push(
-          createOutcome('classification/fragment-node-rank', {
+          createOutcome.classification('classification/fragment-node-rank', {
             element: child.path,
           })
         );

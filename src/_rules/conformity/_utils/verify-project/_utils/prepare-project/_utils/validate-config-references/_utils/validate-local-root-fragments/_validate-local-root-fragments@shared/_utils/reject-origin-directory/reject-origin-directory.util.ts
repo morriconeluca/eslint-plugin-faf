@@ -9,7 +9,7 @@ export function rejectOriginDirectory(
   const id = check.context.inventory.pathToId.get(check.path);
   if (id === undefined) {
     return [
-      createOutcome('configuration/non-existent-path', {
+      createOutcome.configuration('configuration/non-existent-path', {
         detail: `${check.label} "${check.path}" does not exist under configuration base "${check.context.baseDirectory}".`,
         element: check.path,
         propertyPath: check.propertyPath,
@@ -20,7 +20,7 @@ export function rejectOriginDirectory(
   const item = check.context.inventory.items[id];
   if (item === undefined) {
     return [
-      createOutcome('configuration/expected-directory', {
+      createOutcome.configuration('configuration/expected-directory', {
         detail: `${check.label} "${check.path}" is not a resolved directory in the inventory.`,
         element: check.path,
         propertyPath: check.propertyPath,
@@ -30,7 +30,7 @@ export function rejectOriginDirectory(
 
   if (item.kind !== 'directory') {
     return [
-      createOutcome('configuration/expected-directory', {
+      createOutcome.configuration('configuration/expected-directory', {
         detail: `${check.label} "${check.path}" must be a directory.`,
         element: check.path,
         propertyPath: check.propertyPath,
@@ -40,11 +40,14 @@ export function rejectOriginDirectory(
 
   if (item.treeOrigin !== null && item.treeOrigin !== check.path) {
     return [
-      createOutcome('configuration/origin-contained-in-other-tree', {
-        detail: `${check.label} "${check.path}" is contained in tree "${item.treeOrigin}".`,
-        element: check.path,
-        propertyPath: check.propertyPath,
-      }),
+      createOutcome.configuration(
+        'configuration/origin-contained-in-other-tree',
+        {
+          detail: `${check.label} "${check.path}" is contained in tree "${item.treeOrigin}".`,
+          element: check.path,
+          propertyPath: check.propertyPath,
+        }
+      ),
     ];
   }
 

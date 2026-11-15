@@ -34,7 +34,7 @@ export function validateRoles(
     propertyPath: string,
     constraint: TConfigConstraint
   ): TConfigOutcome =>
-    createOutcome(constraint, {
+    createOutcome.configuration(constraint, {
       propertyPath,
     });
 

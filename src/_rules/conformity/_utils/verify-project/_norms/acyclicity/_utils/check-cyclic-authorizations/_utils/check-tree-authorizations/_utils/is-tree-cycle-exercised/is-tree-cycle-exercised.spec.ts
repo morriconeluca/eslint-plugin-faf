@@ -7,7 +7,7 @@ import { isTreeCycleExercised } from './is-tree-cycle-exercised.util.js';
 
 describe('isTreeCycleExercised', () => {
   it('detects exercised tree cycle when cycle has 2 or more origin trees from sources only', () => {
-    const cycleOutcome: TAcyclicityOutcome = createOutcome(
+    const cycleOutcome: TAcyclicityOutcome = createOutcome.acyclicity(
       'acyclicity/inter-tree-cycle',
       {
         cycle: [
@@ -27,7 +27,7 @@ describe('isTreeCycleExercised', () => {
   });
 
   it('detects exercised tree cycle when cycle has 2 or more origin trees from destinations only', () => {
-    const cycleOutcome: TAcyclicityOutcome = createOutcome(
+    const cycleOutcome: TAcyclicityOutcome = createOutcome.acyclicity(
       'acyclicity/inter-tree-cycle',
       {
         cycle: [
@@ -47,7 +47,7 @@ describe('isTreeCycleExercised', () => {
   });
 
   it('rejects cycle when only 1 tree from originSet participates even if another tree is present', () => {
-    const cycleOutcome: TAcyclicityOutcome = createOutcome(
+    const cycleOutcome: TAcyclicityOutcome = createOutcome.acyclicity(
       'acyclicity/inter-tree-cycle',
       {
         cycle: [
@@ -71,7 +71,7 @@ describe('isTreeCycleExercised', () => {
   it('returns false when no cycles exist or segments empty', () => {
     expect(isTreeCycleExercised(['a', 'b'], [], new Map())).toBe(false);
 
-    const emptySegmentOutcome: TAcyclicityOutcome = createOutcome(
+    const emptySegmentOutcome: TAcyclicityOutcome = createOutcome.acyclicity(
       'acyclicity/inter-tree-cycle',
       {
         cycle: [[]],

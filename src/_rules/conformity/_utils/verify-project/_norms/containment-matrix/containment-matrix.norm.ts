@@ -77,7 +77,7 @@ export function verifyContainmentMatrix(
     if (admittedChildren.includes(childType)) {
       return null;
     }
-    return createOutcome('classification/containment-matrix', {
+    return createOutcome.classification('classification/containment-matrix', {
       element: item.path,
     });
   };

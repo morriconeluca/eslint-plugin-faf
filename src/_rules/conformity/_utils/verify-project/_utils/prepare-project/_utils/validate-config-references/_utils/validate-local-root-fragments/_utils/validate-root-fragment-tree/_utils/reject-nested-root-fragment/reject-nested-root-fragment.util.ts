@@ -26,9 +26,12 @@ export function rejectNestedRootFragment(
 
   return [
     ...directoryOutcomes,
-    createOutcome('configuration/nested-root-fragment-not-direct-child', {
-      element: childPath,
-      propertyPath,
-    }),
+    createOutcome.configuration(
+      'configuration/nested-root-fragment-not-direct-child',
+      {
+        element: childPath,
+        propertyPath,
+      }
+    ),
   ];
 }

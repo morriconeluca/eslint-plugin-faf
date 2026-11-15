@@ -14,7 +14,7 @@ export function validateAliasReferences(
     const id = context.inventory.pathToId.get(basePath);
     if (id === undefined) {
       outcomes.push(
-        createOutcome('configuration/non-existent-path', {
+        createOutcome.configuration('configuration/non-existent-path', {
           detail: `Alias base "${basePath}" does not exist under configuration base "${context.baseDirectory}".`,
           element: basePath,
           propertyPath: `faf.common.aliases.${key}`,
@@ -25,7 +25,7 @@ export function validateAliasReferences(
     const item = context.inventory.items[id];
     if (item === undefined || item.kind !== 'directory') {
       outcomes.push(
-        createOutcome('configuration/expected-directory', {
+        createOutcome.configuration('configuration/expected-directory', {
           detail: `Alias base "${basePath}" must be a directory.`,
           element: basePath,
           propertyPath: `faf.common.aliases.${key}`,

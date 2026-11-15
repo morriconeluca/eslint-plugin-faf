@@ -29,7 +29,7 @@ export function checkCatalogInvariants(
     detail: string
   ): void => {
     outcomes.push(
-      createOutcome(constraint, {
+      createOutcome.configuration(constraint, {
         detail,
         propertyPath,
       })

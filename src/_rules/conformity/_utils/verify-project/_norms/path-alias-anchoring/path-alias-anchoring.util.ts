@@ -53,7 +53,7 @@ export function checkEdgeAliasAnchoring(
     return undefined;
   }
 
-  return createOutcome('dependency/path-alias-anchoring', {
+  return createOutcome.edge('dependency/path-alias-anchoring', {
     from: edge.sourcePath,
     importIndex: edge.importIndex,
     position: edge.position,

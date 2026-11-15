@@ -274,6 +274,12 @@ export default defineConfig([
           },
         },
       ],
+      'unicorn/no-non-function-verb-prefix': [
+        'error',
+        {
+          ignore: ['^createOutcome$'],
+        },
+      ],
       'unicorn/no-null': 'off',
     },
     settings: {

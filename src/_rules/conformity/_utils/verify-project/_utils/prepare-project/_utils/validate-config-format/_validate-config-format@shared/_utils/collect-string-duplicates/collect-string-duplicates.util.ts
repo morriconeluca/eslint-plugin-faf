@@ -26,7 +26,7 @@ export const collectStringDuplicates = (
       if (seen.has(item)) {
         const propertyPath = pathAt(index);
         outcomes.push(
-          createOutcome(constraint, {
+          createOutcome.configuration(constraint, {
             propertyPath,
           })
         );

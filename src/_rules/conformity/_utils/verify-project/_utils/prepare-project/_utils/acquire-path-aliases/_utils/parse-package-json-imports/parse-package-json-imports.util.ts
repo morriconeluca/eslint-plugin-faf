@@ -21,7 +21,7 @@ export function parsePackageJsonImports(
     return {
       ok: false,
       outcomes: [
-        createOutcome('configuration/invalid-alias-source', {
+        createOutcome.configuration('configuration/invalid-alias-source', {
           detail: 'package.json imports must be a JSON object',
           element: PACKAGE_JSON_ELEMENT,
           propertyPath: PACKAGE_JSON_IMPORTS_PROPERTY_PATH,

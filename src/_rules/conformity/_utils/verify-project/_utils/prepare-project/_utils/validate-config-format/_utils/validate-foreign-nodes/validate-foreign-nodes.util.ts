@@ -67,7 +67,7 @@ export function validateForeignNodes(
         !compileForeignPattern(pattern).ok
       ) {
         outcomes.push(
-          createOutcome('configuration/invalid-foreign-pattern', {
+          createOutcome.configuration('configuration/invalid-foreign-pattern', {
             propertyPath: `${patternsPath}[${index}]`,
           })
         );

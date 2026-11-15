@@ -21,10 +21,13 @@ export function rejectLocalPublicRootNodes(
   const basePath = `faf.locals[${localIndex}].publicRootNodes`;
   if (hasOnlyRootLayers()) {
     return nodes.map((path, index) =>
-      createOutcome(CONSTRAINT_PUBLIC_ROOT_NODES_IN_ROOT_LAYER_TREE, {
-        element: path,
-        propertyPath: `${basePath}[${index}]`,
-      })
+      createOutcome.configuration(
+        CONSTRAINT_PUBLIC_ROOT_NODES_IN_ROOT_LAYER_TREE,
+        {
+          element: path,
+          propertyPath: `${basePath}[${index}]`,
+        }
+      )
     );
   }
 

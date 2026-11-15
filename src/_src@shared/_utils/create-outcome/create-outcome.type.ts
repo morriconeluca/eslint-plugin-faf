@@ -55,11 +55,6 @@ export type TCatalogEntry = {
   readonly family: TOutcomeFamily;
 
   /**
-   * Message formatting structure.
-   */
-  readonly form: TOutcomeForm;
-
-  /**
    * Normative FAF specification clause reference.
    */
   readonly normativeReference: string;
@@ -449,51 +444,6 @@ export type TElementFacts = {
 };
 
 /**
- * Observed facts provided to assemble diagnostic outcome message strings.
- */
-export type TFormatFacts = {
-  /**
-   * Real chain of dependency paths demonstrating transitively reached targets.
-   */
-  readonly chain?: readonly string[];
-
-  /**
-   * Ordered sequence of cycle path segments demonstrating graph circularity.
-   */
-  readonly cycle?: readonly (readonly string[])[];
-
-  /**
-   * Optional observed defect detail expanding the predicate.
-   */
-  readonly detail?: null | string;
-
-  /**
-   * Affected element codebase path or identifier.
-   */
-  readonly element?: string;
-
-  /**
-   * Originating source file path for dependency relations.
-   */
-  readonly from?: string;
-
-  /**
-   * Configuration property path for configuration diagnostics.
-   */
-  readonly propertyPath?: string;
-
-  /**
-   * Verbatim import specifier string written in source code.
-   */
-  readonly specifier?: string;
-
-  /**
-   * Target destination resolved path or package name for dependency relations.
-   */
-  readonly to?: string;
-};
-
-/**
  * Discriminated union of all structured diagnostic outcomes across families.
  */
 export type TOutcome =
@@ -505,38 +455,65 @@ export type TOutcome =
   | TUnverifiedOutcome;
 
 /**
- * Combined facts union acceptable across all diagnostic constraint forms.
+ * Family-specific constructors producing structured diagnostic outcomes from typed facts.
  */
-export type TOutcomeFacts =
-  | TConfigFacts
-  | TCycleFacts
-  | TEdgeFacts
-  | TElementFacts
-  | TPathFacts
-  | TSymbolFacts
-  | TUnverifiedFacts;
+export type TOutcomeCreators = {
+  /**
+   * Constructs an acyclicity diagnostic outcome from cycle facts.
+   */
+  readonly acyclicity: (
+    constraint: TAcyclicityConstraint,
+    facts: TCycleFacts
+  ) => TAcyclicityOutcome;
 
-/**
- * Conditional type selecting the mandatory facts required by a given constraint.
- */
-export type TOutcomeFactsFor<K extends TConstraint> =
-  K extends TAcyclicityConstraint
-    ? TCycleFacts
-    : K extends TPathOnlyDependencyConstraint
-      ? TPathFacts
-      : K extends TEdgeOrPathDependencyConstraint
-        ? TEdgeFacts | TPathFacts
-        : K extends TEdgeOnlyDependencyConstraint
-          ? TEdgeFacts
-          : K extends TConfigConstraint
-            ? TConfigFacts
-            : K extends TUnverifiedConstraint
-              ? TUnverifiedFacts
-              : K extends TSymbolConstraint
-                ? TSymbolFacts
-                : K extends TClassificationConstraint
-                  ? TElementFacts
-                  : never;
+  /**
+   * Constructs a classification diagnostic outcome from element facts.
+   */
+  readonly classification: (
+    constraint: TClassificationConstraint,
+    facts: TElementFacts
+  ) => TClassificationOutcome;
+
+  /**
+   * Constructs a configuration diagnostic outcome from configuration facts.
+   */
+  readonly configuration: (
+    constraint: TConfigConstraint,
+    facts: TConfigFacts
+  ) => TConfigOutcome;
+
+  /**
+   * Constructs a dependency diagnostic outcome from direct import edge facts.
+   */
+  readonly edge: (
+    constraint: TEdgeOnlyDependencyConstraint | TEdgeOrPathDependencyConstraint,
+    facts: TEdgeFacts
+  ) => TDependencyOutcome;
+
+  /**
+   * Constructs a dependency diagnostic outcome from multi-hop reachability path facts.
+   */
+  readonly path: (
+    constraint: TEdgeOrPathDependencyConstraint | TPathOnlyDependencyConstraint,
+    facts: TPathFacts
+  ) => TDependencyOutcome;
+
+  /**
+   * Constructs a symbol diagnostic outcome from symbol facts.
+   */
+  readonly symbol: (
+    constraint: TSymbolConstraint,
+    facts: TSymbolFacts
+  ) => TSymbolOutcome;
+
+  /**
+   * Constructs an unverified diagnostic outcome from unverified check facts.
+   */
+  readonly unverified: (
+    constraint: TUnverifiedConstraint,
+    facts: TUnverifiedFacts
+  ) => TUnverifiedOutcome;
+};
 
 /**
  * Outcome family categories matching rule message identifiers.
@@ -548,33 +525,6 @@ export type TOutcomeFamily =
   | 'dependency'
   | 'symbol'
   | 'unverified';
-
-/**
- * Conditional type selecting the exact outcome shape produced by a given constraint.
- */
-export type TOutcomeFor<K extends TConstraint> = K extends TAcyclicityConstraint
-  ? TAcyclicityOutcome
-  : K extends TClassificationConstraint
-    ? TClassificationOutcome
-    : K extends TConfigConstraint
-      ? TConfigOutcome
-      : K extends TDependencyConstraint
-        ? TDependencyOutcome
-        : K extends TSymbolConstraint
-          ? TSymbolOutcome
-          : K extends TUnverifiedConstraint
-            ? TUnverifiedOutcome
-            : never;
-
-/**
- * Message formatting structure category for diagnostic constraints.
- */
-export type TOutcomeForm =
-  | 'cycle'
-  | 'edge'
-  | 'edge-or-path'
-  | 'element'
-  | 'path';
 
 /**
  * Observed facts provided when constructing transitive path diagnostic outcomes.

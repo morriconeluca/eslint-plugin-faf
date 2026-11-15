@@ -7,7 +7,7 @@ import { isRootCycleExercised } from './is-root-cycle-exercised.util.js';
 
 describe('isRootCycleExercised', () => {
   it('detects exercised root cycle', () => {
-    const cycleOutcome: TAcyclicityOutcome = createOutcome(
+    const cycleOutcome: TAcyclicityOutcome = createOutcome.acyclicity(
       'acyclicity/dependency-cycle',
       {
         cycle: [['src/a/main.ts', 'src/b/main.ts', 'src/a/main.ts']],
@@ -24,7 +24,7 @@ describe('isRootCycleExercised', () => {
   });
 
   it('returns false when nodes belong to irrelevant or unmapped fragments or empty cycle', () => {
-    const cycleOutcome: TAcyclicityOutcome = createOutcome(
+    const cycleOutcome: TAcyclicityOutcome = createOutcome.acyclicity(
       'acyclicity/dependency-cycle',
       {
         cycle: [['src/a/main.ts', 'src/other.ts', 'src/a/main.ts']],
@@ -39,7 +39,7 @@ describe('isRootCycleExercised', () => {
       isRootCycleExercised(['src/a', 'src/b'], [cycleOutcome], nodeToFrag)
     ).toBe(false);
 
-    const emptyOutcome: TAcyclicityOutcome = createOutcome(
+    const emptyOutcome: TAcyclicityOutcome = createOutcome.acyclicity(
       'acyclicity/dependency-cycle',
       {
         cycle: [],

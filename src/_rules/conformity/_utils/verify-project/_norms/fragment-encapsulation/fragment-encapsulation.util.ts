@@ -60,7 +60,7 @@ export function checkEdgeEncapsulation(
     return undefined;
   }
 
-  return createOutcome('dependency/fragment-encapsulation', {
+  return createOutcome.edge('dependency/fragment-encapsulation', {
     from: edge.sourcePath,
     importIndex: edge.importIndex,
     position: edge.position,

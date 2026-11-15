@@ -8,6 +8,7 @@ import type {
 } from './read-package-json.type.js';
 
 import { createOutcome } from '../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
+import { packageJsonObjectSchema } from './read-package-json.schema.js';
 
 export function readPackageJson(
   input: TReadPackageJsonInput
@@ -33,7 +34,7 @@ export function readPackageJson(
     return {
       ok: false,
       outcomes: [
-        createOutcome(invalidPackageJson, {
+        createOutcome.configuration(invalidPackageJson, {
           detail: `package.json at ${packagePath} is not a regular file`,
           element: packagePath,
           propertyPath: '',
@@ -44,16 +45,13 @@ export function readPackageJson(
 
   try {
     const rawContent = nodeFs.readFileSync(packagePath, 'utf8');
-    const parsed: unknown = JSON.parse(rawContent);
+    const parsed = packageJsonObjectSchema.safeParse(JSON.parse(rawContent));
 
-    const isRecord = (value: unknown): value is Record<string, unknown> =>
-      typeof value === 'object' && value !== null && !Array.isArray(value);
-
-    if (!isRecord(parsed)) {
+    if (!parsed.success) {
       return {
         ok: false,
         outcomes: [
-          createOutcome(invalidPackageJson, {
+          createOutcome.configuration(invalidPackageJson, {
             detail: `package.json at ${packagePath} does not contain a JSON object`,
             element: packagePath,
             propertyPath: '',
@@ -63,7 +61,7 @@ export function readPackageJson(
     }
 
     const packageJsonData: TPackageJsonData = {
-      packageJson: parsed,
+      packageJson: parsed.data,
       present: true,
     };
 
@@ -72,12 +70,12 @@ export function readPackageJson(
       value: packageJsonData,
     };
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorMessage = String(error);
 
     return {
       ok: false,
       outcomes: [
-        createOutcome(invalidPackageJson, {
+        createOutcome.configuration(invalidPackageJson, {
           detail: `Failed to parse package.json at ${packagePath}: ${errorMessage}`,
           element: packagePath,
           propertyPath: '',

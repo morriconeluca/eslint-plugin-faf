@@ -17,6 +17,7 @@ import {
   DISCORDANCE_REASON,
   NODE_MODULES_MARKER,
   NON_LITERAL_DYNAMIC_IMPORT_REASON,
+  RESOLVER_OPTIONS,
 } from './_resolve-specifiers@shared/_constants/resolve-specifiers.constant.js';
 import { classifyResolutionTarget } from './_utils/classify-resolution-target/index.js';
 import { matchPathAlias } from './_utils/match-path-alias/index.js';
@@ -34,37 +35,13 @@ export function resolveSpecifiers(
     ? { configFile: tsconfigCandidate, references: 'auto' as const }
     : undefined;
 
-  const resolverOptions = {
-    builtinModules: true,
-    conditionNames: ['import', 'require', 'node', 'types', 'style', 'default'],
-    extensionAlias: {
-      '.cjs': ['.cts', '.cjs'],
-      '.js': ['.ts', '.tsx', '.js'],
-      '.jsx': ['.tsx', '.jsx'],
-      '.mjs': ['.mts', '.mjs'],
-    },
-    extensions: [
-      '.ts',
-      '.tsx',
-      '.mts',
-      '.cts',
-      '.js',
-      '.jsx',
-      '.mjs',
-      '.cjs',
-      '.json',
-      '.css',
-    ],
-    importsFields: [['imports']],
-  };
-
   const resolver = new ResolverFactory({
-    ...resolverOptions,
+    ...RESOLVER_OPTIONS,
     tsconfig,
   });
 
   const noTsconfigResolver = hasTsconfig
-    ? new ResolverFactory(resolverOptions)
+    ? new ResolverFactory(RESOLVER_OPTIONS)
     : null;
 
   const resolutionCache = new Map<string, TCachedResolution>();

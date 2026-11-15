@@ -1,21 +1,21 @@
 import type { TConfigOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 import type { TValidateSubpathKeyResult } from './validate-subpath-key.type.js';
 
-import { createOutcome as makeOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
+import { createOutcome } from '../../../../../../../../../../../../_src@shared/_utils/create-outcome/index.js';
 import {
   PACKAGE_JSON_ELEMENT,
   PACKAGE_JSON_IMPORTS_PROPERTY_PATH,
 } from '../../../../_acquire-path-aliases@shared/_constants/acquire-path-aliases.constant.js';
 
 export function validateSubpathKey(key: string): TValidateSubpathKeyResult {
-  const createOutcome = (
+  const createSubpathOutcome = (
     constraint:
       | 'configuration/invalid-alias-key'
       | 'configuration/invalid-alias-source'
       | 'configuration/unresolvable-alias-base',
     detail: string
   ): TConfigOutcome =>
-    makeOutcome(constraint, {
+    createOutcome.configuration(constraint, {
       detail,
       element: PACKAGE_JSON_ELEMENT,
       propertyPath: `${PACKAGE_JSON_IMPORTS_PROPERTY_PATH}.${key}`,
@@ -23,7 +23,7 @@ export function validateSubpathKey(key: string): TValidateSubpathKeyResult {
 
   if (key === '#' || !key.startsWith('#')) {
     return {
-      outcome: createOutcome(
+      outcome: createSubpathOutcome(
         'configuration/invalid-alias-source',
         `package.json imports subpath keys must start with '#' followed by a path: ${key}`
       ),
@@ -35,7 +35,7 @@ export function validateSubpathKey(key: string): TValidateSubpathKeyResult {
 
   if (starCount > 1) {
     return {
-      outcome: createOutcome(
+      outcome: createSubpathOutcome(
         'configuration/unresolvable-alias-base',
         `package.json imports subpath key cannot contain multiple wildcards: ${key}`
       ),
@@ -51,7 +51,7 @@ export function validateSubpathKey(key: string): TValidateSubpathKeyResult {
     }
 
     return {
-      outcome: createOutcome(
+      outcome: createSubpathOutcome(
         'configuration/unresolvable-alias-base',
         `Wildcard in package.json imports subpath key must be terminal and preceded by a slash: ${key}`
       ),
@@ -60,7 +60,7 @@ export function validateSubpathKey(key: string): TValidateSubpathKeyResult {
 
   if (key.endsWith('/')) {
     return {
-      outcome: createOutcome(
+      outcome: createSubpathOutcome(
         'configuration/invalid-alias-source',
         `package.json imports subpath key must not end with a slash: ${key}`
       ),
