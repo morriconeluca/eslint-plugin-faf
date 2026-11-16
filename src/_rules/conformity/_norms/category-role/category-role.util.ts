@@ -102,20 +102,9 @@ export function isViolatingFragmentsForm(
   }
 
   const { parent, tree } = context;
-  if (parent.domainKind === 'category') {
-    const isMimetic = tree.mimeticPathStructures.some((structure) =>
-      structure.paths.includes(parent.path)
-    );
-    if (isMimetic) {
-      return false;
-    }
-    const slashIndex = classification.path.lastIndexOf('/');
-    const fileName = classification.path.slice(slashIndex + 1);
-    return classification.role.kind !== 'absent' || fileName === 'index.ts';
-  }
-
-  return (
-    parent.domainKind === 'sub-category' &&
-    classification.role.kind !== 'absent'
-  );
+  return parent.domainKind === 'category'
+    ? tree.mimeticPathStructures.every(
+        (structure) => !structure.paths.includes(parent.path)
+      )
+    : parent.domainKind === 'sub-category';
 }
