@@ -9,6 +9,7 @@ import type {
 import { compareSourceLocations } from '../../../../../../_conformity@shared/_utils/compare-source-locations/index.js';
 import { createSourceLocator } from './_extract-script-module-record@shared/_utils/create-source-locator/index.js';
 import { extractModuleExports } from './_utils/extract-module-exports/index.js';
+import { extractReferenceDirectives } from './_utils/extract-reference-directives/index.js';
 import { extractRootSymbols } from './_utils/extract-root-symbols/index.js';
 import { extractStaticImports } from './_utils/extract-static-imports/index.js';
 import { extractTraversalEntries } from './_utils/extract-traversal-entries/index.js';
@@ -58,10 +59,15 @@ export function extractScriptModuleRecord(
   );
 
   const traversal = extractTraversalEntries(parseResult.program, locator);
+  const referenceDirectives = extractReferenceDirectives(
+    parseResult.comments,
+    locator
+  );
 
   const allImports: TModuleImport[] = [
     ...staticImports,
     ...traversal.inlineImports,
+    ...referenceDirectives,
   ];
   allImports.sort((first, second) =>
     compareSourceLocations(first.position, second.position)

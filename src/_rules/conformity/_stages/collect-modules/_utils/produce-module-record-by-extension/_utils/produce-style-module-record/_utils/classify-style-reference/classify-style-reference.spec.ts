@@ -129,7 +129,7 @@ describe('classifyStyleReference', () => {
     expect(lessResult.unsupportedSyntax?.position).toEqual(position);
   });
 
-  it('normalizes bare relative references by prepending ./', () => {
+  it('preserves bare references verbatim without prepending ./', () => {
     const result = classifyStyleReference(
       'css-url',
       position,
@@ -139,12 +139,25 @@ describe('classifyStyleReference', () => {
       isTypeOnly: false,
       kind: 'css-url',
       position,
-      specifier: './images/icon.png',
+      specifier: 'images/icon.png',
     });
     expect(result.unsupportedSyntax).toBeUndefined();
+
+    const aliasResult = classifyStyleReference(
+      'css-at-import',
+      position,
+      '@shared/_styles/theme.css'
+    );
+    expect(aliasResult.importItem).toEqual({
+      isTypeOnly: false,
+      kind: 'css-at-import',
+      position,
+      specifier: '@shared/_styles/theme.css',
+    });
+    expect(aliasResult.unsupportedSyntax).toBeUndefined();
   });
 
-  it('preserves existing ./, ../, and #/ specifiers without alteration', () => {
+  it('preserves existing ./, ../, and # subpath specifiers containing / without alteration', () => {
     const currentResult = classifyStyleReference(
       'css-url',
       position,
@@ -159,18 +172,44 @@ describe('classifyStyleReference', () => {
     );
     expect(parentResult.importItem?.specifier).toBe('../base/theme.css');
 
-    const aliasResult = classifyStyleReference(
+    const slashAliasResult = classifyStyleReference(
       'css-at-import',
       position,
       '#/_src@shared/_styles/base.css'
     );
-    expect(aliasResult.importItem).toEqual({
+    expect(slashAliasResult.importItem).toEqual({
       isTypeOnly: false,
       kind: 'css-at-import',
       position,
       specifier: '#/_src@shared/_styles/base.css',
     });
-    expect(aliasResult.unsupportedSyntax).toBeUndefined();
+    expect(slashAliasResult.unsupportedSyntax).toBeUndefined();
+
+    const subpathAliasResult = classifyStyleReference(
+      'css-at-import',
+      position,
+      '#_src@shared/_styles/theme.css'
+    );
+    expect(subpathAliasResult.importItem).toEqual({
+      isTypeOnly: false,
+      kind: 'css-at-import',
+      position,
+      specifier: '#_src@shared/_styles/theme.css',
+    });
+    expect(subpathAliasResult.unsupportedSyntax).toBeUndefined();
+
+    const sharedSubpathResult = classifyStyleReference(
+      'css-url',
+      position,
+      '#shared/icons/arrow.svg'
+    );
+    expect(sharedSubpathResult.importItem).toEqual({
+      isTypeOnly: false,
+      kind: 'css-url',
+      position,
+      specifier: '#shared/icons/arrow.svg',
+    });
+    expect(sharedSubpathResult.unsupportedSyntax).toBeUndefined();
   });
 
   it('unquotes double and single quoted strings properly', () => {
@@ -179,29 +218,27 @@ describe('classifyStyleReference', () => {
       position,
       '"styles.css"'
     );
-    expect(doubleQuoted.importItem?.specifier).toBe('./styles.css');
+    expect(doubleQuoted.importItem?.specifier).toBe('styles.css');
 
     const singleQuoted = classifyStyleReference(
       'css-url',
       position,
       "'styles.css'"
     );
-    expect(singleQuoted.importItem?.specifier).toBe('./styles.css');
+    expect(singleQuoted.importItem?.specifier).toBe('styles.css');
 
     const internalQuotes = classifyStyleReference(
       'css-url',
       position,
       'prefix "middle" suffix'
     );
-    expect(internalQuotes.importItem?.specifier).toBe(
-      './prefix "middle" suffix'
-    );
+    expect(internalQuotes.importItem?.specifier).toBe('prefix "middle" suffix');
 
     const mismatchedQuote = classifyStyleReference(
       'css-url',
       position,
       '"styles.css'
     );
-    expect(mismatchedQuote.importItem?.specifier).toBe('./"styles.css');
+    expect(mismatchedQuote.importItem?.specifier).toBe('"styles.css');
   });
 });

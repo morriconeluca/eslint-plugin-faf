@@ -1981,6 +1981,203 @@ const SCENARIOS: readonly TScenarioCase[] = [
         "declare module '*.css';\ndeclare global {\n  interface Window {}\n}\n",
     },
   },
+  {
+    config: {
+      faf: {
+        common,
+        locals: [
+          {
+            foreignDomains: ['src/configs'],
+            rootLayers: ['src'],
+          },
+        ],
+      },
+    },
+    expected: [
+      dependency('foreignNodeIsolation', {
+        from: 'src/_utils/widget/widget.util.ts',
+        line: 1,
+        specifier: '../../configs/globals.d.ts',
+        to: 'src/configs/globals.d.ts',
+      }),
+    ],
+    name: 'triple-slash reference path before imports triggers foreign-node-isolation',
+    tree: {
+      'src/_utils/widget/index.ts':
+        "export { widget } from './widget.util.js';\n",
+      'src/_utils/widget/widget.type.ts': 'export type TWidget = number;\n',
+      'src/_utils/widget/widget.util.ts':
+        '/// <reference path="../../configs/globals.d.ts" />\nimport type { TWidget } from \'./widget.type.js\';\nexport const widget: TWidget = 1;\n',
+      'src/configs/globals.d.ts': 'declare const appGlobal: string;\n',
+    },
+  },
+  {
+    config: {
+      faf: {
+        common,
+        locals: [
+          {
+            foreignDomains: ['src/configs'],
+            rootLayers: ['src'],
+          },
+        ],
+      },
+    },
+    expected: [
+      dependency('foreignNodeIsolation', {
+        from: 'src/_utils/widget/widget.util.ts',
+        line: 2,
+        specifier: '../../configs/globals.d.ts',
+        to: 'src/configs/globals.d.ts',
+      }),
+    ],
+    name: 'triple-slash reference path after imports triggers foreign-node-isolation',
+    tree: {
+      'src/_utils/widget/index.ts':
+        "export { widget } from './widget.util.js';\n",
+      'src/_utils/widget/widget.type.ts': 'export type TWidget = number;\n',
+      'src/_utils/widget/widget.util.ts':
+        'import type { TWidget } from \'./widget.type.js\';\n/// <reference path="../../configs/globals.d.ts" />\nexport const widget: TWidget = 1;\n',
+      'src/configs/globals.d.ts': 'declare const appGlobal: string;\n',
+    },
+  },
+  {
+    config: {
+      faf: {
+        common,
+        locals: [{ rootLayers: ['src'] }],
+      },
+    },
+    expected: [],
+    name: 'triple-slash reference types and lib directives are not treated as local file imports',
+    tree: {
+      'src/_utils/widget/index.ts':
+        "export { widget } from './widget.util.js';\n",
+      'src/_utils/widget/widget.util.ts':
+        '/// <reference types="node" />\n/// <reference lib="es2022" />\nexport const widget = 1;\n',
+    },
+  },
+  {
+    config: {
+      faf: {
+        common,
+        locals: [{ rootLayers: ['src'] }],
+      },
+    },
+    expected: [],
+    name: 'CSS #_src@shared via package.json imports resolves cleanly when anchored to a Fractal Branch and ignores SVG url(#clip-path)',
+    tree: {
+      'package.json': JSON.stringify({
+        imports: {
+          '#_src@shared/*': './src/_src@shared/*',
+        },
+        type: 'module',
+      }),
+      'src/_src@shared/_styles/theme.css': ':root { --accent: blue; }\n',
+      'src/_styles/app.css':
+        "@import '#_src@shared/_styles/theme.css';\n.icon { clip-path: url('#clip-path'); }\n",
+    },
+  },
+  {
+    config: {
+      faf: {
+        common: {
+          ...common,
+          aliases: {
+            '#_src@shared': 'src/_src@shared',
+            '@shared': 'src/_src@shared',
+          },
+        },
+        locals: [{ rootLayers: ['src'] }],
+      },
+    },
+    expected: [],
+    name: 'CSS #_src@shared and @shared Path Aliases resolve cleanly when anchored to a Fractal Branch and ignore SVG url(#clip-path)',
+    tree: {
+      'package.json': JSON.stringify({
+        type: 'module',
+      }),
+      'src/_src@shared/_styles/theme.css': ':root { --accent: blue; }\n',
+      'src/_styles/app.css':
+        "@import '#_src@shared/_styles/theme.css';\n@import '@shared/_styles/theme.css';\n.icon { clip-path: url('#clip-path'); }\n",
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '#_src@shared/*': ['./src/_src@shared/*'],
+            '@shared/*': ['./src/_src@shared/*'],
+          },
+        },
+      }),
+    },
+  },
+  {
+    config: {
+      faf: {
+        common: {
+          aliases: {
+            '#_src@shared': 'src',
+            '@shared': 'src',
+          },
+          roles: [
+            {
+              category: '_styles',
+              implicitRoleExtensions: ['.css'],
+              isCategoryNode: true,
+              name: 'style',
+            },
+            { category: '_components', name: 'component' },
+          ],
+        },
+        locals: [
+          {
+            horizontalHierarchies: [
+              { hierarchy: [['_styles'], ['_components']], path: 'src' },
+            ],
+            rootLayers: ['src'],
+          },
+        ],
+      },
+    },
+    expected: [
+      dependency('pathAliasAnchoring', {
+        filePath: 'src/_components/button/button.component.ts',
+        from: 'src/_components/button/button.style.css',
+        line: 1,
+        specifier: '#_src@shared/_styles/theme.css',
+        to: 'src/_styles/theme.css',
+      }),
+      dependency('pathAliasAnchoring', {
+        filePath: 'src/_components/button/button.component.ts',
+        from: 'src/_components/button/button.style.css',
+        line: 1,
+        specifier: '@shared/_styles/theme.css',
+        to: 'src/_styles/theme.css',
+      }),
+    ],
+    name: 'CSS #_src@shared and @shared Path Aliases trigger path-alias-anchoring when anchored to Root Layer src',
+    tree: {
+      'package.json': JSON.stringify({
+        type: 'module',
+      }),
+      'src/_components/button/button.component.ts':
+        "import './button.style.css';\nexport const button = 1;\n",
+      'src/_components/button/button.style.css':
+        "@import '#_src@shared/_styles/theme.css';\n@import '@shared/_styles/theme.css';\n.btn { clip-path: url('#clip-path'); }\n",
+      'src/_components/button/index.ts':
+        "export { button } from './button.component.js';\n",
+      'src/_styles/theme.css': ':root { --accent: blue; }\n',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '#_src@shared/*': ['./src/*'],
+            '@shared/*': ['./src/*'],
+          },
+        },
+      }),
+    },
+  },
 ];
 
 const WARMUP_TIMEOUT_MS = 120_000;
