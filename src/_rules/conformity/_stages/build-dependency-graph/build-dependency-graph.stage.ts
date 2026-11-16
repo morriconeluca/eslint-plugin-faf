@@ -1,0 +1,41 @@
+import type { TOutcome } from '../../../../_src@shared/_utils/create-outcome/index.js';
+import type {
+  TDependencyGraph,
+  TModuleCollection,
+  TProjectBasis,
+  TTaxonomyModel,
+} from '../../_conformity@shared/_types/verification-model.type.js';
+
+import { assembleDependencyGraph } from './_utils/assemble-dependency-graph/index.js';
+import { collectGraphVertices } from './_utils/collect-graph-vertices/index.js';
+import { collectResolvedEdges } from './_utils/collect-resolved-edges/index.js';
+
+export function buildDependencyGraph(
+  basis: TProjectBasis,
+  _taxonomy: TTaxonomyModel,
+  modules: TModuleCollection
+): {
+  readonly graph: TDependencyGraph;
+  readonly outcomes: readonly TOutcome[];
+} {
+  const vertices = collectGraphVertices(
+    basis.inventory,
+    modules.records,
+    modules.resolutions
+  );
+  const resolved = collectResolvedEdges(
+    modules.records,
+    modules.resolutions,
+    vertices.paths,
+    vertices.pathToVertex
+  );
+  return {
+    graph: assembleDependencyGraph(
+      vertices.paths,
+      vertices.natures,
+      resolved.edges,
+      resolved.libraryImports
+    ),
+    outcomes: [],
+  };
+}

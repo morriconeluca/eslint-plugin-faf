@@ -12,10 +12,6 @@ describe('plugin entrypoint', () => {
     expect(entry.default).toBe(plugin);
   });
 
-  it('exports plugin object with exact package name', () => {
-    expect(plugin.meta.name).toBe('@morriconeluca/eslint-plugin-faf');
-  });
-
   it('matches exact plugin structure', () => {
     expect(plugin.meta).toEqual({
       name: '@morriconeluca/eslint-plugin-faf',
@@ -24,7 +20,6 @@ describe('plugin entrypoint', () => {
     });
     const recommended = plugin.configs.recommended;
     expect(recommended.plugins.faf).toBe(plugin);
-    expect(recommended.plugins).toBe(plugin.configs.recommended.plugins);
     expect(recommended).toMatchObject({
       files: [
         '**/*.cjs',

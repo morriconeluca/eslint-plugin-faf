@@ -3,21 +3,28 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import eslintConfig from '../../eslint.config.js';
+import eslintConfig, { HOST_IO_BOUNDARY_FILES } from '../../eslint.config.js';
 
 const fixtureRoot = path.resolve(
   import.meta.dirname,
-  '../../src/_rules/conformity/_utils/role-purity-fixture'
+  '../../src/_rules/conformity/_stages/role-purity-fixture'
+);
+
+const hostBoundaryFile = path.resolve(
+  import.meta.dirname,
+  '../../src/_rules/conformity/_stages/discover-config/discover-config.stage.ts'
 );
 
 const ROLE_FIXTURE_SUFFIXES = [
-  '.adapter.ts',
   '.config.ts',
   '.constant.ts',
   '.mock.ts',
   '.norm.ts',
+  '.rule.ts',
   '.schema.ts',
   '.spec.ts',
+  '.stage.ts',
+  '.store.ts',
   '.type.ts',
   '.util.ts',
 ] as const;
@@ -58,6 +65,17 @@ const lint = async (
     .filter((ruleId): ruleId is string => typeof ruleId === 'string');
 };
 
+const lintBoundaryFile = async (
+  content: string
+): Promise<readonly string[]> => {
+  const results = await eslint.lintText(content, {
+    filePath: hostBoundaryFile,
+  });
+  return (results[0]?.messages ?? [])
+    .map((message) => message.ruleId)
+    .filter((ruleId): ruleId is string => typeof ruleId === 'string');
+};
+
 const restricted = (ruleIds: readonly string[]): readonly string[] =>
   ruleIds.filter((ruleId) => ruleId.startsWith('no-restricted-'));
 
@@ -80,7 +98,7 @@ describe('role purity', { timeout: 30_000 }, () => {
     fs.rmSync(fixtureRoot, { force: true, recursive: true });
   });
 
-  it('rejects node:fs in a util', async () => {
+  it('rejects node:fs in a non-boundary util', async () => {
     const errors = restricted(
       await lint(
         'read.util.ts',
@@ -90,7 +108,7 @@ describe('role purity', { timeout: 30_000 }, () => {
     expect(errors).toContain('no-restricted-imports');
   });
 
-  it('rejects fs in a util', async () => {
+  it('rejects fs in a non-boundary util', async () => {
     const errors = restricted(
       await lint(
         'read-fs.util.ts',
@@ -100,7 +118,7 @@ describe('role purity', { timeout: 30_000 }, () => {
     expect(errors).toContain('no-restricted-imports');
   });
 
-  it('rejects node:worker_threads in a util', async () => {
+  it('rejects node:worker_threads in a non-boundary util', async () => {
     const errors = restricted(
       await lint(
         'worker.util.ts',
@@ -110,7 +128,7 @@ describe('role purity', { timeout: 30_000 }, () => {
     expect(errors).toContain('no-restricted-imports');
   });
 
-  it('rejects worker_threads in a util', async () => {
+  it('rejects worker_threads in a non-boundary util', async () => {
     const errors = restricted(
       await lint(
         'worker-bare.util.ts',
@@ -120,27 +138,25 @@ describe('role purity', { timeout: 30_000 }, () => {
     expect(errors).toContain('no-restricted-imports');
   });
 
-  it('rejects node:child_process in a util', async () => {
-    const errors = restricted(
+  it('rejects node:child_process and child_process in a non-boundary util', async () => {
+    const nodeChildErrors = restricted(
       await lint(
         'spawn.util.ts',
         "import { spawnSync } from 'node:child_process';\nexport const run = (): number => spawnSync('true').status ?? 0;\n"
       )
     );
-    expect(errors).toContain('no-restricted-imports');
-  });
+    expect(nodeChildErrors).toContain('no-restricted-imports');
 
-  it('rejects child_process in a util', async () => {
-    const errors = restricted(
+    const bareChildErrors = restricted(
       await lint(
         'spawn-bare.util.ts',
         "import { spawnSync } from 'child_process';\nexport const run = (): number => spawnSync('true').status ?? 0;\n"
       )
     );
-    expect(errors).toContain('no-restricted-imports');
+    expect(bareChildErrors).toContain('no-restricted-imports');
   });
 
-  it('rejects oxc-resolver in a util', async () => {
+  it('rejects oxc-resolver in a non-boundary util', async () => {
     const errors = restricted(
       await lint(
         'resolve.util.ts',
@@ -150,92 +166,70 @@ describe('role purity', { timeout: 30_000 }, () => {
     expect(errors).toContain('no-restricted-imports');
   });
 
-  it('rejects the process global in a util', async () => {
-    const errors = restricted(
-      await lint('pid.util.ts', 'export const pid = process.pid;\n')
-    );
-    expect(errors).toContain('no-restricted-globals');
-    expect(errors).toContain('no-restricted-properties');
+  it('rejects the process global in non-boundary files across pure roles', async () => {
+    for (const filename of [
+      'pid.util.ts',
+      'pid.norm.ts',
+      'pid.stage.ts',
+      'pid.store.ts',
+      'pid.rule.ts',
+      'pid.schema.ts',
+      'pid.config.ts',
+      'pid.constant.ts',
+      'pid.mock.ts',
+    ]) {
+      const errors = restricted(
+        await lint(filename, 'export const pid = process.pid;\n')
+      );
+      expect(errors).toContain('no-restricted-globals');
+      expect(errors).toContain('no-restricted-properties');
+    }
   });
 
-  it('rejects an adapter import from a util', async () => {
-    const errors = restricted(
-      await lint(
-        'pure.util.ts',
-        "import { effect } from './_adapters/effect/index.js';\nexport const value = effect;\n"
-      )
-    );
-    expect(errors).toContain('no-restricted-imports');
+  it('rejects node:fs in pure roles such as norm, schema, config, constant, store, rule, and mock', async () => {
+    for (const filename of [
+      'check.norm.ts',
+      'check.stage.ts',
+      'parse.schema.ts',
+      'local.config.ts',
+      'limit.constant.ts',
+      'state.store.ts',
+      'check.rule.ts',
+      'sample.mock.ts',
+    ]) {
+      const errors = restricted(
+        await lint(
+          filename,
+          "import fs from 'node:fs';\nexport const value = fs.existsSync('x');\n"
+        )
+      );
+      expect(errors).toContain('no-restricted-imports');
+    }
   });
 
-  it('rejects an adapter import from a schema', async () => {
+  it('allows host I/O effects and process in a declared host I/O boundary file', async () => {
     const errors = restricted(
-      await lint(
-        'parse.schema.ts',
-        "import { effect } from '../_adapters/effect/index.js';\nexport function parse(value: unknown): unknown { return effect ?? value; }\n"
-      )
-    );
-    expect(errors).toContain('no-restricted-imports');
-  });
-
-  it('rejects an adapter import from a norm', async () => {
-    const errors = restricted(
-      await lint(
-        'check.norm.ts',
-        "import { effect } from '../_adapters/effect/index.js';\nexport const check = (): unknown => effect;\n"
-      )
-    );
-    expect(errors).toContain('no-restricted-imports');
-  });
-
-  it('rejects an adapter import from a config', async () => {
-    const errors = restricted(
-      await lint(
-        'local.config.ts',
-        "import { effect } from '../_adapters/effect/index.js';\nexport const local = effect;\n"
-      )
-    );
-    expect(errors).toContain('no-restricted-imports');
-  });
-
-  it('rejects an adapter import from a constant', async () => {
-    const errors = restricted(
-      await lint(
-        'limit.constant.ts',
-        "import { effect } from '../_adapters/effect/index.js';\nexport const LIMIT = effect;\n"
-      )
-    );
-    expect(errors).toContain('no-restricted-imports');
-  });
-
-  it('rejects an adapter import from a type', async () => {
-    const errors = restricted(
-      await lint(
-        'payload.type.ts',
-        "import type { TEffect } from '../_adapters/effect/index.js';\n/**\n * Payload carried by a pure type file.\n */\nexport type TPayload = {\n  /**\n   * Effect type that a pure file must not import.\n   */\n  readonly effect: TEffect;\n};\n"
-      )
-    );
-    expect(errors).toContain('no-restricted-imports');
-  });
-
-  it('rejects an adapter import from a mock', async () => {
-    const errors = restricted(
-      await lint(
-        'sample.mock.ts',
-        "import { effect } from '../_adapters/effect/index.js';\nexport const sample = effect;\n"
-      )
-    );
-    expect(errors).toContain('no-restricted-imports');
-  });
-
-  it('allows effect imports and process in an adapter', async () => {
-    const errors = restricted(
-      await lint(
-        'read.adapter.ts',
-        "import fs from 'node:fs';\nimport { Worker } from 'node:worker_threads';\nimport { spawnSync } from 'node:child_process';\nimport { ResolverFactory } from 'oxc-resolver';\nimport { readSibling } from './_adapters/sibling/index.js';\nexport function readFile(): string {\n  return fs.readFileSync('x', 'utf8') + String(process.pid) + String(new Worker('x')) + String(spawnSync('true').status) + String(new ResolverFactory({})) + readSibling;\n}\n"
+      await lintBoundaryFile(
+        "import fs from 'node:fs';\nimport { Worker } from 'node:worker_threads';\nimport { ResolverFactory } from 'oxc-resolver';\nexport function readFile(): string {\n  return fs.readFileSync('x', 'utf8') + String(process.pid) + String(new Worker('x')) + String(new ResolverFactory({}));\n}\n"
       )
     );
     expect(errors).toEqual([]);
+  });
+
+  it('forbids node:child_process and child_process even in declared host I/O boundary files', async () => {
+    const nodeChildErrors = restricted(
+      await lintBoundaryFile(
+        "import { spawnSync } from 'node:child_process';\nexport const run = (): number => spawnSync('true').status ?? 0;\n"
+      )
+    );
+    expect(nodeChildErrors).toContain('no-restricted-imports');
+
+    const bareChildErrors = restricted(
+      await lintBoundaryFile(
+        "import { spawnSync } from 'child_process';\nexport const run = (): number => spawnSync('true').status ?? 0;\n"
+      )
+    );
+    expect(bareChildErrors).toContain('no-restricted-imports');
   });
 
   it('allows a pure util with no effect import', async () => {
@@ -256,5 +250,20 @@ describe('role purity', { timeout: 30_000 }, () => {
       )
     );
     expect(errors).toEqual([]);
+  });
+
+  it('requires every HOST_IO_BOUNDARY_FILES entry to exist on disk and use a restricted host effect or process', () => {
+    const repositoryRoot = path.resolve(import.meta.dirname, '../..');
+    const hostEffectPattern =
+      /from\s+['"](?:node:fs|fs|node:worker_threads|worker_threads|oxc-resolver)['"]|\bprocess\b/;
+    const invalidEntries = HOST_IO_BOUNDARY_FILES.filter((relativePath) => {
+      const fullPath = path.resolve(repositoryRoot, relativePath);
+      if (!fs.existsSync(fullPath)) {
+        return true;
+      }
+      const source = fs.readFileSync(fullPath, 'utf8');
+      return !hostEffectPattern.test(source);
+    });
+    expect(invalidEntries).toEqual([]);
   });
 });

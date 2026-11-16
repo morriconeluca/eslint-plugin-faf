@@ -277,7 +277,7 @@ Exclude non-architectural files (documentation, tooling, environment declaration
   ```ts
   externalDependencies: [
     {
-      from: ['src/_adapters/legacy-client/legacy-client.adapter.ts'],
+      from: ['src/_apis/legacy-client/legacy-client.api.ts'],
       to: ['legacy/client.ts'],
     },
   ];

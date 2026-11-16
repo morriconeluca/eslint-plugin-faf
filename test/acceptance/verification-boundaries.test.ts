@@ -890,10 +890,9 @@ describe('acceptance: external dependency isolation as an architectural recommen
     await runScenario(
       {
         'legacy/client.ts': 'export const legacyClient = 1;\n',
-        'src/_adapters/user/index.ts':
-          "export { userAdapter } from './user.adapter.js';\n",
-        'src/_adapters/user/user.adapter.ts':
-          "import { legacyClient } from '../../../legacy/client.js';\nexport const userAdapter = legacyClient;\n",
+        'src/_apis/user/index.ts': "export { userApi } from './user.api.js';\n",
+        'src/_apis/user/user.api.ts':
+          "import { legacyClient } from '../../../legacy/client.js';\nexport const userApi = legacyClient;\n",
       },
       {
         faf: {
@@ -901,11 +900,11 @@ describe('acceptance: external dependency isolation as an architectural recommen
             {
               externalDependencies: [
                 {
-                  from: ['src/_adapters/user/user.adapter.ts'],
+                  from: ['src/_apis/user/user.api.ts'],
                   to: ['legacy/client.ts'],
                 },
               ],
-              roles: [{ category: '_adapters', name: 'adapter' }],
+              roles: [{ category: '_apis', name: 'api' }],
               rootLayers: ['src'],
             },
           ],
@@ -951,12 +950,12 @@ describe('acceptance: external dependency isolation as an architectural recommen
     );
   });
 
-  it('does not emit outcomes on adapter qualification from node name alone', async () => {
+  it('does not emit outcomes on gateway qualification from node name alone', async () => {
     await runScenario(
       {
-        'src/_utils/adapter/adapter.util.ts': 'export const adapter = 1;\n',
-        'src/_utils/adapter/index.ts':
-          "export { adapter } from './adapter.util.js';\n",
+        'src/_utils/gateway/gateway.util.ts': 'export const gateway = 1;\n',
+        'src/_utils/gateway/index.ts':
+          "export { gateway } from './gateway.util.js';\n",
       },
       {
         faf: {

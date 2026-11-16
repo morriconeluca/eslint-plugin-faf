@@ -1,0 +1,26 @@
+import type { TInventoryItem } from '../../_conformity@shared/_types/verification-model.type.js';
+
+/**
+ * Resolved endpoints and classification status of an edge targeting a Root Node.
+ */
+export type TResolvedRootEdge = {
+  /**
+   * Inventory item corresponding to the destination Root Node.
+   */
+  readonly destinationItem: TInventoryItem;
+
+  /**
+   * Indicates whether the originating source item is qualified as a Root Node.
+   */
+  readonly isSourceRootNode: boolean;
+
+  /**
+   * Inventory item corresponding to the originating source file.
+   */
+  readonly sourceItem: TInventoryItem;
+
+  /**
+   * Origin path of the Fractal Tree containing both endpoints.
+   */
+  readonly treeOrigin: string;
+};
