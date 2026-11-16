@@ -14,12 +14,11 @@ export function findBranchViolationPaths(
   type TExplorationState = {
     readonly queue: TQueueItem[];
     readonly source: TCandidateBranchSource;
-    readonly violations: Map<number, TBranchViolationPath>;
+    readonly violations: TBranchViolationPath[];
     readonly visited: Set<number>;
   };
 
   const { candidateSources, graph, isViolation } = input;
-  const memo = new Map<number, readonly TBranchViolationPath[]>();
 
   const sortOutgoingEdges = (vertex: number): readonly number[] => {
     const start = graph.rowOffsets[vertex] ?? 0;
@@ -45,54 +44,6 @@ export function findBranchViolationPaths(
     return indices;
   };
 
-  const recordViolation = (
-    next: number,
-    sourcePath: string,
-    chain: readonly string[],
-    firstEdge: TEdgeMetadata,
-    violations: Map<number, TBranchViolationPath>
-  ): void => {
-    const existing = violations.get(next);
-    const isBetter =
-      existing === undefined ||
-      chain.length < existing.chain.length ||
-      (chain.length === existing.chain.length &&
-        chain.join('\0') < existing.chain.join('\0'));
-    if (isBetter) {
-      violations.set(next, {
-        chain,
-        firstEdge,
-        sourcePath,
-        targetVertex: next,
-      });
-    }
-  };
-
-  const incorporateMemoized = (
-    pathToNext: readonly string[],
-    initialEdge: TEdgeMetadata,
-    memoized: readonly TBranchViolationPath[],
-    state: TExplorationState
-  ): void => {
-    const seen = new Set(pathToNext);
-    for (const entry of memoized) {
-      const destinationPath = graph.vertexToPath[entry.targetVertex] ?? '';
-      const hasCycle = entry.chain
-        .slice(1)
-        .some((element) => seen.has(element));
-      if (hasCycle || !isViolation(state.source.path, destinationPath)) {
-        continue;
-      }
-      recordViolation(
-        entry.targetVertex,
-        state.source.path,
-        [...pathToNext, ...entry.chain.slice(1)],
-        initialEdge,
-        state.violations
-      );
-    }
-  };
-
   const expandEdge = (
     edgeIndex: number,
     chainToCurrent: readonly string[],
@@ -101,9 +52,11 @@ export function findBranchViolationPaths(
   ): void => {
     const next = graph.columnTargets[edgeIndex];
     const edge = graph.edgeMetadata[edgeIndex];
-    if (next === undefined || edge === undefined) {
+    if (next === undefined || edge === undefined || state.visited.has(next)) {
       return;
     }
+    state.visited.add(next);
+
     const initialEdge = parentFirstEdge ?? edge;
     const chainToNext =
       parentFirstEdge === undefined
@@ -111,24 +64,15 @@ export function findBranchViolationPaths(
         : [...chainToCurrent, edge.destinationPath];
 
     if (isViolation(state.source.path, edge.destinationPath)) {
-      recordViolation(
-        next,
-        state.source.path,
-        chainToNext,
-        initialEdge,
-        state.violations
-      );
+      state.violations.push({
+        chain: chainToNext,
+        firstEdge: initialEdge,
+        sourcePath: state.source.path,
+        targetVertex: next,
+      });
       return;
     }
-    const memoized = memo.get(next);
-    if (memoized !== undefined) {
-      incorporateMemoized(chainToNext, initialEdge, memoized, state);
-      return;
-    }
-    if (state.visited.has(next)) {
-      return;
-    }
-    state.visited.add(next);
+
     state.queue.push({
       chain: chainToNext,
       current: next,
@@ -143,24 +87,24 @@ export function findBranchViolationPaths(
     const state: TExplorationState = {
       queue: [],
       source,
-      violations: new Map<number, TBranchViolationPath>(),
+      violations: [],
       visited: new Set<number>([source.vertex]),
     };
     const sourceOutgoing = sortedEdges[source.vertex] ?? [];
     for (const edgeIndex of sourceOutgoing) {
       expandEdge(edgeIndex, [], undefined, state);
     }
-    let item = state.queue.shift();
+    let head = 0;
+    let item = state.queue[head];
     while (item !== undefined) {
       const outgoing = sortedEdges[item.current] ?? [];
       for (const edgeIndex of outgoing) {
         expandEdge(edgeIndex, item.chain, item.firstEdge, state);
       }
-      item = state.queue.shift();
+      head += 1;
+      item = state.queue[head];
     }
-    const recorded = [...state.violations].map(([, value]) => value);
-    memo.set(source.vertex, recorded);
-    return recorded;
+    return state.violations;
   };
 
   const sortedEdges = Array.from({ length: graph.vertexCount }, (_, vertex) =>

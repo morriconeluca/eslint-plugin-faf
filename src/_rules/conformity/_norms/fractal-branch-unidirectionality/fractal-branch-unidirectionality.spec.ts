@@ -1044,4 +1044,263 @@ describe('verifyFractalBranchUnidirectionality', () => {
       }).to
     ).toBe('src/_src@shared/_types/start.type.ts');
   });
+
+  it('detects indirect unidirectionality violation from a nested Branch through a deeper outer Branch node', () => {
+    const entries: readonly TModelEntry[] = [
+      {
+        depth: 0,
+        domainKind: 'root-fragment',
+        id: 0,
+        kind: 'directory',
+        parentId: null,
+        path: 'src',
+        preorderEnd: 20,
+        preorderStart: 0,
+      },
+      {
+        depth: 1,
+        domainKind: 'fractal-branch',
+        id: 1,
+        kind: 'directory',
+        parentId: 0,
+        path: 'src/_src@shared',
+        preorderEnd: 20,
+        preorderStart: 1,
+      },
+      {
+        depth: 2,
+        domainKind: 'layer',
+        id: 2,
+        kind: 'directory',
+        parentId: 1,
+        path: 'src/_src@shared/_ui',
+        preorderEnd: 11,
+        preorderStart: 2,
+      },
+      {
+        depth: 3,
+        domainKind: 'category',
+        id: 3,
+        kind: 'directory',
+        parentId: 2,
+        path: 'src/_src@shared/_ui/_components',
+        preorderEnd: 11,
+        preorderStart: 3,
+      },
+      {
+        depth: 4,
+        domainKind: 'fragment',
+        id: 4,
+        kind: 'directory',
+        parentId: 3,
+        path: 'src/_src@shared/_ui/_components/card',
+        preorderEnd: 11,
+        preorderStart: 4,
+      },
+      {
+        depth: 5,
+        id: 5,
+        kind: 'file',
+        nodeKind: 'access-node',
+        parentId: 4,
+        path: 'src/_src@shared/_ui/_components/card/index.ts',
+        preorderEnd: 5,
+        preorderStart: 5,
+      },
+      {
+        depth: 5,
+        id: 6,
+        kind: 'file',
+        nodeKind: 'master-node',
+        parentId: 4,
+        path: 'src/_src@shared/_ui/_components/card/card.component.tsx',
+        preorderEnd: 6,
+        preorderStart: 6,
+      },
+      {
+        depth: 5,
+        domainKind: 'fractal-branch',
+        id: 7,
+        kind: 'directory',
+        parentId: 4,
+        path: 'src/_src@shared/_ui/_components/card/_card@shared',
+        preorderEnd: 11,
+        preorderStart: 7,
+      },
+      {
+        depth: 6,
+        domainKind: 'category',
+        id: 8,
+        kind: 'directory',
+        parentId: 7,
+        path: 'src/_src@shared/_ui/_components/card/_card@shared/_utils',
+        preorderEnd: 11,
+        preorderStart: 8,
+      },
+      {
+        depth: 7,
+        domainKind: 'fragment',
+        id: 9,
+        kind: 'directory',
+        parentId: 8,
+        path: 'src/_src@shared/_ui/_components/card/_card@shared/_utils/helper',
+        preorderEnd: 11,
+        preorderStart: 9,
+      },
+      {
+        depth: 8,
+        id: 10,
+        kind: 'file',
+        nodeKind: 'access-node',
+        parentId: 9,
+        path: 'src/_src@shared/_ui/_components/card/_card@shared/_utils/helper/index.ts',
+        preorderEnd: 10,
+        preorderStart: 10,
+      },
+      {
+        depth: 8,
+        id: 11,
+        kind: 'file',
+        nodeKind: 'master-node',
+        parentId: 9,
+        path: 'src/_src@shared/_ui/_components/card/_card@shared/_utils/helper/helper.util.ts',
+        preorderEnd: 11,
+        preorderStart: 11,
+      },
+      {
+        depth: 2,
+        domainKind: 'layer',
+        id: 12,
+        kind: 'directory',
+        parentId: 1,
+        path: 'src/_src@shared/_network',
+        preorderEnd: 20,
+        preorderStart: 12,
+      },
+      {
+        depth: 3,
+        domainKind: 'category',
+        id: 13,
+        kind: 'directory',
+        parentId: 12,
+        path: 'src/_src@shared/_network/_apis',
+        preorderEnd: 20,
+        preorderStart: 13,
+      },
+      {
+        depth: 4,
+        domainKind: 'sub-category',
+        id: 14,
+        kind: 'directory',
+        parentId: 13,
+        path: 'src/_src@shared/_network/_apis/_v1',
+        preorderEnd: 20,
+        preorderStart: 14,
+      },
+      {
+        depth: 5,
+        domainKind: 'sub-category',
+        id: 15,
+        kind: 'directory',
+        parentId: 14,
+        path: 'src/_src@shared/_network/_apis/_v1/_users',
+        preorderEnd: 20,
+        preorderStart: 15,
+      },
+      {
+        depth: 6,
+        domainKind: 'sub-category',
+        id: 16,
+        kind: 'directory',
+        parentId: 15,
+        path: 'src/_src@shared/_network/_apis/_v1/_users/_details',
+        preorderEnd: 20,
+        preorderStart: 16,
+      },
+      {
+        depth: 7,
+        domainKind: 'path-sub-category',
+        id: 17,
+        kind: 'directory',
+        parentId: 16,
+        path: 'src/_src@shared/_network/_apis/_v1/_users/_details/_[user-id]',
+        preorderEnd: 20,
+        preorderStart: 17,
+      },
+      {
+        depth: 8,
+        domainKind: 'fragment',
+        id: 18,
+        kind: 'directory',
+        parentId: 17,
+        path: 'src/_src@shared/_network/_apis/_v1/_users/_details/_[user-id]/get-user-details',
+        preorderEnd: 20,
+        preorderStart: 18,
+      },
+      {
+        depth: 9,
+        id: 19,
+        kind: 'file',
+        nodeKind: 'access-node',
+        parentId: 18,
+        path: 'src/_src@shared/_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/index.ts',
+        preorderEnd: 19,
+        preorderStart: 19,
+      },
+      {
+        depth: 9,
+        id: 20,
+        kind: 'file',
+        nodeKind: 'master-node',
+        parentId: 18,
+        path: 'src/_src@shared/_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/get-user-details.api.ts',
+        preorderEnd: 20,
+        preorderStart: 20,
+      },
+    ];
+
+    const nestedBranchSource =
+      'src/_src@shared/_ui/_components/card/_card@shared/_utils/helper/helper.util.ts';
+    const outerBranchAccess =
+      'src/_src@shared/_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/index.ts';
+    const outerBranchApi =
+      'src/_src@shared/_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/get-user-details.api.ts';
+    const parentFragmentAccess =
+      'src/_src@shared/_ui/_components/card/index.ts';
+
+    const edges = [
+      createEdge(
+        nestedBranchSource,
+        outerBranchAccess,
+        '../../../../_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/index.js'
+      ),
+      createEdge(
+        outerBranchAccess,
+        outerBranchApi,
+        './get-user-details.api.js'
+      ),
+      createEdge(
+        outerBranchApi,
+        parentFragmentAccess,
+        '../../../../../../../../_ui/_components/card/index.js'
+      ),
+    ];
+
+    const model = buildTestModel(entries, edges);
+    const outcomes = verifyFractalBranchUnidirectionality(model);
+
+    expect(outcomes).toEqual([
+      expect.objectContaining({
+        chain: [
+          nestedBranchSource,
+          outerBranchAccess,
+          outerBranchApi,
+          parentFragmentAccess,
+        ],
+        constraint: 'dependency/fractal-branch-unidirectionality',
+        from: nestedBranchSource,
+        to: parentFragmentAccess,
+      }),
+    ]);
+  });
 });

@@ -33,7 +33,7 @@ export type TBranchViolationPath = {
  */
 export type TCandidateBranchSource = {
   /**
-   * Directory tree depth used to process deepest branch nodes first for memoization.
+   * Directory tree depth used to order candidate branch sources deterministically.
    */
   readonly depth: number;
 
