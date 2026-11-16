@@ -13,6 +13,7 @@ import type {
   TVerifyProjectResult,
 } from './conformity.type.js';
 
+import { CONFIG_FILE_NAME } from '../../_src@shared/_constants/faf.constant.js';
 import { toPosixPath } from '../../_src@shared/_utils/to-posix-path/index.js';
 import { compareOrdinal } from './_conformity@shared/_utils/compare-ordinal/index.js';
 import { verifyAccessNodeContract } from './_norms/access-node-contract/index.js';
@@ -124,6 +125,28 @@ const buildTextOverrides = (
   return textOverrides;
 };
 
+const selectOverlayPaths = (
+  textOverrides: ReadonlyMap<string, string>
+): readonly string[] => {
+  const paths: string[] = [];
+  for (const relativePath of textOverrides.keys()) {
+    if (
+      relativePath === '..' ||
+      relativePath.length === 0 ||
+      relativePath.startsWith('../')
+    ) {
+      continue;
+    }
+    if (
+      relativePath !== CONFIG_FILE_NAME &&
+      !nodePath.isAbsolute(relativePath)
+    ) {
+      paths.push(relativePath);
+    }
+  }
+  return paths;
+};
+
 const collectNormOutcomes = (
   model: TVerificationModel
 ): readonly TOutcome[] => [
@@ -167,12 +190,17 @@ export function verifyProject(
       declarationsResult.outcomes
     );
   }
+  const textOverrides = buildTextOverrides(
+    declarationsResult.baseDirectory,
+    input.fileOverlays
+  );
   const inventoryResult = buildInventory({
     baseDirectory: declarationsResult.baseDirectory,
     config: declarationsResult.config,
     origins: declarationsResult.declarations.trees.map(
       (tree) => tree.originPath
     ),
+    overlayPaths: selectOverlayPaths(textOverrides),
   });
   if (!inventoryResult.ok) {
     return blockedVerificationResult(
@@ -216,7 +244,7 @@ export function verifyProject(
     baseDirectory: basis.baseDirectory,
     inventory: basis.inventory,
     packageVersion: input.packageVersion,
-    textOverrides: buildTextOverrides(basis.baseDirectory, input.fileOverlays),
+    textOverrides,
   });
   const graph = buildDependencyGraph(basis, taxonomy.model, modules);
   const crossings = deriveExternalCrossings(graph.graph);

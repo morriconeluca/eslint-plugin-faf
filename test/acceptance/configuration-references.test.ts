@@ -3799,3 +3799,100 @@ describe('acceptance: multi-tree configuration verification on a synthetic inven
     }
   });
 });
+
+describe('acceptance: external configuration reference scope accuracy', () => {
+  const externalReferenceCases = [
+    {
+      caseName: 'foreignNodes referencing existing external file README.md',
+      config: {
+        faf: {
+          locals: [
+            {
+              foreignNodes: ['README.md'],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      expected: [
+        configMessage(
+          'README.md',
+          'configuration/reference-outside-trees',
+          'must be inside a Fractal Tree of this configuration',
+          'FAF §6',
+          'Foreign node "README.md" must be inside a Fractal Tree of this configuration'
+        ),
+      ],
+    },
+    {
+      caseName:
+        'foreignDomains referencing existing external directory scripts',
+      config: {
+        faf: {
+          locals: [
+            {
+              foreignDomains: ['scripts'],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      expected: [
+        configMessage(
+          'scripts',
+          'configuration/reference-outside-trees',
+          'must be inside a Fractal Tree of this configuration',
+          'FAF §6',
+          'Foreign domain "scripts" must be inside a Fractal Tree of this configuration'
+        ),
+      ],
+    },
+    {
+      caseName:
+        'foreignNodes family paths referencing dot when dot is not a tree origin',
+      config: {
+        faf: {
+          locals: [
+            {
+              foreignNodes: [{ paths: ['.'], patterns: ['*.md'] }],
+              roles,
+              rootLayers: ['src'],
+              subGraphRoles,
+            },
+          ],
+        },
+      },
+      expected: [
+        configMessage(
+          '.',
+          'configuration/reference-outside-trees',
+          'must be inside a Fractal Tree of this configuration',
+          'FAF §6',
+          'Foreign family path "." must be inside a Fractal Tree of this configuration'
+        ),
+      ],
+    },
+  ] as const;
+
+  it.each(externalReferenceCases)(
+    'reports configuration/reference-outside-trees instead of non-existent-path for $caseName',
+    async ({ config, expected }) => {
+      const tree: FileTree = {
+        ...baseLayerTree,
+        'README.md': '# Root Readme\n',
+        'scripts/release.sh': 'echo release\n',
+      };
+      const fixture = await createProject(tree, config);
+      try {
+        const result = await lintScenario(fixture.path);
+        expectScenario(result, expected);
+      } finally {
+        await fixture.rm();
+      }
+    }
+  );
+});

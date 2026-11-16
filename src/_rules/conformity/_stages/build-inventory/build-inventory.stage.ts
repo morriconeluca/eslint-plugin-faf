@@ -20,7 +20,8 @@ export function buildInventory(
     built.inventory,
     input.config,
     input.baseDirectory,
-    input.origins
+    input.origins,
+    input.overlayPaths
   );
   return {
     ok: true,
