@@ -64,23 +64,23 @@ const HOST_EFFECT_IMPORT_PATHS = [
 ] as const;
 
 export const HOST_IO_BOUNDARY_FILES = [
+  'src/_rules/conformity/_stages/build-inventory/_utils/include-external-targets/include-external-targets.util.ts',
+  'src/_rules/conformity/_stages/build-inventory/_utils/list-entries/_utils/scan-tree-origin/_utils/inspect-origin/inspect-origin.util.ts',
+  'src/_rules/conformity/_stages/build-inventory/_utils/list-entries/_utils/scan-tree-origin/_utils/process-dirent/process-dirent.util.ts',
+  'src/_rules/conformity/_stages/build-inventory/_utils/list-entries/_utils/scan-tree-origin/scan-tree-origin.util.ts',
+  'src/_rules/conformity/_stages/collect-modules/_collect-modules@shared/_utils/canonicalize-directory/canonicalize-directory.util.ts',
+  'src/_rules/conformity/_stages/collect-modules/_stores/module-record-store/_utils/read-module-record-cache/read-module-record-cache.util.ts',
+  'src/_rules/conformity/_stages/collect-modules/_stores/module-record-store/_utils/write-module-record-cache/write-module-record-cache.util.ts',
+  'src/_rules/conformity/_stages/collect-modules/_utils/analyze-queued-module/_utils/read-module-text/read-module-text.util.ts',
+  'src/_rules/conformity/_stages/collect-modules/_utils/resolve-specifiers/resolve-specifiers.util.ts',
+  'src/_rules/conformity/_stages/discover-config/discover-config.stage.ts',
+  'src/_rules/conformity/_stages/resolve-declarations/_resolve-declarations@shared/_utils/read-package-json/read-package-json.util.ts',
+  'src/_rules/conformity/_stages/resolve-declarations/_utils/load-config/load-config.util.ts',
   'src/_rules/conformity/_stores/session/_session@shared/_utils/read-file-snapshot/read-file-snapshot.util.ts',
   'src/_rules/conformity/_stores/session/_session@shared/_utils/read-origin-dirents/read-origin-dirents.util.ts',
   'src/_rules/conformity/_stores/session/_utils/match-file-fingerprints/_utils/has-matching-tree-origin/has-matching-tree-origin.util.ts',
   'src/_rules/conformity/_stores/session/_utils/match-file-fingerprints/_utils/has-matching-watched-files/has-matching-watched-files.util.ts',
   'src/_rules/conformity/_stores/session/_utils/read-file-fingerprints/read-file-fingerprints.util.ts',
-  'src/_rules/conformity/_utils/discover-config/discover-config.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_collect-modules@shared/_utils/canonicalize-directory/canonicalize-directory.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_stores/module-record-store/_utils/read-module-record-cache/read-module-record-cache.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_stores/module-record-store/_utils/write-module-record-cache/write-module-record-cache.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_utils/analyze-queued-module/_utils/read-module-text/read-module-text.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/collect-modules/_utils/resolve-specifiers/resolve-specifiers.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_prepare-project@shared/_utils/read-package-json/read-package-json.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/include-external-targets/include-external-targets.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/list-entries/_utils/scan-tree-origin/_utils/inspect-origin/inspect-origin.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/list-entries/_utils/scan-tree-origin/_utils/process-dirent/process-dirent.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/list-entries/_utils/scan-tree-origin/scan-tree-origin.util.ts',
-  'src/_rules/conformity/_utils/verify-project/_utils/prepare-project/_utils/load-config/load-config.util.ts',
 ] as const;
 
 const TYPE_FILE_RESTRICTIONS = [
@@ -290,7 +290,7 @@ export default defineConfig([
   },
   {
     files: [
-      'src/_rules/conformity/_utils/verify-project/_verify-project@shared/_utils/assert-invariant/assert-invariant.util.ts',
+      'src/_rules/conformity/_conformity@shared/_utils/assert-invariant/assert-invariant.util.ts',
     ],
     rules: {
       'no-restricted-syntax': ['error', ...COMMON_FUNCTIONAL_RESTRICTIONS],

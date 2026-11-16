@@ -47,6 +47,7 @@ export default {
           [
             { category: '_norms', name: 'norm' },
             { category: '_rules', name: 'rule' },
+            { category: '_stages', name: 'stage' },
             { category: '_stores', name: 'store' },
           ],
         ],

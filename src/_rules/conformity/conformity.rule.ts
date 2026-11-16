@@ -4,10 +4,9 @@ import nodePath from 'node:path';
 
 import type { TAnchoredOutcome } from './_conformity@shared/_types/anchored-outcome.type.js';
 
+import { discoverConfig } from './_stages/discover-config/index.js';
 import { session } from './_stores/session/index.js';
-import { discoverConfig } from './_utils/discover-config/index.js';
-import { readConfigFileSetting } from './_utils/read-config-file-setting/index.js';
-import { verifyProject } from './_utils/verify-project/index.js';
+import { readConfigFileSetting, verifyProject } from './conformity.util.js';
 
 export function createConformity(packageVersion: string): Rule.RuleModule {
   const message = '{{constraint}}: {{message}} ({{reference}}).';

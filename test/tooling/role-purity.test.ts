@@ -7,12 +7,12 @@ import eslintConfig, { HOST_IO_BOUNDARY_FILES } from '../../eslint.config.js';
 
 const fixtureRoot = path.resolve(
   import.meta.dirname,
-  '../../src/_rules/conformity/_utils/role-purity-fixture'
+  '../../src/_rules/conformity/_stages/role-purity-fixture'
 );
 
 const hostBoundaryFile = path.resolve(
   import.meta.dirname,
-  '../../src/_rules/conformity/_utils/discover-config/discover-config.util.ts'
+  '../../src/_rules/conformity/_stages/discover-config/discover-config.stage.ts'
 );
 
 const ROLE_FIXTURE_SUFFIXES = [
@@ -23,6 +23,7 @@ const ROLE_FIXTURE_SUFFIXES = [
   '.rule.ts',
   '.schema.ts',
   '.spec.ts',
+  '.stage.ts',
   '.store.ts',
   '.type.ts',
   '.util.ts',
@@ -169,6 +170,7 @@ describe('role purity', { timeout: 30_000 }, () => {
     for (const filename of [
       'pid.util.ts',
       'pid.norm.ts',
+      'pid.stage.ts',
       'pid.store.ts',
       'pid.rule.ts',
       'pid.schema.ts',
@@ -187,6 +189,7 @@ describe('role purity', { timeout: 30_000 }, () => {
   it('rejects node:fs in pure roles such as norm, schema, config, constant, store, rule, and mock', async () => {
     for (const filename of [
       'check.norm.ts',
+      'check.stage.ts',
       'parse.schema.ts',
       'local.config.ts',
       'limit.constant.ts',
