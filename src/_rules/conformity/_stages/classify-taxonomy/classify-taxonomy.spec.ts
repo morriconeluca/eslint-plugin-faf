@@ -842,12 +842,13 @@ describe('classifyTaxonomy', () => {
     ).toBe(true);
   });
 
-  it('rejects externalDependency sources that are Access Nodes, Foreign Nodes, or domains', () => {
+  it('rejects externalDependency sources that are Access Nodes, Foreign Nodes, or Foreign Domains while allowing Logical Domains', () => {
     const result = classify(
       [
         'src/_components/button/button.component.tsx',
         'src/_components/button/index.ts',
         'src/_components/button/README.md',
+        'src/_tooling/gen.ts',
       ],
       [
         treeOf('src', {
@@ -855,7 +856,9 @@ describe('classifyTaxonomy', () => {
             { from: 'src/_components/button/index.ts', to: 'legacy/a.ts' },
             { from: 'src/_components/button/README.md', to: 'legacy/a.ts' },
             { from: 'src/_components', to: 'legacy/a.ts' },
+            { from: 'src/_tooling', to: 'legacy/a.ts' },
           ],
+          foreignDomains: ['src/_tooling'],
           foreignNodes: {
             families: [],
             individualPaths: ['src/_components/button/README.md'],
@@ -875,19 +878,10 @@ describe('classifyTaxonomy', () => {
     ).toEqual([
       {
         constraint: 'configuration/invalid-external-dependency-source',
-        element: 'src/_components',
-        family: 'configuration',
-        message:
-          "'src/_components' must be an authorized logical node in externalDependencies",
-        normativeReference: 'FAF §7.3',
-        propertyPath: 'trees[0].externalDependencyPairs[2].from',
-      },
-      {
-        constraint: 'configuration/invalid-external-dependency-source',
         element: 'src/_components/button/README.md',
         family: 'configuration',
         message:
-          "'src/_components/button/README.md' must be an authorized logical node in externalDependencies",
+          "'src/_components/button/README.md' must be an authorized Logical Node or Logical Domain in externalDependencies",
         normativeReference: 'FAF §7.3',
         propertyPath: 'trees[0].externalDependencyPairs[1].from',
       },
@@ -896,9 +890,18 @@ describe('classifyTaxonomy', () => {
         element: 'src/_components/button/index.ts',
         family: 'configuration',
         message:
-          "'src/_components/button/index.ts' must be an authorized logical node in externalDependencies",
+          "'src/_components/button/index.ts' must be an authorized Logical Node or Logical Domain in externalDependencies",
         normativeReference: 'FAF §7.3',
         propertyPath: 'trees[0].externalDependencyPairs[0].from',
+      },
+      {
+        constraint: 'configuration/invalid-external-dependency-source',
+        element: 'src/_tooling',
+        family: 'configuration',
+        message:
+          "'src/_tooling' must be an authorized Logical Node or Logical Domain in externalDependencies",
+        normativeReference: 'FAF §7.3',
+        propertyPath: 'trees[0].externalDependencyPairs[3].from',
       },
     ]);
   });

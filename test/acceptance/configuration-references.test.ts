@@ -2685,6 +2685,124 @@ describe('acceptance: frontier declarations and scope filtering', () => {
     }
   });
 
+  it('rejects publicRootNodes pointing to a Root Layer tree across common and mixed locals', async () => {
+    const config = {
+      faf: {
+        common: {
+          publicRootNodes: ['src/_utils/widget/widget.util.ts'],
+        },
+        locals: [
+          {
+            publicRootNodes: ['src/_utils/widget/widget.util.ts'],
+            roles,
+            rootFragments: [{ path: 'app', rootNodes: [['main.ts']] }],
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const tree: FileTree = {
+      ...baseLayerTree,
+      'app/main.ts': 'export const main = 1;\n',
+    };
+
+    const fixture = await createProject(tree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'src/_utils/widget/widget.util.ts',
+          'configuration/public-root-nodes-in-root-layer-tree',
+          'cannot be declared as a public root node in a tree with only Root Layers',
+          'FAF §7.1'
+        ),
+        configMessage(
+          'src/_utils/widget/widget.util.ts',
+          'configuration/public-root-nodes-in-root-layer-tree',
+          'cannot be declared as a public root node in a tree with only Root Layers',
+          'FAF §7.1'
+        ),
+      ];
+      expectScenario(result, expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('checks existence, file kind, and tree ownership before root-layer kind on publicRootNodes', async () => {
+    const config = {
+      faf: {
+        common: {
+          publicRootNodes: ['outside.ts'],
+        },
+        locals: [
+          {
+            publicRootNodes: [
+              'src/missing.ts',
+              'src',
+              'outside.ts',
+              'src/_utils/widget/widget.util.ts',
+            ],
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const tree: FileTree = {
+      ...baseLayerTree,
+      'outside.ts': 'export const outside = 1;\n',
+    };
+
+    const fixture = await createProject(tree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        configMessage(
+          'src',
+          'configuration/expected-file',
+          'must be a file',
+          'FAF §1.2, §6.9',
+          'Public root node "src" must be a file'
+        ),
+        configMessage(
+          'src/missing.ts',
+          'configuration/non-existent-path',
+          'does not exist',
+          'FAF §1.2, §6.9',
+          `Public root node "src/missing.ts" does not exist under configuration base "${fixture.path}"`
+        ),
+        configMessage(
+          'src/_utils/widget/widget.util.ts',
+          'configuration/public-root-nodes-in-root-layer-tree',
+          'cannot be declared as a public root node in a tree with only Root Layers',
+          'FAF §7.1'
+        ),
+        configMessage(
+          'outside.ts',
+          'configuration/reference-outside-trees',
+          'must be inside a Fractal Tree of this configuration',
+          'FAF §6',
+          'Public root node "outside.ts" must be inside a Fractal Tree of this configuration'
+        ),
+        configMessage(
+          'outside.ts',
+          'configuration/reference-outside-trees',
+          'must be inside a Fractal Tree of this configuration',
+          'FAF §6',
+          'Public root node "outside.ts" must be inside a Fractal Tree of this configuration'
+        ),
+      ];
+      expectScenario(result, expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
   it('authorizes tree relationships through origin cartesian product', async () => {
     const config = {
       faf: {
@@ -2886,67 +3004,108 @@ describe('acceptance: frontier declarations and scope filtering', () => {
     }
   });
 
+  it('authorizes Logical Domains in from and external directories in to via externalDependencies', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            externalDependencies: [
+              {
+                from: ['src/_utils/legacy-client', 'src/_apis'],
+                to: ['legacy'],
+              },
+            ],
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const tree: FileTree = {
+      'legacy/client.ts': 'export const client = 1;\n',
+      'legacy/sub/helper.ts': 'export const helper = 2;\n',
+      'src/_apis/gateway/gateway.api.ts':
+        "import { helper } from '../../../legacy/sub/helper.js';\nexport const gateway = helper;\n",
+      'src/_apis/gateway/index.ts':
+        "export { gateway } from './gateway.api.js';\n",
+      'src/_utils/legacy-client/index.ts':
+        "export { legacyClient } from './legacy-client.util.js';\n",
+      'src/_utils/legacy-client/legacy-client.util.ts':
+        "import { client } from '../../../legacy/client.js';\nexport const legacyClient = client;\n",
+    };
+
+    const fixture = await createProject(tree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      expectScenario(result, []);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('still forbids a Fragment Access Node from importing external files even when its Fragment directory is authorized', async () => {
+    const config = {
+      faf: {
+        locals: [
+          {
+            externalDependencies: [
+              {
+                from: ['src/_utils/legacy-client'],
+                to: ['legacy'],
+              },
+            ],
+            roles,
+            rootLayers: ['src'],
+            subGraphRoles,
+          },
+        ],
+      },
+    };
+
+    const tree: FileTree = {
+      'legacy/client.ts': 'export const client = 1;\n',
+      'src/_utils/legacy-client/index.ts':
+        "import '../../../legacy/client.js';\nexport { legacyClient } from './legacy-client.util.js';\n",
+      'src/_utils/legacy-client/legacy-client.util.ts':
+        "import { client } from '../../../legacy/client.js';\nexport const legacyClient = client;\n",
+    };
+
+    const fixture = await createProject(tree, config);
+    try {
+      const result = await lintScenario(fixture.path);
+      const expected = [
+        dependencyMessage(
+          'src/_utils/legacy-client/index.ts',
+          'legacy/client.ts',
+          '../../../legacy/client.js',
+          'dependency/access-node-sources',
+          'an Access Node imports only direct Fragment Nodes of its own Fragment',
+          'FAF §6.1.1'
+        ),
+      ];
+      expectScenario(result, expected);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
   type TExternalSelectorCase = {
     readonly aliases?: Record<string, string>;
     readonly caseName: string;
+    readonly extraForeignDomains?: readonly string[];
     readonly extraForeignNodes?: readonly string[];
     readonly from: readonly string[];
     readonly getExpected: (
       baseDirectory: string
     ) => readonly TScenarioMessage[];
+    readonly rootLayers?: readonly string[];
     readonly to: readonly string[];
     readonly tree: FileTree;
   };
 
   const externalSelectorCases: readonly TExternalSelectorCase[] = [
-    {
-      caseName: 'from identifies a Fragment directory',
-      from: ['src/_utils/widget'],
-      getExpected: () => [
-        configMessage(
-          'src/_utils/widget',
-          'configuration/expected-file',
-          'must be a file',
-          'FAF §1.2, §6.9',
-          'External dependency source "src/_utils/widget" must be a file'
-        ),
-      ],
-      to: ['legacy/client.ts'],
-      tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
-    },
-    {
-      caseName: 'from identifies a Category directory',
-      from: ['src/_utils'],
-      getExpected: () => [
-        configMessage(
-          'src/_utils',
-          'configuration/expected-file',
-          'must be a file',
-          'FAF §1.2, §6.9',
-          'External dependency source "src/_utils" must be a file'
-        ),
-      ],
-      to: ['legacy/client.ts'],
-      tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
-    },
-    {
-      caseName: 'to identifies an external directory',
-      from: ['src/_utils/widget/widget.util.ts'],
-      getExpected: () => [
-        configMessage(
-          'legacy',
-          'configuration/expected-file',
-          'must be a file',
-          'FAF §1.2, §6.9',
-          'External dependency target "legacy" must be a file'
-        ),
-      ],
-      to: ['legacy'],
-      tree: {
-        ...baseLayerTree,
-        'legacy/client.ts': 'export const c = 1;\n',
-      },
-    },
     {
       caseName: 'from identifies an Access Node',
       from: ['src/_utils/widget/index.ts'],
@@ -2954,7 +3113,7 @@ describe('acceptance: frontier declarations and scope filtering', () => {
         configMessage(
           'src/_utils/widget/index.ts',
           'configuration/invalid-external-dependency-source',
-          'must be an authorized logical node in externalDependencies',
+          'must be an authorized Logical Node or Logical Domain in externalDependencies',
           'FAF §7.3'
         ),
       ],
@@ -2969,7 +3128,7 @@ describe('acceptance: frontier declarations and scope filtering', () => {
         configMessage(
           'src/README.md',
           'configuration/invalid-external-dependency-source',
-          'must be an authorized logical node in externalDependencies',
+          'must be an authorized Logical Node or Logical Domain in externalDependencies',
           'FAF §7.3'
         ),
       ],
@@ -2978,6 +3137,25 @@ describe('acceptance: frontier declarations and scope filtering', () => {
         ...baseLayerTree,
         'legacy/client.ts': 'export const c = 1;\n',
         'src/README.md': '# Hello\n',
+      },
+    },
+    {
+      caseName: 'from identifies a Foreign Domain',
+      extraForeignDomains: ['src/_tooling'],
+      from: ['src/_tooling'],
+      getExpected: () => [
+        configMessage(
+          'src/_tooling',
+          'configuration/invalid-external-dependency-source',
+          'must be an authorized Logical Node or Logical Domain in externalDependencies',
+          'FAF §7.3'
+        ),
+      ],
+      to: ['legacy/client.ts'],
+      tree: {
+        ...baseLayerTree,
+        'legacy/client.ts': 'export const c = 1;\n',
+        'src/_tooling/gen.ts': 'export const g = 1;\n',
       },
     },
     {
@@ -3000,6 +3178,24 @@ describe('acceptance: frontier declarations and scope filtering', () => {
       },
     },
     {
+      caseName: 'from identifies a directory outside all Trees',
+      from: ['legacy'],
+      getExpected: () => [
+        configMessage(
+          'legacy',
+          'configuration/reference-outside-trees',
+          'must be inside a Fractal Tree of this configuration',
+          'FAF §6',
+          'External dependency source "legacy" must be inside a Fractal Tree of this configuration'
+        ),
+      ],
+      to: ['legacy/client.ts'],
+      tree: {
+        ...baseLayerTree,
+        'legacy/client.ts': 'export const c = 1;\n',
+      },
+    },
+    {
       caseName: 'to identifies a file inside a Tree',
       from: ['src/_utils/widget/widget.util.ts'],
       getExpected: () => [
@@ -3011,6 +3207,55 @@ describe('acceptance: frontier declarations and scope filtering', () => {
         ),
       ],
       to: ['src/_utils/widget/index.ts'],
+      tree: baseLayerTree,
+    },
+    {
+      caseName: 'to identifies a directory inside a Tree',
+      from: ['src/_utils/widget/widget.util.ts'],
+      getExpected: () => [
+        configMessage(
+          'src/_utils',
+          'configuration/external-dependency-to-inside-tree',
+          'must be outside all Fractal Trees as an external dependency target',
+          'FAF §7.3'
+        ),
+      ],
+      to: ['src/_utils'],
+      tree: baseLayerTree,
+    },
+    {
+      caseName: 'to identifies a directory containing a Fractal Tree origin',
+      from: ['packages/app/src/_utils/widget/widget.util.ts'],
+      getExpected: () => [
+        configMessage(
+          'packages',
+          'configuration/external-dependency-to-inside-tree',
+          'must be outside all Fractal Trees as an external dependency target',
+          'FAF §7.3'
+        ),
+      ],
+      rootLayers: ['packages/app/src'],
+      to: ['packages'],
+      tree: {
+        'packages/app/src/_utils/widget/index.ts':
+          "export { widget } from './widget.util.js';\n",
+        'packages/app/src/_utils/widget/widget.util.ts':
+          'export const widget = 1;\n',
+      },
+    },
+    {
+      caseName:
+        'to identifies the root dot directory containing a Fractal Tree',
+      from: ['src/_utils/widget/widget.util.ts'],
+      getExpected: () => [
+        configMessage(
+          '.',
+          'configuration/external-dependency-to-inside-tree',
+          'must be outside all Fractal Trees as an external dependency target',
+          'FAF §7.3'
+        ),
+      ],
+      to: ['.'],
       tree: baseLayerTree,
     },
     {
@@ -3081,7 +3326,7 @@ describe('acceptance: frontier declarations and scope filtering', () => {
   ];
 
   it.each(externalSelectorCases)(
-    'rejects non-exact or out-of-scope external selectors: $caseName',
+    'rejects invalid or out-of-scope external selectors: $caseName',
     async (item) => {
       const config = {
         faf: {
@@ -3091,11 +3336,14 @@ describe('acceptance: frontier declarations and scope filtering', () => {
           locals: [
             {
               externalDependencies: [{ from: item.from, to: item.to }],
+              ...(item.extraForeignDomains !== undefined && {
+                foreignDomains: item.extraForeignDomains,
+              }),
               ...(item.extraForeignNodes !== undefined && {
                 foreignNodes: item.extraForeignNodes,
               }),
               roles,
-              rootLayers: ['src'],
+              rootLayers: item.rootLayers ?? ['src'],
               subGraphRoles,
             },
           ],
@@ -3112,48 +3360,6 @@ describe('acceptance: frontier declarations and scope filtering', () => {
       }
     }
   );
-
-  it('enforces exact file restriction without substituting FAF contract', async () => {
-    const config = {
-      faf: {
-        locals: [
-          {
-            externalDependencies: [
-              {
-                from: ['src/_utils/widget'],
-                to: ['legacy/client.ts'],
-              },
-            ],
-            roles,
-            rootLayers: ['src'],
-            subGraphRoles,
-          },
-        ],
-      },
-    };
-
-    const tree: FileTree = {
-      ...baseLayerTree,
-      'legacy/client.ts': 'export const c = 1;\n',
-    };
-
-    const fixture = await createProject(tree, config);
-    try {
-      const result = await lintScenario(fixture.path);
-      const expected = [
-        configMessage(
-          'src/_utils/widget',
-          'configuration/expected-file',
-          'must be a file',
-          'FAF §1.2, §6.9',
-          'External dependency source "src/_utils/widget" must be a file'
-        ),
-      ];
-      expectScenario(result, expected);
-    } finally {
-      await fixture.rm();
-    }
-  });
 });
 
 describe('acceptance: runtime validation of optional properties and structural types', () => {
@@ -3184,17 +3390,18 @@ describe('acceptance: runtime validation of optional properties and structural t
       tree: baseLayerTree,
     },
     {
-      caseName: 'existing directory in externalDependencies.from',
+      caseName: 'Foreign Domain in externalDependencies.from',
       config: {
         faf: {
           locals: [
             {
               externalDependencies: [
                 {
-                  from: ['src/_utils/widget'],
+                  from: ['src/_tooling'],
                   to: ['legacy/client.ts'],
                 },
               ],
+              foreignDomains: ['src/_tooling'],
               roles,
               rootLayers: ['src'],
               subGraphRoles,
@@ -3204,29 +3411,32 @@ describe('acceptance: runtime validation of optional properties and structural t
       },
       getExpected: () => [
         configMessage(
-          'src/_utils/widget',
-          'configuration/expected-file',
-          'must be a file',
-          'FAF §1.2, §6.9',
-          'External dependency source "src/_utils/widget" must be a file'
+          'src/_tooling',
+          'configuration/invalid-external-dependency-source',
+          'must be an authorized Logical Node or Logical Domain in externalDependencies',
+          'FAF §7.3'
         ),
       ],
-      tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
+      tree: {
+        ...baseLayerTree,
+        'legacy/client.ts': 'export const c = 1;\n',
+        'src/_tooling/gen.ts': 'export const g = 1;\n',
+      },
     },
     {
-      caseName: 'existing directory in externalDependencies.to',
+      caseName: 'tree-containing directory in externalDependencies.to',
       config: {
         faf: {
           locals: [
             {
               externalDependencies: [
                 {
-                  from: ['src/_utils/widget/widget.util.ts'],
-                  to: ['legacy'],
+                  from: ['packages/app/src/_utils/widget/widget.util.ts'],
+                  to: ['packages'],
                 },
               ],
               roles,
-              rootLayers: ['src'],
+              rootLayers: ['packages/app/src'],
               subGraphRoles,
             },
           ],
@@ -3234,14 +3444,18 @@ describe('acceptance: runtime validation of optional properties and structural t
       },
       getExpected: () => [
         configMessage(
-          'legacy',
-          'configuration/expected-file',
-          'must be a file',
-          'FAF §1.2, §6.9',
-          'External dependency target "legacy" must be a file'
+          'packages',
+          'configuration/external-dependency-to-inside-tree',
+          'must be outside all Fractal Trees as an external dependency target',
+          'FAF §7.3'
         ),
       ],
-      tree: { ...baseLayerTree, 'legacy/client.ts': 'export const c = 1;\n' },
+      tree: {
+        'packages/app/src/_utils/widget/index.ts':
+          "export { widget } from './widget.util.js';\n",
+        'packages/app/src/_utils/widget/widget.util.ts':
+          'export const widget = 1;\n',
+      },
     },
     {
       caseName: 'unknown property on composite object',

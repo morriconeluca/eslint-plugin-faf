@@ -3,9 +3,8 @@ import type { TConfigOutcome } from '../../../../../../_src@shared/_utils/create
 import type { TReferenceContext } from '../../_validate-declaration-references@shared/_utils/reject-reference-scope/index.js';
 
 import { rejectExternalDependencies } from './_utils/reject-external-dependencies/index.js';
-import { rejectLocalPublicRootNodes } from './_utils/reject-local-public-root-nodes/index.js';
+import { rejectPublicRootNode } from './_utils/reject-public-root-node/index.js';
 import { rejectTreeDependencies } from './_utils/reject-tree-dependencies/index.js';
-import { rejectPublicRootNode } from './_validate-frontier-references@shared/_utils/reject-public-root-node/index.js';
 
 export function validateFrontierReferences(
   config: TFAFConfig,
@@ -36,7 +35,14 @@ export function validateFrontierReferences(
     const scope = { kind: 'local' as const, localIndex };
     const base = `faf.locals[${localIndex}]`;
     return [
-      ...rejectLocalPublicRootNodes(local, localIndex, context),
+      ...(local.publicRootNodes ?? []).flatMap((path, index) =>
+        rejectPublicRootNode(
+          path,
+          `${base}.publicRootNodes[${index}]`,
+          scope,
+          context
+        )
+      ),
       ...rejectTreeDependencies(
         local.treeDependencies ?? [],
         `${base}.treeDependencies`,

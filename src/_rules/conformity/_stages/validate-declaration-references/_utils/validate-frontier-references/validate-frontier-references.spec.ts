@@ -122,4 +122,56 @@ describe('validateFrontierReferences', () => {
       'faf.locals[0].externalDependencies[0].to[0]',
     ]);
   });
+
+  it('rejects publicRootNodes pointing to a Root Layer tree or external file across common and mixed locals', () => {
+    const items = [
+      itemOf(0, 'app', 'directory', 'app'),
+      itemOf(1, 'app/main.ts', 'file', 'app'),
+      itemOf(2, 'lib', 'directory', 'lib'),
+      itemOf(3, 'lib/widget.util.ts', 'file', 'lib'),
+      itemOf(4, 'README.md', 'file', null),
+    ];
+    const context: TReferenceContext = {
+      aliasPrefixes: [],
+      baseDirectory: '/project',
+      enumeratedRootNodes: new Map([
+        ['app/main.ts', { rootFragmentPath: 'app', treeOrigin: 'app' }],
+      ]),
+      inventory: {
+        items,
+        pathToId: new Map(items.map((item) => [item.path, item.id])),
+        realPathToId: new Map(items.map((item) => [item.realPath, item.id])),
+      },
+      ownedOrigins: new Map([
+        ['app', { localIndex: 0, originKind: 'root-fragment' }],
+        ['lib', { localIndex: 0, originKind: 'root-layer' }],
+      ]),
+    };
+
+    const config: TFAFConfig = {
+      faf: {
+        common: {
+          publicRootNodes: ['lib/widget.util.ts', 'README.md'],
+        },
+        locals: [
+          {
+            publicRootNodes: ['lib/widget.util.ts', 'README.md'],
+            rootFragments: [{ path: 'app', rootNodes: [['main.ts']] }],
+            rootLayers: ['lib'],
+          },
+        ],
+      },
+    };
+
+    expect(
+      validateFrontierReferences(config, context).map(
+        (outcome) => `${outcome.propertyPath}|${outcome.constraint}`
+      )
+    ).toEqual([
+      'faf.common.publicRootNodes[0]|configuration/public-root-nodes-in-root-layer-tree',
+      'faf.common.publicRootNodes[1]|configuration/reference-outside-trees',
+      'faf.locals[0].publicRootNodes[0]|configuration/public-root-nodes-in-root-layer-tree',
+      'faf.locals[0].publicRootNodes[1]|configuration/reference-outside-trees',
+    ]);
+  });
 });

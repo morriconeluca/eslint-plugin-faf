@@ -150,7 +150,7 @@ const invalidExternalDependencySource = (source: string): TScenarioMessage => ({
   element: source,
   filePath: 'faf.config.ts',
   line: 1,
-  message: `configuration/invalid-external-dependency-source: '${source}' must be an authorized logical node in externalDependencies (FAF §7.3).`,
+  message: `configuration/invalid-external-dependency-source: '${source}' must be an authorized Logical Node or Logical Domain in externalDependencies (FAF §7.3).`,
   messageId: 'configuration',
   ruleId: 'faf/conformity',
   severity: 2,

@@ -286,7 +286,8 @@ export const OUTCOME_CATALOG = {
   'configuration/invalid-external-dependency-source': {
     family: 'configuration',
     normativeReference: REFERENCE_FAF_7_3,
-    predicate: 'must be an authorized logical node in externalDependencies',
+    predicate:
+      'must be an authorized Logical Node or Logical Domain in externalDependencies',
   },
   'configuration/invalid-file-name': {
     family: 'configuration',

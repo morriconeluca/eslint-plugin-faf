@@ -2,6 +2,7 @@ import type { TDependencyOutcome } from '../../../../_src@shared/_utils/create-o
 import type {
   TDependencyGraph,
   TEdgeMetadata,
+  TEffectiveOrientedPair,
   TInventory,
   TTaxonomyModel,
 } from '../../_conformity@shared/_types/verification-model.type.js';
@@ -17,12 +18,20 @@ const ELIGIBLE_SOURCE_NODE_KINDS = new Set<string>([
   'unauthorized-logical-node',
 ]);
 
+const isPathOrDescendant = (
+  candidatePath: string,
+  declaredPath: string
+): boolean =>
+  declaredPath === '.' ||
+  candidatePath === declaredPath ||
+  candidatePath.startsWith(`${declaredPath}/`);
+
 export function checkEdgeExternalDependency(
   edge: TEdgeMetadata,
   graph: TDependencyGraph,
   inventory: TInventory,
   taxonomy: TTaxonomyModel,
-  authorizedPairs: ReadonlySet<string>
+  authorizedByTree: ReadonlyMap<string, readonly TEffectiveOrientedPair[]>
 ): TDependencyOutcome | undefined {
   const destinationVertex = graph.pathToVertex.get(edge.destinationPath);
   const destinationNature =
@@ -51,8 +60,15 @@ export function checkEdgeExternalDependency(
     return undefined;
   }
 
-  const authorizationKey = `${treeOrigin}\0${edge.sourcePath}\0${edge.destinationPath}`;
-  if (authorizedPairs.has(authorizationKey)) {
+  const pairs = authorizedByTree.get(treeOrigin);
+  const isAuthorized =
+    pairs !== undefined &&
+    pairs.some(
+      (pair) =>
+        isPathOrDescendant(edge.sourcePath, pair.from) &&
+        isPathOrDescendant(edge.destinationPath, pair.to)
+    );
+  if (isAuthorized) {
     return undefined;
   }
 

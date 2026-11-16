@@ -616,4 +616,121 @@ describe('verifyExternalDependencies', () => {
 
     expect(verifyExternalDependencies(model)).toEqual([]);
   });
+
+  it('authorizes Logical Domain sources and external directory targets with segment-boundary matching', () => {
+    const items: readonly TModelItemSpec[] = [
+      {
+        id: 0,
+        nodeKind: 'master-node',
+        path: 'src/_utils/legacy-client/legacy-client.util.ts',
+        treeOrigin: 'src',
+      },
+      {
+        id: 1,
+        nodeKind: 'access-node',
+        path: 'src/_utils/legacy-client/index.ts',
+        treeOrigin: 'src',
+      },
+      {
+        id: 2,
+        nodeKind: 'master-node',
+        path: 'src/_utils/legacy-client-other/legacy-client-other.util.ts',
+        treeOrigin: 'src',
+      },
+      { id: 3, nodeKind: null, path: 'legacy/client.ts', treeOrigin: null },
+      {
+        id: 4,
+        nodeKind: null,
+        path: 'legacy/sub/helper.ts',
+        treeOrigin: null,
+      },
+      {
+        id: 5,
+        nodeKind: null,
+        path: 'legacy-other/client.ts',
+        treeOrigin: null,
+      },
+    ];
+    const vertices: readonly TVertexSpec[] = [
+      {
+        nature: { inventoryId: 0, kind: 'tree-node' },
+        path: 'src/_utils/legacy-client/legacy-client.util.ts',
+      },
+      {
+        nature: { inventoryId: 1, kind: 'tree-node' },
+        path: 'src/_utils/legacy-client/index.ts',
+      },
+      {
+        nature: { inventoryId: 2, kind: 'tree-node' },
+        path: 'src/_utils/legacy-client-other/legacy-client-other.util.ts',
+      },
+      { nature: { kind: 'external-local-file' }, path: 'legacy/client.ts' },
+      {
+        nature: { kind: 'external-local-file' },
+        path: 'legacy/sub/helper.ts',
+      },
+      {
+        nature: { kind: 'external-local-file' },
+        path: 'legacy-other/client.ts',
+      },
+    ];
+
+    const model = buildVerificationModel({
+      edges: [
+        createEdge(
+          'src/_utils/legacy-client/legacy-client.util.ts',
+          'legacy/client.ts'
+        ),
+        createEdge(
+          'src/_utils/legacy-client/legacy-client.util.ts',
+          'legacy/sub/helper.ts'
+        ),
+        createEdge(
+          'src/_utils/legacy-client/legacy-client.util.ts',
+          'legacy-other/client.ts'
+        ),
+        createEdge(
+          'src/_utils/legacy-client-other/legacy-client-other.util.ts',
+          'legacy/client.ts'
+        ),
+        createEdge('src/_utils/legacy-client/index.ts', 'legacy/client.ts'),
+      ],
+      items,
+      trees: [
+        createTree('src', [{ from: 'src/_utils/legacy-client', to: 'legacy' }]),
+      ],
+      vertices,
+    });
+
+    expect(verifyExternalDependencies(model)).toEqual([
+      expect.objectContaining({
+        from: 'src/_utils/legacy-client-other/legacy-client-other.util.ts',
+        to: 'legacy/client.ts',
+      }),
+      expect.objectContaining({
+        from: 'src/_utils/legacy-client/legacy-client.util.ts',
+        to: 'legacy-other/client.ts',
+      }),
+    ]);
+  });
+
+  it('authorizes dot tree origin when paired with an external target', () => {
+    const items: readonly TModelItemSpec[] = [
+      { id: 0, nodeKind: 'root-node', path: 'main.ts', treeOrigin: '.' },
+      { id: 1, nodeKind: null, path: 'outside.ts', treeOrigin: null },
+    ];
+    const vertices: readonly TVertexSpec[] = [
+      { nature: { inventoryId: 0, kind: 'tree-node' }, path: 'main.ts' },
+      { nature: { kind: 'external-local-file' }, path: 'outside.ts' },
+    ];
+
+    const model = buildVerificationModel({
+      edges: [createEdge('main.ts', 'outside.ts')],
+      items,
+      trees: [createTree('.', [{ from: '.', to: 'outside.ts' }])],
+      vertices,
+    });
+
+    expect(verifyExternalDependencies(model)).toEqual([]);
+  });
 });

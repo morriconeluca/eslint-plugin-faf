@@ -20,12 +20,21 @@ export function rejectExternalDependencies(
   ): readonly TConfigOutcome[] =>
     rejectReferenceScope({
       context,
-      expectedKind: 'file',
+      expectedKind: 'file-or-directory',
       label: 'External dependency source',
       path,
       propertyPath,
       scope,
     });
+
+  const hasContainedTreeOrigin = (directoryPath: string): boolean => {
+    for (const originPath of context.ownedOrigins.keys()) {
+      if (directoryPath === '.' || originPath.startsWith(`${directoryPath}/`)) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   const rejectExternalTarget = (
     path: string,
@@ -59,7 +68,8 @@ export function rejectExternalDependencies(
     }
 
     const id = context.inventory.pathToId.get(path);
-    if (id === undefined) {
+    const item = id === undefined ? undefined : context.inventory.items[id];
+    if (item === undefined) {
       return [
         createOutcome.configuration('configuration/non-existent-path', {
           detail: `External dependency target "${path}" does not exist under configuration base "${context.baseDirectory}".`,
@@ -68,26 +78,10 @@ export function rejectExternalDependencies(
         }),
       ];
     }
-    const item = context.inventory.items[id];
-    if (item === undefined) {
-      return [
-        createOutcome.configuration('configuration/expected-file', {
-          detail: `External dependency target "${path}" is not a resolved file in the inventory.`,
-          element: path,
-          propertyPath,
-        }),
-      ];
-    }
-    if (item.kind !== 'file') {
-      return [
-        createOutcome.configuration('configuration/expected-file', {
-          detail: `External dependency target "${path}" must be a file.`,
-          element: path,
-          propertyPath,
-        }),
-      ];
-    }
-    if (item.treeOrigin !== null) {
+    if (
+      item.treeOrigin !== null ||
+      (item.kind === 'directory' && hasContainedTreeOrigin(path))
+    ) {
       return [
         createOutcome.configuration(
           'configuration/external-dependency-to-inside-tree',

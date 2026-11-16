@@ -1,5 +1,6 @@
 export type {
   TEnumeratedRootNode,
+  TExpectedEntryKind,
   TOriginDirectoryCheck,
   TOwnedOrigin,
   TReferenceContext,

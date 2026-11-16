@@ -20,6 +20,11 @@ export type TEnumeratedRootNode = {
 };
 
 /**
+ * Expected inventory entry kind (`directory`, `file`, or `file-or-directory`).
+ */
+export type TExpectedEntryKind = 'file-or-directory' | TEntryKind;
+
+/**
  * Apical origin directory that must exist and must not sit inside another tree.
  */
 export type TOriginDirectoryCheck = {
@@ -99,9 +104,9 @@ export type TReferenceScopeCheck = {
   readonly context: TReferenceContext;
 
   /**
-   * Expected inventory entry kind (`directory` or `file`).
+   * Expected inventory entry kind (`directory`, `file`, or `file-or-directory`).
    */
-  readonly expectedKind: TEntryKind;
+  readonly expectedKind: TExpectedEntryKind;
 
   /**
    * English noun used in the diagnostic to name the configured element.

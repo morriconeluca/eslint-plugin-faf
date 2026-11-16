@@ -74,7 +74,10 @@ export function rejectReferenceScope(
     ];
   }
 
-  if (item.kind !== check.expectedKind) {
+  if (
+    check.expectedKind !== 'file-or-directory' &&
+    item.kind !== check.expectedKind
+  ) {
     return [
       createOutcome.configuration(expectedConstraint, {
         detail: `${check.label} "${check.path}" must be a ${check.expectedKind}.`,

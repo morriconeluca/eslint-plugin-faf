@@ -8,6 +8,7 @@ import type { TTreeBuild } from '../../_classify-taxonomy@shared/_types/classify
 import { createOutcome } from '../../../../../../_src@shared/_utils/create-outcome/index.js';
 import {
   DOMAIN_CATEGORY,
+  DOMAIN_FOREIGN,
   FORM_FRAGMENTS,
   NODE_ACCESS,
   NODE_FOREIGN,
@@ -49,6 +50,19 @@ export function verifyClassificationReferences(
     return outcomes;
   };
 
+  const isRejectedFileSource = (
+    nodeKind: TItemClassification['nodeKind']
+  ): boolean =>
+    nodeKind === null || nodeKind === NODE_ACCESS || nodeKind === NODE_FOREIGN;
+
+  const isRejectedExternalSource = (
+    classification: TItemClassification
+  ): boolean =>
+    classification.entryKind === 'file'
+      ? isRejectedFileSource(classification.nodeKind)
+      : classification.domainKind === null ||
+        classification.domainKind === DOMAIN_FOREIGN;
+
   const verifyExternalSources = (
     byPath: ReadonlyMap<string, TItemClassification>
   ): readonly TConfigOutcome[] => {
@@ -58,11 +72,7 @@ export function verifyClassificationReferences(
       if (classification === undefined) {
         continue;
       }
-      const isRejectedSource =
-        classification.domainKind !== null ||
-        classification.nodeKind === NODE_ACCESS ||
-        classification.nodeKind === NODE_FOREIGN;
-      if (isRejectedSource) {
+      if (isRejectedExternalSource(classification)) {
         outcomes.push(
           createOutcome.configuration(
             'configuration/invalid-external-dependency-source',
