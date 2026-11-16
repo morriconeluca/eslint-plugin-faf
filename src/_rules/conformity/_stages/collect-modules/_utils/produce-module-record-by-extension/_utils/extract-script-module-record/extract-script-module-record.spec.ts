@@ -234,6 +234,13 @@ describe('extractScriptModuleRecord', () => {
         specifier: './target',
         title: 'typescript import type',
       },
+      {
+        code: '/// <reference path="./target.d.ts" />',
+        expectedKind: 'typescript-reference-path',
+        isTypeOnly: true,
+        specifier: './target.d.ts',
+        title: 'typescript triple-slash reference path',
+      },
     ])('extracts $title', ({ code, expectedKind, isTypeOnly, specifier }) => {
       const record = extractScriptModuleRecord('test.ts', code);
       expect(record.imports).toHaveLength(1);
@@ -645,6 +652,38 @@ describe('extractScriptModuleRecord', () => {
       expect(record.imports).toHaveLength(2);
       expect(record.imports[0]?.specifier).toBe('./dynamic-first');
       expect(record.imports[1]?.specifier).toBe('./static-second');
+    });
+
+    it('extracts triple-slash path directives before or after imports and ignores types and lib directives', () => {
+      const code = [
+        '/// <reference types="node" />',
+        "/// <reference lib='es2022' />",
+        "import { first } from './first';",
+        '/// <reference path="../../configs/globals.d.ts" />',
+        "/// <reference path='local.d.ts' />",
+      ].join('\n');
+      const record = extractScriptModuleRecord('test.ts', code);
+      expect(record.imports).toEqual([
+        {
+          isTypeOnly: false,
+          kind: 'named-import',
+          position: { column: 1, line: 3 },
+          specifier: './first',
+        },
+        {
+          isTypeOnly: true,
+          kind: 'typescript-reference-path',
+          position: { column: 1, line: 4 },
+          specifier: '../../configs/globals.d.ts',
+        },
+        {
+          isTypeOnly: true,
+          kind: 'typescript-reference-path',
+          position: { column: 1, line: 5 },
+          specifier: 'local.d.ts',
+        },
+      ]);
+      expect(record.symbols).toHaveLength(0);
     });
 
     it('orders static, require, and dynamic imports deterministically by source position', () => {

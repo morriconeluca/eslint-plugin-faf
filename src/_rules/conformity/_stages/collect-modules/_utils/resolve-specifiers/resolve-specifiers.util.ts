@@ -14,9 +14,11 @@ import { toPosixPath } from '../../../../../../_src@shared/_utils/to-posix-path/
 import { assertInvariant } from '../../../../_conformity@shared/_utils/assert-invariant/index.js';
 import { canonicalizeDirectory } from '../../_collect-modules@shared/_utils/canonicalize-directory/index.js';
 import {
+  CSS_NON_BARE_PREFIXES,
   DISCORDANCE_REASON,
   NODE_MODULES_MARKER,
   NON_LITERAL_DYNAMIC_IMPORT_REASON,
+  RELATIVE_OR_ABSOLUTE_PREFIXES,
   RESOLVER_OPTIONS,
 } from './_resolve-specifiers@shared/_constants/resolve-specifiers.constant.js';
 import { classifyResolutionTarget } from './_utils/classify-resolution-target/index.js';
@@ -57,12 +59,10 @@ export function resolveSpecifiers(
   const isCandidateForDiscordanceCheck = (
     cleanSpecifier: string,
     aliasUsed: null | string,
-    hasUsedRelativeFallback: boolean,
     isBuiltin: boolean,
     resolvedPath: string | undefined
   ): boolean => {
-    const isContextEligible =
-      hasTsconfig && aliasUsed === null && !hasUsedRelativeFallback;
+    const isContextEligible = hasTsconfig && aliasUsed === null;
     const isBare =
       !cleanSpecifier.startsWith('.') && !cleanSpecifier.startsWith('/');
     const isLocal = !isBuiltin && resolvedPath !== undefined;
@@ -95,18 +95,28 @@ export function resolveSpecifiers(
   const resolveWithFallback = (
     directory: string,
     specifier: string,
-    canFallbackToBare: boolean
+    isBareStyleSpecifier: boolean
   ) => {
-    let result = resolver.sync(directory, specifier);
-    if (
-      canFallbackToBare &&
-      result.path === undefined &&
-      specifier.startsWith('./')
-    ) {
-      result = resolver.sync(directory, specifier.slice(2));
-      return { hasUsedFallback: true, result };
+    if (!isBareStyleSpecifier) {
+      return {
+        effectiveSpecifier: specifier,
+        result: resolver.sync(directory, specifier),
+      };
     }
-    return { hasUsedFallback: false, result };
+
+    const relativeSpecifier = `./${specifier}`;
+    const relativeResult = resolver.sync(directory, relativeSpecifier);
+    if (relativeResult.path !== undefined) {
+      return {
+        effectiveSpecifier: relativeSpecifier,
+        result: relativeResult,
+      };
+    }
+
+    return {
+      effectiveSpecifier: specifier,
+      result: resolver.sync(directory, specifier),
+    };
   };
 
   const acquireCanonicalResult = (
@@ -122,28 +132,36 @@ export function resolveSpecifiers(
     };
   };
 
+  const resolveAliasMetadata = (
+    cleanSpecifier: string
+  ): {
+    readonly aliasAlternatives: readonly string[];
+    readonly aliasUsed: null | string;
+  } => {
+    const matchedAlias = matchPathAlias(cleanSpecifier, aliases);
+    return {
+      aliasAlternatives: matchedAlias?.targets ?? [],
+      aliasUsed: matchedAlias?.alias.prefix ?? null,
+    };
+  };
+
   const resolveSingle = (
     directory: string,
     specifier: string,
-    canFallbackToBare: boolean
+    isBareStyleSpecifier: boolean
   ): TCachedResolution => {
-    const cleanSpecifier = specifier.split('?', 1)[0] ?? specifier;
-    const matchedAlias = matchPathAlias(cleanSpecifier, aliases);
-    const aliasUsed = matchedAlias?.alias.prefix ?? null;
-    const aliasAlternatives = matchedAlias?.targets ?? [];
-
     let fallbackOutcome;
     try {
       fallbackOutcome = resolveWithFallback(
         directory,
         specifier,
-        canFallbackToBare
+        isBareStyleSpecifier
       );
     } catch (error: unknown) {
       assertInvariant(error instanceof Error, 'Expected resolver error');
       return {
-        aliasAlternatives,
-        aliasUsed,
+        aliasAlternatives: [],
+        aliasUsed: null,
         target: {
           reason: error.message,
           type: 'unresolved',
@@ -151,20 +169,29 @@ export function resolveSpecifiers(
       };
     }
 
+    const { effectiveSpecifier } = fallbackOutcome;
+    const effectiveCleanSpecifier =
+      effectiveSpecifier.split('?', 1)[0] ?? effectiveSpecifier;
+    const { aliasAlternatives, aliasUsed } = resolveAliasMetadata(
+      effectiveCleanSpecifier
+    );
+
     const acquiredResolveResult = acquireCanonicalResult(
       fallbackOutcome.result
     );
 
     const isCandidate = isCandidateForDiscordanceCheck(
-      cleanSpecifier,
+      effectiveCleanSpecifier,
       aliasUsed,
-      fallbackOutcome.hasUsedFallback,
       acquiredResolveResult.builtin !== undefined,
       acquiredResolveResult.path
     );
 
     if (isCandidate) {
-      const nonTsconfigPath = resolveWithoutTsconfig(directory, specifier);
+      const nonTsconfigPath = resolveWithoutTsconfig(
+        directory,
+        effectiveSpecifier
+      );
       if (
         nonTsconfigPath === null ||
         nonTsconfigPath !== acquiredResolveResult.path
@@ -185,7 +212,7 @@ export function resolveSpecifiers(
       aliasUsed,
       canonicalBase,
       resolveResult: acquiredResolveResult,
-      specifier,
+      specifier: effectiveSpecifier,
     });
 
     return {
@@ -220,16 +247,30 @@ export function resolveSpecifiers(
           },
         });
       } else {
-        const canFallbackToBare =
+        const rawSpecifier = importItem.specifier;
+        const isUnprefixedReferencePath =
+          importItem.kind === 'typescript-reference-path' &&
+          RELATIVE_OR_ABSOLUTE_PREFIXES.every(
+            (prefix) => !rawSpecifier.startsWith(prefix)
+          );
+        const resolutionSpecifier = isUnprefixedReferencePath
+          ? `./${rawSpecifier}`
+          : rawSpecifier;
+        const isStyleImport =
           importItem.kind === 'css-at-import' || importItem.kind === 'css-url';
-        const cacheKey = `${directory}\0${importItem.specifier}\0${String(canFallbackToBare)}`;
+        const isBareStyleSpecifier =
+          isStyleImport &&
+          CSS_NON_BARE_PREFIXES.every(
+            (prefix) => !rawSpecifier.startsWith(prefix)
+          );
+        const cacheKey = `${directory}\0${resolutionSpecifier}\0${String(isBareStyleSpecifier)}`;
         let cached = resolutionCache.get(cacheKey);
 
         if (cached === undefined) {
           cached = resolveSingle(
             directory,
-            importItem.specifier,
-            canFallbackToBare
+            resolutionSpecifier,
+            isBareStyleSpecifier
           );
           resolutionCache.set(cacheKey, cached);
         }

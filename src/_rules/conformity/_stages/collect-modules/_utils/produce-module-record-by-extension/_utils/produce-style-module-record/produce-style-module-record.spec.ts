@@ -43,34 +43,38 @@ describe('produceStyleModuleRecord', () => {
       isTypeOnly: false,
       kind: 'css-at-import',
       position: { column: 1, line: 1 },
-      specifier: './reset.css',
+      specifier: 'reset.css',
     });
     expect(result.imports[1]).toEqual({
       isTypeOnly: false,
       kind: 'css-at-import',
       position: { column: 1, line: 2 },
-      specifier: './typography.css',
+      specifier: 'typography.css',
     });
   });
 
-  it('normalizes bare relative references to start with ./', () => {
+  it('preserves bare relative references verbatim without synthetic ./ prefix', () => {
     const css = [
       '@import "components/button.css";',
+      '@import "@shared/theme.css";',
       '.icon {',
       '  background: url(images/icon.png);',
       '}',
     ].join('\n');
     const result = produceStyleModuleRecord('theme.css', css);
 
-    expect(result.imports[0]?.specifier).toBe('./components/button.css');
-    expect(result.imports[1]?.specifier).toBe('./images/icon.png');
+    expect(result.imports[0]?.specifier).toBe('components/button.css');
+    expect(result.imports[1]?.specifier).toBe('@shared/theme.css');
+    expect(result.imports[2]?.specifier).toBe('images/icon.png');
   });
 
-  it('preserves existing ./, ../, and #/ specifiers without alteration', () => {
+  it('preserves existing ./, ../, and # subpath specifiers without alteration', () => {
     const css = [
       '@import "./variables.css";',
       '@import "../common/base.css";',
       '@import "#/_src@shared/_styles/base.css";',
+      '@import "#_src@shared/_styles/theme.css";',
+      '@import "#shared/tokens.css";',
       '.bg {',
       "  background: url('./assets/bg.jpg');",
       '}',
@@ -83,8 +87,10 @@ describe('produceStyleModuleRecord', () => {
     expect(result.imports[0]?.specifier).toBe('./variables.css');
     expect(result.imports[1]?.specifier).toBe('../common/base.css');
     expect(result.imports[2]?.specifier).toBe('#/_src@shared/_styles/base.css');
-    expect(result.imports[3]?.specifier).toBe('./assets/bg.jpg');
-    expect(result.imports[4]?.specifier).toBe('../fonts/inter.woff2');
+    expect(result.imports[3]?.specifier).toBe('#_src@shared/_styles/theme.css');
+    expect(result.imports[4]?.specifier).toBe('#shared/tokens.css');
+    expect(result.imports[5]?.specifier).toBe('./assets/bg.jpg');
+    expect(result.imports[6]?.specifier).toBe('../fonts/inter.woff2');
   });
 
   it('extracts @import with url() syntax', () => {
@@ -97,9 +103,9 @@ describe('produceStyleModuleRecord', () => {
 
     expect(result.imports).toHaveLength(3);
     expect(result.imports[0]?.kind).toBe('css-at-import');
-    expect(result.imports[0]?.specifier).toBe('./theme.css');
-    expect(result.imports[1]?.specifier).toBe('./fonts.css');
-    expect(result.imports[2]?.specifier).toBe('./base.css');
+    expect(result.imports[0]?.specifier).toBe('theme.css');
+    expect(result.imports[1]?.specifier).toBe('fonts.css');
+    expect(result.imports[2]?.specifier).toBe('base.css');
   });
 
   it('extracts @import with media queries, layer(), and supports() clauses', () => {
@@ -111,9 +117,9 @@ describe('produceStyleModuleRecord', () => {
     const result = produceStyleModuleRecord('responsive.css', css);
 
     expect(result.imports).toHaveLength(3);
-    expect(result.imports[0]?.specifier).toBe('./mobile.css');
-    expect(result.imports[1]?.specifier).toBe('./utilities.css');
-    expect(result.imports[2]?.specifier).toBe('./grid.css');
+    expect(result.imports[0]?.specifier).toBe('mobile.css');
+    expect(result.imports[1]?.specifier).toBe('utilities.css');
+    expect(result.imports[2]?.specifier).toBe('grid.css');
   });
 
   it('extracts standalone url() references from property declarations', () => {
@@ -134,10 +140,10 @@ describe('produceStyleModuleRecord', () => {
       isTypeOnly: false,
       kind: 'css-url',
       position: { column: 8, line: 3 },
-      specifier: './fonts/roboto.woff2',
+      specifier: 'fonts/roboto.woff2',
     });
-    expect(result.imports[1]?.specifier).toBe('./img/card-bg.png');
-    expect(result.imports[2]?.specifier).toBe('./cursor.cur');
+    expect(result.imports[1]?.specifier).toBe('img/card-bg.png');
+    expect(result.imports[2]?.specifier).toBe('cursor.cur');
   });
 
   it('excludes non-codebase references from dependency edges', () => {
@@ -250,7 +256,7 @@ describe('produceStyleModuleRecord', () => {
     const result = produceStyleModuleRecord('style.scss', scss);
 
     expect(result.imports).toHaveLength(1);
-    expect(result.imports[0]?.specifier).toBe('./active.scss');
+    expect(result.imports[0]?.specifier).toBe('active.scss');
   });
 
   it('does not treat double slash as comment in standard .css files', () => {
@@ -258,7 +264,7 @@ describe('produceStyleModuleRecord', () => {
     const result = produceStyleModuleRecord('style.css', css);
 
     expect(result.imports).toHaveLength(1);
-    expect(result.imports[0]?.specifier).toBe('./not-a-comment.css');
+    expect(result.imports[0]?.specifier).toBe('not-a-comment.css');
   });
 
   it('handles indented Sass syntax with newline statement terminators', () => {
@@ -271,9 +277,9 @@ describe('produceStyleModuleRecord', () => {
     const result = produceStyleModuleRecord('main.sass', sass);
 
     expect(result.imports).toHaveLength(3);
-    expect(result.imports[0]?.specifier).toBe('./reset');
-    expect(result.imports[1]?.specifier).toBe('./typography');
-    expect(result.imports[2]?.specifier).toBe('./logo.png');
+    expect(result.imports[0]?.specifier).toBe('reset');
+    expect(result.imports[1]?.specifier).toBe('typography');
+    expect(result.imports[2]?.specifier).toBe('logo.png');
   });
 
   it('tracks CRLF, CR, escaped/unterminated strings, and unclosed comments accurately', () => {
@@ -291,7 +297,7 @@ describe('produceStyleModuleRecord', () => {
         isTypeOnly: false,
         kind: 'css-url',
         position: { column: 15, line: 3 },
-        specifier: './after-crlf.png',
+        specifier: 'after-crlf.png',
       },
     ]);
   });
@@ -309,19 +315,19 @@ describe('produceStyleModuleRecord', () => {
         isTypeOnly: false,
         kind: 'css-url',
         position: { column: 28, line: 2 },
-        specifier: './after.png',
+        specifier: 'after.png',
       },
       {
         isTypeOnly: false,
         kind: 'css-url',
         position: { column: 56, line: 3 },
-        specifier: './after-slash.png',
+        specifier: 'after-slash.png',
       },
       {
         isTypeOnly: false,
         kind: 'css-at-import',
         position: { column: 6, line: 4 },
-        specifier: './tight.css',
+        specifier: 'tight.css',
       },
     ]);
 
@@ -339,31 +345,31 @@ describe('produceStyleModuleRecord', () => {
         isTypeOnly: false,
         kind: 'css-at-import',
         position: { column: 36, line: 1 },
-        specifier: './after-ratio.scss',
+        specifier: 'after-ratio.scss',
       },
       {
         isTypeOnly: false,
         kind: 'css-at-import',
         position: { column: 1, line: 3 },
-        specifier: './after-line-comment.scss',
+        specifier: 'after-line-comment.scss',
       },
       {
         isTypeOnly: false,
         kind: 'css-at-import',
         position: { column: 3, line: 5 },
-        specifier: './after-cr.scss',
+        specifier: 'after-cr.scss',
       },
       {
         isTypeOnly: false,
         kind: 'css-url',
         position: { column: 23, line: 7 },
-        specifier: './after-crlf-comment.png',
+        specifier: 'after-crlf-comment.png',
       },
       {
         isTypeOnly: false,
         kind: 'css-at-import',
         position: { column: 12, line: 8 },
-        specifier: './after-stray-close.scss',
+        specifier: 'after-stray-close.scss',
       },
     ]);
   });
