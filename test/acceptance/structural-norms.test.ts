@@ -99,11 +99,14 @@ const exclusiveFormsViolation = (
     `'${element}' mixes mutually exclusive forms among its direct children (FAF §6.3.2, §6.4.1, §6.5.1, §6.6.1).`
   );
 
-const categoryRoleViolation = (element: string): TScenarioMessage =>
+const categoryRoleViolation = (
+  element: string,
+  filePath = element
+): TScenarioMessage =>
   diagnostic(
     'classification/category-role',
     element,
-    element,
+    filePath,
     `'${element}' does not have the form or the Role imposed by its Category (FAF §6.3.1).`
   );
 
@@ -685,6 +688,36 @@ describe('acceptance: structural norms', () => {
       'src/_styles/_styles@shared/_fonts/inter.woff2': '',
       'src/_styles/theme.css': '',
     });
+
+    for (const [file, anchor] of [
+      ['src/_components/README.md', 'faf.config.ts'],
+      ['src/_components/helper.ts', 'src/_components/helper.ts'],
+      ['src/_components/_atoms/README.md', 'faf.config.ts'],
+      ['src/_components/_atoms/helper.ts', 'src/_components/_atoms/helper.ts'],
+      ['src/_components/_atoms/index.ts', 'src/_components/_atoms/index.ts'],
+    ] as const) {
+      scenario(
+        `rejects direct undeclared file ${file} in Fragments form`,
+        { [file]: file.endsWith('.md') ? '' : 'export {};\n' },
+        [categoryRoleViolation(file, anchor)]
+      );
+    }
+
+    scenario(
+      'allows declared Foreign README.md in Category and Sub-Category of Fragments',
+      {
+        'src/_components/_atoms/README.md': '',
+        'src/_components/README.md': '',
+      },
+      [],
+      {
+        ...local,
+        foreignNodes: [
+          'src/_components/README.md',
+          'src/_components/_atoms/README.md',
+        ],
+      }
+    );
   });
 
   describe('Layer forms', () => {

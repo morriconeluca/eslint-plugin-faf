@@ -544,6 +544,7 @@ describe('acceptance: contextual nomenclature and qualifications', () => {
         `${path}/_user-profile.util.ts`,
         `${path}/_user-profile.util.ts`
       ),
+      categoryRoleViolation(`${path}/index.ts`, `${path}/index.ts`),
     ]);
   });
 
@@ -1452,6 +1453,7 @@ describe('acceptance: Mimetic Path Structures', () => {
             `${path}/_home.page.ts`,
             `${path}/_home.page.ts`
           ),
+          categoryRoleViolation(`${path}/index.ts`, `${path}/index.ts`),
         ]);
         return;
       }

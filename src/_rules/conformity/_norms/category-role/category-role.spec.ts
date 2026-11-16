@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type {
+  TEffectiveMimeticStructure,
   TEffectiveRole,
   TEffectiveTree,
   TInventory,
@@ -57,10 +58,14 @@ const buildModel = (options: {
   classifications: readonly TItemClassification[];
   inventoryItems: readonly TInventoryItem[];
   mimeticPaths?: readonly string[];
+  mimeticPathStructures?: readonly TEffectiveMimeticStructure[];
   roles: readonly TEffectiveRole[];
 }): TVerificationModel => {
   const { classifications, inventoryItems, roles } = options;
   const mimeticPaths = options.mimeticPaths ?? [];
+  const mimeticPathStructures =
+    options.mimeticPathStructures ??
+    (mimeticPaths.length > 0 ? [{ actions: null, paths: mimeticPaths }] : []);
 
   const taxonomy: TTaxonomyModel = {
     byItemId: new Map(
@@ -97,8 +102,7 @@ const buildModel = (options: {
     foreignNodes: { families: [], individualPaths: [] },
     horizontalHierarchies: [],
     horizontalHierarchyModels: [],
-    mimeticPathStructures:
-      mimeticPaths.length > 0 ? [{ actions: null, paths: mimeticPaths }] : [],
+    mimeticPathStructures,
     originKind: 'root-layer',
     originPath: 'src',
     publicRootNodes: [],
@@ -173,6 +177,15 @@ describe('verifyCategoryRole', () => {
     form: 'fragments',
     implicitExtensions: [],
     name: 'api',
+    rank: 6,
+  };
+
+  const pageRoleFragments: TEffectiveRole = {
+    allowMultipleSymbols: false,
+    category: '_pages',
+    form: 'fragments',
+    implicitExtensions: [],
+    name: 'page',
     rank: 6,
   };
 
@@ -835,5 +848,281 @@ describe('verifyCategoryRole', () => {
         normativeReference: 'FAF §6.3.1',
       },
     ]);
+  });
+
+  it('rejects absent-role and explicit-role direct files in a non-mimetic Category of Fragments', () => {
+    const model = buildModel({
+      classifications: [
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'util',
+          itemId: 0,
+          path: 'src/_utils',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 1,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/README.md',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 2,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/helper.ts',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 3,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/foo.util.spec.ts',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 4,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/index.ts',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 5,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/other.type.ts',
+          role: { kind: 'explicit', roleName: 'type' },
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 6,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/helper.spec.ts',
+          role: { kind: 'explicit', roleName: 'spec' },
+        }),
+      ],
+      inventoryItems: [
+        createInventoryItem(0, 'src/_utils', 'directory', null),
+        createInventoryItem(1, 'src/_utils/README.md', 'file', 0),
+        createInventoryItem(2, 'src/_utils/helper.ts', 'file', 0),
+        createInventoryItem(3, 'src/_utils/foo.util.spec.ts', 'file', 0),
+        createInventoryItem(4, 'src/_utils/index.ts', 'file', 0),
+        createInventoryItem(5, 'src/_utils/other.type.ts', 'file', 0),
+        createInventoryItem(6, 'src/_utils/helper.spec.ts', 'file', 0),
+      ],
+      roles: [utilRole, typeRoleNodes],
+    });
+
+    expect(verifyCategoryRole(model).map((outcome) => outcome.element)).toEqual(
+      [
+        'src/_utils/README.md',
+        'src/_utils/foo.util.spec.ts',
+        'src/_utils/helper.spec.ts',
+        'src/_utils/helper.ts',
+        'src/_utils/index.ts',
+        'src/_utils/other.type.ts',
+      ]
+    );
+  });
+
+  it('rejects absent-role and explicit-role direct files in a Sub-Category of Fragments', () => {
+    const model = buildModel({
+      classifications: [
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'util',
+          itemId: 0,
+          path: 'src/_utils',
+        }),
+        createItem({
+          domainKind: 'sub-category',
+          entryKind: 'directory',
+          imposedRoleName: 'util',
+          itemId: 1,
+          path: 'src/_utils/_helpers',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 2,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/_helpers/README.md',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 3,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/_helpers/helper.ts',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 4,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/_helpers/foo.util.spec.ts',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 5,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/_helpers/index.ts',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 6,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/_helpers/format.util.ts',
+          role: { kind: 'explicit', roleName: 'util' },
+        }),
+      ],
+      inventoryItems: [
+        createInventoryItem(0, 'src/_utils', 'directory', null),
+        createInventoryItem(1, 'src/_utils/_helpers', 'directory', 0),
+        createInventoryItem(2, 'src/_utils/_helpers/README.md', 'file', 1),
+        createInventoryItem(3, 'src/_utils/_helpers/helper.ts', 'file', 1),
+        createInventoryItem(
+          4,
+          'src/_utils/_helpers/foo.util.spec.ts',
+          'file',
+          1
+        ),
+        createInventoryItem(5, 'src/_utils/_helpers/index.ts', 'file', 1),
+        createInventoryItem(6, 'src/_utils/_helpers/format.util.ts', 'file', 1),
+      ],
+      roles: [utilRole],
+    });
+
+    expect(verifyCategoryRole(model).map((outcome) => outcome.element)).toEqual(
+      [
+        'src/_utils/_helpers/README.md',
+        'src/_utils/_helpers/foo.util.spec.ts',
+        'src/_utils/_helpers/format.util.ts',
+        'src/_utils/_helpers/helper.ts',
+        'src/_utils/_helpers/index.ts',
+      ]
+    );
+  });
+
+  it('allows declared Foreign Nodes directly inside Categories and Sub-Categories of Fragments', () => {
+    const model = buildModel({
+      classifications: [
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'util',
+          itemId: 0,
+          path: 'src/_utils',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 1,
+          nodeKind: 'foreign-node',
+          path: 'src/_utils/README.md',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          domainKind: 'sub-category',
+          entryKind: 'directory',
+          imposedRoleName: 'util',
+          itemId: 2,
+          path: 'src/_utils/_helpers',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 3,
+          nodeKind: 'foreign-node',
+          path: 'src/_utils/_helpers/README.md',
+          role: { kind: 'absent', roleName: null },
+        }),
+      ],
+      inventoryItems: [
+        createInventoryItem(0, 'src/_utils', 'directory', null),
+        createInventoryItem(1, 'src/_utils/README.md', 'file', 0),
+        createInventoryItem(2, 'src/_utils/_helpers', 'directory', 0),
+        createInventoryItem(3, 'src/_utils/_helpers/README.md', 'file', 2),
+      ],
+      roles: [utilRole],
+    });
+
+    expect(verifyCategoryRole(model)).toEqual([]);
+  });
+
+  it('leaves direct files in mimetic Parent Categories and Path Sub-Categories to containment-matrix', () => {
+    const model = buildModel({
+      classifications: [
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'page',
+          itemId: 0,
+          path: 'src/_pages',
+        }),
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'api',
+          itemId: 1,
+          path: 'src/_apis',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 2,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_apis/helper.ts',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          domainKind: 'path-sub-category',
+          entryKind: 'directory',
+          imposedRoleName: 'api',
+          itemId: 3,
+          path: 'src/_apis/_todos',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 4,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_apis/_todos/helper.ts',
+          role: { kind: 'absent', roleName: null },
+        }),
+        createItem({
+          domainKind: 'category',
+          entryKind: 'directory',
+          imposedRoleName: 'util',
+          itemId: 5,
+          path: 'src/_utils',
+        }),
+        createItem({
+          entryKind: 'file',
+          itemId: 6,
+          nodeKind: 'unauthorized-logical-node',
+          path: 'src/_utils/helper.ts',
+          role: { kind: 'absent', roleName: null },
+        }),
+      ],
+      inventoryItems: [
+        createInventoryItem(0, 'src/_pages', 'directory', null),
+        createInventoryItem(1, 'src/_apis', 'directory', null),
+        createInventoryItem(2, 'src/_apis/helper.ts', 'file', 1),
+        createInventoryItem(3, 'src/_apis/_todos', 'directory', 1),
+        createInventoryItem(4, 'src/_apis/_todos/helper.ts', 'file', 3),
+        createInventoryItem(5, 'src/_utils', 'directory', null),
+        createInventoryItem(6, 'src/_utils/helper.ts', 'file', 5),
+      ],
+      mimeticPathStructures: [
+        { actions: null, paths: ['src/_pages'] },
+        { actions: ['get'], paths: ['src/_apis'] },
+      ],
+      roles: [apiRoleFragments, pageRoleFragments, utilRole],
+    });
+
+    expect(verifyCategoryRole(model).map((outcome) => outcome.element)).toEqual(
+      ['src/_utils/helper.ts']
+    );
   });
 });
