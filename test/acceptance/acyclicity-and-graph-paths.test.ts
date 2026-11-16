@@ -493,6 +493,60 @@ describe('acceptance: global graph norms', () => {
     );
   });
 
+  it('rejects an indirect nested Fractal Branch return through a deeper outer Fractal Branch node', async () => {
+    const nestedBranchSource =
+      'src/_src@shared/_ui/_components/card/_card@shared/_utils/helper/helper.util.ts';
+    const outerBranchAccess =
+      'src/_src@shared/_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/index.ts';
+    const outerBranchApi =
+      'src/_src@shared/_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/get-user-details.api.ts';
+    const parentFragmentAccess =
+      'src/_src@shared/_ui/_components/card/index.ts';
+    const returnSpecifier =
+      '../../../../../../../_ui/_components/card/index.js';
+
+    await runScenario(
+      {
+        [nestedBranchSource]:
+          "import { getUserDetails } from '../../../../../../_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/index.js';\nexport const helper = (): number => getUserDetails();\n",
+        [outerBranchAccess]:
+          "export { getUserDetails } from './get-user-details.api.js';\n",
+        [outerBranchApi]: `import { card } from '${returnSpecifier}';\nexport const getUserDetails = (): number => card;\n`,
+        [parentFragmentAccess]: "export { card } from './card.component.js';\n",
+        'src/_src@shared/_ui/_components/card/_card@shared/_utils/helper/index.ts':
+          "export { helper } from './helper.util.js';\n",
+        'src/_src@shared/_ui/_components/card/card.component.tsx':
+          'export const card = 1;\n',
+        'src/main.ts': 'export const main = 1;\n',
+      },
+      {
+        horizontalHierarchies: [
+          { hierarchy: [['_network'], ['_ui']], path: 'src/_src@shared' },
+        ],
+        mimeticPathStructures: [{ paths: ['src/_src@shared/_network/_apis'] }],
+        roles: [
+          ...roles,
+          { category: '_apis', name: 'api' },
+          { category: '_components', name: 'component' },
+        ],
+        rootFragments: [root('src', ['main.ts'])],
+      },
+      [
+        peerSeparationOutcome(
+          outerBranchApi,
+          parentFragmentAccess,
+          returnSpecifier
+        ),
+        branchPathOutcome([
+          nestedBranchSource,
+          outerBranchAccess,
+          outerBranchApi,
+          parentFragmentAccess,
+        ]),
+      ]
+    );
+  });
+
   it.each([
     [
       'chain',

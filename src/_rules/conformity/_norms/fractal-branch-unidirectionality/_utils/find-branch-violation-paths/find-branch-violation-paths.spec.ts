@@ -109,7 +109,7 @@ describe('findBranchViolationPaths', () => {
     ]);
   });
 
-  it('detects multi-hop violation chains and reuses memoized deeper sources', () => {
+  it('detects multi-hop violation chains across multiple candidate sources', () => {
     const graph = buildGraph(
       ['branch/start.ts', 'branch/middle.ts', 'branch/last.ts', 'parent/a.ts'],
       [
@@ -270,7 +270,7 @@ describe('findBranchViolationPaths', () => {
     ]);
   });
 
-  it('prefers direct edge over longer memoized alternative', () => {
+  it('prefers direct edge over longer transitive alternative', () => {
     const graph = buildGraph(
       ['branch/a.ts', 'branch/b.ts', 'parent/main.ts'],
       [
@@ -294,7 +294,7 @@ describe('findBranchViolationPaths', () => {
     expect(fromA?.chain).toEqual(['branch/a.ts', 'parent/main.ts']);
   });
 
-  it('skips memoized violations that are not violations for the outer source', () => {
+  it('does not propagate inner source violations to an outer source when predicate differs', () => {
     const graph = buildGraph(
       ['branch/outer.ts', 'branch/inner.ts', 'target.ts', 'safe.ts'],
       [
@@ -345,7 +345,7 @@ describe('findBranchViolationPaths', () => {
     expect(toB?.firstEdge.importIndex).toBe(2);
   });
 
-  it('replaces longer or lexicographically larger memoized paths when BFS discovers a better path and skips cyclic memoized entries', () => {
+  it('finds shortest and lexicographically smallest paths across diamond and cyclic graphs', () => {
     const graph = buildGraph(
       [
         'branch/outer.ts',
@@ -506,24 +506,6 @@ describe('findBranchViolationPaths', () => {
       vertexCount: 2,
       vertexToPath: ['branch/start.ts'],
     };
-    const innerOnly = buildGraph(
-      ['branch/inner.ts', 'parent/main.ts'],
-      [createEdge('branch/inner.ts', 'parent/main.ts', '../parent/main.js')]
-    );
-    const truncatedMemoGraph: TDependencyGraph = {
-      ...innerOnly,
-      vertexToPath: ['branch/inner.ts'],
-    };
-    expect(
-      findBranchViolationPaths({
-        candidateSources: [
-          { depth: 3, path: 'branch/inner.ts', vertex: 0 },
-          { depth: 2, path: 'branch/outer.ts', vertex: 1 },
-        ],
-        graph: truncatedMemoGraph,
-        isViolation: (_source, destination) => destination === '',
-      })
-    ).toEqual([]);
     expect(
       findBranchViolationPaths({
         candidateSources: [{ depth: 2, path: 'branch/start.ts', vertex: 0 }],
@@ -531,5 +513,99 @@ describe('findBranchViolationPaths', () => {
         isViolation: () => true,
       })
     ).toEqual([]);
+    expect(
+      findBranchViolationPaths({
+        candidateSources: [{ depth: 2, path: 'branch/missing.ts', vertex: 99 }],
+        graph: baseGraph,
+        isViolation: () => true,
+      })
+    ).toEqual([]);
+  });
+
+  it('detects indirect violations for shallower nested sources through deeper non-violating outer sources', () => {
+    const nestedSource =
+      'src/_src@shared/_ui/_components/card/_card@shared/_utils/helper/helper.util.ts';
+    const deeperOuterSource =
+      'src/_src@shared/_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/get-user-details.api.ts';
+    const parentFragmentTarget =
+      'src/_src@shared/_ui/_components/card/index.ts';
+
+    const graph = buildGraph(
+      [nestedSource, deeperOuterSource, parentFragmentTarget],
+      [
+        createEdge(
+          nestedSource,
+          deeperOuterSource,
+          '../../../../_network/_apis/_v1/_users/_details/_[user-id]/get-user-details/get-user-details.api.js'
+        ),
+        createEdge(
+          deeperOuterSource,
+          parentFragmentTarget,
+          '../../../../../../../../_ui/_components/card/index.js'
+        ),
+      ]
+    );
+
+    const violations = findBranchViolationPaths({
+      candidateSources: [
+        { depth: 8, path: nestedSource, vertex: 0 },
+        { depth: 9, path: deeperOuterSource, vertex: 1 },
+      ],
+      graph,
+      isViolation: (source, destination) =>
+        source === nestedSource && destination === parentFragmentTarget,
+    });
+
+    expect(violations).toEqual([
+      expect.objectContaining({
+        chain: [nestedSource, deeperOuterSource, parentFragmentTarget],
+        sourcePath: nestedSource,
+        targetVertex: 2,
+      }),
+    ]);
+  });
+
+  it('continues past an intermediate target that violates only for a deeper source', () => {
+    const outerSource = 'src/_src@shared/outer.ts';
+    const innerSource = 'src/_src@shared/nested/_nested@shared/inner.ts';
+    const innerParentTarget = 'src/_src@shared/nested/sibling.ts';
+    const outerParentTarget = 'src/main.ts';
+
+    const graph = buildGraph(
+      [outerSource, innerSource, innerParentTarget, outerParentTarget],
+      [
+        createEdge(
+          outerSource,
+          innerSource,
+          './nested/_nested@shared/inner.js'
+        ),
+        createEdge(innerSource, innerParentTarget, '../sibling.js'),
+        createEdge(innerParentTarget, outerParentTarget, '../../main.js'),
+      ]
+    );
+
+    const violations = findBranchViolationPaths({
+      candidateSources: [
+        { depth: 2, path: outerSource, vertex: 0 },
+        { depth: 4, path: innerSource, vertex: 1 },
+      ],
+      graph,
+      isViolation: (source, destination) =>
+        destination === outerParentTarget ||
+        (source === innerSource && destination === innerParentTarget),
+    });
+
+    expect(violations).toEqual([
+      expect.objectContaining({
+        chain: [innerSource, innerParentTarget],
+        sourcePath: innerSource,
+        targetVertex: 2,
+      }),
+      expect.objectContaining({
+        chain: [outerSource, innerSource, innerParentTarget, outerParentTarget],
+        sourcePath: outerSource,
+        targetVertex: 3,
+      }),
+    ]);
   });
 });
