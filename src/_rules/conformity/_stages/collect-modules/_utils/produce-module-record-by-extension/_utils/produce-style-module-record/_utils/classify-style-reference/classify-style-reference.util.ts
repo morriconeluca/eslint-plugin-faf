@@ -5,7 +5,6 @@ import type { TClassifiedStyleReference } from './classify-style-reference.type.
 import {
   EXCLUDED_PREFIXES,
   INTERPOLATION_MARKERS,
-  PRESERVED_SPECIFIER_PREFIXES,
   QUOTE_WRAP_PATTERN,
 } from './classify-style-reference.constant.js';
 
@@ -40,7 +39,7 @@ export function classifyStyleReference(
     };
   }
 
-  if (cleaned.startsWith('#') && !cleaned.startsWith('#/')) {
+  if (cleaned.startsWith('#') && !cleaned.includes('/')) {
     return {};
   }
 
@@ -82,17 +81,12 @@ export function classifyStyleReference(
     };
   }
 
-  const isExplicitRelative = PRESERVED_SPECIFIER_PREFIXES.some((prefix) =>
-    cleaned.startsWith(prefix)
-  );
-  const specifier = isExplicitRelative ? cleaned : `./${cleaned}`;
-
   return {
     importItem: {
       isTypeOnly: false,
       kind,
       position,
-      specifier,
+      specifier: cleaned,
     },
   };
 }

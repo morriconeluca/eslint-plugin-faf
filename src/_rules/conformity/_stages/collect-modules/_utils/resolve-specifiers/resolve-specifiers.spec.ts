@@ -927,7 +927,7 @@ describe('resolveSpecifiers', () => {
     }
   });
 
-  it('falls back to bare package resolution for ./-prefixed CSS imports while keeping script ./-imports relative', async () => {
+  it('resolves bare CSS imports relative-first with package fallback while keeping explicit ./ and script imports strict', async () => {
     const fixture = await createFixture({
       'node_modules/@scope/ui/dist/theme.css': '.theme {}',
       'node_modules/@scope/ui/package.json': JSON.stringify({
@@ -952,9 +952,11 @@ describe('resolveSpecifiers', () => {
 
       const results = resolver('src/main.css', [
         createImport('./tailwindcss', 'named-import'),
-        createImport('./tailwindcss', 'css-at-import'),
-        createImport('./@scope/ui/theme.css', 'css-url'),
+        createImport('tailwindcss', 'css-at-import'),
+        createImport('@scope/ui/theme.css', 'css-url'),
+        createImport('local.css', 'css-at-import'),
         createImport('./local.css', 'css-at-import'),
+        createImport('./tailwindcss', 'css-at-import'),
         createImport('../tailwindcss', 'css-at-import'),
       ]);
 
@@ -971,9 +973,14 @@ describe('resolveSpecifiers', () => {
         path: 'src/local.css',
         type: 'local-file',
       });
-      expect(results[4]?.target.type).toBe('unresolved');
-      if (results[4]?.target.type === 'unresolved') {
-        expect(results[4].target.reason).toContain("'../tailwindcss'");
+      expect(results[4]?.target).toEqual({
+        path: 'src/local.css',
+        type: 'local-file',
+      });
+      expect(results[5]?.target.type).toBe('unresolved');
+      expect(results[6]?.target.type).toBe('unresolved');
+      if (results[6]?.target.type === 'unresolved') {
+        expect(results[6].target.reason).toContain("'../tailwindcss'");
       }
     } finally {
       await fixture.rm();
@@ -1216,11 +1223,171 @@ describe('resolveSpecifiers', () => {
       const resolver = resolveSpecifiers(fixture.path, []);
 
       const result = resolver('src/main.css', [
-        createImport('./tailwindcss', 'css-at-import'),
+        createImport('tailwindcss', 'css-at-import'),
       ]);
       expect(result[0]?.target).toEqual({
         packageName: 'tailwindcss',
         type: 'external-library',
+      });
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('resolves typescript-reference-path directives relative to file directory without alias or package fallback', async () => {
+    const fixture = await createFixture({
+      'node_modules/globals.d.ts/index.js': 'export const pkg = 1;',
+      'src/configs/globals.d.ts': 'declare const globalVal: string;\n',
+      'src/features/app/app.ts': 'export const app = 1;\n',
+      'src/features/app/local.d.ts': 'declare const localVal: string;\n',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            'local.d.ts': ['./src/configs/globals.d.ts'],
+          },
+        },
+      }),
+    });
+
+    try {
+      const resolver = resolveSpecifiers(fixture.path, []);
+
+      const results = resolver('src/features/app/app.ts', [
+        createImport('local.d.ts', 'typescript-reference-path'),
+        createImport('./local.d.ts', 'typescript-reference-path'),
+        createImport('../../configs/globals.d.ts', 'typescript-reference-path'),
+        createImport(
+          nodePath.join(fixture.path, 'src/configs/globals.d.ts'),
+          'typescript-reference-path'
+        ),
+        createImport('missing.d.ts', 'typescript-reference-path'),
+      ]);
+
+      expect(results[0]?.target).toEqual({
+        path: 'src/features/app/local.d.ts',
+        type: 'local-file',
+      });
+      expect(results[0]?.aliasUsed).toBeNull();
+      expect(results[1]?.target).toEqual({
+        path: 'src/features/app/local.d.ts',
+        type: 'local-file',
+      });
+      expect(results[2]?.target).toEqual({
+        path: 'src/configs/globals.d.ts',
+        type: 'local-file',
+      });
+      expect(results[3]?.target).toEqual({
+        path: 'src/configs/globals.d.ts',
+        type: 'local-file',
+      });
+      expect(results[4]?.target.type).toBe('unresolved');
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('matches declared aliases and checks discordance on CSS fallback bare specifiers', async () => {
+    const fixture = await createFixture({
+      'package.json': JSON.stringify({
+        imports: {
+          '#_src@shared/*': './src/_src@shared/*',
+        },
+        name: 'test-project',
+        type: 'module',
+      }),
+      'src/_src@shared/_styles/theme.css': ':root { --color: red; }\n',
+      'src/_src@shared/_styles/tokens.css': ':root { --size: 1px; }\n',
+      'src/main.css': '',
+      'src/rogue/theme.css': ':root {}\n',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '$shared/*': ['./src/_src@shared/*'],
+            '@rogue/*': ['./src/rogue/*'],
+            '@shared/*': ['./src/_src@shared/*'],
+            '@undeclared/*': ['./src/_src@shared/*'],
+          },
+        },
+      }),
+    });
+
+    try {
+      const aliases: readonly TEffectivePathAlias[] = [
+        {
+          prefix: '@shared',
+          source: 'common.aliases',
+          targets: ['src/_src@shared'],
+        },
+        {
+          prefix: '$shared',
+          source: 'common.aliases',
+          targets: ['src/_src@shared'],
+        },
+        {
+          prefix: '@rogue',
+          source: 'common.aliases',
+          targets: ['src/_src@shared'],
+        },
+        {
+          prefix: '#_src@shared',
+          source: 'package.json#imports',
+          targets: ['src/_src@shared'],
+        },
+      ];
+
+      const resolver = resolveSpecifiers(fixture.path, aliases);
+
+      const results = resolver('src/main.css', [
+        createImport('@shared/_styles/theme.css?inline', 'css-at-import'),
+        createImport('$shared/_styles/tokens.css', 'css-url'),
+        createImport('#_src@shared/_styles/theme.css', 'css-at-import'),
+        createImport('@rogue/theme.css', 'css-at-import'),
+        createImport('@undeclared/_styles/theme.css', 'css-at-import'),
+      ]);
+
+      expect(results[0]).toMatchObject({
+        aliasAlternatives: ['src/_src@shared/_styles/theme.css'],
+        aliasUsed: '@shared',
+        target: {
+          path: 'src/_src@shared/_styles/theme.css',
+          type: 'local-file',
+        },
+      });
+      expect(results[1]).toMatchObject({
+        aliasAlternatives: ['src/_src@shared/_styles/tokens.css'],
+        aliasUsed: '$shared',
+        target: {
+          path: 'src/_src@shared/_styles/tokens.css',
+          type: 'local-file',
+        },
+      });
+      expect(results[2]).toMatchObject({
+        aliasAlternatives: ['src/_src@shared/_styles/theme.css'],
+        aliasUsed: '#_src@shared',
+        target: {
+          path: 'src/_src@shared/_styles/theme.css',
+          type: 'local-file',
+        },
+      });
+      expect(results[3]).toMatchObject({
+        aliasAlternatives: ['src/_src@shared/theme.css'],
+        aliasUsed: '@rogue',
+        target: {
+          reason:
+            'Path alias resolution falls outside the declared alias targets',
+          type: 'unresolved',
+        },
+      });
+      expect(results[4]).toMatchObject({
+        aliasAlternatives: [],
+        aliasUsed: null,
+        target: {
+          reason:
+            'Path alias resolution falls outside the declared alias targets',
+          type: 'unresolved',
+        },
       });
     } finally {
       await fixture.rm();

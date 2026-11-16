@@ -660,6 +660,7 @@ describe('verifyRootNodeDiscipline', () => {
         'side-effect-import',
         'type-only-import',
         'typescript-import-type',
+        'typescript-reference-path',
         'typescript-require-import',
       ];
 
