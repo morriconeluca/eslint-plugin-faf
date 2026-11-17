@@ -1,5 +1,19 @@
 # eslint-plugin-faf
 
+## 0.11.0
+
+### Minor Changes
+
+- a9be541: Unify `publicRootNodes` reference validation across `common` and `locals` (checking existence, file kind, external-tree membership, and local scope before Root Layer origin checks) and support Logical Domains in `externalDependencies.from` and external directories in `externalDependencies.to` per FAF §7.3.
+
+### Patch Changes
+
+- 61af8f9: Fix a false negative in `classification/category-role` so every non-Foreign direct file (including absent-Role files and `index.ts`) inside a non-mimetic Category of Fragments or Sub-Category of Fragments is reported as a violation.
+- 64ba2c9: Fix worker configuration diagnostics and documentation: emit the configuration file basename (`nodePath.basename(configPath)`) as the diagnostic `element` instead of an OS-absolute path, restrict `configuration/unresolved-relative-import` to extensionless local `ERR_MODULE_NOT_FOUND` targets (falling back to `configuration/commonjs-package-type` or `configuration/config-load-failure` for explicit-extension missing files, missing packages, and `node_modules` paths), include `roles` in standalone `TFAFConfig` examples, and document `typescript-eslint` parser setup and `externalDependencies` (`from`/`to`) semantics in `README.md`.
+- 64ff18c: Fix external inventory discovery in `includeExternalTargets` so source dot-directories (such as `.storybook/`), nested artifact-named directories (such as `__test__/build/`), active ESLint file overlays, and configuration-referenced paths outside Fractal Trees are accurately indexed instead of being silently skipped or misreported as `configuration/non-existent-path`.
+- 3045d18: Fix an algorithmic soundness bug in `dependency/fractal-branch-unidirectionality` by removing unsound cross-source memoization in `findBranchViolationPaths` so indirect violations from nested Fractal Branches routed through deeper outer Fractal Branch nodes are always detected.
+- 730b7fe: Extract TypeScript triple-slash file reference directives (`/// <reference path="..." />`) as `typescript-reference-path` imports, preserve `#` stylesheet subpath aliases containing `/`, and match declared path aliases after CSS bare-specifier fallback in `resolveSpecifiers`.
+
 ## 0.10.0
 
 ### Minor Changes
