@@ -131,11 +131,70 @@ describe('loadConfig', () => {
           expect(outcome.constraint).toBe(
             'configuration/unresolved-relative-import'
           );
+          expect(outcome.element).toBe('faf.config.ts');
           expect(outcome.normativeReference).toBe('FAF §1.2');
           expect(outcome.propertyPath).toBe('default');
           expect(outcome.message).toContain(
             'Relative import without explicit file extension violates configuration constraints'
           );
+          expect(outcome.message).toContain('ERR_MODULE_NOT_FOUND');
+        }
+      }
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('returns config-load-failure outcome for nonexistent relative import with explicit .ts extension', async () => {
+    const fixture = await createFixture({
+      'faf.config.ts':
+        'import { item } from "./nonexistent.ts"; export default { item };',
+    });
+
+    try {
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
+      const result = loadConfig({ configPath });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.outcomes).toHaveLength(1);
+        const outcome = result.outcomes[0];
+        expect(outcome?.family).toBe('configuration');
+        if (outcome?.family === 'configuration') {
+          expect(outcome.constraint).toBe('configuration/config-load-failure');
+          expect(outcome.element).toBe('faf.config.ts');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
+          expect(outcome.propertyPath).toBe('default');
+          expect(outcome.message).toContain('Failed to load faf.config.ts:');
+          expect(outcome.message).toContain('ERR_MODULE_NOT_FOUND');
+        }
+      }
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('returns config-load-failure outcome for nonexistent bare package import', async () => {
+    const fixture = await createFixture({
+      'faf.config.ts':
+        'import { something } from "nonexistent-faf-pkg"; export default { something };',
+    });
+
+    try {
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
+      const result = loadConfig({ configPath });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.outcomes).toHaveLength(1);
+        const outcome = result.outcomes[0];
+        expect(outcome?.family).toBe('configuration');
+        if (outcome?.family === 'configuration') {
+          expect(outcome.constraint).toBe('configuration/config-load-failure');
+          expect(outcome.element).toBe('faf.config.ts');
+          expect(outcome.normativeReference).toBe('FAF §1.2');
+          expect(outcome.propertyPath).toBe('default');
+          expect(outcome.message).toContain('Failed to load faf.config.ts:');
           expect(outcome.message).toContain('ERR_MODULE_NOT_FOUND');
         }
       }

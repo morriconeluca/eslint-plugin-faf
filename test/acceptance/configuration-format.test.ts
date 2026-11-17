@@ -1,6 +1,7 @@
 import type { FileTree } from 'fs-fixture';
 
 import { createFixture } from 'fs-fixture';
+import nodeFs from 'node:fs';
 import nodePath from 'node:path';
 import { beforeAll, describe, it } from 'vitest';
 
@@ -134,10 +135,10 @@ describe('acceptance: faf.config.ts TypeScript module contract', () => {
       `export default function () {
         return { faf: { locals: [{ roles: [{ category: '_utils', name: 'util' }], rootLayers: ['src'] }] } };
       };\n`,
-      (projectPath) => [
+      () => [
         configMessage({
           constraint: 'configuration/invalid-default-export-function',
-          element: nodePath.join(projectPath, 'faf.config.ts'),
+          element: 'faf.config.ts',
           predicate: 'cannot export a function as its default export',
           reference: 'FAF §1.2',
         }),
@@ -151,14 +152,85 @@ describe('acceptance: faf.config.ts TypeScript module contract', () => {
       `export default Promise.resolve({
         faf: { locals: [{ roles: [{ category: '_utils', name: 'util' }], rootLayers: ['src'] }] },
       });\n`,
-      (projectPath) => [
+      () => [
         configMessage({
           constraint: 'configuration/invalid-default-export-promise',
-          element: nodePath.join(projectPath, 'faf.config.ts'),
+          element: 'faf.config.ts',
           predicate: 'cannot export a Promise as its default export',
           reference: 'FAF §1.2',
         }),
       ]
+    );
+  });
+
+  it('rejects extensionless relative import in configuration file', async () => {
+    await runRawScenario(
+      {
+        ...defaultTree,
+        'roles.ts':
+          "export const sharedRoles = [{ category: '_utils', name: 'util' }];\n",
+      },
+      `import { sharedRoles } from './roles';
+      export default {
+        faf: { locals: [{ roles: sharedRoles, rootLayers: ['src'] }] },
+      };\n`,
+      (projectPath) => {
+        const realProjectPath = nodeFs.realpathSync(projectPath);
+        return [
+          configMessage({
+            constraint: 'configuration/unresolved-relative-import',
+            detail: `Relative import without explicit file extension violates configuration constraints: Cannot find module '${nodePath.join(realProjectPath, 'roles')}' imported from ${nodePath.join(realProjectPath, 'faf.config.ts')} (code: ERR_MODULE_NOT_FOUND)`,
+            element: 'faf.config.ts',
+            predicate:
+              'requires relative imports to include explicit file extensions',
+            reference: 'FAF §1.2',
+          }),
+        ];
+      }
+    );
+  });
+
+  it('reports config-load-failure for nonexistent relative import with explicit .ts extension', async () => {
+    await runRawScenario(
+      defaultTree,
+      `import { sharedRoles } from './nonexistent.ts';
+      export default {
+        faf: { locals: [{ roles: sharedRoles, rootLayers: ['src'] }] },
+      };\n`,
+      (projectPath) => {
+        const realProjectPath = nodeFs.realpathSync(projectPath);
+        return [
+          configMessage({
+            constraint: 'configuration/config-load-failure',
+            detail: `Failed to load faf.config.ts: Cannot find module '${nodePath.join(realProjectPath, 'nonexistent.ts')}' imported from ${nodePath.join(realProjectPath, 'faf.config.ts')} (code: ERR_MODULE_NOT_FOUND)`,
+            element: 'faf.config.ts',
+            predicate: 'failed to load configuration',
+            reference: 'FAF §1.2',
+          }),
+        ];
+      }
+    );
+  });
+
+  it('reports config-load-failure for missing bare package import in configuration file', async () => {
+    await runRawScenario(
+      defaultTree,
+      `import { missing } from 'nonexistent-faf-pkg';
+      export default {
+        faf: { locals: [{ roles: missing, rootLayers: ['src'] }] },
+      };\n`,
+      (projectPath) => {
+        const realProjectPath = nodeFs.realpathSync(projectPath);
+        return [
+          configMessage({
+            constraint: 'configuration/config-load-failure',
+            detail: `Failed to load faf.config.ts: Cannot find package 'nonexistent-faf-pkg' imported from ${nodePath.join(realProjectPath, 'faf.config.ts')} (code: ERR_MODULE_NOT_FOUND)`,
+            element: 'faf.config.ts',
+            predicate: 'failed to load configuration',
+            reference: 'FAF §1.2',
+          }),
+        ];
+      }
     );
   });
 

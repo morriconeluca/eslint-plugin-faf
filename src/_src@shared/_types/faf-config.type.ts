@@ -33,6 +33,7 @@ export type TFAFCommonConfig = TFAFSharedConfig & {
  *   faf: {
  *     locals: [
  *       {
+ *         roles: [{ category: '_utils', name: 'util' }],
  *         rootLayers: ['src'],
  *       },
  *     ],
