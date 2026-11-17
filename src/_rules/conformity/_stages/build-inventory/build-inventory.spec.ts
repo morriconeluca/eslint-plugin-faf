@@ -84,6 +84,29 @@ describe('buildInventory', () => {
     }
   });
 
+  it('forwards overlayPaths into includeExternalTargets so active files in ignored directories are indexed', async () => {
+    const fixture = await createFixture({
+      'build/active.ts': 'export const active = 1;\n',
+      'src/real.ts': 'export const real = 1;\n',
+    });
+    try {
+      const result = buildInventory({
+        baseDirectory: fixture.path,
+        config: baseConfig,
+        origins: ['src'],
+        overlayPaths: ['build/active.ts'],
+      });
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value.inventory.pathToId.has('build/active.ts')).toBe(
+          true
+        );
+      }
+    } finally {
+      await fixture.rm();
+    }
+  });
+
   it('builds an empty inventory with empty outcomes when no entries or origins are given', () => {
     const result = assembleInventory([], []);
     expect(result.inventory.items).toEqual([]);

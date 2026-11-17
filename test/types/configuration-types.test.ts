@@ -181,6 +181,12 @@ const POSITIVE_AUXILIARY_CASES = [
   },
   {
     description:
+      'accepts TFAFExternalDependency with Logical Domain and external directory paths',
+    snippet:
+      "({ from: ['src/_src@shared'], to: ['legacy'] }) as const satisfies TFAFExternalDependency;",
+  },
+  {
+    description:
       'accepts TFAFSharedConfig with roles and mixed foreignNodes definitions',
     snippet:
       "({ roles: [], foreignNodes: ['src/README.md', { paths: ['src'], patterns: ['*.md'] }] }) as const satisfies TFAFSharedConfig;",
@@ -293,9 +299,9 @@ const STATIC_RUNTIME_LIMIT_CASES = [
   },
   {
     description:
-      'compiles statically when externalDependencies points to a directory',
+      'compiles statically when externalDependencies targets an inside-tree or node_modules path',
     snippet:
-      "({ from: ['src/_src@shared'], to: ['legacy'] }) satisfies TFAFExternalDependency;",
+      "({ from: ['src/_utils/widget/index.ts'], to: ['node_modules/pkg/index.js'] }) satisfies TFAFExternalDependency;",
   },
   {
     description:

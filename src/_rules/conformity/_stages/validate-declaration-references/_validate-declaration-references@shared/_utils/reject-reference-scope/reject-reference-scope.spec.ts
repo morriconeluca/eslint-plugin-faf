@@ -284,4 +284,76 @@ describe('rejectReferenceScope', () => {
       ).toBe('configuration/reference-outside-local-scope');
     });
   });
+
+  describe('file-or-directory checks', () => {
+    it('accepts both files and directories in scope and rejects out-of-scope or missing paths', () => {
+      const directoryItem = itemOf(0, 'src/_utils', 'directory', 'src');
+      const fileItem = itemOf(
+        1,
+        'src/_utils/widget/widget.util.ts',
+        'file',
+        'src'
+      );
+      const outsideDirectory = itemOf(2, 'outside', 'directory', null);
+      const context = buildContext(
+        [directoryItem, fileItem, outsideDirectory],
+        new Map([['src', { localIndex: 0, originKind: 'root-layer' }]])
+      );
+
+      expect(
+        rejectReferenceScope({
+          context,
+          expectedKind: 'file-or-directory',
+          label: 'Source',
+          path: 'src/_utils',
+          propertyPath: 'p',
+          scope: { kind: 'local', localIndex: 0 },
+        })
+      ).toEqual([]);
+
+      expect(
+        rejectReferenceScope({
+          context,
+          expectedKind: 'file-or-directory',
+          label: 'Source',
+          path: 'src/_utils/widget/widget.util.ts',
+          propertyPath: 'p',
+          scope: { kind: 'local', localIndex: 0 },
+        })
+      ).toEqual([]);
+
+      expect(
+        rejectReferenceScope({
+          context,
+          expectedKind: 'file-or-directory',
+          label: 'Source',
+          path: 'outside',
+          propertyPath: 'p',
+          scope: { kind: 'common' },
+        })[0]?.constraint
+      ).toBe('configuration/reference-outside-trees');
+
+      expect(
+        rejectReferenceScope({
+          context,
+          expectedKind: 'file-or-directory',
+          label: 'Source',
+          path: 'src/_utils',
+          propertyPath: 'p',
+          scope: { kind: 'local', localIndex: 1 },
+        })[0]?.constraint
+      ).toBe('configuration/reference-outside-local-scope');
+
+      expect(
+        rejectReferenceScope({
+          context,
+          expectedKind: 'file-or-directory',
+          label: 'Source',
+          path: 'src/missing',
+          propertyPath: 'p',
+          scope: { kind: 'common' },
+        })[0]?.constraint
+      ).toBe('configuration/non-existent-path');
+    });
+  });
 });

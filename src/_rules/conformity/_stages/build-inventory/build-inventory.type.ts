@@ -38,6 +38,11 @@ export type TBuildInventoryInput = {
    * Relative POSIX origin paths of all declared Fractal Trees.
    */
   readonly origins: readonly string[];
+
+  /**
+   * Optional POSIX paths of active in-memory file overlays relative to baseDirectory.
+   */
+  readonly overlayPaths?: readonly string[];
 };
 
 /**

@@ -16,14 +16,55 @@ describe('classifyWorkerOutcome', () => {
     expect(result.outcomes).toHaveLength(1);
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
-    expect(outcome?.element).toBe('/test/faf.config.ts');
+    expect(outcome?.element).toBe('faf.config.ts');
     expect(outcome?.family).toBe('configuration');
     if (outcome?.family === 'configuration') {
       expect(outcome.normativeReference).toBe('FAF §1.2');
       expect(outcome.propertyPath).toBe('default');
     }
     expect(outcome?.message).toBe(
-      "'/test/faf.config.ts' failed to load configuration: Worker terminated without transmitting a valid configuration payload"
+      "'faf.config.ts' failed to load configuration: Worker terminated without transmitting a valid configuration payload"
+    );
+  });
+
+  it('uses custom config basename as element on failure while keeping absolute path on success', () => {
+    const failureResult = classifyWorkerOutcome({
+      configPath: '/custom/configs/arch.config.ts',
+      rawMessage: {
+        error: {
+          code: 'ERR_SYNTAX',
+          message: 'Unexpected token',
+        },
+        kind: 'error',
+      },
+    });
+
+    expect(failureResult.ok).toBe(false);
+    if (!failureResult.ok) {
+      const outcome = failureResult.outcomes[0];
+      expect(outcome?.element).toBe('arch.config.ts');
+      expect(outcome?.message).toBe(
+        "'arch.config.ts' failed to load configuration: Failed to load arch.config.ts: Unexpected token (code: ERR_SYNTAX)"
+      );
+    }
+
+    const successResult = classifyWorkerOutcome({
+      configPath: '/custom/configs/arch.config.ts',
+      rawMessage: {
+        kind: 'value',
+        loadedFiles: ['/custom/configs/arch.config.ts'],
+        value: { key: 'sample' },
+      },
+    });
+
+    expect(successResult.ok).toBe(true);
+    if (!successResult.ok) {
+      return;
+    }
+
+    expect(successResult.value.configDirectory).toBe('/custom/configs');
+    expect(successResult.value.configPath).toBe(
+      '/custom/configs/arch.config.ts'
     );
   });
 
@@ -141,19 +182,17 @@ describe('classifyWorkerOutcome', () => {
     {
       constraint: 'configuration/missing-default-export',
       kind: 'missing',
-      message: "'/project/faf.config.ts' must declare a default export",
+      message: "'faf.config.ts' must declare a default export",
     },
     {
       constraint: 'configuration/invalid-default-export-function',
       kind: 'function',
-      message:
-        "'/project/faf.config.ts' cannot export a function as its default export",
+      message: "'faf.config.ts' cannot export a function as its default export",
     },
     {
       constraint: 'configuration/invalid-default-export-promise',
       kind: 'thenable',
-      message:
-        "'/project/faf.config.ts' cannot export a Promise as its default export",
+      message: "'faf.config.ts' cannot export a Promise as its default export",
     },
   ] as const)(
     'returns $constraint outcome when kind is $kind',
@@ -169,7 +208,7 @@ describe('classifyWorkerOutcome', () => {
       }
       const outcome = result.outcomes[0];
       expect(outcome?.constraint).toBe(constraint);
-      expect(outcome?.element).toBe('/project/faf.config.ts');
+      expect(outcome?.element).toBe('faf.config.ts');
       expect(outcome?.message).toBe(message);
     }
   );
@@ -189,7 +228,7 @@ describe('classifyWorkerOutcome', () => {
     }
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/unclonable-config-value');
-    expect(outcome?.element).toBe('/project/faf.config.ts');
+    expect(outcome?.element).toBe('faf.config.ts');
     expect(outcome?.message).toContain('Could not clone function property');
   });
 
@@ -253,13 +292,102 @@ describe('classifyWorkerOutcome', () => {
     expect(outcome?.message).toContain('TypeScript enum is not supported');
   });
 
-  it('returns unresolved-relative-import outcome when error code is ERR_MODULE_NOT_FOUND', () => {
+  it.each([
+    'Cannot find module ./local',
+    "Cannot find module '/project/dep' imported from /project/faf.config.ts",
+    'Cannot find module "./dep"',
+    "Cannot find module 'file:///project/dep' imported from file:///project/faf.config.ts",
+  ])(
+    'returns unresolved-relative-import outcome when ERR_MODULE_NOT_FOUND targets extensionless local module: %s',
+    (message) => {
+      const result = classifyWorkerOutcome({
+        configPath: '/project/faf.config.ts',
+        rawMessage: {
+          error: {
+            code: 'ERR_MODULE_NOT_FOUND',
+            message,
+          },
+          kind: 'error',
+        },
+      });
+
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        return;
+      }
+      const outcome = result.outcomes[0];
+      expect(outcome?.constraint).toBe(
+        'configuration/unresolved-relative-import'
+      );
+      expect(outcome?.element).toBe('faf.config.ts');
+      expect(outcome?.message).toContain(message);
+    }
+  );
+
+  it.each([
+    {
+      description: 'explicit .ts extension on missing local module',
+      message:
+        "Cannot find module '/project/nonexistent.ts' imported from /project/faf.config.ts",
+    },
+    {
+      description: 'explicit .js extension on missing local module',
+      message:
+        "Cannot find module './nonexistent.js' imported from /project/faf.config.ts",
+    },
+    {
+      description: 'missing bare package',
+      message:
+        "Cannot find package 'missing-pkg' imported from /project/faf.config.ts",
+    },
+    {
+      description: 'missing module inside node_modules',
+      message:
+        "Cannot find module '/project/node_modules/pkg/subpath' imported from /project/faf.config.ts",
+    },
+    {
+      description: 'empty ERR_MODULE_NOT_FOUND message',
+      message: '',
+    },
+    {
+      description: 'unrecognized ERR_MODULE_NOT_FOUND message',
+      message: 'Unrecognized loader error',
+    },
+  ])(
+    'falls back to config-load-failure when ERR_MODULE_NOT_FOUND is $description',
+    ({ message }) => {
+      const result = classifyWorkerOutcome({
+        configPath: '/project/faf.config.ts',
+        rawMessage: {
+          error: {
+            code: 'ERR_MODULE_NOT_FOUND',
+            message,
+          },
+          kind: 'error',
+        },
+      });
+
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        return;
+      }
+      const outcome = result.outcomes[0];
+      expect(outcome?.constraint).toBe('configuration/config-load-failure');
+      expect(outcome?.element).toBe('faf.config.ts');
+      expect(outcome?.message).toContain('Failed to load faf.config.ts:');
+      expect(outcome?.message).toContain('(code: ERR_MODULE_NOT_FOUND)');
+    }
+  );
+
+  it('falls back to commonjs-package-type when ERR_MODULE_NOT_FOUND has explicit extension and package.json declares type commonjs', () => {
     const result = classifyWorkerOutcome({
       configPath: '/project/faf.config.ts',
+      packageJson: { type: 'commonjs' },
       rawMessage: {
         error: {
           code: 'ERR_MODULE_NOT_FOUND',
-          message: 'Cannot find module ./local',
+          message:
+            "Cannot find module '/project/nonexistent.ts' imported from /project/faf.config.ts",
         },
         kind: 'error',
       },
@@ -270,10 +398,8 @@ describe('classifyWorkerOutcome', () => {
       return;
     }
     const outcome = result.outcomes[0];
-    expect(outcome?.constraint).toBe(
-      'configuration/unresolved-relative-import'
-    );
-    expect(outcome?.message).toContain('Cannot find module ./local');
+    expect(outcome?.constraint).toBe('configuration/commonjs-package-type');
+    expect(outcome?.element).toBe('faf.config.ts');
   });
 
   it('returns commonjs-package-type outcome when package.json declares type commonjs', () => {
@@ -446,7 +572,7 @@ describe('classifyWorkerOutcome', () => {
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
     expect(outcome?.message).toBe(
-      "'/project/faf.config.ts' failed to load configuration: Worker terminated without transmitting a valid configuration payload"
+      "'faf.config.ts' failed to load configuration: Worker terminated without transmitting a valid configuration payload"
     );
   });
 
@@ -463,7 +589,7 @@ describe('classifyWorkerOutcome', () => {
     const outcome = result.outcomes[0];
     expect(outcome?.constraint).toBe('configuration/config-load-failure');
     expect(outcome?.message).toBe(
-      "'/project/faf.config.ts' failed to load configuration: Worker terminated without transmitting a valid configuration payload"
+      "'faf.config.ts' failed to load configuration: Worker terminated without transmitting a valid configuration payload"
     );
   });
 });

@@ -6,6 +6,7 @@ import type {
   TInventory,
   TInventoryItem,
 } from '../../../../_conformity@shared/_types/verification-model.type.js';
+import type { TResolvedExternalTarget } from './include-external-targets.type.js';
 
 import {
   CONFIG_FILE_NAME,
@@ -13,39 +14,57 @@ import {
 } from '../../../../../../_src@shared/_constants/faf.constant.js';
 import { toPosixPath } from '../../../../../../_src@shared/_utils/to-posix-path/index.js';
 import { compareOrdinal } from '../../../../_conformity@shared/_utils/compare-ordinal/index.js';
+import { collectConfigTargetPaths } from './_utils/collect-config-target-paths/index.js';
+import { filterExternalOverlayPaths } from './_utils/filter-external-overlay-paths/index.js';
+import { shouldTraverseExternalDirectory } from './_utils/should-traverse-external-directory/index.js';
 
 export function includeExternalTargets(
   inventory: TInventory,
   config: TFAFConfig,
   baseDirectory: string,
-  origins?: readonly string[]
+  origins?: readonly string[],
+  overlayPaths?: readonly string[]
 ): TInventory {
-  const skippedDirectoryNames: ReadonlySet<string> = new Set([
-    'build',
-    'coverage',
-    'dist',
-    'node_modules',
-    'out',
-    'reports',
-    'tmp',
-  ]);
-
+  const resolvedBaseDirectory = nodePath.resolve(baseDirectory);
   const items = [...inventory.items];
   const pathToId = new Map(inventory.pathToId);
   const realPathToId = new Map(inventory.realPathToId);
 
+  const declaredOriginList =
+    origins ??
+    config.faf.locals.flatMap((local) => [
+      ...(local.rootLayers ?? []),
+      ...(local.rootFragments?.map((rootFragment) => rootFragment.path) ?? []),
+    ]);
+
+  const declaredOrigins = new Set(
+    declaredOriginList.map((rawOrigin) => {
+      const posix = toPosixPath(rawOrigin);
+      const withoutPrefix = posix.startsWith('./') ? posix.slice(2) : posix;
+      return withoutPrefix.endsWith('/') && withoutPrefix.length > 1
+        ? withoutPrefix.slice(0, -1)
+        : withoutPrefix;
+    })
+  );
+
   const resolveTargetKind = (
     target: string
-  ): null | {
-    readonly absolute: string;
-    readonly kind: 'directory' | 'file';
-    readonly normalized: string;
-  } => {
+  ): null | TResolvedExternalTarget => {
     const normalized = toPosixPath(target);
-    if (pathToId.has(normalized)) {
+    if (normalized.length === 0 || pathToId.has(normalized)) {
       return null;
     }
-    const absolute = nodePath.resolve(baseDirectory, normalized);
+    const absolute = nodePath.resolve(resolvedBaseDirectory, normalized);
+    const relativeToBase = toPosixPath(
+      nodePath.relative(resolvedBaseDirectory, absolute)
+    );
+    if (
+      relativeToBase === '..' ||
+      relativeToBase.startsWith('../') ||
+      nodePath.isAbsolute(relativeToBase)
+    ) {
+      return null;
+    }
     const stats = nodeFs.statSync(absolute, { throwIfNoEntry: false });
     if (stats?.isDirectory() === true) {
       return { absolute, kind: 'directory', normalized };
@@ -56,19 +75,8 @@ export function includeExternalTargets(
     return null;
   };
 
-  const declaredOriginList =
-    origins ??
-    config.faf.locals.flatMap((local) => [
-      ...(local.rootLayers ?? []),
-      ...(local.rootFragments?.map((rootFragment) => rootFragment.path) ?? []),
-    ]);
-
-  const declaredOrigins = new Set(
-    declaredOriginList.map((origin) => toPosixPath(origin))
-  );
-
   const collectExternalCandidates = (): readonly string[] => {
-    if (declaredOrigins.has('.') || !nodeFs.existsSync(baseDirectory)) {
+    if (declaredOrigins.has('.') || !nodeFs.existsSync(resolvedBaseDirectory)) {
       return [];
     }
 
@@ -83,31 +91,39 @@ export function includeExternalTargets(
     };
 
     const candidates: string[] = [];
-    const directoryQueue: string[] = [baseDirectory];
+    const directoryQueue: string[] = [resolvedBaseDirectory];
 
     const processDirent = (
       dirent: nodeFs.Dirent,
       currentDirectory: string
     ): void => {
-      if (dirent.name.startsWith('.') || dirent.isSymbolicLink()) {
+      if (dirent.isSymbolicLink()) {
         return;
       }
       const fullPath = nodePath.join(currentDirectory, dirent.name);
       const relativePath = toPosixPath(
-        nodePath.relative(baseDirectory, fullPath)
+        nodePath.relative(resolvedBaseDirectory, fullPath)
       );
 
-      if (
-        dirent.isDirectory() &&
-        !skippedDirectoryNames.has(dirent.name) &&
-        !declaredOrigins.has(relativePath)
-      ) {
-        directoryQueue.push(fullPath);
+      if (dirent.isDirectory()) {
+        if (
+          shouldTraverseExternalDirectory({
+            declaredOrigins,
+            isAtRoot: currentDirectory === resolvedBaseDirectory,
+            name: dirent.name,
+            relativePath,
+          })
+        ) {
+          directoryQueue.push(fullPath);
+        }
+        return;
       }
 
+      if (!dirent.isFile() || dirent.name.startsWith('.')) {
+        return;
+      }
       if (
         relativePath !== CONFIG_FILE_NAME &&
-        dirent.isFile() &&
         LINTABLE_EXTENSIONS.some((extension) => dirent.name.endsWith(extension))
       ) {
         candidates.push(relativePath);
@@ -124,13 +140,20 @@ export function includeExternalTargets(
     return candidates;
   };
 
-  const sections = [
-    config.faf.common?.externalDependencies,
-    ...config.faf.locals.map((local) => local.externalDependencies),
-  ];
+  const collectOverlayTargets = (): readonly string[] =>
+    filterExternalOverlayPaths(
+      resolvedBaseDirectory,
+      declaredOrigins,
+      overlayPaths
+    ).filter((relativePath) => {
+      const absolute = nodePath.resolve(resolvedBaseDirectory, relativePath);
+      const lstat = nodeFs.lstatSync(absolute, { throwIfNoEntry: false });
+      return lstat?.isFile() === true;
+    });
+
   const targets = [
-    ...sections.flatMap((section) => section ?? []).flatMap((edge) => edge.to),
-    ...Object.values(config.faf.common?.aliases ?? {}),
+    ...collectConfigTargetPaths(config),
+    ...collectOverlayTargets(),
     ...collectExternalCandidates(),
   ];
 

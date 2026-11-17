@@ -150,7 +150,7 @@ const invalidExternalDependencySource = (source: string): TScenarioMessage => ({
   element: source,
   filePath: 'faf.config.ts',
   line: 1,
-  message: `configuration/invalid-external-dependency-source: '${source}' must be an authorized logical node in externalDependencies (FAF §7.3).`,
+  message: `configuration/invalid-external-dependency-source: '${source}' must be an authorized Logical Node or Logical Domain in externalDependencies (FAF §7.3).`,
   messageId: 'configuration',
   ruleId: 'faf/conformity',
   severity: 2,
@@ -2176,6 +2176,92 @@ const SCENARIOS: readonly TScenarioCase[] = [
           },
         },
       }),
+    },
+  },
+  {
+    config: {
+      faf: {
+        common,
+        locals: [
+          {
+            publicRootNodes: ['src/high.ts'],
+            rootFragments: [
+              {
+                path: 'src',
+                rootNodes: [['high.ts'], ['low.ts'], ['main.css']],
+              },
+            ],
+          },
+        ],
+      },
+    },
+    expected: [
+      dependency('treeOpacity', {
+        filePath: 'faf.config.ts',
+        from: '.storybook/storybook.style.css',
+        specifier: '../src/main.css',
+        to: 'src/main.css',
+      }),
+    ],
+    name: 'external dot-directory .storybook CSS transitively importing internal tree asset triggers tree-opacity',
+    tree: {
+      '.storybook/preview.ts': "import './storybook.style.css';\n",
+      '.storybook/storybook.style.css': "@import '../src/main.css';\n",
+      'src/high.ts': 'export const high = 1;\n',
+      'src/low.ts': 'export const low = 1;\n',
+      'src/main.css': 'body {}\n',
+    },
+  },
+  {
+    config: {
+      faf: {
+        common,
+        locals: [
+          {
+            publicRootNodes: ['src/high.ts'],
+            rootFragments: [root],
+          },
+        ],
+      },
+    },
+    expected: [
+      dependency('treeOpacity', {
+        from: '.storybook/preview.ts',
+        specifier: '../src/low.js',
+        to: 'src/low.ts',
+      }),
+    ],
+    files: ['.storybook/preview.ts', 'faf.config.ts'],
+    name: 'external dot-directory .storybook script importing internal tree module triggers tree-opacity anchored to preview.ts',
+    tree: {
+      ...rootTree,
+      '.storybook/preview.ts': "import '../src/low.js';\n",
+    },
+  },
+  {
+    config: {
+      faf: {
+        common,
+        locals: [
+          {
+            publicRootNodes: ['src/high.ts'],
+            rootFragments: [root],
+          },
+        ],
+      },
+    },
+    expected: [
+      dependency('treeOpacity', {
+        from: '__test__/build/package-exports.test.ts',
+        specifier: '../../src/low.js',
+        to: 'src/low.ts',
+      }),
+    ],
+    name: 'nested artifact-named directory __test__/build is traversed while root build/ remains ignored',
+    tree: {
+      ...rootTree,
+      '__test__/build/package-exports.test.ts': "import '../../src/low.js';\n",
+      'build/output.js': "import '../src/low.js';\n",
     },
   },
 ];

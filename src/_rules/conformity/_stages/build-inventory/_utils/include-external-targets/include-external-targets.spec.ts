@@ -507,4 +507,271 @@ describe('includeExternalTargets', () => {
       await fixture.rm();
     }
   });
+
+  it('traverses source dot-directories like .storybook while skipping dot-files and known tooling dot-directories', async () => {
+    const fixture = await createFixture({
+      '.agents/skill.ts': 'export const skill = 1;\n',
+      '.changeset/config.ts': 'export const cs = 1;\n',
+      '.github/workflows/check.ts': 'export const wf = 1;\n',
+      '.husky/pre-commit.ts': 'export const hc = 1;\n',
+      '.idea/workspace.ts': 'export const idea = 1;\n',
+      '.next/server.ts': 'export const next = 1;\n',
+      '.nuxt/app.ts': 'export const nuxt = 1;\n',
+      '.pnpm-store/v3/file.ts': 'export const pnpm = 1;\n',
+      '.storybook/.hidden.ts': 'export const hidden = 1;\n',
+      '.storybook/main.ts': 'export const main = 1;\n',
+      '.storybook/preview.ts': 'export const preview = 1;\n',
+      '.storybook/storybook.style.css': 'body {}\n',
+      '.svelte-kit/generated.ts': 'export const sk = 1;\n',
+      '.turbo/cache.ts': 'export const turbo = 1;\n',
+      '.vercel/output.ts': 'export const vercel = 1;\n',
+      '.vscode/settings.ts': 'export const vscode = 1;\n',
+      '.yarn/releases/yarn.cjs': 'module.exports = {};\n',
+    });
+
+    try {
+      const config: TFAFConfig = {
+        faf: {
+          locals: [{ rootLayers: ['src'] }],
+        },
+      };
+      const inventory = includeExternalTargets(
+        emptyInventory,
+        config,
+        fixture.path,
+        ['src']
+      );
+
+      expect(inventory.items.map((item) => item.path)).toEqual([
+        '.storybook/main.ts',
+        '.storybook/preview.ts',
+      ]);
+      expect(inventory.pathToId.has('.storybook/.hidden.ts')).toBe(false);
+      expect(inventory.pathToId.has('.storybook/storybook.style.css')).toBe(
+        false
+      );
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('skips artifact directories only at root and traverses nested artifact-named directories while skipping nested node_modules', async () => {
+    const fixture = await createFixture({
+      '__test__/build/package-exports.test.ts': 'export const test = 1;\n',
+      '__test__/coverage/fixture.ts': 'export const cov = 1;\n',
+      '__test__/dist/fixture.ts': 'export const dist = 1;\n',
+      '__test__/out/fixture.ts': 'export const out = 1;\n',
+      '__test__/reports/fixture.ts': 'export const rep = 1;\n',
+      '__test__/tmp/fixture.ts': 'export const tmp = 1;\n',
+      'build/output.js': 'export const rootBuild = 1;\n',
+      'dist/bundle.js': 'export const rootDist = 1;\n',
+      'tools/node_modules/pkg/index.ts': 'export const pkg = 1;\n',
+    });
+
+    try {
+      const config: TFAFConfig = {
+        faf: {
+          locals: [{ rootLayers: ['src'] }],
+        },
+      };
+      const inventory = includeExternalTargets(
+        emptyInventory,
+        config,
+        fixture.path,
+        ['src']
+      );
+
+      expect(inventory.items.map((item) => item.path)).toEqual([
+        '__test__/build/package-exports.test.ts',
+        '__test__/coverage/fixture.ts',
+        '__test__/dist/fixture.ts',
+        '__test__/out/fixture.ts',
+        '__test__/reports/fixture.ts',
+        '__test__/tmp/fixture.ts',
+      ]);
+      expect(inventory.pathToId.has('build/output.js')).toBe(false);
+      expect(inventory.pathToId.has('dist/bundle.js')).toBe(false);
+      expect(inventory.pathToId.has('tools/node_modules/pkg/index.ts')).toBe(
+        false
+      );
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('includes eligible overlayPaths inside ignored directories while skipping symlinks, non-files, tree files, and escaping paths', async () => {
+    const fixture = await createFixture({
+      'build/active.ts': 'export const active = 1;\n',
+      'build/folder.ts/nested.ts': 'export const nested = 1;\n',
+      'dist/ignored.ts': 'export const ignored = 1;\n',
+      'faf.config.ts': 'export default {};\n',
+      'src/inside.ts': 'export const inside = 1;\n',
+    });
+
+    try {
+      nodeFs.symlinkSync(
+        nodePath.join(fixture.path, 'build/active.ts'),
+        nodePath.join(fixture.path, 'build/symlink.ts'),
+        'file'
+      );
+      const config: TFAFConfig = {
+        faf: {
+          locals: [{ rootLayers: ['src'] }],
+        },
+      };
+      const inventory = includeExternalTargets(
+        emptyInventory,
+        config,
+        fixture.path,
+        ['src'],
+        [
+          'build/active.ts',
+          'build/folder.ts',
+          'build/missing.ts',
+          'build/symlink.ts',
+          'faf.config.ts',
+          'src/inside.ts',
+          '../outside.ts',
+        ]
+      );
+
+      expect(inventory.items.map((item) => item.path)).toEqual([
+        'build/active.ts',
+      ]);
+      const activeId = inventory.pathToId.get('build/active.ts');
+      expect(inventory.items[activeId ?? -1]?.kind).toBe('file');
+      expect(inventory.items[activeId ?? -1]?.treeOrigin).toBeNull();
+      expect(inventory.items[activeId ?? -1]?.isSymlink).toBe(false);
+      expect(inventory.pathToId.has('dist/ignored.ts')).toBe(false);
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('indexes config-referenced external files, directories, and dot when dot is not a tree origin', async () => {
+    const fixture = await createFixture({
+      'outside-apis/readme.txt': 'text\n',
+      'outside-dir/note.txt': 'note\n',
+      'README.md': '# Root Readme\n',
+      'scripts/build.sh': 'echo hi\n',
+      'src/app.ts': 'export const app = 1;\n',
+    });
+
+    try {
+      const config: TFAFConfig = {
+        faf: {
+          common: {
+            foreignDomains: ['scripts'],
+            foreignNodes: ['README.md', { paths: ['.'], patterns: ['*.md'] }],
+          },
+          locals: [
+            {
+              horizontalHierarchies: [
+                { hierarchy: [['_a'], ['_b']], path: 'outside-dir' },
+              ],
+              mimeticPathStructures: [{ paths: ['outside-apis'] }],
+              publicRootNodes: ['README.md'],
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      };
+      const inventory = includeExternalTargets(
+        emptyInventory,
+        config,
+        fixture.path,
+        ['src']
+      );
+
+      const dotId = inventory.pathToId.get('.');
+      expect(dotId).toBeDefined();
+      expect(inventory.items[dotId ?? -1]?.kind).toBe('directory');
+      expect(inventory.items[dotId ?? -1]?.treeOrigin).toBeNull();
+
+      const scriptsId = inventory.pathToId.get('scripts');
+      expect(scriptsId).toBeDefined();
+      expect(inventory.items[scriptsId ?? -1]?.kind).toBe('directory');
+      expect(inventory.items[scriptsId ?? -1]?.treeOrigin).toBeNull();
+
+      const readmeId = inventory.pathToId.get('README.md');
+      expect(readmeId).toBeDefined();
+      expect(inventory.items[readmeId ?? -1]?.kind).toBe('file');
+      expect(inventory.items[readmeId ?? -1]?.treeOrigin).toBeNull();
+
+      const outsideDirectoryId = inventory.pathToId.get('outside-dir');
+      expect(inventory.items[outsideDirectoryId ?? -1]?.kind).toBe('directory');
+
+      const outsideApisId = inventory.pathToId.get('outside-apis');
+      expect(inventory.items[outsideApisId ?? -1]?.kind).toBe('directory');
+    } finally {
+      await fixture.rm();
+    }
+  });
+
+  it('normalizes dot-slash and trailing slashes in declared origins and ignores real files outside baseDirectory', async () => {
+    const outerFixture = await createFixture({
+      'outside.txt': 'outside\n',
+      'project/build/active.ts': 'export const active = 1;\n',
+      'project/src/app.ts': 'export const app = 1;\n',
+    });
+
+    const projectDirectory = nodePath.join(outerFixture.path, 'project');
+    try {
+      const config: TFAFConfig = {
+        faf: {
+          locals: [
+            {
+              foreignDomains: ['..'],
+              foreignNodes: ['../outside.txt'],
+              rootLayers: ['./src/'],
+            },
+          ],
+        },
+      };
+      const inventory = includeExternalTargets(
+        emptyInventory,
+        config,
+        projectDirectory,
+        ['./src/'],
+        ['./build/active.ts', './src/app.ts']
+      );
+
+      expect(inventory.items.map((item) => item.path)).toEqual([
+        'build/active.ts',
+      ]);
+      expect(inventory.pathToId.has('..')).toBe(false);
+      expect(inventory.pathToId.has('../outside.txt')).toBe(false);
+      expect(inventory.pathToId.has('src/app.ts')).toBe(false);
+    } finally {
+      await outerFixture.rm();
+    }
+  });
+
+  it('ignores empty or parent-escaping config targets safely', async () => {
+    const fixture = await createFixture({
+      'README.md': '# Readme\n',
+    });
+
+    try {
+      const config: TFAFConfig = {
+        faf: {
+          locals: [
+            {
+              foreignDomains: ['', '../outside-parent'],
+              rootLayers: ['src'],
+            },
+          ],
+        },
+      };
+      const inventory = includeExternalTargets(
+        emptyInventory,
+        config,
+        fixture.path,
+        ['src']
+      );
+      expect(inventory.items).toHaveLength(0);
+    } finally {
+      await fixture.rm();
+    }
+  });
 });

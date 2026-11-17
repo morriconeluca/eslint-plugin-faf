@@ -5,6 +5,7 @@ import type { TLoadConfigResult } from '../../_load-config@shared/_types/load-co
 import type { TClassifyWorkerOutcomeInput } from './classify-worker-outcome.type.js';
 
 import { createOutcome } from '../../../../../../../../_src@shared/_utils/create-outcome/index.js';
+import { isExtensionlessLocalModuleError } from './_utils/is-extensionless-local-module-error/index.js';
 import {
   workerErrorSchema,
   workerMessageSchema,
@@ -14,6 +15,7 @@ export function classifyWorkerOutcome(
   input: TClassifyWorkerOutcomeInput
 ): TLoadConfigResult {
   const { configPath, rawMessage } = input;
+  const configElement = nodePath.basename(configPath);
   const configLoadFailure = 'configuration/config-load-failure' as const;
   const invalidPayloadMessage =
     'Worker terminated without transmitting a valid configuration payload';
@@ -27,7 +29,7 @@ export function classifyWorkerOutcome(
     outcomes: [
       createOutcome.configuration(constraint, {
         ...(detail !== undefined && { detail }),
-        element: configPath,
+        element: configElement,
         propertyPath: defaultProperty,
       }),
     ],
@@ -52,7 +54,10 @@ export function classifyWorkerOutcome(
       );
     }
 
-    if (code === 'ERR_MODULE_NOT_FOUND') {
+    if (
+      code === 'ERR_MODULE_NOT_FOUND' &&
+      isExtensionlessLocalModuleError(message)
+    ) {
       return makeFailure(
         'configuration/unresolved-relative-import',
         `Relative import without explicit file extension violates configuration constraints: ${message}${codeSuffix}`
@@ -66,7 +71,7 @@ export function classifyWorkerOutcome(
         )
       : makeFailure(
           configLoadFailure,
-          `Failed to load faf.config.ts: ${message}${codeSuffix}`
+          `Failed to load ${configElement}: ${message}${codeSuffix}`
         );
   };
 

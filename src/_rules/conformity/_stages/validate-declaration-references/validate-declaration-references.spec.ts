@@ -952,6 +952,44 @@ describe('validateDeclarationReferences', () => {
       ).toEqual([]);
     });
 
+    it('validates existence, file kind, external trees, and root-layer origin consistently across common and mixed locals', () => {
+      const config: TFAFConfig = {
+        faf: {
+          common: {
+            publicRootNodes: [
+              'lib/index.ts',
+              'legacy/client.ts',
+              'src/missing.ts',
+            ],
+          },
+          locals: [
+            {
+              publicRootNodes: [
+                'lib/index.ts',
+                'legacy/client.ts',
+                'src/missing.ts',
+              ],
+              rootFragments: [
+                {
+                  path: 'src',
+                  rootNodes: [['main.ts']],
+                },
+              ],
+              rootLayers: ['lib'],
+            },
+          ],
+        },
+      };
+      expect(constraintsOf(config, inventory)).toEqual([
+        'faf.common.publicRootNodes[0]|configuration/public-root-nodes-in-root-layer-tree|lib/index.ts',
+        'faf.common.publicRootNodes[1]|configuration/reference-outside-trees|legacy/client.ts',
+        'faf.common.publicRootNodes[2]|configuration/non-existent-path|src/missing.ts',
+        'faf.locals[0].publicRootNodes[0]|configuration/public-root-nodes-in-root-layer-tree|lib/index.ts',
+        'faf.locals[0].publicRootNodes[1]|configuration/reference-outside-trees|legacy/client.ts',
+        'faf.locals[0].publicRootNodes[2]|configuration/non-existent-path|src/missing.ts',
+      ]);
+    });
+
     it('accepts tree dependency targets of another configuration and rejects nested fragments, self pairs, and unknown origins', () => {
       const config: TFAFConfig = {
         faf: {
@@ -1008,7 +1046,7 @@ describe('validateDeclarationReferences', () => {
       ]);
     });
 
-    it('rejects external selectors that are directories, out of scope, libraries, aliases, or inside a tree', () => {
+    it('accepts directory selectors in scope and rejects out-of-scope, libraries, aliases, or inside-tree targets', () => {
       const declarations = createDeclarations();
       const withAlias: TEffectiveDeclarations = {
         ...declarations,
@@ -1022,9 +1060,10 @@ describe('validateDeclarationReferences', () => {
             {
               externalDependencies: [
                 {
-                  from: ['src', 'legacy/client.ts', 'lib/index.ts'],
+                  from: ['src', 'legacy', 'legacy/client.ts', 'lib/index.ts'],
                   to: [
                     'legacy',
+                    'src',
                     'src/main.ts',
                     'node_modules/react/index.js',
                     '#shared/file.ts',
@@ -1038,14 +1077,14 @@ describe('validateDeclarationReferences', () => {
         },
       };
       expect(constraintsOf(config, inventory, withAlias)).toEqual([
-        'faf.locals[0].externalDependencies[0].from[0]|configuration/expected-file|src',
-        'faf.locals[0].externalDependencies[0].from[1]|configuration/reference-outside-trees|legacy/client.ts',
-        'faf.locals[0].externalDependencies[0].from[2]|configuration/reference-outside-local-scope|lib/index.ts',
-        'faf.locals[0].externalDependencies[0].to[0]|configuration/expected-file|legacy',
-        'faf.locals[0].externalDependencies[0].to[1]|configuration/external-dependency-to-inside-tree|src/main.ts',
-        'faf.locals[0].externalDependencies[0].to[2]|configuration/external-dependency-to-library|node_modules/react/index.js',
-        'faf.locals[0].externalDependencies[0].to[3]|configuration/external-dependency-to-alias|#shared/file.ts',
-        'faf.locals[0].externalDependencies[0].to[4]|configuration/non-existent-path|legacy/missing.ts',
+        'faf.locals[0].externalDependencies[0].from[1]|configuration/reference-outside-trees|legacy',
+        'faf.locals[0].externalDependencies[0].from[2]|configuration/reference-outside-trees|legacy/client.ts',
+        'faf.locals[0].externalDependencies[0].from[3]|configuration/reference-outside-local-scope|lib/index.ts',
+        'faf.locals[0].externalDependencies[0].to[1]|configuration/external-dependency-to-inside-tree|src',
+        'faf.locals[0].externalDependencies[0].to[2]|configuration/external-dependency-to-inside-tree|src/main.ts',
+        'faf.locals[0].externalDependencies[0].to[3]|configuration/external-dependency-to-library|node_modules/react/index.js',
+        'faf.locals[0].externalDependencies[0].to[4]|configuration/external-dependency-to-alias|#shared/file.ts',
+        'faf.locals[0].externalDependencies[0].to[5]|configuration/non-existent-path|legacy/missing.ts',
       ]);
     });
 
@@ -1495,7 +1534,7 @@ describe('validateDeclarationReferences', () => {
       },
     };
     expect(constraintsOf(config, dangling)).toEqual([
-      'faf.locals[0].externalDependencies[0].to[0]|configuration/expected-file|ghost-external',
+      'faf.locals[0].externalDependencies[0].to[0]|configuration/non-existent-path|ghost-external',
       'faf.locals[0].foreignDomains[0]|configuration/expected-directory|src/ghost-dir',
       'faf.locals[0].foreignNodes[0]|configuration/expected-file|src/ghost-file',
       'faf.locals[0].publicRootNodes[0]|configuration/expected-file|src/ghost-public',

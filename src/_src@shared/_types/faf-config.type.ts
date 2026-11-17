@@ -33,6 +33,7 @@ export type TFAFCommonConfig = TFAFSharedConfig & {
  *   faf: {
  *     locals: [
  *       {
+ *         roles: [{ category: '_utils', name: 'util' }],
  *         rootLayers: ['src'],
  *       },
  *     ],
@@ -59,16 +60,16 @@ export type TFAFConfig = {
 };
 
 /**
- * Authorized egress dependency from internal logical nodes to external local modules.
+ * Authorized egress dependency from internal Logical Nodes or Logical Domains to external local codebase paths.
  */
 export type TFAFExternalDependency = {
   /**
-   * POSIX paths of internal logical node files permitted to import external modules.
+   * POSIX paths of internal Logical Nodes (excluding Fragment Access Nodes) or Logical Domains permitted to import external local modules.
    */
   readonly from: TFAFNonEmptyArray<string>;
 
   /**
-   * POSIX paths of modular local files residing outside all fractal trees.
+   * POSIX paths of modular local files or external directories residing outside all Fractal Trees.
    */
   readonly to: TFAFNonEmptyArray<string>;
 };

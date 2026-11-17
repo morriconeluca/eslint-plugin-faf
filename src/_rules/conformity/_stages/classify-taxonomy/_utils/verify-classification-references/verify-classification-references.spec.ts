@@ -11,10 +11,13 @@ import { verifyClassificationReferences } from './verify-classification-referenc
 const classificationOf = (
   path: string,
   domainKind: TItemClassification['domainKind'],
-  nodeKind: TItemClassification['nodeKind']
+  nodeKind: TItemClassification['nodeKind'],
+  entryKind: TItemClassification['entryKind'] = domainKind === null
+    ? 'file'
+    : 'directory'
 ): TItemClassification => ({
   domainKind,
-  entryKind: domainKind === null ? 'file' : 'directory',
+  entryKind,
   fragmentInternalRank: null,
   imposedRoleName: null,
   itemId: 1,
@@ -101,7 +104,16 @@ describe('verifyClassificationReferences', () => {
     const classifications = [
       classificationOf('src/_apis', 'category', null),
       classificationOf('src/_types', 'category', null),
+      classificationOf('src/_foreign', 'foreign-domain', null),
+      classificationOf('src/undeclared', null, null, 'directory'),
       classificationOf('src/_apis/get-user/index.ts', null, 'access-node'),
+      classificationOf(
+        'src/_apis/get-user/get-user.api.ts',
+        null,
+        'master-node'
+      ),
+      classificationOf('src/README.md', null, 'foreign-node'),
+      classificationOf('src/unclassified.ts', null, null, 'file'),
       classificationOf('src/main.ts', null, 'root-node'),
     ];
     const tree = treeOf({
@@ -109,6 +121,12 @@ describe('verifyClassificationReferences', () => {
         { from: 'src/_apis/get-user/index.ts', to: 'legacy.ts' },
         { from: 'src/main.ts', to: 'legacy.ts' },
         { from: 'src/missing.ts', to: 'legacy.ts' },
+        { from: 'src/_apis', to: 'legacy.ts' },
+        { from: 'src/_foreign', to: 'legacy.ts' },
+        { from: 'src/undeclared', to: 'legacy.ts' },
+        { from: 'src/README.md', to: 'legacy.ts' },
+        { from: 'src/unclassified.ts', to: 'legacy.ts' },
+        { from: 'src/_apis/get-user/get-user.api.ts', to: 'legacy.ts' },
       ],
       publicRootNodes: [
         'src/main.ts',
@@ -128,10 +146,16 @@ describe('verifyClassificationReferences', () => {
         ])
       )
     );
-    expect(outcomes.map((outcome) => outcome.constraint)).toEqual([
-      'configuration/incompatible-mimetic-designation',
-      'configuration/invalid-external-dependency-source',
-      'configuration/invalid-public-root-node',
+    expect(
+      outcomes.map((outcome) => `${outcome.constraint}|${outcome.element}`)
+    ).toEqual([
+      'configuration/incompatible-mimetic-designation|src/_types',
+      'configuration/invalid-external-dependency-source|src/_apis/get-user/index.ts',
+      'configuration/invalid-external-dependency-source|src/_foreign',
+      'configuration/invalid-external-dependency-source|src/undeclared',
+      'configuration/invalid-external-dependency-source|src/README.md',
+      'configuration/invalid-external-dependency-source|src/unclassified.ts',
+      'configuration/invalid-public-root-node|src/_apis/get-user/index.ts',
     ]);
   });
 });

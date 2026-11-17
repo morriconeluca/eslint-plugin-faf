@@ -4,6 +4,8 @@ export const ACCESS_NODE_FILE_NAME = 'index.ts';
 
 export const DOMAIN_CATEGORY = 'category';
 
+export const DOMAIN_FOREIGN = 'foreign-domain';
+
 export const DOMAIN_FRAGMENT = 'fragment';
 
 export const DOMAIN_FRACTAL_BRANCH = 'fractal-branch';

@@ -537,4 +537,49 @@ describe('conformity', () => {
       await fixture.rm();
     }
   });
+
+  it('analyzes an active file overlay located inside an ignored root artifact directory while ignoring non-base overlays', async () => {
+    const fixture = await createFixture({
+      'build/active.ts': 'export const active = 1;\n',
+      'faf.config.ts': verifyConfigSource(''),
+      'package.json': packageJson,
+      'src/_utils/widget/index.ts':
+        "export { widget } from './widget.util.js';\n",
+      'src/_utils/widget/widget.util.ts': 'export const widget = 1;\n',
+    });
+
+    try {
+      const configPath = nodePath.join(fixture.path, 'faf.config.ts');
+      const result = verifyProject({
+        configPath,
+        fileOverlays: new Map([
+          [fixture.path, ''],
+          [
+            nodePath.join(fixture.path, '../outside.ts'),
+            'export const x = 1;\n',
+          ],
+          [
+            nodePath.join(fixture.path, 'build/active.ts'),
+            "import '../src/_utils/widget/widget.util.js';\nexport const active = 1;\n",
+          ],
+          [
+            nodePath.join(fixture.path, 'faf.config.ts'),
+            nodeFs.readFileSync(configPath, 'utf8'),
+          ],
+        ]),
+        packageVersion: '0.5.0',
+        workingDirectory: fixture.path,
+      });
+
+      expect(
+        result.outcomes.some(
+          (item) =>
+            item.outcome.constraint === 'dependency/tree-opacity' &&
+            item.anchorPath === nodePath.join(fixture.path, 'build/active.ts')
+        )
+      ).toBe(true);
+    } finally {
+      await fixture.rm();
+    }
+  });
 });

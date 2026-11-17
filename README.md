@@ -12,25 +12,29 @@ It enforces FAF's directory taxonomy, file naming, symbol uniqueness, encapsulat
 ## Installation
 
 ```bash
-npm install --save-dev @morriconeluca/eslint-plugin-faf eslint
+npm install --save-dev @morriconeluca/eslint-plugin-faf eslint typescript-eslint
 ```
+
+JavaScript-only projects without TypeScript syntax do not need `typescript-eslint`.
 
 ## Quick Start
 
 ### 1. Configure ESLint
 
-Add `faf.configs.recommended` to your `eslint.config.js` or `eslint.config.ts`:
+Add `faf.configs.recommended` alongside `typescript-eslint` in your `eslint.config.js` or `eslint.config.ts`:
 
 ```ts
 import faf from '@morriconeluca/eslint-plugin-faf';
+import tseslint from 'typescript-eslint';
 
 export default [
+  ...tseslint.configs.recommended,
   faf.configs.recommended,
   // ...other ESLint configs
 ];
 ```
 
-`faf.configs.recommended` registers the `faf` plugin, targets `.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, and `.cts` files, and enables `faf/conformity` as `'error'`.
+`faf.configs.recommended` registers the `faf` plugin, targets `.js`, `.jsx`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.mts`, and `.cts` files, and enables `faf/conformity` as `'error'`. `...tseslint.configs.recommended` (or `languageOptions: { parser: tseslint.parser }`) is required for TypeScript projects so ESLint does not fall back to `espree` and fail with `Parsing error: Unexpected token` on `.ts`/`.tsx` files (including `faf.config.ts`). JavaScript-only projects can use `faf.configs.recommended` alone.
 
 #### Manual Setup and Custom Config Path
 
@@ -38,9 +42,14 @@ By default, the plugin searches upward from ESLint's working directory for `faf.
 
 ```ts
 import faf from '@morriconeluca/eslint-plugin-faf';
+import tseslint from 'typescript-eslint';
 
 export default [
   {
+    files: ['**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}'],
+    languageOptions: {
+      parser: tseslint.parser,
+    },
     plugins: { faf },
     rules: {
       'faf/conformity': 'error',
@@ -138,6 +147,7 @@ export default {
   faf: {
     common: {
       // Optional declarations shared across all locals entries
+      roles: [{ name: 'util', category: '_utils' }],
     },
     locals: [
       {
@@ -273,7 +283,7 @@ Exclude non-architectural files (documentation, tooling, environment declaration
     },
   ];
   ```
-- **`externalDependencies`** (`common` or `locals`): Authorizes specific internal Logical Nodes to import local codebase files located outside all Fractal Trees:
+- **`externalDependencies`** (`common` or `locals`): Authorizes internal Logical Nodes (excluding Fragment Access Nodes) or Logical Domains (`from`) to import external local codebase files or external directories located outside all Fractal Trees (`to`):
   ```ts
   externalDependencies: [
     {
